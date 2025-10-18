@@ -226,116 +226,124 @@ function initSubscription(userId) {
 }
 
 // ===================================================
-// 4️⃣ Market Button Logic
+// 4️⃣ Market Button Logic (Fixed)
 // ===================================================
-function marketButtonsIn(container) {
-  if (!container) return [];
-  return Array.from(container.querySelectorAll("button[data-market]"));
-}
 
-function setActiveFor(buttons, active = true) {
-  buttons.forEach((b) =>
-    active ? b.classList.add("active") : b.classList.remove("active")
-  );
-}
+// Ensure DOM is loaded before binding
+document.addEventListener("DOMContentLoaded", () => {
+  // Helper to get market buttons inside a container
+  function marketButtonsIn(container) {
+    if (!container) return [];
+    return Array.from(container.querySelectorAll("button[data-market]"));
+  }
 
-function updateSelectedMarkets() {
-  const activeBtns = Array.from(
-    document.querySelectorAll(
-      "#main-content .market-list button.active[data-market]"
-    )
-  );
-  selectedMarkets = activeBtns.map((b) => b.getAttribute("data-market"));
-}
+  // Add/remove active class
+  function setActiveFor(buttons, active = true) {
+    buttons.forEach((b) =>
+      active ? b.classList.add("active") : b.classList.remove("active")
+    );
+  }
 
-function resetAllMarkets() {
+  // Update selectedMarkets array
+  function updateSelectedMarkets() {
+    const activeBtns = Array.from(
+      document.querySelectorAll(
+        "#main-content .market-list button.active[data-market]"
+      )
+    );
+    selectedMarkets = activeBtns.map((b) => b.getAttribute("data-market"));
+  }
+
+  // Reset all markets
+  function resetAllMarkets() {
+    document
+      .querySelectorAll("#main-content .market-list button[data-market]")
+      .forEach((b) => b.classList.remove("active"));
+    selectedMarkets = [];
+  }
+
+  // Sport button behavior
+  sportButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      // Deactivate all sport buttons
+      sportButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // Set selected sport
+      selectedSport = btn.getAttribute("data-sport");
+      console.log("🏈 Selected sport:", selectedSport);
+
+      // Clear results and reset markets
+      resultsDiv.innerHTML = "";
+      progressText.textContent = "";
+      resetAllMarkets();
+
+      // Hide all market containers
+      if (nflMarkets) nflMarkets.style.display = "none";
+      if (nbaMarkets) nbaMarkets.style.display = "none";
+      if (mlbMarkets) mlbMarkets.style.display = "none";
+
+      // Show relevant market container
+      if (
+        selectedSport === "americanfootball_nfl" ||
+        selectedSport === "americanfootball_ncaaf"
+      ) {
+        if (nflMarkets) nflMarkets.style.display = "block";
+      } else if (selectedSport === "basketball_nba") {
+        if (nbaMarkets) nbaMarkets.style.display = "block";
+      } else if (selectedSport === "baseball_mlb") {
+        if (mlbMarkets) mlbMarkets.style.display = "block";
+      }
+    });
+  });
+
+  // Market button toggle (highlight on click)
   document
     .querySelectorAll("#main-content .market-list button[data-market]")
-    .forEach((b) => b.classList.remove("active"));
-  selectedMarkets = [];
-}
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        btn.classList.toggle("active");
+        updateSelectedMarkets();
+      });
+    });
 
-// Sport button logic
-sportButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    sportButtons.forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
+  // Select / Deselect All Buttons
+  if (selectAllNFL)
+    selectAllNFL.addEventListener("click", () => {
+      setActiveFor(marketButtonsIn(nflMarkets), true);
+      updateSelectedMarkets();
+    });
 
-    selectedSport = btn.getAttribute("data-sport");
-    resultsDiv.innerHTML = "";
-    progressText.textContent = "";
-    resetAllMarkets();
+  if (deselectAllNFL)
+    deselectAllNFL.addEventListener("click", () => {
+      setActiveFor(marketButtonsIn(nflMarkets), false);
+      updateSelectedMarkets();
+    });
 
-    // Show/hide market containers
-    nflMarkets.style.display =
-      selectedSport === "americanfootball_nfl" ||
-      selectedSport === "americanfootball_ncaaf"
-        ? "block"
-        : "none";
-    nbaMarkets.style.display =
-      selectedSport === "basketball_nba" ? "block" : "none";
-    if (mlbMarkets)
-      mlbMarkets.style.display =
-        selectedSport === "baseball_mlb" ? "block" : "none";
+  if (selectAllNBA)
+    selectAllNBA.addEventListener("click", () => {
+      setActiveFor(marketButtonsIn(nbaMarkets), true);
+      updateSelectedMarkets();
+    });
 
-    // Update header
-    if (
-      selectedSport === "americanfootball_nfl" ||
-      selectedSport === "americanfootball_ncaaf"
-    ) {
-      const h3 = nflMarkets.querySelector("h3");
-      if (h3)
-        h3.textContent =
-          selectedSport === "americanfootball_nfl"
-            ? "NFL Markets"
-            : "NCAAF Markets";
-    }
-  });
+  if (deselectAllNBA)
+    deselectAllNBA.addEventListener("click", () => {
+      setActiveFor(marketButtonsIn(nbaMarkets), false);
+      updateSelectedMarkets();
+    });
+
+  if (selectAllMLB)
+    selectAllMLB.addEventListener("click", () => {
+      setActiveFor(marketButtonsIn(mlbMarkets), true);
+      updateSelectedMarkets();
+    });
+
+  if (deselectAllMLB)
+    deselectAllMLB.addEventListener("click", () => {
+      setActiveFor(marketButtonsIn(mlbMarkets), false);
+      updateSelectedMarkets();
+    });
 });
-
-// Market button toggle
-document.querySelectorAll("#main-content .market-list").forEach((container) => {
-  container.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-market]");
-    if (!btn) return;
-    btn.classList.toggle("active");
-    updateSelectedMarkets();
-  });
-});
-
-// Select/Deselect All
-if (selectAllNFL)
-  selectAllNFL.addEventListener("click", () => {
-    setActiveFor(marketButtonsIn(nflMarkets), true);
-    updateSelectedMarkets();
-  });
-if (deselectAllNFL)
-  deselectAllNFL.addEventListener("click", () => {
-    setActiveFor(marketButtonsIn(nflMarkets), false);
-    updateSelectedMarkets();
-  });
-
-if (selectAllNBA)
-  selectAllNBA.addEventListener("click", () => {
-    setActiveFor(marketButtonsIn(nbaMarkets), true);
-    updateSelectedMarkets();
-  });
-if (deselectAllNBA)
-  deselectAllNBA.addEventListener("click", () => {
-    setActiveFor(marketButtonsIn(nbaMarkets), false);
-    updateSelectedMarkets();
-  });
-
-if (selectAllMLB && mlbMarkets)
-  selectAllMLB.addEventListener("click", () => {
-    setActiveFor(marketButtonsIn(mlbMarkets), true);
-    updateSelectedMarkets();
-  });
-if (deselectAllMLB && mlbMarkets)
-  deselectAllMLB.addEventListener("click", () => {
-    setActiveFor(marketButtonsIn(mlbMarkets), false);
-    updateSelectedMarkets();
-  });
 
 // ===================================================
 // 4️⃣ Load Data & Render Table
