@@ -65,7 +65,7 @@ async function checkUser() {
     return;
   }
 
-  // Logged-in user → show main dashboard
+  // ✅ Logged-in user → show main dashboard
   authContainer.style.display = "none";
   mainContent.style.display = "block";
   signoutBtn.style.display = "inline-block";
@@ -121,35 +121,18 @@ async function checkUser() {
   resetAllMarkets();
 }
 
-// ===================================================
-// 2️⃣ Sports Selection Logic
-// ===================================================
-
-    // Default sport selection
-    selectedSport = "americanfootball_nfl";
-    sportButtons.forEach(btn => {
-      btn.classList.toggle("active", btn.getAttribute("data-sport") === selectedSport);
-    });
-    nflMarkets.style.display = "block";
-    nbaMarkets.style.display = "none";
-    if (mlbMarkets) mlbMarkets.style.display = "none";
-
-    resetAllMarkets();
-  } else {
-    authContainer.style.display = "flex";
-    mainContent.style.display = "none";
-    signoutBtn.style.display = "none";
-  }
-}
-
 // 🔹 Sign In
 signinForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signin-email").value;
   const password = document.getElementById("signin-password").value;
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) authMessage.textContent = error.message;
-  else checkUser();
+  if (error) {
+    authMessage.textContent = error.message;
+  } else {
+    authMessage.textContent = "";
+    checkUser();
+  }
 });
 
 // 🔹 Sign Up
@@ -158,15 +141,20 @@ signupForm.addEventListener("submit", async (e) => {
   const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
   const { error } = await supabaseClient.auth.signUp({ email, password });
-  if (error) authMessage.textContent = error.message;
-  else authMessage.textContent = "Sign up successful! Please check your email.";
+  if (error) {
+    authMessage.textContent = error.message;
+  } else {
+    authMessage.textContent = "✅ Sign-up successful! Please check your email to verify your account.";
+  }
 });
 
 // 🔹 Log Out
 signoutBtn.addEventListener("click", async () => {
   await supabaseClient.auth.signOut();
   localStorage.clear();
-  checkUser();
+  authContainer.style.display = "flex";
+  mainContent.style.display = "none";
+  signoutBtn.style.display = "none";
 });
 
 // 🔹 Forgot Password
@@ -175,8 +163,9 @@ forgotBtn.addEventListener("click", async () => {
   if (!email) return;
   const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
   if (error) alert(error.message);
-  else alert("Check your email for password reset link.");
+  else alert("📩 Check your email for a password reset link.");
 });
+
 
 // ===================================================
 // 3️⃣ Subscription Logic (Stripe + Supabase Integration)
