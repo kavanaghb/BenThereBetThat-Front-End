@@ -54,64 +54,46 @@ let subscribeListenerAdded = false;
 checkUser();
 
 async function checkUser() {
+  console.log("🔍 Checking user session...");
   const { data, error } = await supabaseClient.auth.getUser();
   const user = data?.user;
 
   if (!user) {
-    // No logged-in user → show auth screen
+    console.log("❌ No user found — showing login");
     authContainer.style.display = "flex";
     mainContent.style.display = "none";
     signoutBtn.style.display = "none";
     return;
   }
 
-  // ✅ Logged-in user → show main dashboard
+  console.log("✅ Logged in as:", user.email);
+
+  // Show dashboard while checking subscription
   authContainer.style.display = "none";
   mainContent.style.display = "block";
   signoutBtn.style.display = "inline-block";
 
-  // Always ensure user exists in the backend
   await createUserIfNeeded(user);
 
-  // Check if user came from Stripe redirect
-  const currentPath = window.location.pathname;
-  const fromStripe =
-    currentPath.includes("success") || currentPath.includes("cancel");
+  console.log("🌐 Checking subscription status...");
+  const res = await fetch(`${API_BASE}/api/check-subscription?user_id=${user.id}`);
+  const dataSub = await res.json();
+  console.log("📦 Subscription API Response:", dataSub);
 
-  // Always check subscription fresh
-  const active = await checkSubscriptionAndShowButton(user.id);
+  const status = dataSub.subscription_status || "unknown";
+  subscriptionStatus.textContent = `Subscription: ${status}`;
 
-  if (fromStripe) {
-    if (active) {
-      alert("✅ Subscription activated! Enjoy full access.");
-      // Optionally redirect back to main page (if you're on success.html)
-      if (currentPath.includes("success")) {
-        window.location.href = "/";
-        return;
-      }
-    } else {
-      alert("⚠️ Payment canceled or inactive subscription.");
-      if (currentPath.includes("cancel")) {
-        window.location.href = "/";
-        return;
-      }
-    }
-  }
-
-  // If not active, send to subscribe page
-  if (!active) {
-    alert("Your subscription is inactive. Redirecting to checkout.");
-    window.location.href = "subscribe.html";
+  if (status !== "active") {
+    alert("⚠️ Subscription inactive — stopping loop.");
+    // Just stop here instead of redirecting
     return;
   }
 
-  // Default to NFL when active and loaded
+  console.log("✅ Subscription active — loading dashboard");
+  // Continue with dashboard setup
   selectedSport = "americanfootball_nfl";
   sportButtons.forEach((btn) => {
-    btn.classList.toggle(
-      "active",
-      btn.getAttribute("data-sport") === selectedSport
-    );
+    btn.classList.toggle("active", btn.getAttribute("data-sport") === selectedSport);
   });
 
   nflMarkets.style.display = "block";
@@ -120,6 +102,7 @@ async function checkUser() {
 
   resetAllMarkets();
 }
+
 
 // 🔹 Sign In
 signinForm.addEventListener("submit", async (e) => {
