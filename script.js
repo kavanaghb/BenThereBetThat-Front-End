@@ -54,19 +54,76 @@ let subscribeListenerAdded = false;
 checkUser();
 
 async function checkUser() {
-  const { data } = await supabaseClient.auth.getUser();
+  const { data, error } = await supabaseClient.auth.getUser();
   const user = data?.user;
 
-  if (user) {
-    authContainer.style.display = "none";
-    mainContent.style.display = "block";
-    signoutBtn.style.display = "inline-block";
+  if (!user) {
+    // No logged-in user → show auth screen
+    authContainer.style.display = "flex";
+    mainContent.style.display = "none";
+    signoutBtn.style.display = "none";
+    return;
+  }
 
-    // Create user in backend if not exists
-    await createUserIfNeeded(user);
+  // Logged-in user → show main dashboard
+  authContainer.style.display = "none";
+  mainContent.style.display = "block";
+  signoutBtn.style.display = "inline-block";
 
-    // Check subscription in Supabase
-    await checkSubscriptionAndShowButton(user.id);
+  // Always ensure user exists in the backend
+  await createUserIfNeeded(user);
+
+  // Check if user came from Stripe redirect
+  const currentPath = window.location.pathname;
+  const fromStripe =
+    currentPath.includes("success") || currentPath.includes("cancel");
+
+  // Always check subscription fresh
+  const active = await checkSubscriptionAndShowButton(user.id);
+
+  if (fromStripe) {
+    if (active) {
+      alert("✅ Subscription activated! Enjoy full access.");
+      // Optionally redirect back to main page (if you're on success.html)
+      if (currentPath.includes("success")) {
+        window.location.href = "/";
+        return;
+      }
+    } else {
+      alert("⚠️ Payment canceled or inactive subscription.");
+      if (currentPath.includes("cancel")) {
+        window.location.href = "/";
+        return;
+      }
+    }
+  }
+
+  // If not active, send to subscribe page
+  if (!active) {
+    alert("Your subscription is inactive. Redirecting to checkout.");
+    window.location.href = "subscribe.html";
+    return;
+  }
+
+  // Default to NFL when active and loaded
+  selectedSport = "americanfootball_nfl";
+  sportButtons.forEach((btn) => {
+    btn.classList.toggle(
+      "active",
+      btn.getAttribute("data-sport") === selectedSport
+    );
+  });
+
+  nflMarkets.style.display = "block";
+  nbaMarkets.style.display = "none";
+  if (mlbMarkets) mlbMarkets.style.display = "none";
+
+  resetAllMarkets();
+}
+
+// ===================================================
+// 2️⃣ Sports Selection Logic
+// ===================================================
 
     // Default sport selection
     selectedSport = "americanfootball_nfl";
