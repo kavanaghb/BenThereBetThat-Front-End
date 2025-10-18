@@ -2,9 +2,11 @@
 // ✅ Supabase Initialization
 // ===================================================
 const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g"; 
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API_BASE = "https://bentherebetthat-api.onrender.com";
+const STRIPE_PRICE_ID = "price_1SIzajExPCuJMaCrq8ADxMmx"; // ✅ your Stripe price ID
 
 // ===================================================
 // 1️⃣ DOM References
@@ -44,13 +46,11 @@ const deselectAllMLB = document.getElementById("deselectAllMLB");
 let selectedSport = null;
 let selectedMarkets = [];
 let currentController = null;
-let subscribeListenerAdded = false;
 
 // ===================================================
 // 2️⃣ Authentication & Subscription Initialization
 // ===================================================
 
-// 🔹 Check user on page load
 checkUser();
 
 async function checkUser() {
@@ -67,14 +67,13 @@ async function checkUser() {
   }
 
   console.log("✅ Logged in as:", user.email);
-
-  // Show dashboard while checking subscription
   authContainer.style.display = "none";
   mainContent.style.display = "block";
   signoutBtn.style.display = "inline-block";
 
   await createUserIfNeeded(user);
 
+  // 🔄 Check subscription status
   console.log("🌐 Checking subscription status...");
   const res = await fetch(`${API_BASE}/api/check-subscription?user_id=${user.id}`);
   const dataSub = await res.json();
@@ -83,14 +82,61 @@ async function checkUser() {
   const status = dataSub.subscription_status || "unknown";
   subscriptionStatus.textContent = `Subscription: ${status}`;
 
+  // ✅ Handle inactive subscriptions with retry loop
   if (status !== "active") {
-    alert("⚠️ Subscription inactive — stopping loop.");
-    // Just stop here instead of redirecting
+    console.log("⚠️ Subscription inactive — verifying payment sync...");
+    let retries = 0;
+    while (retries < 3) {
+      await new Promise((r) => setTimeout(r, 2000)); // wait 2s
+      const resRetry = await fetch(`${API_BASE}/api/check-subscription?user_id=${user.id}`);
+      const dataRetry = await resRetry.json();
+      if (dataRetry.subscription_status === "active") {
+        console.log("✅ Payment processed — user is now active.");
+        subscriptionStatus.textContent = "Subscription: active";
+        return setupDashboard();
+      }
+      retries++;
+    }
+
+    // If still inactive after retries, prompt user
+    const goToCheckout = confirm(
+      "Your subscription is inactive. Would you like to subscribe now?"
+    );
+    if (goToCheckout) {
+      await redirectToStripe(user.id);
+    } else {
+      alert("⚠️ Subscription required to use the dashboard.");
+      mainContent.style.display = "none";
+      authContainer.style.display = "flex";
+    }
     return;
   }
 
+  // ✅ Active subscription — proceed
+  setupDashboard();
+}
+
+async function redirectToStripe(userId) {
+  try {
+    const res = await fetch(`${API_BASE}/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, price_id: STRIPE_PRICE_ID }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Failed to start checkout session");
+    }
+  } catch (err) {
+    console.error("Error redirecting to Stripe:", err);
+    alert("Error connecting to payment service.");
+  }
+}
+
+function setupDashboard() {
   console.log("✅ Subscription active — loading dashboard");
-  // Continue with dashboard setup
   selectedSport = "americanfootball_nfl";
   sportButtons.forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-sport") === selectedSport);
@@ -103,35 +149,37 @@ async function checkUser() {
   resetAllMarkets();
 }
 
-
-// 🔹 Sign In
+// ===================================================
+// Authentication actions
+// ===================================================
 signinForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signin-email").value;
   const password = document.getElementById("signin-password").value;
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) {
-    authMessage.textContent = error.message;
-  } else {
+  if (error) authMessage.textContent = error.message;
+  else {
     authMessage.textContent = "";
     checkUser();
   }
 });
 
-// 🔹 Sign Up
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
-  const { error } = await supabaseClient.auth.signUp({ email, password });
-  if (error) {
-    authMessage.textContent = error.message;
-  } else {
-    authMessage.textContent = "✅ Sign-up successful! Please check your email to verify your account.";
-  }
+  const { error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: "https://bentherebetthat.netlify.app/verify.html",
+    },
+  });
+  if (error) authMessage.textContent = error.message;
+  else authMessage.textContent =
+    "✅ Sign-up successful! Please check your email to verify your account.";
 });
 
-// 🔹 Log Out
 signoutBtn.addEventListener("click", async () => {
   await supabaseClient.auth.signOut();
   localStorage.clear();
@@ -140,7 +188,6 @@ signoutBtn.addEventListener("click", async () => {
   signoutBtn.style.display = "none";
 });
 
-// 🔹 Forgot Password
 forgotBtn.addEventListener("click", async () => {
   const email = prompt("Enter your email for password reset:");
   if (!email) return;
@@ -149,12 +196,9 @@ forgotBtn.addEventListener("click", async () => {
   else alert("📩 Check your email for a password reset link.");
 });
 
-
-/// ===================================================
-// 3️⃣ Subscription Logic (Stripe + Supabase Integration)
 // ===================================================
-
-// Create user record in backend if needed
+// 3️⃣ Subscription Logic Helpers
+// ===================================================
 async function createUserIfNeeded(user) {
   try {
     await fetch(`${API_BASE}/api/create-user`, {
@@ -167,80 +211,9 @@ async function createUserIfNeeded(user) {
   }
 }
 
-// 🔹 Check subscription and update UI
-async function checkSubscriptionAndShowButton(userId) {
-  try {
-    const res = await fetch(
-      `${API_BASE}/api/check-subscription?user_id=${userId}`
-    );
-    const data = await res.json();
-
-    const status = data.subscription_status || "inactive";
-    if (subscriptionStatus)
-      subscriptionStatus.textContent = `Subscription: ${status}`;
-
-    if (status !== "active") {
-      if (subscribeCTA) subscribeCTA.style.display = "block";
-      ensureSubscribeButton(userId);
-      return false;
-    } else {
-      if (subscribeCTA) subscribeCTA.style.display = "none";
-      return true;
-    }
-  } catch (err) {
-    console.error("Subscription check failed:", err);
-    if (subscriptionStatus)
-      subscriptionStatus.textContent = "Subscription: unknown";
-    ensureSubscribeButton(userId);
-    return false;
-  }
-}
-
-// 🔹 Ensure subscribe button exists and is functional
-function ensureSubscribeButton(userId) {
-  let btn = document.getElementById("subscribeBtn");
-  if (!btn) {
-    btn = document.createElement("button");
-    btn.id = "subscribeBtn";
-    btn.className = "primary-btn";
-    btn.textContent = "Subscribe Now";
-    const statusEl = document.getElementById("subscription-status");
-    if (statusEl && statusEl.parentElement) {
-      statusEl.parentElement.appendChild(btn);
-    } else {
-      document.body.appendChild(btn);
-    }
-  }
-
-  if (!btn.dataset.bound) {
-    btn.addEventListener("click", async () => {
-      try {
-        const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // ✅ Your Stripe Price ID
-        const res = await fetch(`${API_BASE}/create-checkout-session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userId, price_id: priceId }),
-        });
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          alert("Failed to create checkout session");
-          console.error("Stripe error:", data);
-        }
-      } catch (err) {
-        console.error("Error initiating subscription:", err);
-        alert("Error initiating subscription");
-      }
-    });
-    btn.dataset.bound = "1";
-  }
-}
-
 // ===================================================
 // 3️⃣ Market Button Logic
 // ===================================================
-// 3️⃣ Market Button Logic
 // ===================================================
 function marketButtonsIn(container) {
   if (!container) return [];
