@@ -1,4 +1,6 @@
-/* General Page Styles */
+/* ================================
+   General Page Styles
+   ================================ */
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
@@ -10,7 +12,9 @@ h1, h2, h3 {
   margin: 10px 0;
 }
 
-/* Buttons */
+/* ================================
+   Buttons
+   ================================ */
 button {
   padding: 10px 16px;
   margin: 4px;
@@ -28,95 +32,474 @@ button:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-.sport-buttons button.active,
-.market-list button.active {
+/* Sport Buttons */
+.sport-buttons button.active {
   background-color: #f1c40f;
   color: #000;
 }
-
-.sport-buttons button,
-.market-list button {
-  background-color: #2a5298;
-  color: #fff;
+.sport-buttons button {
+  background-color: #e0e0e0;
+  color: #333;
 }
 
-/* Table Styles */
+/* Market Buttons */
+.market-list button {
+  background-color: #e0f0ff;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.market-list button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.market-list button:hover {
+  background-color: #3399ff;
+  color: white;
+}
+
+/* Action Buttons */
+#loadData, #stopBtn, #refreshBtn,
+.select-all-btn, .deselect-all-btn,
+#exportCsv, #exportExcel {
+  background-color: #28a745;
+  color: white;
+}
+
+#stopBtn {
+  background-color: #dc3545;
+}
+
+#refreshBtn {
+  background-color: #17a2b8;
+}
+
+/* ================================
+   Table Styles
+   ================================ */
 .odds-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  background-color: #fff;
 }
 
-.odds-table th, .odds-table td {
+/* Headers */
+.odds-table th {
+  background-color: #f0f4f7;
+  color: #333;
+  font-weight: 700;
+  font-size: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px;
+  border-bottom: 2px solid #ccc;
+  text-align: center;
+}
+
+/* Cells */
+.odds-table td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
 }
 
-.odds-table th {
-  background-color: #2a5298;
-  color: white;
-  cursor: pointer;
+/* Alternate Row Colors */
+.odds-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+.odds-table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
 }
 
-.odds-table tr:nth-child(even) { background-color: #f9f9f9; }
-.odds-table tr:hover { background-color: #f1f1f1; }
-
-/* Color Coding */
-.huntergreen { background-color: #006400; color: white; }
-.green { background-color: #28a745; color: white; }
-.darkyellow { background-color: #ffc107; color: black; }
-.gray { background-color: #d3d3d3; color: black; }
-.green-mlb { background-color: #2ecc71; color: white; }
-.white { background-color: white; color: black; }
-
-/* Spinner */
-.spinner {
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #2a5298;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 10px auto;
+/* Hover highlight for rows */
+.odds-table tbody tr:hover {
+  background-color: #e6f2ff;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* ================================
+   Difference Column Formatting
+   ================================ */
+
+/* NFL / NCAAF / NBA */
+td.green { background-color: #28a745; color: white; }
+td.huntergreen { background-color: #196f3d; color: white; }
+td.darkyellow { background-color: #d4af37; color: black; }
+td.gray { background-color: #c0c0c0; color: black; }
+
+/* MLB */
+td.green-mlb { background-color: #28a745; color: white; }
+
+/* No value */
+td.white { background-color: #ffffff; color: black; }
+
+/* ================================
+   Difference Arrows
+   ================================ */
+.diff-arrow {
+  font-weight: 900;
+  font-size: 20px;
+  margin-left: 4px;
+  vertical-align: middle;
+  color: #ff4500;
 }
 
-/* Responsive Layout */
-@media (max-width: 768px) {
-  body { margin: 10px; }
-  .sport-buttons, .market-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  button {
-    flex: 1 1 45%;
-    margin: 5px;
-  }
-  .odds-table th, .odds-table td {
-    padding: 6px;
-    font-size: 12px;
-  }
+/* ================================
+   Loading / Progress
+   ================================ */
+#loading {
+  display: none;
+  margin-top: 15px;
+  font-weight: bold;
+  color: #555;
 }
-.date-picker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+
+#progressText {
+  margin-top: 5px;
+  font-style: italic;
+}
+
+/* ================================
+   Export Buttons
+   ================================ */
+#exportCsv, #exportExcel {
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 8px 12px;
   margin-top: 10px;
-}
-
-.date-picker button {
-  background-color: #2a5298;
+  margin-right: 5px;
+  background-color: #17a2b8;
   color: #fff;
 }
 
-.date-picker button:hover {
-  background-color: #f1c40f;
-  color: #000;
+#exportCsv:hover, #exportExcel:hover {
+  background-color: #138496;
+}
+
+/* ================================
+   Select / Deselect Buttons
+   ================================ */
+.select-all-btn, .deselect-all-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.select-all-btn:hover, .deselect-all-btn:hover {
+  background-color: #5a6268;
+}
+
+/* ================================
+   Market Buttons Hover & Active Enhancements
+   ================================ */
+.market-list button.active {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.market-list button:hover:not(.active) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* ================================
+   Floating Sign Out Button
+   ================================ */
+#signout-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px 14px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 999;
+  transition: background 0.2s, transform 0.2s;
+}
+
+#signout-btn:hover {
+  background-color: #b02a37;
+  transform: translateY(-1px);
+}
+
+/* ================================
+   Responsive Adjustments
+   ================================ */
+@media (max-width: 768px) {
+  .sport-buttons,
+  .market-list,
+  .controls,
+  .auth-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sport-buttons button,
+  .market-list button,
+  .controls button,
+  #exportCsv,
+  #exportExcel {
+    width: 100%;
+    margin: 4px 0;
+  }
+}
+
+/* Header */
+#header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Log Out button */
+#signout-btn {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: none; /* Hidden until login */
+}
+
+#signout-btn:hover {
+  background-color: #c82333;
+}
+
+/* Auth message (sign in/up feedback) */
+#auth-message {
+  margin-top: 10px;
+  color: #333;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Header */
+#header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Log Out button */
+#signout-btn {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: none; /* Hidden until login */
+}
+
+#signout-btn:hover {
+  background-color: #c82333;
+}
+
+/* Auth message (sign in/up feedback) */
+#auth-message {
+  margin-top: 10px;
+  color: #333;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Auth Container */
+#auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(to right, #1e3c72, #2a5298);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Card */
+.auth-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 40px 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+/* Forms */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.auth-form h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Inputs */
+.auth-form input {
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+/* Buttons */
+.primary-btn {
+  background-color: #2a5298;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.primary-btn:hover {
+  background-color: #1e3c72;
+}
+
+.secondary-btn {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.secondary-btn:hover {
+  background-color: #ccc;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #2a5298;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+/* Divider */
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 14px;
+  color: #888;
+}
+
+/* ================================
+   Mobile Responsiveness Enhancements
+   ================================ */
+
+/* General layout scaling */
+@media (max-width: 1024px) {
+  body {
+    margin: 10px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  button {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .market-list button,
+  .sport-buttons button {
+    min-width: 110px;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  .sport-buttons,
+  .market-list,
+  .controls,
+  .date-picker,
+  .export-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sport-buttons button,
+  .market-list button,
+  .controls button,
+  .date-picker button,
+  .export-buttons button {
+    width: 100%;
+    margin: 6px 0;
+  }
+
+  input[type="date"],
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+  }
+
+  table {
+    font-size: 12px;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  th,
+  td {
+    padding: 6px;
+  }
+}
+
+/* Phone (portrait) adjustments */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  .sport-buttons button,
+  .market-list button {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  #signout-btn {
+    top: 10px;
+    right: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  #progressText {
+    font-size: 12px;
+  }
+}
+
+/* Sticky table header for mobile scrolls */
+.odds-table th {
+  position: sticky;
+  top: 0;
+  background-color: #f0f4f7;
+  z-index: 2;
 }

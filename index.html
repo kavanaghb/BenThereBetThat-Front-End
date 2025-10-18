@@ -8,12 +8,14 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  <!-- Authentication Section -->
+  <!-- ================================
+       Auth Section (modern card UI)
+       ================================ -->
   <div id="auth-container">
     <div class="auth-card">
       <h1>Ben There Bet That!</h1>
 
-      <!-- Sign In Form -->
+      <!-- Sign In -->
       <form id="signin-form" class="auth-form">
         <h2>Sign In</h2>
         <input type="email" id="signin-email" placeholder="Email" required />
@@ -23,7 +25,7 @@
 
       <div class="divider">OR</div>
 
-      <!-- Sign Up Form -->
+      <!-- Sign Up -->
       <form id="signup-form" class="auth-form">
         <h2>Create Account</h2>
         <input type="email" id="signup-email" placeholder="Email" required />
@@ -32,14 +34,15 @@
       </form>
 
       <button id="forgot-btn" class="link-btn">Forgot Password?</button>
-      <div id="forgot-spinner" class="spinner" style="display:none;"></div>
       <p id="auth-message"></p>
     </div>
   </div>
 
-  <!-- Main Dashboard -->
+  <!-- ================================
+       Main Dashboard
+       ================================ -->
   <div id="main-content" style="display:none;">
-    <div id="header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div id="header">
       <p id="subscription-status">Checking subscription...</p>
       <button id="signout-btn">Log Out</button>
     </div>
@@ -57,12 +60,12 @@
       <button data-sport="baseball_mlb">MLB</button>
     </div>
 
-    <!-- Market Buttons (for each sport) -->
+    <!-- NFL Markets -->
     <div id="nflMarkets" class="market-buttons" style="display:none;">
       <h3>NFL Markets</h3>
       <div class="market-actions">
-        <button id="selectAllNFL">Select All</button>
-        <button id="deselectAllNFL">Deselect All</button>
+        <button id="selectAllNFL" class="select-all-btn">Select All</button>
+        <button id="deselectAllNFL" class="deselect-all-btn">Deselect All</button>
       </div>
       <div class="market-list">
         <button data-market="player_pass_yds">Pass Yards</button>
@@ -74,11 +77,12 @@
       </div>
     </div>
 
+    <!-- NBA Markets -->
     <div id="nbaMarkets" class="market-buttons" style="display:none;">
       <h3>NBA Markets</h3>
       <div class="market-actions">
-        <button id="selectAllNBA">Select All</button>
-        <button id="deselectAllNBA">Deselect All</button>
+        <button id="selectAllNBA" class="select-all-btn">Select All</button>
+        <button id="deselectAllNBA" class="deselect-all-btn">Deselect All</button>
       </div>
       <div class="market-list">
         <button data-market="player_points">Points (O/U)</button>
@@ -91,11 +95,12 @@
       </div>
     </div>
 
+    <!-- MLB Markets -->
     <div id="mlbMarkets" class="market-buttons" style="display:none;">
       <h3>MLB Markets</h3>
       <div class="market-actions">
-        <button id="selectAllMLB">Select All</button>
-        <button id="deselectAllMLB">Deselect All</button>
+        <button id="selectAllMLB" class="select-all-btn">Select All</button>
+        <button id="deselectAllMLB" class="deselect-all-btn">Deselect All</button>
       </div>
       <div class="market-list">
         <button data-market="batter_total_bases">Batter Total Bases</button>
@@ -108,7 +113,7 @@
       </div>
     </div>
 
-    <!-- Date Picker -->
+    <!-- Date & Actions -->
     <div class="date-picker">
       <input type="date" id="dateInput" />
       <button id="loadData">Load Data</button>
@@ -122,7 +127,7 @@
       <button id="exportExcel">Export Excel</button>
     </div>
 
-    <!-- Spinner -->
+    <!-- Loading -->
     <div id="loading" class="spinner" style="display:none;"></div>
     <div id="progressText"></div>
     <div id="results"></div>
