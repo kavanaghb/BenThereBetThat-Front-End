@@ -4,7 +4,7 @@
 const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g"; 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = "https://bentherebetthat-api.onrender.com";
 
 // ===================================================
 // 1️⃣ DOM References
