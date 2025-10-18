@@ -1,70 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Account Verification - Ben There Bet That</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body style="text-align:center; margin-top:100px; font-family:Arial, sans-serif;">
-  <h1>Verifying your account...</h1>
-  <p id="verify-message">Please wait while we complete your verification.</p>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Verification | Ben There Bet That</title>
+  <link rel="stylesheet" href="style.css" />
   <script>
-    const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g"; 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Verification redirect logic
+    document.addEventListener("DOMContentLoaded", async () => {
+      const statusMsg = document.getElementById("statusMsg");
+      statusMsg.textContent = "Verifying your account...";
 
-    const API_BASE = "https://bentherebetthat-api.onrender.com";
-    const messageEl = document.getElementById("verify-message");
-
-    (async () => {
       try {
-        // Parse URL fragment to extract session tokens
-        const hash = window.location.hash;
-        if (!hash.includes("access_token")) {
-          messageEl.textContent = "⚠️ Invalid verification link.";
-          return;
-        }
+        const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
+        const SUPABASE_ANON_KEY =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g";
 
-        // Exchange tokens with Supabase to log user in
-        const { data, error } = await supabaseClient.auth.exchangeCodeForSession(window.location.href);
-        if (error) {
-          console.error("Verification error:", error);
-          messageEl.textContent = "❌ Verification failed. Please try signing in again.";
-          return;
-        }
+        const { createClient } = window.supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        const { data, error } = await supabaseClient.auth.getUser();
         const user = data?.user;
-        if (!user) {
-          messageEl.textContent = "❌ No user found.";
+
+        if (error || !user) {
+          statusMsg.textContent =
+            "⚠️ Verification failed or expired. Please log in again.";
           return;
         }
 
-        // Create user record (if not already exists)
-        await fetch(`${API_BASE}/api/create-user`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: user.id, email: user.email }),
-        });
-
-        // Check subscription
-        const res = await fetch(`${API_BASE}/api/check-subscription?user_id=${user.id}`);
+        // Redirect to payment screen if not active
+        const res = await fetch(
+          `https://bentherebetthat-api.onrender.com/api/check-subscription?user_id=${user.id}`
+        );
         const dataSub = await res.json();
-        const status = dataSub.subscription_status || "inactive";
 
-        if (status === "active") {
-          messageEl.textContent = "✅ Account verified! Redirecting to your dashboard...";
-          setTimeout(() => window.location.href = "index.html", 1500);
+        if (dataSub.subscription_status !== "active") {
+          statusMsg.textContent =
+            "✅ Email verified! Redirecting to payment page...";
+          setTimeout(() => {
+            window.location.href = "https://bentherebetthat.com/index.html";
+          }, 1500);
         } else {
-          messageEl.textContent = "✅ Account verified! Redirecting to subscribe page...";
-          setTimeout(() => window.location.href = "index.html#subscribe", 1500);
+          statusMsg.textContent =
+            "✅ Account active! Redirecting to your dashboard...";
+          setTimeout(() => {
+            window.location.href = "https://bentherebetthat.com/index.html";
+          }, 1500);
         }
       } catch (err) {
-        console.error("Verification failed:", err);
-        messageEl.textContent = "❌ Something went wrong during verification.";
+        console.error(err);
+        statusMsg.textContent =
+          "❌ Something went wrong verifying your account.";
       }
-    })();
+    });
   </script>
+</head>
+<body>
+  <div id="auth-container">
+    <div class="auth-card">
+      <h1>Ben There Bet That!</h1>
+      <h2>Verifying your account...</h2>
+      <p id="statusMsg">Please wait a moment.</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
