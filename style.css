@@ -1,511 +1,48 @@
 /* ================================
-   General Page Styles
+   Base Styles
    ================================ */
 body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  background-color: #fafafa;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f6f8;
   color: #333;
-}
-
-h1, h2, h3 {
-  margin: 10px 0;
+  margin: 0;
+  padding: 0;
 }
 
 /* ================================
-   Buttons
+   Navbar
    ================================ */
-button {
-  padding: 10px 16px;
-  margin: 4px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-}
-
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-/* Sport Buttons */
-.sport-buttons button.active {
-  background-color: #f1c40f;
-  color: #000;
-}
-.sport-buttons button {
-  background-color: #e0e0e0;
-  color: #333;
-}
-
-/* Market Buttons */
-.market-list button {
-  background-color: #e0f0ff;
-  color: #007bff;
-  font-weight: 500;
-}
-
-.market-list button.active {
-  background-color: #007bff;
-  color: white;
-}
-
-.market-list button:hover {
-  background-color: #3399ff;
-  color: white;
-}
-
-/* Action Buttons */
-#loadData, #stopBtn, #refreshBtn,
-.select-all-btn, .deselect-all-btn,
-#exportCsv, #exportExcel {
-  background-color: #28a745;
-  color: white;
-}
-
-#stopBtn {
-  background-color: #dc3545;
-}
-
-#refreshBtn {
-  background-color: #17a2b8;
-}
-
-/* ================================
-   Table Styles
-   ================================ */
-.odds-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  font-size: 14px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-}
-
-/* Headers */
-.odds-table th {
-  background-color: #f0f4f7;
-  color: #333;
-  font-weight: 700;
-  font-size: 14px;
+.navbar {
   position: sticky;
   top: 0;
-  z-index: 1;
-  padding: 8px;
-  border-bottom: 2px solid #ccc;
-  text-align: center;
-}
-
-/* Cells */
-.odds-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
-/* Alternate Row Colors */
-.odds-table tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-.odds-table tbody tr:nth-child(odd) {
-  background-color: #ffffff;
-}
-
-/* Hover highlight for rows */
-.odds-table tbody tr:hover {
-  background-color: #e6f2ff;
-}
-
-/* ================================
-   Difference Column Formatting
-   ================================ */
-
-/* NFL / NCAAF / NBA */
-td.green { background-color: #28a745; color: white; }
-td.huntergreen { background-color: #196f3d; color: white; }
-td.darkyellow { background-color: #d4af37; color: black; }
-td.gray { background-color: #c0c0c0; color: black; }
-
-/* MLB */
-td.green-mlb { background-color: #28a745; color: white; }
-
-/* No value */
-td.white { background-color: #ffffff; color: black; }
-
-/* ================================
-   Difference Arrows
-   ================================ */
-.diff-arrow {
-  font-weight: 900;
-  font-size: 20px;
-  margin-left: 4px;
-  vertical-align: middle;
-  color: #ff4500;
-}
-
-/* ================================
-   Loading / Progress
-   ================================ */
-#loading {
-  display: none;
-  margin-top: 15px;
-  font-weight: bold;
-  color: #555;
-}
-
-#progressText {
-  margin-top: 5px;
-  font-style: italic;
-}
-
-/* ================================
-   Export Buttons
-   ================================ */
-#exportCsv, #exportExcel {
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: bold;
-  padding: 8px 12px;
-  margin-top: 10px;
-  margin-right: 5px;
-  background-color: #17a2b8;
-  color: #fff;
-}
-
-#exportCsv:hover, #exportExcel:hover {
-  background-color: #138496;
-}
-
-/* ================================
-   Select / Deselect Buttons
-   ================================ */
-.select-all-btn, .deselect-all-btn {
-  background-color: #6c757d;
+  background: linear-gradient(135deg, #2a5298, #1e3c72);
   color: white;
-}
-
-.select-all-btn:hover, .deselect-all-btn:hover {
-  background-color: #5a6268;
-}
-
-/* ================================
-   Market Buttons Hover & Active Enhancements
-   ================================ */
-.market-list button.active {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
-.market-list button:hover:not(.active) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-/* ================================
-   Floating Sign Out Button
-   ================================ */
-#signout-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 8px 14px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 999;
-  transition: background 0.2s, transform 0.2s;
-}
-
-#signout-btn:hover {
-  background-color: #b02a37;
-  transform: translateY(-1px);
-}
-
-/* ================================
-   Responsive Adjustments
-   ================================ */
-@media (max-width: 768px) {
-  .sport-buttons,
-  .market-list,
-  .controls,
-  .auth-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .sport-buttons button,
-  .market-list button,
-  .controls button,
-  #exportCsv,
-  #exportExcel {
-    width: 100%;
-    margin: 4px 0;
-  }
-}
-
-/* Header */
-#header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-}
-
-/* Log Out button */
-#signout-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  display: none; /* Hidden until login */
-}
-
-#signout-btn:hover {
-  background-color: #c82333;
-}
-
-/* Auth message (sign in/up feedback) */
-#auth-message {
-  margin-top: 10px;
-  color: #333;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* Header */
-#header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-/* Log Out button */
-#signout-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  display: none; /* Hidden until login */
-}
-
-#signout-btn:hover {
-  background-color: #c82333;
-}
-
-/* Auth message (sign in/up feedback) */
-#auth-message {
-  margin-top: 10px;
-  color: #333;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* Auth Container */
-#auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(to right, #1e3c72, #2a5298);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Card */
-.auth-card {
-  background-color: white;
-  border-radius: 12px;
-  padding: 40px 30px;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-/* Forms */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-}
-
-.auth-form h2 {
-  margin-bottom: 20px;
-  color: #333;
+  padding: 12px 20px;
+  font-size: 18px;
   font-weight: 600;
+  z-index: 1000;
 }
 
-/* Inputs */
-.auth-form input {
-  padding: 12px 15px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-/* Buttons */
-.primary-btn {
-  background-color: #2a5298;
+.nav-btn {
+  background: rgba(255, 255, 255, 0.1);
   color: white;
   border: none;
+  padding: 8px 16px;
   border-radius: 8px;
-  padding: 12px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s;
-}
-
-.primary-btn:hover {
-  background-color: #1e3c72;
-}
-
-.secondary-btn {
-  background-color: #e0e0e0;
-  color: #333;
-  border: none;
-  border-radius: 8px;
-  padding: 12px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s;
-}
-
-.secondary-btn:hover {
-  background-color: #ccc;
-}
-
-.link-btn {
-  background: none;
-  border: none;
-  color: #2a5298;
   cursor: pointer;
   font-size: 14px;
-  margin-top: 10px;
+  transition: all 0.2s ease;
 }
 
-.link-btn:hover {
-  text-decoration: underline;
-}
-
-/* Divider */
-.divider {
-  text-align: center;
-  margin: 20px 0;
-  font-size: 14px;
-  color: #888;
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* ================================
-   Mobile Responsiveness Enhancements
-   ================================ */
-
-/* General layout scaling */
-@media (max-width: 1024px) {
-  body {
-    margin: 10px;
-  }
-
-  h1 {
-    font-size: 1.8rem;
-  }
-
-  button {
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-
-  .market-list button,
-  .sport-buttons button {
-    min-width: 110px;
-  }
-}
-
-/* Tablet adjustments */
-@media (max-width: 768px) {
-  .sport-buttons,
-  .market-list,
-  .controls,
-  .date-picker,
-  .export-buttons {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .sport-buttons button,
-  .market-list button,
-  .controls button,
-  .date-picker button,
-  .export-buttons button {
-    width: 100%;
-    margin: 6px 0;
-  }
-
-  input[type="date"],
-  input[type="text"],
-  input[type="number"] {
-    width: 100%;
-  }
-
-  table {
-    font-size: 12px;
-    overflow-x: auto;
-    display: block;
-    white-space: nowrap;
-  }
-
-  th,
-  td {
-    padding: 6px;
-  }
-}
-
-/* Phone (portrait) adjustments */
-@media (max-width: 480px) {
-  h1 {
-    font-size: 1.4rem;
-    text-align: center;
-  }
-
-  .sport-buttons button,
-  .market-list button {
-    font-size: 13px;
-    padding: 10px;
-  }
-
-  #signout-btn {
-    top: 10px;
-    right: 10px;
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  #progressText {
-    font-size: 12px;
-  }
-}
-
-/* Sticky table header for mobile scrolls */
-.odds-table th {
-  position: sticky;
-  top: 0;
-  background-color: #f0f4f7;
-  z-index: 2;
-}
-
-/* ================================
-   Authentication Section
+   Auth Section
    ================================ */
 #auth-container {
   display: flex;
@@ -514,33 +51,20 @@ td.white { background-color: #ffffff; color: black; }
   min-height: 100vh;
   background: linear-gradient(135deg, #2a5298, #1e3c72);
   padding: 20px;
-  box-sizing: border-box;
 }
 
 .auth-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
+  background: white;
   border-radius: 16px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   padding: 30px 25px;
   text-align: center;
-}
-
-.auth-card h1 {
-  margin-bottom: 10px;
-  font-size: 26px;
-  color: #1e3c72;
+  max-width: 400px;
+  width: 100%;
 }
 
 .auth-card h2 {
-  font-size: 20px;
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.auth-form {
-  margin-bottom: 15px;
+  color: #1e3c72;
 }
 
 .auth-form input {
@@ -549,81 +73,163 @@ td.white { background-color: #ffffff; color: black; }
   margin: 8px 0;
   border: 1px solid #ccc;
   border-radius: 8px;
-  font-size: 16px;
-  box-sizing: border-box;
+  font-size: 15px;
 }
 
 .primary-btn,
 .secondary-btn {
   width: 100%;
   padding: 12px;
-  margin-top: 8px;
   border: none;
   border-radius: 8px;
+  cursor: pointer;
   font-weight: bold;
   font-size: 16px;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  margin-top: 6px;
 }
 
 .primary-btn {
-  background-color: #2a5298;
-  color: #fff;
+  background: #2a5298;
+  color: white;
 }
 
 .primary-btn:hover {
-  background-color: #1e3c72;
+  background: #1e3c72;
 }
 
 .secondary-btn {
-  background-color: #f1c40f;
+  background: #f1c40f;
   color: #333;
 }
 
 .secondary-btn:hover {
-  background-color: #d4ac0d;
+  background: #d4ac0d;
 }
 
 .link-btn {
   background: none;
   border: none;
   color: #2a5298;
-  font-size: 14px;
   text-decoration: underline;
   cursor: pointer;
-}
-
-.divider {
-  margin: 15px 0;
-  font-weight: bold;
-  color: #999;
+  margin-top: 10px;
 }
 
 /* ================================
-   Mobile Responsive Adjustments
+   Sections & Cards
+   ================================ */
+.section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  max-width: 1000px;
+}
+
+.section h2 {
+  margin-bottom: 10px;
+  color: #1e3c72;
+}
+
+/* ================================
+   Buttons & Controls
+   ================================ */
+button {
+  transition: all 0.25s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.controls,
+.export-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ================================
+   Tables
+   ================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+table th,
+table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+table tr:hover {
+  background-color: #f1f1f1;
+}
+
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* ================================
+   Spinner
+   ================================ */
+.spinner {
+  margin: 20px auto;
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  border-top: 6px solid #2a5298;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ================================
+   Footer
+   ================================ */
+.footer {
+  text-align: center;
+  font-size: 13px;
+  color: #888;
+  padding: 20px 0;
+  border-top: 1px solid #eee;
+  margin-top: 40px;
+}
+
+/* ================================
+   Responsive Tweaks
    ================================ */
 @media (max-width: 600px) {
   .auth-card {
     padding: 20px 15px;
-    border-radius: 12px;
   }
 
-  .auth-card h1 {
-    font-size: 22px;
-  }
-
-  .auth-card h2 {
-    font-size: 18px;
-  }
-
-  input,
   .primary-btn,
   .secondary-btn {
     font-size: 15px;
-    padding: 14px;
   }
 
-  .link-btn {
-    font-size: 13px;
+  .section {
+    margin: 10px;
+    padding: 15px;
   }
 }
