@@ -310,7 +310,7 @@ async function loadData() {
     params.append("date", date);
     selectedMarkets.forEach(m => params.append("markets", m));
 
-    const res = await fetch(`https://bentherebetthat-api.onrender.com/api/data${params.toString()}`, { signal });
+    const res = await fetch(`${API_BASE}/api/data?${params.toString()}`, { signal });
     const allData = await res.json();
     if (!Array.isArray(allData) || allData.length === 0) {
       progressText.textContent = "⚠️ No data found for selected sport/date.";
