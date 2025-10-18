@@ -332,6 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
       updateSelectedMarkets();
     });
 
+
   if (selectAllMLB)
     selectAllMLB.addEventListener("click", () => {
       setActiveFor(marketButtonsIn(mlbMarkets), true);
