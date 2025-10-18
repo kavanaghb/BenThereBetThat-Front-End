@@ -320,45 +320,168 @@ refreshBtn.addEventListener("click", () => loadDataBtn.click());
 stopBtn.addEventListener("click", () => { if (currentController) currentController.abort(); });
 
 // ===================================================
-// 6️⃣ Render Table
-// ===================================================
+// ----------------------------
+// Render Table
+// ----------------------------
 async function renderTableInBatches(data, batchSize = 50) {
-  if (!data || !Array.isArray(data)) return;
   resultsDiv.innerHTML = "";
   const table = document.createElement("table");
-  table.innerHTML =
-    "<thead><tr><th>Event</th><th>Market</th><th>Description</th><th>Outcome</th><th>FanduelPoint</th><th>PrizePickPoint</th><th>UnderdogPoint</th><th>PrizePicksDifference</th><th>UnderdogDifference</th></tr></thead>";
+  table.classList.add("odds-table");
+
+  // Columns - UnderdogPoint moved left
+  let columns = ["Event", "Market", "Outcome", "Description", "FanduelPoint", "PrizePickPoint", "UnderdogPoint", "PrizePicksDifference", "UnderdogDifference"];
+  const hideOutcome = selectedSport === "americanfootball_nfl" || selectedSport === "americanfootball_ncaaf";
+  if (hideOutcome) columns = ["Event", "Market", "Description", "FanduelPoint", "PrizePickPoint", "UnderdogPoint", "PrizePicksDifference", "UnderdogDifference"];
+  if (selectedSport === "baseball_mlb") columns = ["Event","Market","Outcome","Description","FanduelPrice","FanduelPoint","PrizePickPoint","UnderdogPoint","PrizePicksDifference","UnderdogDifference"];
+
+  // Table header
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  columns.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    th.style.cursor = "pointer";
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
   const tbody = document.createElement("tbody");
   table.appendChild(tbody);
   resultsDiv.appendChild(table);
 
-  for (let i = 0; i < data.length; i++) {
-    const r = data[i];
-    const tr = document.createElement("tr");
-    const fanduel = parseFloat(r.FanduelPoint ?? r.FanduelPrice ?? null);
-    const prize = parseFloat(r.PrizePickPoint ?? null);
-    const underdog = parseFloat(r.UnderdogPoint ?? null);
+  // Default sort by PrizePicksDifference descending
+  let sortedData = [...data];
+  sortedData.sort((a,b) => (parseFloat(b.FanduelPoint ?? b.FanduelPrice ?? 0) - parseFloat(b.PrizePickPoint ?? 0)) -
+                            (parseFloat(a.FanduelPoint ?? a.FanduelPrice ?? 0) - parseFloat(a.PrizePickPoint ?? 0)));
 
-    const prizeDiff =
-      fanduel != null && prize != null ? Math.abs(fanduel - prize) : null;
-    const underdogDiff =
-      fanduel != null && underdog != null ? Math.abs(fanduel - underdog) : null;
+  for (let i=0; i<sortedData.length; i+=batchSize) {
+    const batch = sortedData.slice(i, i+batchSize);
+    batch.forEach(row => {
+      const tr = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td>${r.Event}</td>
-      <td>${r.Market}</td>
-      <td>${r.Description}</td>
-      <td>${r.Outcome ?? ""}</td>
-      <td>${r.FanduelPoint ?? ""}</td>
-      <td>${r.PrizePickPoint ?? ""}</td>
-      <td>${r.UnderdogPoint ?? ""}</td>
-      <td>${prizeDiff ?? ""}</td>
-      <td>${underdogDiff ?? ""}</td>`;
-    tbody.appendChild(tr);
+      const fanduel = parseFloat(row.FanduelPoint ?? row.FanduelPrice ?? null);
+      const prize = parseFloat(row.PrizePickPoint ?? null);
+      const underdog = parseFloat(row.UnderdogPoint ?? null);
 
-    if (i % batchSize === 0)
-      await new Promise((r) => setTimeout(r, 0));
+      const prizeDiff = (fanduel != null && prize != null) ? Math.abs(fanduel - prize) : null;
+      const underdogDiff = (fanduel != null && underdog != null) ? Math.abs(fanduel - underdog) : null;
+
+      columns.forEach(col => {
+        const td = document.createElement("td");
+
+        if (col === "PrizePicksDifference") {
+          td.textContent = prizeDiff != null ? prizeDiff.toFixed(2) : "";
+          if (prizeDiff != null) {
+            if (["americanfootball_nfl","americanfootball_ncaaf","basketball_nba"].includes(selectedSport)) {
+              if (prizeDiff > 2) td.classList.add("huntergreen");
+              else if (prizeDiff === 2) td.classList.add("green");
+              else if (prizeDiff === 1) td.classList.add("darkyellow");
+              else td.classList.add("gray");
+            } else if (selectedSport === "baseball_mlb") {
+              if (prizeDiff > 0) td.classList.add("green-mlb");
+              else td.classList.add("gray");
+            }
+            if (fanduel > prize) td.innerHTML += `<span class="diff-arrow">🔺</span>`;
+            else if (fanduel < prize) td.innerHTML += `<span class="diff-arrow">🔻</span>`;
+          } else td.classList.add("white");
+
+        } else if (col === "UnderdogDifference") {
+          td.textContent = underdogDiff != null ? underdogDiff.toFixed(2) : "";
+          if (underdogDiff != null) {
+            if (["americanfootball_nfl","americanfootball_ncaaf","basketball_nba"].includes(selectedSport)) {
+              if (underdogDiff > 2) td.classList.add("huntergreen");
+              else if (underdogDiff === 2) td.classList.add("green");
+              else if (underdogDiff === 1) td.classList.add("darkyellow");
+              else td.classList.add("gray");
+            } else if (selectedSport === "baseball_mlb") {
+              if (underdogDiff > 0) td.classList.add("green-mlb");
+              else td.classList.add("gray");
+            }
+            if (fanduel > underdog) td.innerHTML += `<span class="diff-arrow">🔺</span>`;
+            else if (fanduel < underdog) td.innerHTML += `<span class="diff-arrow">🔻</span>`;
+          } else td.classList.add("white");
+
+        } else {
+          td.textContent = row[col] ?? "";
+        }
+
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    progressText.textContent = `Rendering rows ${i+1}-${Math.min(i+batchSize, sortedData.length)} of ${sortedData.length}...`;
+    await new Promise(r => setTimeout(r, 0));
   }
 
-  progressText.textContent = `✅ Rendered ${data.length} rows successfully.`;
+  progressText.textContent = `✅ All ${sortedData.length} rows rendered successfully!`;
+
+  // Default sort by PrizePicksDifference descending
+  const diffIndex = columns.indexOf("PrizePicksDifference");
+  if (diffIndex !== -1) sortTableByColumn(table, diffIndex, false);
+
+  // Sortable headers
+  table.querySelectorAll("th").forEach((th, index) => {
+    if (th.textContent === "UnderdogDifference" || th.textContent === "Event" || th.textContent === "PrizePicksDifference") {
+      let ascending = false;
+      th.addEventListener("click", () => {
+        sortTableByColumn(table, index, ascending);
+        ascending = !ascending;
+      });
+    }
+  });
 }
+
+// ----------------------------
+// Table sorting helper
+// ----------------------------
+function sortTableByColumn(table, columnIndex, ascending = false) {
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+
+  rows.sort((a, b) => {
+    let cellA = a.children[columnIndex].textContent.trim();
+    let cellB = b.children[columnIndex].textContent.trim();
+    cellA = cellA.replace(/[🔺🔻\s]/g, "");
+    cellB = cellB.replace(/[🔺🔻\s]/g, "");
+    const numA = parseFloat(cellA);
+    const numB = parseFloat(cellB);
+    const isNumA = !isNaN(numA);
+    const isNumB = !isNaN(numB);
+
+    if (isNumA && isNumB) return ascending ? numA - numB : numB - numA;
+    else if (!isNumA && !isNumB) return 0;
+    else if (!isNumA) return 1;
+    else return -1;
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+// ----------------------------
+// Export CSV / Excel
+// ----------------------------
+function exportTableToCSV(filename) {
+  const table = resultsDiv.querySelector("table");
+  if (!table) return;
+  let csv = [];
+  const rows = table.querySelectorAll("tr");
+  rows.forEach(row => {
+    const cols = row.querySelectorAll("th, td");
+    const rowData = Array.from(cols).map(td => `"${td.textContent.replace(/🔺|🔻/g,'').trim()}"`);
+    csv.push(rowData.join(","));
+  });
+  const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+// Hook export buttons
+const exportCsvBtn = document.getElementById("exportCsv");
+const exportExcelBtn = document.getElementById("exportExcel");
+if (exportCsvBtn) exportCsvBtn.addEventListener("click",()=>exportTableToCSV(`${selectedSport || "export"}_${Date.now()}.csv`));
+if (exportExcelBtn) exportExcelBtn.addEventListener("click",()=>exportTableToCSV(`${selectedSport || "export"}_${Date.now()}.xlsx`));

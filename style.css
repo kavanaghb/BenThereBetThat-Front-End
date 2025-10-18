@@ -103,3 +103,20 @@ button:hover {
     font-size: 12px;
   }
 }
+.date-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.date-picker button {
+  background-color: #2a5298;
+  color: #fff;
+}
+
+.date-picker button:hover {
+  background-color: #f1c40f;
+  color: #000;
+}
