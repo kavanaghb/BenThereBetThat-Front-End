@@ -150,10 +150,11 @@ forgotBtn.addEventListener("click", async () => {
 });
 
 
-// ===================================================
+/// ===================================================
 // 3️⃣ Subscription Logic (Stripe + Supabase Integration)
 // ===================================================
 
+// Create user record in backend if needed
 async function createUserIfNeeded(user) {
   try {
     await fetch(`${API_BASE}/api/create-user`, {
@@ -166,55 +167,78 @@ async function createUserIfNeeded(user) {
   }
 }
 
-// 🔹 Check if user has active subscription
+// 🔹 Check subscription and update UI
 async function checkSubscriptionAndShowButton(userId) {
   try {
-    const res = await fetch(`${API_BASE}/check-subscription?user_id=${userId}`);
+    const res = await fetch(
+      `${API_BASE}/api/check-subscription?user_id=${userId}`
+    );
     const data = await res.json();
 
     const status = data.subscription_status || "inactive";
-    subscriptionStatus.textContent = `Subscription: ${status}`;
+    if (subscriptionStatus)
+      subscriptionStatus.textContent = `Subscription: ${status}`;
 
     if (status !== "active") {
-      subscribeBtn.style.display = "inline-block";
-      initSubscription(userId);
+      if (subscribeCTA) subscribeCTA.style.display = "block";
+      ensureSubscribeButton(userId);
+      return false;
     } else {
-      subscribeBtn.style.display = "none";
+      if (subscribeCTA) subscribeCTA.style.display = "none";
+      return true;
     }
   } catch (err) {
     console.error("Subscription check failed:", err);
-    subscriptionStatus.textContent = "Subscription: unknown";
-    subscribeBtn.style.display = "inline-block";
+    if (subscriptionStatus)
+      subscriptionStatus.textContent = "Subscription: unknown";
+    ensureSubscribeButton(userId);
+    return false;
   }
 }
 
-// 🔹 Initialize Stripe checkout
-function initSubscription(userId) {
-  if (subscribeListenerAdded) return;
-
-  subscribeBtn.addEventListener("click", async () => {
-    try {
-      const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // Replace with your Price ID
-      const res = await fetch(`${API_BASE}/create-checkout-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, price_id: priceId }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Failed to create checkout session");
-      }
-    } catch (err) {
-      console.error("Error initiating subscription:", err);
-      alert("Error initiating subscription");
+// 🔹 Ensure subscribe button exists and is functional
+function ensureSubscribeButton(userId) {
+  let btn = document.getElementById("subscribeBtn");
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "subscribeBtn";
+    btn.className = "primary-btn";
+    btn.textContent = "Subscribe Now";
+    const statusEl = document.getElementById("subscription-status");
+    if (statusEl && statusEl.parentElement) {
+      statusEl.parentElement.appendChild(btn);
+    } else {
+      document.body.appendChild(btn);
     }
-  });
+  }
 
-  subscribeListenerAdded = true;
+  if (!btn.dataset.bound) {
+    btn.addEventListener("click", async () => {
+      try {
+        const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // ✅ Your Stripe Price ID
+        const res = await fetch(`${API_BASE}/create-checkout-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, price_id: priceId }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert("Failed to create checkout session");
+          console.error("Stripe error:", data);
+        }
+      } catch (err) {
+        console.error("Error initiating subscription:", err);
+        alert("Error initiating subscription");
+      }
+    });
+    btn.dataset.bound = "1";
+  }
 }
 
+// ===================================================
+// 3️⃣ Market Button Logic
 // ===================================================
 // 3️⃣ Market Button Logic
 // ===================================================
@@ -291,9 +315,15 @@ if (deselectAllMLB && mlbMarkets) deselectAllMLB.addEventListener("click", () =>
 // Load Data
 // ----------------------------
 async function loadData() {
-  if (!selectedSport || selectedMarkets.length === 0) { alert("Select sport & markets"); return; }
+  if (!selectedSport || selectedMarkets.length === 0) {
+    alert("Select sport & markets");
+    return;
+  }
   const date = dateInput.value;
-  if (!date) { alert("Select date"); return; }
+  if (!date) {
+    alert("Select date");
+    return;
+  }
 
   resultsDiv.innerHTML = "";
   progressText.textContent = "";
@@ -308,10 +338,12 @@ async function loadData() {
     const params = new URLSearchParams();
     params.append("sport", selectedSport);
     params.append("date", date);
-    selectedMarkets.forEach(m => params.append("markets", m));
+    selectedMarkets.forEach((m) => params.append("markets", m));
 
-    const res = await fetch(`${API_BASE}/api/data?${params.toString()}`, { signal });text
+    // ✅ Fixed: removed extra "text" and added proper fetch
+    const res = await fetch(`${API_BASE}/api/data?${params.toString()}`, { signal });
     const allData = await res.json();
+
     if (!Array.isArray(allData) || allData.length === 0) {
       progressText.textContent = "⚠️ No data found for selected sport/date.";
       loadingDiv.style.display = "none";
@@ -322,9 +354,12 @@ async function loadData() {
     // Deduplicate for NFL/NCAAF
     // ----------------------------
     let uniqueData = allData;
-    if (selectedSport === "americanfootball_nfl" || selectedSport === "americanfootball_ncaaf") {
+    if (
+      selectedSport === "americanfootball_nfl" ||
+      selectedSport === "americanfootball_ncaaf"
+    ) {
       const map = {};
-      allData.forEach(r => {
+      allData.forEach((r) => {
         const key = `${r.Event}|${r.Market}|${r.Description}`;
         if (!map[key]) map[key] = r;
       });
@@ -336,18 +371,26 @@ async function loadData() {
     // ----------------------------
     if (selectedSport === "baseball_mlb") {
       const map = {};
-      uniqueData.forEach(r => {
+      uniqueData.forEach((r) => {
         const key = `${r.Event}|${r.Market}|${r.Description}`;
         const price = parseFloat(r.FanduelPrice ?? Infinity);
-        if (!map[key] || price < parseFloat(map[key].FanduelPrice ?? Infinity)) map[key] = r;
+        if (
+          !map[key] ||
+          price < parseFloat(map[key].FanduelPrice ?? Infinity)
+        )
+          map[key] = r;
       });
       uniqueData = Object.values(map);
     }
 
     await renderTableInBatches(uniqueData, 50);
   } catch (err) {
-    if (err.name === "AbortError") progressText.textContent = "⚠️ Loading stopped by user";
-    else resultsDiv.innerHTML = `<p style="color:red;">${err.message}</p>`;
+    if (err.name === "AbortError")
+      progressText.textContent = "⚠️ Loading stopped by user";
+    else {
+      resultsDiv.innerHTML = `<p style="color:red;">${err.message || "Unknown error"}</p>`;
+      console.error("Error loading data:", err);
+    }
   } finally {
     loadingDiv.style.display = "none";
     currentController = null;
@@ -356,7 +399,9 @@ async function loadData() {
 
 loadDataBtn.addEventListener("click", loadData);
 refreshBtn.addEventListener("click", () => loadDataBtn.click());
-stopBtn.addEventListener("click", () => { if (currentController) currentController.abort(); });
+stopBtn.addEventListener("click", () => {
+  if (currentController) currentController.abort();
+});
 
 // ----------------------------
 // Render Table
