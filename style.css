@@ -504,3 +504,126 @@ td.white { background-color: #ffffff; color: black; }
   z-index: 2;
 }
 
+/* ================================
+   Authentication Section
+   ================================ */
+#auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #2a5298, #1e3c72);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  padding: 30px 25px;
+  text-align: center;
+}
+
+.auth-card h1 {
+  margin-bottom: 10px;
+  font-size: 26px;
+  color: #1e3c72;
+}
+
+.auth-card h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.auth-form {
+  margin-bottom: 15px;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.primary-btn,
+.secondary-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.primary-btn {
+  background-color: #2a5298;
+  color: #fff;
+}
+
+.primary-btn:hover {
+  background-color: #1e3c72;
+}
+
+.secondary-btn {
+  background-color: #f1c40f;
+  color: #333;
+}
+
+.secondary-btn:hover {
+  background-color: #d4ac0d;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #2a5298;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.divider {
+  margin: 15px 0;
+  font-weight: bold;
+  color: #999;
+}
+
+/* ================================
+   Mobile Responsive Adjustments
+   ================================ */
+@media (max-width: 600px) {
+  .auth-card {
+    padding: 20px 15px;
+    border-radius: 12px;
+  }
+
+  .auth-card h1 {
+    font-size: 22px;
+  }
+
+  .auth-card h2 {
+    font-size: 18px;
+  }
+
+  input,
+  .primary-btn,
+  .secondary-btn {
+    font-size: 15px;
+    padding: 14px;
+  }
+
+  .link-btn {
+    font-size: 13px;
+  }
+}
