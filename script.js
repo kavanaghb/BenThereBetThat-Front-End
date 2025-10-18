@@ -2,7 +2,8 @@
 // ✅ Supabase Initialization
 // ===================================================
 const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g"; 
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API_BASE = "https://bentherebetthat-api.onrender.com";
 
@@ -20,7 +21,9 @@ const mainContent = document.getElementById("main-content");
 const subscribeBtn = document.getElementById("subscribeBtn");
 const subscriptionStatus = document.getElementById("subscription-status");
 
-const sportButtons = document.querySelectorAll("#main-content .sport-buttons button");
+const sportButtons = document.querySelectorAll(
+  "#main-content .sport-buttons button"
+);
 const nflMarkets = document.getElementById("nflMarkets");
 const nbaMarkets = document.getElementById("nbaMarkets");
 const mlbMarkets = document.getElementById("mlbMarkets");
@@ -76,7 +79,9 @@ async function checkUser() {
   await createUserIfNeeded(user);
 
   console.log("🌐 Checking subscription status...");
-  const res = await fetch(`${API_BASE}/api/check-subscription?user_id=${user.id}`);
+  const res = await fetch(
+    `${API_BASE}/api/check-subscription?user_id=${user.id}`
+  );
   const dataSub = await res.json();
   console.log("📦 Subscription API Response:", dataSub);
 
@@ -85,15 +90,16 @@ async function checkUser() {
 
   if (status !== "active") {
     alert("⚠️ Subscription inactive — stopping loop.");
-    // Just stop here instead of redirecting
     return;
   }
 
   console.log("✅ Subscription active — loading dashboard");
-  // Continue with dashboard setup
   selectedSport = "americanfootball_nfl";
   sportButtons.forEach((btn) => {
-    btn.classList.toggle("active", btn.getAttribute("data-sport") === selectedSport);
+    btn.classList.toggle(
+      "active",
+      btn.getAttribute("data-sport") === selectedSport
+    );
   });
 
   nflMarkets.style.display = "block";
@@ -103,13 +109,15 @@ async function checkUser() {
   resetAllMarkets();
 }
 
-
 // 🔹 Sign In
 signinForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signin-email").value;
   const password = document.getElementById("signin-password").value;
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password,
+  });
   if (error) {
     authMessage.textContent = error.message;
   } else {
@@ -127,7 +135,8 @@ signupForm.addEventListener("submit", async (e) => {
   if (error) {
     authMessage.textContent = error.message;
   } else {
-    authMessage.textContent = "✅ Sign-up successful! Please check your email to verify your account.";
+    authMessage.textContent =
+      "✅ Sign-up successful! Please check your email to verify your account.";
   }
 });
 
@@ -149,12 +158,10 @@ forgotBtn.addEventListener("click", async () => {
   else alert("📩 Check your email for a password reset link.");
 });
 
-
-/// ===================================================
+// ===================================================
 // 3️⃣ Subscription Logic (Stripe + Supabase Integration)
 // ===================================================
 
-// Create user record in backend if needed
 async function createUserIfNeeded(user) {
   try {
     await fetch(`${API_BASE}/api/create-user`, {
@@ -167,78 +174,59 @@ async function createUserIfNeeded(user) {
   }
 }
 
-// 🔹 Check subscription and update UI
+// 🔹 Check subscription and show button if needed
 async function checkSubscriptionAndShowButton(userId) {
   try {
-    const res = await fetch(
-      `${API_BASE}/api/check-subscription?user_id=${userId}`
-    );
+    const res = await fetch(`${API_BASE}/api/check-subscription?user_id=${userId}`);
     const data = await res.json();
 
     const status = data.subscription_status || "inactive";
-    if (subscriptionStatus)
-      subscriptionStatus.textContent = `Subscription: ${status}`;
+    subscriptionStatus.textContent = `Subscription: ${status}`;
 
     if (status !== "active") {
-      if (subscribeCTA) subscribeCTA.style.display = "block";
-      ensureSubscribeButton(userId);
+      subscribeBtn.style.display = "inline-block";
+      initSubscription(userId);
       return false;
     } else {
-      if (subscribeCTA) subscribeCTA.style.display = "none";
+      subscribeBtn.style.display = "none";
       return true;
     }
   } catch (err) {
     console.error("Subscription check failed:", err);
-    if (subscriptionStatus)
-      subscriptionStatus.textContent = "Subscription: unknown";
-    ensureSubscribeButton(userId);
+    subscriptionStatus.textContent = "Subscription: unknown";
+    subscribeBtn.style.display = "inline-block";
     return false;
   }
 }
 
-// 🔹 Ensure subscribe button exists and is functional
-function ensureSubscribeButton(userId) {
-  let btn = document.getElementById("subscribeBtn");
-  if (!btn) {
-    btn = document.createElement("button");
-    btn.id = "subscribeBtn";
-    btn.className = "primary-btn";
-    btn.textContent = "Subscribe Now";
-    const statusEl = document.getElementById("subscription-status");
-    if (statusEl && statusEl.parentElement) {
-      statusEl.parentElement.appendChild(btn);
-    } else {
-      document.body.appendChild(btn);
-    }
-  }
-
-  if (!btn.dataset.bound) {
-    btn.addEventListener("click", async () => {
-      try {
-        const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // ✅ Your Stripe Price ID
-        const res = await fetch(`${API_BASE}/create-checkout-session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userId, price_id: priceId }),
-        });
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          alert("Failed to create checkout session");
-          console.error("Stripe error:", data);
-        }
-      } catch (err) {
-        console.error("Error initiating subscription:", err);
-        alert("Error initiating subscription");
+// 🔹 Initialize Stripe checkout
+function initSubscription(userId) {
+  if (subscribeListenerAdded) return;
+  subscribeBtn.addEventListener("click", async () => {
+    try {
+      const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // ✅ Your Stripe price
+      const res = await fetch(`${API_BASE}/create-checkout-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, price_id: priceId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Failed to create checkout session");
+        console.error("Stripe error:", data);
       }
-    });
-    btn.dataset.bound = "1";
-  }
+    } catch (err) {
+      console.error("Error initiating subscription:", err);
+      alert("Error initiating subscription");
+    }
+  });
+  subscribeListenerAdded = true;
 }
 
 // ===================================================
-// 3️⃣ Market Button Logic
+// 4️⃣ Market Button Logic
 // ===================================================
 function marketButtonsIn(container) {
   if (!container) return [];
@@ -246,23 +234,31 @@ function marketButtonsIn(container) {
 }
 
 function setActiveFor(buttons, active = true) {
-  buttons.forEach(b => active ? b.classList.add("active") : b.classList.remove("active"));
+  buttons.forEach((b) =>
+    active ? b.classList.add("active") : b.classList.remove("active")
+  );
 }
 
 function updateSelectedMarkets() {
-  const activeBtns = Array.from(document.querySelectorAll("#main-content .market-list button.active[data-market]"));
-  selectedMarkets = activeBtns.map(b => b.getAttribute("data-market"));
+  const activeBtns = Array.from(
+    document.querySelectorAll(
+      "#main-content .market-list button.active[data-market]"
+    )
+  );
+  selectedMarkets = activeBtns.map((b) => b.getAttribute("data-market"));
 }
 
 function resetAllMarkets() {
-  document.querySelectorAll("#main-content .market-list button[data-market]").forEach(b => b.classList.remove("active"));
+  document
+    .querySelectorAll("#main-content .market-list button[data-market]")
+    .forEach((b) => b.classList.remove("active"));
   selectedMarkets = [];
 }
 
 // Sport button logic
-sportButtons.forEach(btn => {
+sportButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    sportButtons.forEach(b => b.classList.remove("active"));
+    sportButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
 
     selectedSport = btn.getAttribute("data-sport");
@@ -271,20 +267,34 @@ sportButtons.forEach(btn => {
     resetAllMarkets();
 
     // Show/hide market containers
-    nflMarkets.style.display = (selectedSport === "americanfootball_nfl" || selectedSport === "americanfootball_ncaaf") ? "block" : "none";
-    nbaMarkets.style.display = (selectedSport === "basketball_nba") ? "block" : "none";
-    if (mlbMarkets) mlbMarkets.style.display = (selectedSport === "baseball_mlb") ? "block" : "none";
+    nflMarkets.style.display =
+      selectedSport === "americanfootball_nfl" ||
+      selectedSport === "americanfootball_ncaaf"
+        ? "block"
+        : "none";
+    nbaMarkets.style.display =
+      selectedSport === "basketball_nba" ? "block" : "none";
+    if (mlbMarkets)
+      mlbMarkets.style.display =
+        selectedSport === "baseball_mlb" ? "block" : "none";
 
-    // Update header text
-    if (selectedSport === "americanfootball_nfl" || selectedSport === "americanfootball_ncaaf") {
+    // Update header
+    if (
+      selectedSport === "americanfootball_nfl" ||
+      selectedSport === "americanfootball_ncaaf"
+    ) {
       const h3 = nflMarkets.querySelector("h3");
-      if (h3) h3.textContent = (selectedSport === "americanfootball_nfl") ? "NFL Markets" : "NCAAF Markets";
+      if (h3)
+        h3.textContent =
+          selectedSport === "americanfootball_nfl"
+            ? "NFL Markets"
+            : "NCAAF Markets";
     }
   });
 });
 
-// Market button click behavior
-document.querySelectorAll("#main-content .market-list").forEach(container => {
+// Market button toggle
+document.querySelectorAll("#main-content .market-list").forEach((container) => {
   container.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-market]");
     if (!btn) return;
@@ -293,15 +303,39 @@ document.querySelectorAll("#main-content .market-list").forEach(container => {
   });
 });
 
-// Select/Deselect All handlers
-if (selectAllNFL) selectAllNFL.addEventListener("click", () => { setActiveFor(marketButtonsIn(nflMarkets), true); updateSelectedMarkets(); });
-if (deselectAllNFL) deselectAllNFL.addEventListener("click", () => { setActiveFor(marketButtonsIn(nflMarkets), false); updateSelectedMarkets(); });
+// Select/Deselect All
+if (selectAllNFL)
+  selectAllNFL.addEventListener("click", () => {
+    setActiveFor(marketButtonsIn(nflMarkets), true);
+    updateSelectedMarkets();
+  });
+if (deselectAllNFL)
+  deselectAllNFL.addEventListener("click", () => {
+    setActiveFor(marketButtonsIn(nflMarkets), false);
+    updateSelectedMarkets();
+  });
 
-if (selectAllNBA) selectAllNBA.addEventListener("click", () => { setActiveFor(marketButtonsIn(nbaMarkets), true); updateSelectedMarkets(); });
-if (deselectAllNBA) deselectAllNBA.addEventListener("click", () => { setActiveFor(marketButtonsIn(nbaMarkets), false); updateSelectedMarkets(); });
+if (selectAllNBA)
+  selectAllNBA.addEventListener("click", () => {
+    setActiveFor(marketButtonsIn(nbaMarkets), true);
+    updateSelectedMarkets();
+  });
+if (deselectAllNBA)
+  deselectAllNBA.addEventListener("click", () => {
+    setActiveFor(marketButtonsIn(nbaMarkets), false);
+    updateSelectedMarkets();
+  });
 
-if (selectAllMLB && mlbMarkets) selectAllMLB.addEventListener("click", () => { setActiveFor(marketButtonsIn(mlbMarkets), true); updateSelectedMarkets(); });
-if (deselectAllMLB && mlbMarkets) deselectAllMLB.addEventListener("click", () => { setActiveFor(marketButtonsIn(mlbMarkets), false); updateSelectedMarkets(); });
+if (selectAllMLB && mlbMarkets)
+  selectAllMLB.addEventListener("click", () => {
+    setActiveFor(marketButtonsIn(mlbMarkets), true);
+    updateSelectedMarkets();
+  });
+if (deselectAllMLB && mlbMarkets)
+  deselectAllMLB.addEventListener("click", () => {
+    setActiveFor(marketButtonsIn(mlbMarkets), false);
+    updateSelectedMarkets();
+  });
 
 // ===================================================
 // 4️⃣ Load Data & Render Table
