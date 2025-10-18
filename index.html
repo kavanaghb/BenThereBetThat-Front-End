@@ -1,112 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ben There Bet That | Sports Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Ben There Bet That!</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js" defer></script>
 </head>
-
 <body>
-  <!-- Navbar -->
-  <header class="navbar">
-    <h1>Ben There Bet That!</h1>
-    <div>
-      <button id="signout-btn" class="nav-btn">Sign Out</button>
-    </div>
-  </header>
 
   <!-- Authentication Section -->
   <div id="auth-container">
     <div class="auth-card">
-      <h2>Welcome</h2>
-      <p>Sign in or create your account to continue.</p>
+      <h1>Ben There Bet That!</h1>
 
       <!-- Sign In Form -->
       <form id="signin-form" class="auth-form">
-        <h3>Sign In</h3>
+        <h2>Sign In</h2>
         <input type="email" id="signin-email" placeholder="Email" required />
         <input type="password" id="signin-password" placeholder="Password" required />
         <button type="submit" class="primary-btn">Sign In</button>
-        <div id="signin-spinner" class="spinner" style="display:none;"></div>
       </form>
 
       <div class="divider">OR</div>
 
       <!-- Sign Up Form -->
       <form id="signup-form" class="auth-form">
-        <h3>Create Account</h3>
+        <h2>Create Account</h2>
         <input type="email" id="signup-email" placeholder="Email" required />
         <input type="password" id="signup-password" placeholder="Password" required />
         <button type="submit" class="secondary-btn">Sign Up</button>
-        <div id="signup-spinner" class="spinner" style="display:none;"></div>
       </form>
 
       <button id="forgot-btn" class="link-btn">Forgot Password?</button>
       <div id="forgot-spinner" class="spinner" style="display:none;"></div>
-
       <p id="auth-message"></p>
     </div>
   </div>
 
   <!-- Main Content -->
-  <main id="main-content" style="display:none;">
-    <div class="section">
-      <div class="header-row">
-        <p id="subscription-status">Checking subscription...</p>
-        <button id="subscribeBtn" class="secondary-btn" style="display:none;">Subscribe</button>
+  <div id="main-content" style="display:none;">
+    <div id="header" style="display:flex; justify-content:space-between; align-items:center;">
+      <p id="subscription-status">Checking subscription...</p>
+      <button id="signout-btn">Log Out</button>
+    </div>
+
+    <button id="subscribeBtn" style="display:none;">Subscribe</button>
+
+    <h1>Ben There Bet That!</h1>
+
+    <!-- Sport Buttons -->
+    <div class="sport-buttons">
+      <button data-sport="americanfootball_nfl">NFL</button>
+      <button data-sport="americanfootball_ncaaf">NCAAF</button>
+      <button data-sport="basketball_nba">NBA</button>
+      <button data-sport="icehockey_nhl">NHL</button>
+      <button data-sport="baseball_mlb">MLB</button>
+    </div>
+
+    <!-- Market Sections (unchanged from working version) -->
+    <div id="nflMarkets" class="market-buttons" style="display:none;">
+      <h3>NFL Markets</h3>
+      <div class="market-actions">
+        <button id="selectAllNFL">Select All</button>
+        <button id="deselectAllNFL">Deselect All</button>
+      </div>
+      <div class="market-list">
+        <button data-market="player_pass_yds">Pass Yards</button>
+        <button data-market="player_pass_attempts">Pass Attempts</button>
+        <button data-market="player_pass_rush_yds">Pass + Rush Yards</button>
+        <button data-market="player_reception_yds">Reception Yards</button>
+        <button data-market="player_rush_yds">Rush Yards</button>
+        <button data-market="player_field_goals">Kicking Points</button>
       </div>
     </div>
 
-    <div class="section">
-      <h2>Choose a Sport</h2>
-      <div class="sport-buttons">
-        <button data-sport="americanfootball_nfl">NFL</button>
-        <button data-sport="americanfootball_ncaaf">NCAAF</button>
-        <button data-sport="basketball_nba">NBA</button>
-        <button data-sport="icehockey_nhl">NHL</button>
-        <button data-sport="baseball_mlb">MLB</button>
+    <div id="nbaMarkets" class="market-buttons" style="display:none;">
+      <h3>NBA Markets</h3>
+      <div class="market-actions">
+        <button id="selectAllNBA">Select All</button>
+        <button id="deselectAllNBA">Deselect All</button>
+      </div>
+      <div class="market-list">
+        <button data-market="player_points">Points (O/U)</button>
+        <button data-market="player_rebounds">Rebounds (O/U)</button>
+        <button data-market="player_assists">Assists (O/U)</button>
+        <button data-market="player_threes">Threes (O/U)</button>
+        <button data-market="player_points_rebounds_assists">Points + Rebounds + Assists</button>
+        <button data-market="player_points_rebounds">Points + Rebounds</button>
+        <button data-market="player_points_assists">Points + Assists</button>
       </div>
     </div>
 
-    <!-- Market Section -->
-    <div class="section">
-      <h2>Market Selection</h2>
-      <div id="market-container"></div>
+    <div id="mlbMarkets" class="market-buttons" style="display:none;">
+      <h3>MLB Markets</h3>
+      <div class="market-actions">
+        <button id="selectAllMLB">Select All</button>
+        <button id="deselectAllMLB">Deselect All</button>
+      </div>
+      <div class="market-list">
+        <button data-market="batter_total_bases">Batter Total Bases</button>
+        <button data-market="batter_strikeouts">Batter Strikeouts</button>
+        <button data-market="pitcher_strikeouts">Pitcher Strikeouts</button>
+        <button data-market="pitcher_hits_allowed">Pitcher Hits Allowed</button>
+        <button data-market="pitcher_walks">Pitcher Walks</button>
+        <button data-market="pitcher_earned_runs">Pitcher Earned Runs</button>
+        <button data-market="pitcher_outs">Pitcher Outs</button>
+      </div>
     </div>
 
     <!-- Controls -->
-    <div class="section">
-      <h2>Data Controls</h2>
-      <div class="controls">
-        <input type="date" id="dateInput" />
-        <button id="loadData" class="primary-btn">Load Data</button>
-        <button id="stopBtn" class="secondary-btn">Stop</button>
-        <button id="refreshBtn" class="secondary-btn">Refresh</button>
-      </div>
+    <div class="date-picker">
+      <input type="date" id="dateInput">
+      <button id="loadData">Load Data</button>
+      <button id="stopBtn">Stop</button>
+      <button id="refreshBtn">Refresh</button>
     </div>
 
     <!-- Export -->
-    <div class="section">
-      <h2>Export Results</h2>
-      <div class="export-buttons">
-        <button id="exportCsv" class="secondary-btn">Export CSV</button>
-        <button id="exportExcel" class="secondary-btn">Export Excel</button>
-      </div>
+    <div class="export-buttons">
+      <button id="exportCsv">Export CSV</button>
+      <button id="exportExcel">Export Excel</button>
     </div>
 
-    <!-- Data Output -->
-    <div class="section">
-      <div id="loading" class="spinner" style="display:none;"></div>
-      <div id="progressText"></div>
-      <div id="results"></div>
-    </div>
-  </main>
-
-  <footer class="footer">
-    <p>© 2025 Ben There Bet That — All rights reserved</p>
-  </footer>
+    <!-- Loading / Progress -->
+    <div id="loading" class="spinner" style="display:none;"></div>
+    <div id="progressText"></div>
+    <div id="results"></div>
+  </div>
 </body>
 </html>
