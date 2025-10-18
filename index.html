@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Ben There Bet That!</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js" defer></script>
 </head>
 <body>
-
   <!-- Authentication Section -->
   <div id="auth-container">
     <div class="auth-card">
@@ -38,7 +37,7 @@
     </div>
   </div>
 
-  <!-- Main Content -->
+  <!-- Main Dashboard -->
   <div id="main-content" style="display:none;">
     <div id="header" style="display:flex; justify-content:space-between; align-items:center;">
       <p id="subscription-status">Checking subscription...</p>
@@ -47,7 +46,7 @@
 
     <button id="subscribeBtn" style="display:none;">Subscribe</button>
 
-    <h1>Ben There Bet That!</h1>
+    <h1>Sports Odds Dashboard</h1>
 
     <!-- Sport Buttons -->
     <div class="sport-buttons">
@@ -58,7 +57,7 @@
       <button data-sport="baseball_mlb">MLB</button>
     </div>
 
-    <!-- Market Sections (unchanged from working version) -->
+    <!-- Market Buttons (for each sport) -->
     <div id="nflMarkets" class="market-buttons" style="display:none;">
       <h3>NFL Markets</h3>
       <div class="market-actions">
@@ -109,21 +108,21 @@
       </div>
     </div>
 
-    <!-- Controls -->
+    <!-- Date Picker -->
     <div class="date-picker">
-      <input type="date" id="dateInput">
+      <input type="date" id="dateInput" />
       <button id="loadData">Load Data</button>
       <button id="stopBtn">Stop</button>
       <button id="refreshBtn">Refresh</button>
     </div>
 
-    <!-- Export -->
+    <!-- Export Buttons -->
     <div class="export-buttons">
       <button id="exportCsv">Export CSV</button>
       <button id="exportExcel">Export Excel</button>
     </div>
 
-    <!-- Loading / Progress -->
+    <!-- Spinner -->
     <div id="loading" class="spinner" style="display:none;"></div>
     <div id="progressText"></div>
     <div id="results"></div>

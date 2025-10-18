@@ -1,201 +1,84 @@
-/* ================================
-   Base Styles
-   ================================ */
+/* General Page Styles */
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: #f4f6f8;
-  color: #333;
-  margin: 0;
-  padding: 0;
-}
-
-/* ================================
-   Navbar
-   ================================ */
-.navbar {
-  position: sticky;
-  top: 0;
-  background: linear-gradient(135deg, #2a5298, #1e3c72);
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  z-index: 1000;
-}
-
-.nav-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* ================================
-   Auth Section
-   ================================ */
-#auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #2a5298, #1e3c72);
-  padding: 20px;
-}
-
-.auth-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  padding: 30px 25px;
-  text-align: center;
-  max-width: 400px;
-  width: 100%;
-}
-
-.auth-card h2 {
-  color: #1e3c72;
-}
-
-.auth-form input {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 15px;
-}
-
-.primary-btn,
-.secondary-btn {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 16px;
-  transition: all 0.2s ease;
-  margin-top: 6px;
-}
-
-.primary-btn {
-  background: #2a5298;
-  color: white;
-}
-
-.primary-btn:hover {
-  background: #1e3c72;
-}
-
-.secondary-btn {
-  background: #f1c40f;
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #fafafa;
   color: #333;
 }
 
-.secondary-btn:hover {
-  background: #d4ac0d;
+h1, h2, h3 {
+  margin: 10px 0;
 }
 
-.link-btn {
-  background: none;
-  border: none;
-  color: #2a5298;
-  text-decoration: underline;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-/* ================================
-   Sections & Cards
-   ================================ */
-.section {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  margin: 20px auto;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  max-width: 1000px;
-}
-
-.section h2 {
-  margin-bottom: 10px;
-  color: #1e3c72;
-}
-
-/* ================================
-   Buttons & Controls
-   ================================ */
+/* Buttons */
 button {
-  transition: all 0.25s ease;
+  padding: 10px 16px;
+  margin: 4px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-.controls,
-.export-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.sport-buttons button.active,
+.market-list button.active {
+  background-color: #f1c40f;
+  color: #000;
 }
 
-/* ================================
-   Tables
-   ================================ */
-table {
+.sport-buttons button,
+.market-list button {
+  background-color: #2a5298;
+  color: #fff;
+}
+
+/* Table Styles */
+.odds-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  margin-top: 15px;
 }
 
-table th,
-table td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
+.odds-table th, .odds-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
 }
 
-table tr:nth-child(even) {
-  background-color: #f9f9f9;
+.odds-table th {
+  background-color: #2a5298;
+  color: white;
+  cursor: pointer;
 }
 
-table tr:hover {
-  background-color: #f1f1f1;
-}
+.odds-table tr:nth-child(even) { background-color: #f9f9f9; }
+.odds-table tr:hover { background-color: #f1f1f1; }
 
-@media (max-width: 768px) {
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-}
+/* Color Coding */
+.huntergreen { background-color: #006400; color: white; }
+.green { background-color: #28a745; color: white; }
+.darkyellow { background-color: #ffc107; color: black; }
+.gray { background-color: #d3d3d3; color: black; }
+.green-mlb { background-color: #2ecc71; color: white; }
+.white { background-color: white; color: black; }
 
-/* ================================
-   Spinner
-   ================================ */
+/* Spinner */
 .spinner {
-  margin: 20px auto;
-  width: 60px;
-  height: 60px;
-  border: 6px solid rgba(255, 255, 255, 0.3);
-  border-top: 6px solid #2a5298;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #2a5298;
   border-radius: 50%;
+  width: 40px;
+  height: 40px;
   animation: spin 1s linear infinite;
-  display: block;
+  margin: 10px auto;
 }
 
 @keyframes spin {
@@ -203,33 +86,20 @@ table tr:hover {
   100% { transform: rotate(360deg); }
 }
 
-/* ================================
-   Footer
-   ================================ */
-.footer {
-  text-align: center;
-  font-size: 13px;
-  color: #888;
-  padding: 20px 0;
-  border-top: 1px solid #eee;
-  margin-top: 40px;
-}
-
-/* ================================
-   Responsive Tweaks
-   ================================ */
-@media (max-width: 600px) {
-  .auth-card {
-    padding: 20px 15px;
+/* Responsive Layout */
+@media (max-width: 768px) {
+  body { margin: 10px; }
+  .sport-buttons, .market-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
   }
-
-  .primary-btn,
-  .secondary-btn {
-    font-size: 15px;
+  button {
+    flex: 1 1 45%;
+    margin: 5px;
   }
-
-  .section {
-    margin: 10px;
-    padding: 15px;
+  .odds-table th, .odds-table td {
+    padding: 6px;
+    font-size: 12px;
   }
 }
