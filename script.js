@@ -140,7 +140,7 @@ async function createUserIfNeeded(user) {
 // 🔹 Check if user has active subscription
 async function checkSubscriptionAndShowButton(userId) {
   try {
-    const res = await fetch(`${API_BASE}/api/check-subscription?user_id=${userId}`);
+    const res = await fetch(`${API_BASE}/check-subscription?user_id=${userId}`);
     const data = await res.json();
 
     const status = data.subscription_status || "inactive";
