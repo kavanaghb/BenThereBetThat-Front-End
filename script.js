@@ -1,173 +1,35 @@
 // ===================================================
-// ✅ Supabase Initialization
+// 1️⃣ Supabase Initialization
 // ===================================================
-const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const API_BASE = "https://bentherebetthat-api.onrender.com";
-const STRIPE_PRICE_ID = "price_1SIzajExPCuJMaCrq8ADxMmx"; // ✅ your Stripe price ID
+const supabaseUrl = "https://pkvkezbakcvrhygowogx.supabase.co";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjg0OTk1MzIsImV4cCI6MjA0NDA3NTUzMn0.AuYjWyjFGaUqIg2KcMx9QmAplQiE7D9e7z5lsN3MtV0";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
 // ===================================================
-// 1️⃣ DOM References
+// 2️⃣ Authentication Elements
 // ===================================================
 const authContainer = document.getElementById("auth-container");
-const signinForm = document.getElementById("signin-form");
-const signupForm = document.getElementById("signup-form");
-const signoutBtn = document.getElementById("signout-btn");
-const forgotBtn = document.getElementById("forgot-btn");
-const authMessage = document.getElementById("auth-message");
-
 const mainContent = document.getElementById("main-content");
+const authMessage = document.getElementById("auth-message");
+const signoutBtn = document.getElementById("signout-btn");
 const subscribeBtn = document.getElementById("subscribeBtn");
-const subscriptionStatus = document.getElementById("subscription-status");
-
-const sportButtons = document.querySelectorAll("#main-content .sport-buttons button");
-const nflMarkets = document.getElementById("nflMarkets");
-const nbaMarkets = document.getElementById("nbaMarkets");
-const mlbMarkets = document.getElementById("mlbMarkets");
-
-const dateInput = document.getElementById("dateInput");
-const loadDataBtn = document.getElementById("loadData");
-const stopBtn = document.getElementById("stopBtn");
-const refreshBtn = document.getElementById("refreshBtn");
-
-const resultsDiv = document.getElementById("results");
-const loadingDiv = document.getElementById("loading");
-const progressText = document.getElementById("progressText");
-
-const selectAllNFL = document.getElementById("selectAllNFL");
-const deselectAllNFL = document.getElementById("deselectAllNFL");
-const selectAllNBA = document.getElementById("selectAllNBA");
-const deselectAllNBA = document.getElementById("deselectAllNBA");
-const selectAllMLB = document.getElementById("selectAllMLB");
-const deselectAllMLB = document.getElementById("deselectAllMLB");
-
-let selectedSport = null;
-let selectedMarkets = [];
-let currentController = null;
+const forgotBtn = document.getElementById("forgot-btn");
 
 // ===================================================
-// 2️⃣ Authentication & Subscription Initialization
+// 3️⃣ Authentication Logic
 // ===================================================
 
-checkUser();
-
-async function checkUser() {
-  console.log("🔍 Checking user session...");
-  const { data, error } = await supabaseClient.auth.getUser();
-  const user = data?.user;
-
-  if (!user) {
-    console.log("❌ No user found — showing login");
-    authContainer.style.display = "flex";
-    mainContent.style.display = "none";
-    signoutBtn.style.display = "none";
-    return;
-  }
-
-  console.log("✅ Logged in as:", user.email);
-  authContainer.style.display = "none";
-  mainContent.style.display = "block";
-  signoutBtn.style.display = "inline-block";
-
-  await createUserIfNeeded(user);
-
-  // 🔄 Check subscription status
-  console.log("🌐 Checking subscription status...");
-  const res = await fetch(`${API_BASE}/api/check-subscription?user_id=${user.id}`);
-  const dataSub = await res.json();
-  console.log("📦 Subscription API Response:", dataSub);
-
-  const status = dataSub.subscription_status || "unknown";
-  subscriptionStatus.textContent = `Subscription: ${status}`;
-
-  // ✅ Handle inactive subscriptions with retry loop
-  if (status !== "active") {
-    console.log("⚠️ Subscription inactive — verifying payment sync...");
-    let retries = 0;
-    while (retries < 3) {
-      await new Promise((r) => setTimeout(r, 2000)); // wait 2s
-      const resRetry = await fetch(`${API_BASE}/api/check-subscription?user_id=${user.id}`);
-      const dataRetry = await resRetry.json();
-      if (dataRetry.subscription_status === "active") {
-        console.log("✅ Payment processed — user is now active.");
-        subscriptionStatus.textContent = "Subscription: active";
-        return setupDashboard();
-      }
-      retries++;
-    }
-
-    // If still inactive after retries, prompt user
-    const goToCheckout = confirm(
-      "Your subscription is inactive. Would you like to subscribe now?"
-    );
-    if (goToCheckout) {
-      await redirectToStripe(user.id);
-    } else {
-      alert("⚠️ Subscription required to use the dashboard.");
-      mainContent.style.display = "none";
-      authContainer.style.display = "flex";
-    }
-    return;
-  }
-
-  // ✅ Active subscription — proceed
-  setupDashboard();
-}
-
-async function redirectToStripe(userId) {
-  try {
-    const res = await fetch(`${API_BASE}/create-checkout-session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: userId, price_id: STRIPE_PRICE_ID }),
-    });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert("Failed to start checkout session");
-    }
-  } catch (err) {
-    console.error("Error redirecting to Stripe:", err);
-    alert("Error connecting to payment service.");
-  }
-}
-
-function setupDashboard() {
-  console.log("✅ Subscription active — loading dashboard");
-  selectedSport = "americanfootball_nfl";
-  sportButtons.forEach((btn) => {
-    btn.classList.toggle("active", btn.getAttribute("data-sport") === selectedSport);
-  });
-
-  nflMarkets.style.display = "block";
-  nbaMarkets.style.display = "none";
-  if (mlbMarkets) mlbMarkets.style.display = "none";
-
-  resetAllMarkets();
-}
-
-// ===================================================
-// Authentication actions
-// ===================================================
-signinForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("signin-email").value;
-  const password = document.getElementById("signin-password").value;
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) authMessage.textContent = error.message;
-  else {
-    authMessage.textContent = "";
-    checkUser();
-  }
-});
-
+// --- Sign Up ---
+const signupForm = document.getElementById("signup-form");
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
+
+  const spinner = document.getElementById("forgot-spinner");
+  spinner.style.display = "block";
+
   const { error } = await supabaseClient.auth.signUp({
     email,
     password,
@@ -175,11 +37,54 @@ signupForm.addEventListener("submit", async (e) => {
       emailRedirectTo: "https://bentherebetthat.netlify.app/verify.html",
     },
   });
-  if (error) authMessage.textContent = error.message;
-  else authMessage.textContent =
-    "✅ Sign-up successful! Please check your email to verify your account.";
+
+  spinner.style.display = "none";
+  if (error)
+    authMessage.textContent = error.message;
+  else
+    authMessage.textContent =
+      "✅ Sign-up successful! Please check your email to verify your account.";
 });
 
+// --- Sign In ---
+const signinForm = document.getElementById("signin-form");
+signinForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("signin-email").value;
+  const password = document.getElementById("signin-password").value;
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) authMessage.textContent = error.message;
+  else handleAuthSuccess(data.user);
+});
+
+// --- Forgot Password ---
+if (forgotBtn) {
+  forgotBtn.addEventListener("click", async () => {
+    const email = prompt("Enter your email for password reset:");
+    if (!email) return;
+
+    const spinner = document.getElementById("forgot-spinner");
+    spinner.style.display = "block";
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://bentherebetthat.com/reset.html",
+    });
+
+    spinner.style.display = "none";
+    if (error)
+      authMessage.textContent = error.message;
+    else
+      authMessage.textContent =
+        "📧 Password reset email sent! Please check your inbox.";
+  });
+}
+
+// --- Sign Out ---
 signoutBtn.addEventListener("click", async () => {
   await supabaseClient.auth.signOut();
   localStorage.clear();
@@ -188,181 +93,163 @@ signoutBtn.addEventListener("click", async () => {
   signoutBtn.style.display = "none";
 });
 
-forgotBtn.addEventListener("click", async () => {
-  const email = prompt("Enter your email for password reset:");
-  if (!email) return;
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-  if (error) alert(error.message);
-  else alert("📩 Check your email for a password reset link.");
-});
+// --- On Load Check ---
+async function handleAuth() {
+  const {
+    data: { user },
+  } = await supabaseClient.auth.getUser();
+
+  if (user) handleAuthSuccess(user);
+  else {
+    authContainer.style.display = "flex";
+    mainContent.style.display = "none";
+  }
+}
+handleAuth();
+
+async function handleAuthSuccess(user) {
+  authContainer.style.display = "none";
+  mainContent.style.display = "block";
+  signoutBtn.style.display = "block";
+  await createUserIfNeeded(user);
+  await checkSubscription(user.id);
+}
 
 // ===================================================
-// 3️⃣ Subscription Logic Helpers
+// 4️⃣ User / Subscription Logic
 // ===================================================
 async function createUserIfNeeded(user) {
-  try {
-    await fetch(`${API_BASE}/api/create-user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: user.id, email: user.email }),
+  await fetch("https://bentherebetthat-api.onrender.com/api/create-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: user.id, email: user.email }),
+  });
+}
+
+async function checkSubscription(user_id) {
+  const statusEl = document.getElementById("subscription-status");
+  const res = await fetch(
+    `https://bentherebetthat-api.onrender.com/api/check-subscription?user_id=${user_id}`
+  );
+  const data = await res.json();
+  const status = data.subscription_status;
+  statusEl.textContent = `Subscription: ${status}`;
+
+  if (status !== "active") {
+    subscribeBtn.style.display = "block";
+    subscribeBtn.addEventListener("click", () => {
+      window.location.href = "https://bentherebetthat.com/subscribe.html";
     });
-  } catch (err) {
-    console.error("Error creating user:", err);
+  } else {
+    subscribeBtn.style.display = "none";
   }
 }
 
 // ===================================================
-// 3️⃣ Market Button Logic
+// 5️⃣ Sport & Market Logic
 // ===================================================
-// ===================================================
-function marketButtonsIn(container) {
-  if (!container) return [];
-  return Array.from(container.querySelectorAll("button[data-market]"));
-}
+const sportButtons = document.querySelectorAll(".sport-buttons button");
+const marketSections = document.querySelectorAll(".market-buttons");
+let selectedSport = null;
 
-function setActiveFor(buttons, active = true) {
-  buttons.forEach(b => active ? b.classList.add("active") : b.classList.remove("active"));
-}
-
-function updateSelectedMarkets() {
-  const activeBtns = Array.from(document.querySelectorAll("#main-content .market-list button.active[data-market]"));
-  selectedMarkets = activeBtns.map(b => b.getAttribute("data-market"));
-}
-
-function resetAllMarkets() {
-  document.querySelectorAll("#main-content .market-list button[data-market]").forEach(b => b.classList.remove("active"));
-  selectedMarkets = [];
-}
-
-// Sport button logic
-sportButtons.forEach(btn => {
+sportButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    sportButtons.forEach(b => b.classList.remove("active"));
+    sportButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
 
     selectedSport = btn.getAttribute("data-sport");
-    resultsDiv.innerHTML = "";
-    progressText.textContent = "";
-    resetAllMarkets();
+    marketSections.forEach((section) => (section.style.display = "none"));
 
-    // Show/hide market containers
-    nflMarkets.style.display = (selectedSport === "americanfootball_nfl" || selectedSport === "americanfootball_ncaaf") ? "block" : "none";
-    nbaMarkets.style.display = (selectedSport === "basketball_nba") ? "block" : "none";
-    if (mlbMarkets) mlbMarkets.style.display = (selectedSport === "baseball_mlb") ? "block" : "none";
+    const sectionId =
+      selectedSport === "americanfootball_nfl"
+        ? "nflMarkets"
+        : selectedSport === "americanfootball_ncaaf"
+        ? "nflMarkets"
+        : selectedSport === "basketball_nba"
+        ? "nbaMarkets"
+        : selectedSport === "baseball_mlb"
+        ? "mlbMarkets"
+        : null;
 
-    // Update header text
-    if (selectedSport === "americanfootball_nfl" || selectedSport === "americanfootball_ncaaf") {
-      const h3 = nflMarkets.querySelector("h3");
-      if (h3) h3.textContent = (selectedSport === "americanfootball_nfl") ? "NFL Markets" : "NCAAF Markets";
-    }
+    if (sectionId) document.getElementById(sectionId).style.display = "block";
   });
 });
 
-// Market button click behavior
-document.querySelectorAll("#main-content .market-list").forEach(container => {
-  container.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-market]");
-    if (!btn) return;
-    btn.classList.toggle("active");
-    updateSelectedMarkets();
-  });
-});
+function setupMarketButtons(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
 
-// Select/Deselect All handlers
-if (selectAllNFL) selectAllNFL.addEventListener("click", () => { setActiveFor(marketButtonsIn(nflMarkets), true); updateSelectedMarkets(); });
-if (deselectAllNFL) deselectAllNFL.addEventListener("click", () => { setActiveFor(marketButtonsIn(nflMarkets), false); updateSelectedMarkets(); });
+  const buttons = section.querySelectorAll(".market-list button");
+  const selectAllBtn = section.querySelector(`#selectAll${sectionId.replace("Markets","")}`);
+  const deselectAllBtn = section.querySelector(`#deselectAll${sectionId.replace("Markets","")}`);
 
-if (selectAllNBA) selectAllNBA.addEventListener("click", () => { setActiveFor(marketButtonsIn(nbaMarkets), true); updateSelectedMarkets(); });
-if (deselectAllNBA) deselectAllNBA.addEventListener("click", () => { setActiveFor(marketButtonsIn(nbaMarkets), false); updateSelectedMarkets(); });
+  buttons.forEach((btn) =>
+    btn.addEventListener("click", () => btn.classList.toggle("active"))
+  );
 
-if (selectAllMLB && mlbMarkets) selectAllMLB.addEventListener("click", () => { setActiveFor(marketButtonsIn(mlbMarkets), true); updateSelectedMarkets(); });
-if (deselectAllMLB && mlbMarkets) deselectAllMLB.addEventListener("click", () => { setActiveFor(marketButtonsIn(mlbMarkets), false); updateSelectedMarkets(); });
+  selectAllBtn.addEventListener("click", () =>
+    buttons.forEach((btn) => btn.classList.add("active"))
+  );
+
+  deselectAllBtn.addEventListener("click", () =>
+    buttons.forEach((btn) => btn.classList.remove("active"))
+  );
+}
+
+setupMarketButtons("nflMarkets");
+setupMarketButtons("nbaMarkets");
+setupMarketButtons("mlbMarkets");
 
 // ===================================================
-// 4️⃣ Load Data & Render Table
+// 6️⃣ Load Data Logic
 // ===================================================
-// loadData(), renderTableInBatches(), sortTableByColumn(), exportTableToCSV() functions go here
-// Add your existing implementations
+const loadDataBtn = document.getElementById("loadData");
+const stopBtn = document.getElementById("stopBtn");
+const refreshBtn = document.getElementById("refreshBtn");
+const loadingDiv = document.getElementById("loading");
+const progressText = document.getElementById("progressText");
+const resultsDiv = document.getElementById("results");
+let currentController = null;
 
-// ----------------------------
-// Load Data
-// ----------------------------
 async function loadData() {
-  if (!selectedSport || selectedMarkets.length === 0) {
-    alert("Select sport & markets");
-    return;
-  }
-  const date = dateInput.value;
-  if (!date) {
-    alert("Select date");
-    return;
-  }
-
-  resultsDiv.innerHTML = "";
-  progressText.textContent = "";
-  loadingDiv.style.display = "block";
-
-  if (currentController) currentController.abort();
-  currentController = new AbortController();
-  const signal = currentController.signal;
-
   try {
-    progressText.textContent = "Fetching all data from server...";
-    const params = new URLSearchParams();
-    params.append("sport", selectedSport);
-    params.append("date", date);
-    selectedMarkets.forEach((m) => params.append("markets", m));
+    const date = document.getElementById("dateInput").value;
+    if (!selectedSport) throw new Error("Select a sport first.");
 
-    // ✅ Fixed: removed extra "text" and added proper fetch
-    const res = await fetch(`${API_BASE}/api/data?${params.toString()}`, { signal });
-    const allData = await res.json();
+    const activeMarketBtns = document.querySelectorAll(
+      ".market-list button.active"
+    );
+    const markets = Array.from(activeMarketBtns).map((b) =>
+      b.getAttribute("data-market")
+    );
+    if (markets.length === 0) throw new Error("Select at least one market.");
 
-    if (!Array.isArray(allData) || allData.length === 0) {
-      progressText.textContent = "⚠️ No data found for selected sport/date.";
-      loadingDiv.style.display = "none";
-      return;
-    }
+    resultsDiv.innerHTML = "";
+    progressText.textContent = "Fetching data from server...";
+    loadingDiv.style.display = "block";
 
-    // ----------------------------
-    // Deduplicate for NFL/NCAAF
-    // ----------------------------
-    let uniqueData = allData;
-    if (
-      selectedSport === "americanfootball_nfl" ||
-      selectedSport === "americanfootball_ncaaf"||
-      selectedSport === "basketball_nba"
-    ) {
-      const map = {};
-      allData.forEach((r) => {
-        const key = `${r.Event}|${r.Market}|${r.Description}`;
-        if (!map[key]) map[key] = r;
-      });
-      uniqueData = Object.values(map);
-    }
+    currentController = new AbortController();
+    const signal = currentController.signal;
 
-    // ----------------------------
-    // For MLB, keep row with lowest FanduelPrice per Outcome
-    // ----------------------------
-    if (selectedSport === "baseball_mlb") {
-      const map = {};
-      uniqueData.forEach((r) => {
-        const key = `${r.Event}|${r.Market}|${r.Description}`;
-        const price = parseFloat(r.FanduelPrice ?? Infinity);
-        if (
-          !map[key] ||
-          price < parseFloat(map[key].FanduelPrice ?? Infinity)
-        )
-          map[key] = r;
-      });
-      uniqueData = Object.values(map);
-    }
+    const { data: user } = await supabaseClient.auth.getUser();
+    const userId = user?.user?.id;
 
-    await renderTableInBatches(uniqueData, 50);
+    const response = await fetch(
+      `https://bentherebetthat-api.onrender.com/api/data?sport=${selectedSport}&date=${date}&markets=${markets.join(
+        "&markets="
+      )}&user_id=${userId}`,
+      { signal }
+    );
+
+    if (!response.ok) throw new Error("Error fetching data.");
+
+    const allData = await response.json();
+    await renderTableInBatches(allData, 50);
   } catch (err) {
     if (err.name === "AbortError")
       progressText.textContent = "⚠️ Loading stopped by user";
     else {
-      resultsDiv.innerHTML = `<p style="color:red;">${err.message || "Unknown error"}</p>`;
+      resultsDiv.innerHTML = `<p style="color:red;">${err.message}</p>`;
       console.error("Error loading data:", err);
     }
   } finally {
@@ -377,168 +264,36 @@ stopBtn.addEventListener("click", () => {
   if (currentController) currentController.abort();
 });
 
-// ----------------------------
-// Render Table
-// ----------------------------
+// ===================================================
+// 7️⃣ Render Table Logic
+// ===================================================
 async function renderTableInBatches(data, batchSize = 50) {
-  resultsDiv.innerHTML = "";
-  const table = document.createElement("table");
-  table.classList.add("odds-table");
-
-  // Columns - UnderdogPoint moved left
-  let columns = ["Event", "Market", "Outcome", "Description", "FanduelPoint", "PrizePickPoint", "UnderdogPoint", "PrizePicksDifference", "UnderdogDifference"];
-  const hideOutcome = selectedSport === "americanfootball_nfl" || selectedSport === "americanfootball_ncaaf";
-  if (hideOutcome) columns = ["Event", "Market", "Description", "FanduelPoint", "PrizePickPoint", "UnderdogPoint", "PrizePicksDifference", "UnderdogDifference"];
-  if (selectedSport === "baseball_mlb") columns = ["Event","Market","Outcome","Description","FanduelPrice","FanduelPoint","PrizePickPoint","UnderdogPoint","PrizePicksDifference","UnderdogDifference"];
-
-  // Table header
-  const thead = document.createElement("thead");
-  const headerRow = document.createElement("tr");
-  columns.forEach(col => {
-    const th = document.createElement("th");
-    th.textContent = col;
-    th.style.cursor = "pointer";
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement("tbody");
-  table.appendChild(tbody);
-  resultsDiv.appendChild(table);
-
-  // Default sort by PrizePicksDifference descending
-  let sortedData = [...data];
-  sortedData.sort((a,b) => (parseFloat(b.FanduelPoint ?? b.FanduelPrice ?? 0) - parseFloat(b.PrizePickPoint ?? 0)) -
-                            (parseFloat(a.FanduelPoint ?? a.FanduelPrice ?? 0) - parseFloat(a.PrizePickPoint ?? 0)));
-
-  for (let i=0; i<sortedData.length; i+=batchSize) {
-    const batch = sortedData.slice(i, i+batchSize);
-    batch.forEach(row => {
-      const tr = document.createElement("tr");
-
-      const fanduel = parseFloat(row.FanduelPoint ?? row.FanduelPrice ?? null);
-      const prize = parseFloat(row.PrizePickPoint ?? null);
-      const underdog = parseFloat(row.UnderdogPoint ?? null);
-
-      const prizeDiff = (fanduel != null && prize != null) ? Math.abs(fanduel - prize) : null;
-      const underdogDiff = (fanduel != null && underdog != null) ? Math.abs(fanduel - underdog) : null;
-
-      columns.forEach(col => {
-        const td = document.createElement("td");
-
-        if (col === "PrizePicksDifference") {
-          td.textContent = prizeDiff != null ? prizeDiff.toFixed(2) : "";
-          if (prizeDiff != null) {
-            if (["americanfootball_nfl","americanfootball_ncaaf","basketball_nba"].includes(selectedSport)) {
-              if (prizeDiff > 2) td.classList.add("huntergreen");
-              else if (prizeDiff === 2) td.classList.add("green");
-              else if (prizeDiff === 1) td.classList.add("darkyellow");
-              else td.classList.add("gray");
-            } else if (selectedSport === "baseball_mlb") {
-              if (prizeDiff > 0) td.classList.add("green-mlb");
-              else td.classList.add("gray");
-            }
-            if (fanduel > prize) td.innerHTML += `<span class="diff-arrow">🔺</span>`;
-            else if (fanduel < prize) td.innerHTML += `<span class="diff-arrow">🔻</span>`;
-          } else td.classList.add("white");
-
-        } else if (col === "UnderdogDifference") {
-          td.textContent = underdogDiff != null ? underdogDiff.toFixed(2) : "";
-          if (underdogDiff != null) {
-            if (["americanfootball_nfl","americanfootball_ncaaf","basketball_nba"].includes(selectedSport)) {
-              if (underdogDiff > 2) td.classList.add("huntergreen");
-              else if (underdogDiff === 2) td.classList.add("green");
-              else if (underdogDiff === 1) td.classList.add("darkyellow");
-              else td.classList.add("gray");
-            } else if (selectedSport === "baseball_mlb") {
-              if (underdogDiff > 0) td.classList.add("green-mlb");
-              else td.classList.add("gray");
-            }
-            if (fanduel > underdog) td.innerHTML += `<span class="diff-arrow">🔺</span>`;
-            else if (fanduel < underdog) td.innerHTML += `<span class="diff-arrow">🔻</span>`;
-          } else td.classList.add("white");
-
-        } else {
-          td.textContent = row[col] ?? "";
-        }
-
-        tr.appendChild(td);
-      });
-
-      tbody.appendChild(tr);
-    });
-
-    progressText.textContent = `Rendering rows ${i+1}-${Math.min(i+batchSize, sortedData.length)} of ${sortedData.length}...`;
-    await new Promise(r => setTimeout(r, 0));
+  if (!Array.isArray(data) || data.length === 0) {
+    resultsDiv.innerHTML = "<p>No results found.</p>";
+    return;
   }
 
-  progressText.textContent = `✅ All ${sortedData.length} rows rendered successfully!`;
+  let table =
+    "<table><thead><tr><th>Event</th><th>Market</th><th>Description</th><th>Outcome</th><th>FanduelPoint</th><th>PrizePickPoint</th><th>UnderdogPoint</th><th>PrizePicksDifference</th><th>UnderdogDifference</th></tr></thead><tbody>";
 
-  // Default sort by PrizePicksDifference descending
-  const diffIndex = columns.indexOf("PrizePicksDifference");
-  if (diffIndex !== -1) sortTableByColumn(table, diffIndex, false);
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    table += `<tr>
+      <td>${row.Event}</td>
+      <td>${row.Market}</td>
+      <td>${row.Description}</td>
+      <td>${row.Outcome}</td>
+      <td>${row.FanduelPoint ?? ""}</td>
+      <td>${row.PrizePickPoint ?? ""}</td>
+      <td>${row.UnderdogPoint ?? ""}</td>
+      <td>${row.PrizePicksDifference ?? ""}</td>
+      <td>${row.UnderdogDifference ?? ""}</td>
+    </tr>`;
 
-  // Sortable headers
-  table.querySelectorAll("th").forEach((th, index) => {
-    if (th.textContent === "UnderdogDifference" || th.textContent === "Event" || th.textContent === "PrizePicksDifference") {
-      let ascending = false;
-      th.addEventListener("click", () => {
-        sortTableByColumn(table, index, ascending);
-        ascending = !ascending;
-      });
+    if ((i + 1) % batchSize === 0) {
+      resultsDiv.innerHTML = table + "</tbody></table>";
+      await new Promise((r) => setTimeout(r, 25));
     }
-  });
+  }
+  resultsDiv.innerHTML = table + "</tbody></table>";
 }
-
-// ----------------------------
-// Table sorting helper
-// ----------------------------
-function sortTableByColumn(table, columnIndex, ascending = false) {
-  const tbody = table.querySelector("tbody");
-  const rows = Array.from(tbody.querySelectorAll("tr"));
-
-  rows.sort((a, b) => {
-    let cellA = a.children[columnIndex].textContent.trim();
-    let cellB = b.children[columnIndex].textContent.trim();
-    cellA = cellA.replace(/[🔺🔻\s]/g, "");
-    cellB = cellB.replace(/[🔺🔻\s]/g, "");
-    const numA = parseFloat(cellA);
-    const numB = parseFloat(cellB);
-    const isNumA = !isNaN(numA);
-    const isNumB = !isNaN(numB);
-
-    if (isNumA && isNumB) return ascending ? numA - numB : numB - numA;
-    else if (!isNumA && !isNumB) return 0;
-    else if (!isNumA) return 1;
-    else return -1;
-  });
-
-  rows.forEach(row => tbody.appendChild(row));
-}
-
-// ----------------------------
-// Export CSV / Excel
-// ----------------------------
-function exportTableToCSV(filename) {
-  const table = resultsDiv.querySelector("table");
-  if (!table) return;
-  let csv = [];
-  const rows = table.querySelectorAll("tr");
-  rows.forEach(row => {
-    const cols = row.querySelectorAll("th, td");
-    const rowData = Array.from(cols).map(td => `"${td.textContent.replace(/🔺|🔻/g,'').trim()}"`);
-    csv.push(rowData.join(","));
-  });
-  const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}
-
-// Hook export buttons
-const exportCsvBtn = document.getElementById("exportCsv");
-const exportExcelBtn = document.getElementById("exportExcel");
-if (exportCsvBtn) exportCsvBtn.addEventListener("click",()=>exportTableToCSV(`${selectedSport || "export"}_${Date.now()}.csv`));
-if (exportExcelBtn) exportExcelBtn.addEventListener("click",()=>exportTableToCSV(`${selectedSport || "export"}_${Date.now()}.xlsx`));
