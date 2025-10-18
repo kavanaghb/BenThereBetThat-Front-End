@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ben There Bet That!</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Load Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js" defer></script>
+
+  <style>
+    /* ===============================
+       GLOBAL STYLES
+    =============================== */
+    body {
+      font-family: "Inter", sans-serif;
+      margin: 0;
+      background-color: #f8f9fa;
+      color: #212529;
+    }
+
+    h1, h2, h3 {
+      font-weight: 600;
+      margin: 0.5em 0;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 600;
+      transition: all 0.2s ease-in-out;
+    }
+
+    /* ===============================
+       AUTH FORM (KEEP AS IS)
+    =============================== */
+    #auth-buttons {
+      background: #121212;
+      color: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      max-width: 360px;
+      margin: 10vh auto;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    #auth-buttons h2 {
+      color: #fdd835;
+    }
+
+    #auth-buttons input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+    }
+
+    #auth-buttons button {
+      width: 100%;
+      margin-top: 10px;
+      background-color: #fdd835;
+      color: #121212;
+    }
+
+    /* ===============================
+       MAIN APP PAGE
+    =============================== */
+    #main-content {
+      display: none;
+      background-color: #ffffff;
+      color: #212529;
+      padding: 30px 40px;
+      border-radius: 12px;
+      max-width: 1200px;
+      margin: 40px auto;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Header */
+    #header {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    #signout-btn {
+      background-color: #dc3545;
+      color: white;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    #signout-btn:hover {
+      background-color: #c82333;
+    }
+
+    /* Title */
+    #main-content h1 {
+      text-align: center;
+      color: #fdd835;
+      font-size: 2rem;
+      margin-bottom: 30px;
+    }
+
+    /* Sport buttons */
+    .sport-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .sport-buttons button {
+      background-color: #212529;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px 18px;
+      transition: transform 0.15s;
+    }
+
+    .sport-buttons button:hover,
+    .sport-buttons button.active {
+      background-color: #fdd835;
+      color: #212529;
+      transform: translateY(-2px);
+    }
+
+    /* Market sections */
+    .market-buttons {
+      background-color: #fdfdfd;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .market-actions {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+
+    .market-actions button {
+      background-color: #fdd835;
+      color: #121212;
+      margin-left: 6px;
+    }
+
+    .market-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .market-list button {
+      background-color: #f1f1f1;
+      color: #212529;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px 12px;
+      transition: all 0.2s ease;
+    }
+
+    .market-list button.active {
+      background-color: #fdd835;
+      color: #121212;
+      border-color: #fdd835;
+    }
+
+    /* Controls and export */
+    .date-picker, .export-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .date-picker button,
+    .export-buttons button {
+      background-color: #212529;
+      color: white;
+    }
+
+    .date-picker button:hover,
+    .export-buttons button:hover {
+      background-color: #fdd835;
+      color: #212529;
+    }
+
+    /* Table & results */
+    #results {
+      margin-top: 30px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    th {
+      background-color: #fdd835;
+      color: #121212;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+
+    tr:hover {
+      background-color: #fff7cc;
+    }
+
+    /* Spinner / loading */
+    .spinner {
+      border: 4px solid #e9ecef;
+      border-top: 4px solid #fdd835;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ===============================
+       AUTHENTICATION
+  =============================== -->
+  <div id="auth-buttons">
+    <h2>Sign In</h2>
+    <form id="signin-form">
+      <input type="email" id="signin-email" placeholder="Email" required />
+      <input type="password" id="signin-password" placeholder="Password" required />
+      <button type="submit">Sign In</button>
+    </form>
+
+    <h2>Sign Up</h2>
+    <form id="signup-form">
+      <input type="email" id="signup-email" placeholder="Email" required />
+      <input type="password" id="signup-password" placeholder="Password" required />
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <button id="forgot-btn" class="link-btn">Forgot Password?</button>
+    <p id="auth-message"></p>
+  </div>
+
+  <!-- ===============================
+       MAIN CONTENT
+  =============================== -->
+  <div id="main-content">
+    <div id="header">
+      <button id="signout-btn">Log Out</button>
+    </div>
+
+    <h1>Ben There Bet That!</h1>
+
+    <div class="sport-buttons">
+      <button data-sport="americanfootball_nfl" class="active">NFL</button>
+      <button data-sport="americanfootball_ncaaf">NCAAF</button>
+      <button data-sport="basketball_nba">NBA</button>
+      <button data-sport="baseball_mlb">MLB</button>
+    </div>
+
+    <div id="nflMarkets" class="market-buttons">
+      <h3>NFL Markets</h3>
+      <div class="market-actions">
+        <button id="selectAllNFL">Select All</button>
+        <button id="deselectAllNFL">Deselect All</button>
+      </div>
+      <div class="market-list">
+        <button data-market="player_pass_yds">Pass Yards</button>
+        <button data-market="player_pass_attempts">Pass Attempts</button>
+        <button data-market="player_pass_rush_yds">Pass + Rush Yards</button>
+        <button data-market="player_reception_yds">Reception Yards</button>
+        <button data-market="player_rush_yds">Rush Yards</button>
+        <button data-market="player_field_goals">Kicking Points</button>
+      </div>
+    </div>
+
+    <div class="date-picker">
+      <input type="date" id="dateInput">
+      <button id="loadData">Load Data</button>
+      <button id="stopBtn">Stop</button>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <div class="export-buttons">
+      <button id="exportCsv">Export CSV</button>
+      <button id="exportExcel">Export Excel</button>
+    </div>
+
+    <div id="loading" class="spinner" style="display:none;"></div>
+    <div id="progressText"></div>
+    <div id="results"></div>
+  </div>
+</body>
+</html>
