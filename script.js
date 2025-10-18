@@ -329,7 +329,8 @@ async function loadData() {
     let uniqueData = allData;
     if (
       selectedSport === "americanfootball_nfl" ||
-      selectedSport === "americanfootball_ncaaf"
+      selectedSport === "americanfootball_ncaaf"||
+      selectedSport === "basketball_nba"
     ) {
       const map = {};
       allData.forEach((r) => {
