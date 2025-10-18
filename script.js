@@ -150,10 +150,11 @@ forgotBtn.addEventListener("click", async () => {
 });
 
 
-// ===================================================
+/// ===================================================
 // 3️⃣ Subscription Logic (Stripe + Supabase Integration)
 // ===================================================
 
+// Create user record in backend if needed
 async function createUserIfNeeded(user) {
   try {
     await fetch(`${API_BASE}/api/create-user`, {
@@ -166,53 +167,74 @@ async function createUserIfNeeded(user) {
   }
 }
 
-// 🔹 Check if user has active subscription
+// 🔹 Check subscription and update UI
 async function checkSubscriptionAndShowButton(userId) {
   try {
-    const res = await fetch(`${API_BASE}/check-subscription?user_id=${userId}`);
+    const res = await fetch(
+      `${API_BASE}/api/check-subscription?user_id=${userId}`
+    );
     const data = await res.json();
 
     const status = data.subscription_status || "inactive";
-    subscriptionStatus.textContent = `Subscription: ${status}`;
+    if (subscriptionStatus)
+      subscriptionStatus.textContent = `Subscription: ${status}`;
 
     if (status !== "active") {
-      subscribeBtn.style.display = "inline-block";
-      initSubscription(userId);
+      if (subscribeCTA) subscribeCTA.style.display = "block";
+      ensureSubscribeButton(userId);
+      return false;
     } else {
-      subscribeBtn.style.display = "none";
+      if (subscribeCTA) subscribeCTA.style.display = "none";
+      return true;
     }
   } catch (err) {
     console.error("Subscription check failed:", err);
-    subscriptionStatus.textContent = "Subscription: unknown";
-    subscribeBtn.style.display = "inline-block";
+    if (subscriptionStatus)
+      subscriptionStatus.textContent = "Subscription: unknown";
+    ensureSubscribeButton(userId);
+    return false;
   }
 }
 
-// 🔹 Initialize Stripe checkout
-function initSubscription(userId) {
-  if (subscribeListenerAdded) return;
-
-  subscribeBtn.addEventListener("click", async () => {
-    try {
-      const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // Replace with your Price ID
-      const res = await fetch(`${API_BASE}/create-checkout-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, price_id: priceId }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Failed to create checkout session");
-      }
-    } catch (err) {
-      console.error("Error initiating subscription:", err);
-      alert("Error initiating subscription");
+// 🔹 Ensure subscribe button exists and is functional
+function ensureSubscribeButton(userId) {
+  let btn = document.getElementById("subscribeBtn");
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "subscribeBtn";
+    btn.className = "primary-btn";
+    btn.textContent = "Subscribe Now";
+    const statusEl = document.getElementById("subscription-status");
+    if (statusEl && statusEl.parentElement) {
+      statusEl.parentElement.appendChild(btn);
+    } else {
+      document.body.appendChild(btn);
     }
-  });
+  }
 
-  subscribeListenerAdded = true;
+  if (!btn.dataset.bound) {
+    btn.addEventListener("click", async () => {
+      try {
+        const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // ✅ Your Stripe Price ID
+        const res = await fetch(`${API_BASE}/create-checkout-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, price_id: priceId }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert("Failed to create checkout session");
+          console.error("Stripe error:", data);
+        }
+      } catch (err) {
+        console.error("Error initiating subscription:", err);
+        alert("Error initiating subscription");
+      }
+    });
+    btn.dataset.bound = "1";
+  }
 }
 
 // ===================================================
