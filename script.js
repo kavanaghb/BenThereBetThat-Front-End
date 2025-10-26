@@ -454,6 +454,39 @@ function resetAllMarkets() {
   );
   selectedMarkets = [];
 }
+// ===================================================
+// ✅ Market Select/Deselect Setup Function (NEW)
+// ===================================================
+function setupMarketSelectButtons() {
+  const marketSections = [
+    { container: footballMarkets, selectAll: "selectAllFootball", deselectAll: "deselectAllFootball" },
+    { container: nbaMarkets, selectAll: "selectAllNBA", deselectAll: "deselectAllNBA" },
+    { container: mlbMarkets, selectAll: "selectAllMLB", deselectAll: "deselectAllMLB" },
+    { container: hockeyMarkets, selectAll: "selectAllNHL", deselectAll: "deselectAllNHL" },
+    { container: ncaabMarkets, selectAll: "selectAllNCAAB", deselectAll: "deselectAllNCAAB" },
+  ];
+
+  marketSections.forEach(({ container, selectAll, deselectAll }) => {
+    const selectBtn = document.getElementById(selectAll);
+    const deselectBtn = document.getElementById(deselectAll);
+
+    if (!container) return;
+
+    if (selectBtn) {
+      selectBtn.onclick = () => {
+        container.querySelectorAll("button[data-market]").forEach((b) => b.classList.add("active"));
+        updateSelectedMarkets();
+      };
+    }
+
+    if (deselectBtn) {
+      deselectBtn.onclick = () => {
+        container.querySelectorAll("button[data-market]").forEach((b) => b.classList.remove("active"));
+        updateSelectedMarkets();
+      };
+    }
+  });
+}
 
 function updateSelectedMarkets() {
   const activeBtns = Array.from(
@@ -465,11 +498,12 @@ function updateSelectedMarkets() {
 // 🧠 Main sport button logic (auto-renders markets)
 sportButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
+    // 🔹 Visually mark selected sport
     sportButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     selectedSport = btn.getAttribute("data-sport");
 
-    // 🧹 reset everything
+    // 🧹 Reset previous state
     resultsDiv.innerHTML = "";
     progressText.textContent = "";
     resetAllMarkets();
@@ -480,16 +514,18 @@ sportButtons.forEach((btn) => {
     }
     if (gameFilterContainer) gameFilterContainer.style.display = "none";
 
-    // 🎯 render market buttons dynamically
+    // 🎯 Render market buttons dynamically for selected sport
     Object.keys(SPORT_MARKETS).forEach((sport) => {
       const groupEl = document.getElementById(`${sport}Markets`);
       if (!groupEl) return;
+
       const listEl = groupEl.querySelector(".market-list");
       listEl.innerHTML = "";
 
       if (selectedSport === sport) {
         groupEl.style.display = "block";
         const markets = SPORT_MARKETS[sport];
+
         Object.entries(markets).forEach(([key, label]) => {
           const btnEl = document.createElement("button");
           btnEl.textContent = label;
@@ -505,13 +541,17 @@ sportButtons.forEach((btn) => {
       }
     });
 
-    // 🚀 load games for this sport if date chosen
+    // 🧩 Rebind Select/Deselect All buttons dynamically (Fix)
+    setupMarketSelectButtons();
+
+    // 🚀 Auto-load games if date already chosen
     if (dateInput.value) {
       disableLoadData();
       loadGames();
     }
   });
 });
+
 
 // ✅ Reload when date changes
 safeAddEventListener(dateInput, "change", () => {
@@ -644,7 +684,13 @@ console.log(`🧹 Deduped from ${allData.length} → ${cleanedData.length} rows`
 console.log("📦 Sample row:", cleanedData[0]);
 
 progressText.textContent = "Rendering table...";
+
+// Wait for the table to render
 await renderTableInBatches(cleanedData);
+
+// ✅ Clear progress text after rendering completes
+progressText.textContent = "";
+
 
 
 
