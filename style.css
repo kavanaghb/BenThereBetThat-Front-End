@@ -1121,4 +1121,65 @@ button:disabled {
   }
 }
 
+/* ================================
+   📱 Mobile Table Responsiveness
+   ================================ */
+@media (max-width: 768px) {
+  .odds-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+  }
+
+  .odds-table thead {
+    background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .odds-table th,
+  .odds-table td {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .odds-table th {
+    background: #007bff;
+    color: white;
+    text-align: left;
+  }
+
+  /* Make rows more tappable on mobile */
+  .odds-table tr {
+    border-bottom: 1px solid #ddd;
+  }
+
+  /* Soft scroll cue for mobile users */
+  .odds-table::after {
+    content: "⇆";
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    font-size: 1.2rem;
+    color: #999;
+    animation: fadeScrollHint 2s ease-in-out infinite;
+  }
+
+  @keyframes fadeScrollHint {
+    0%, 100% { opacity: 0.3; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(-5px); }
+  }
+
+  /* Ensure no overlap with other UI */
+  #results {
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+}
 
