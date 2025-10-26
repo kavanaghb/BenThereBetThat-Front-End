@@ -495,15 +495,14 @@ function updateSelectedMarkets() {
   selectedMarkets = activeBtns.map((b) => b.getAttribute("data-market"));
 }
 
-// 🧠 Main sport button logic (auto-renders markets)
+// 🧠 Main sport button logic (auto-renders markets + select/deselect support)
 sportButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    // 🔹 Visually mark selected sport
+    // --- UI reset ---
     sportButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     selectedSport = btn.getAttribute("data-sport");
 
-    // 🧹 Reset previous state
     resultsDiv.innerHTML = "";
     progressText.textContent = "";
     resetAllMarkets();
@@ -514,18 +513,16 @@ sportButtons.forEach((btn) => {
     }
     if (gameFilterContainer) gameFilterContainer.style.display = "none";
 
-    // 🎯 Render market buttons dynamically for selected sport
+    // --- Render market buttons dynamically ---
     Object.keys(SPORT_MARKETS).forEach((sport) => {
       const groupEl = document.getElementById(`${sport}Markets`);
       if (!groupEl) return;
-
       const listEl = groupEl.querySelector(".market-list");
       listEl.innerHTML = "";
 
       if (selectedSport === sport) {
         groupEl.style.display = "block";
         const markets = SPORT_MARKETS[sport];
-
         Object.entries(markets).forEach(([key, label]) => {
           const btnEl = document.createElement("button");
           btnEl.textContent = label;
@@ -536,21 +533,33 @@ sportButtons.forEach((btn) => {
           });
           listEl.appendChild(btnEl);
         });
+
+        // ✅ Rebind Select/Deselect All buttons for this sport
+        const selectAllBtn = groupEl.querySelector(".select-all-btn");
+        const deselectAllBtn = groupEl.querySelector(".deselect-all-btn");
+        if (selectAllBtn && deselectAllBtn) {
+          selectAllBtn.onclick = () => {
+            setActiveFor(marketButtonsIn(groupEl), true);
+            updateSelectedMarkets();
+          };
+          deselectAllBtn.onclick = () => {
+            setActiveFor(marketButtonsIn(groupEl), false);
+            updateSelectedMarkets();
+          };
+        }
       } else {
         groupEl.style.display = "none";
       }
     });
 
-    // 🧩 Rebind Select/Deselect All buttons dynamically (Fix)
-    setupMarketSelectButtons();
-
-    // 🚀 Auto-load games if date already chosen
+    // 🚀 Load games automatically if date chosen
     if (dateInput.value) {
       disableLoadData();
       loadGames();
     }
   });
 });
+
 
 
 // ✅ Reload when date changes
@@ -1168,21 +1177,38 @@ for (let i = 0; i < data.length; i += batchSize) {
         return;
       }
 
-      // 🎯 Difference columns with color cues
-      if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
-        const diff = Number(value);
-        if (Number.isFinite(diff)) {
-          if (diff > 2) td.classList.add("huntergreen");
-          else if (diff >= 1.5) td.classList.add("green");
-          else if (diff >= 1.0) td.classList.add("darkyellow");
-          else td.classList.add("gray");
-          td.textContent = diff.toFixed(2);
-        } else {
-          td.textContent = "—";
-        }
-        tr.appendChild(td);
-        return;
-      }
+      // 🎯 Difference columns with color cues + directional arrows
+if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
+  const diff = Number(value);
+  const isPrize = col === "PrizePicksDifference";
+  const pointKey = isPrize ? "PrizePickPoint" : "UnderdogPoint";
+  const pointVal = Number(row[pointKey]);
+  const consensusVal = Number(row.ConsensusPoint);
+
+  if (Number.isFinite(diff)) {
+    // 🎨 Color code by strength
+    if (diff > 2) td.classList.add("huntergreen");
+    else if (diff >= 1.5) td.classList.add("green");
+    else if (diff >= 1.0) td.classList.add("darkyellow");
+    else td.classList.add("gray");
+
+    // 🧭 Arrow direction based on comparison to consensus
+    let arrow = "";
+    if (Number.isFinite(consensusVal) && Number.isFinite(pointVal)) {
+      if (pointVal > consensusVal) arrow = "⬆️";
+      else if (pointVal < consensusVal) arrow = "⬇️";
+    }
+
+    // 🧮 Final cell text
+    td.innerHTML = `${diff.toFixed(2)} <span class="diff-arrow">${arrow}</span>`;
+  } else {
+    td.textContent = "—";
+  }
+
+  tr.appendChild(td);
+  return;
+}
+
 
       // 🧾 Default text/fallback
       td.textContent =
