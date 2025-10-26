@@ -1028,4 +1028,97 @@ button:disabled {
   to { transform: scale(1); opacity: 1; }
 }
 
+/* =====================================
+   🗓️ Enhanced Date Picker Styling
+   ===================================== */
+.date-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.date-label {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0d6efd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#dateInput {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 14px;
+  border: 2px solid #0d6efd;
+  border-radius: 10px;
+  background-color: #f8fbff;
+  color: #111;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 3px 8px rgba(13, 110, 253, 0.1);
+}
+
+#dateInput:hover,
+#dateInput:focus {
+  border-color: #0a58ca;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+  background-color: #ffffff;
+  outline: none;
+  transform: scale(1.02);
+}
+
+#dateInput::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(35%) sepia(89%) saturate(7489%) hue-rotate(210deg) brightness(95%) contrast(98%);
+  transition: transform 0.3s ease;
+}
+
+#dateInput:hover::-webkit-calendar-picker-indicator {
+  transform: scale(1.2);
+}
+
+/* =====================================
+   📱 Mobile Auth Layout Fix
+   ===================================== */
+@media (max-width: 768px) {
+  #auth-container {
+    align-items: flex-start;  /* move content to top instead of center */
+    padding-top: 60px;        /* add breathing room from top */
+    height: auto;             /* allow natural scroll height */
+    min-height: 100vh;        /* still fill screen visually */
+  }
+
+  .auth-card {
+    width: 95%;
+    max-width: 360px;
+    padding: 28px 20px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    margin-bottom: 40px; /* space for scroll bounce */
+  }
+
+  .app-title {
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
+
+  .app-subtitle {
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
+
+  input, button {
+    font-size: 15px;
+  }
+
+  .primary-btn, .secondary-btn {
+    padding: 10px 14px;
+  }
+}
+
 
