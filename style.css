@@ -2,13 +2,15 @@
    General Page Styles
    ================================ */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Poppins', Arial, sans-serif;
   margin: 20px;
   background-color: #fafafa;
   color: #333;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   margin: 10px 0;
 }
 
@@ -24,23 +26,53 @@ button {
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Sport Buttons */
-.sport-buttons button.active {
-  background-color: #f1c40f;
-  color: #000;
+/* ================================
+   Sport Buttons — Larger + Modern
+   ================================ */
+.sport-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
 }
+
 .sport-buttons button {
-  background-color: #e0e0e0;
-  color: #333;
+  background: linear-gradient(135deg, #dcdcdc, #bfbfbf);
+  color: #222;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 16px 28px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
+
+.sport-buttons button:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #f2f2f2, #e0e0e0);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.sport-buttons button.active {
+  background: linear-gradient(135deg, #f1c40f, #f39c12);
+  color: #000;
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.8);
+  transform: scale(1.05);
+}
+
 
 /* Market Buttons */
 .market-list button {
@@ -60,9 +92,13 @@ button:hover {
 }
 
 /* Action Buttons */
-#loadData, #stopBtn, #refreshBtn,
-.select-all-btn, .deselect-all-btn,
-#exportCsv, #exportExcel {
+#loadData,
+#stopBtn,
+#refreshBtn,
+.select-all-btn,
+.deselect-all-btn,
+#exportCsv,
+#exportExcel {
   background-color: #28a745;
   color: white;
 }
@@ -112,11 +148,11 @@ button:hover {
 .odds-table tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+
 .odds-table tbody tr:nth-child(odd) {
   background-color: #ffffff;
 }
 
-/* Hover highlight for rows */
 .odds-table tbody tr:hover {
   background-color: #e6f2ff;
 }
@@ -124,18 +160,35 @@ button:hover {
 /* ================================
    Difference Column Formatting
    ================================ */
+td.green {
+  background-color: #28a745;
+  color: white;
+}
 
-/* NFL / NCAAF / NBA */
-td.green { background-color: #28a745; color: white; }
-td.huntergreen { background-color: #196f3d; color: white; }
-td.darkyellow { background-color: #d4af37; color: black; }
-td.gray { background-color: #c0c0c0; color: black; }
+td.huntergreen {
+  background-color: #196f3d;
+  color: white;
+}
 
-/* MLB */
-td.green-mlb { background-color: #28a745; color: white; }
+td.darkyellow {
+  background-color: #d4af37;
+  color: black;
+}
 
-/* No value */
-td.white { background-color: #ffffff; color: black; }
+td.gray {
+  background-color: #c0c0c0;
+  color: black;
+}
+
+td.green-mlb {
+  background-color: #28a745;
+  color: white;
+}
+
+td.white {
+  background-color: #ffffff;
+  color: black;
+}
 
 /* ================================
    Difference Arrows
@@ -166,7 +219,8 @@ td.white { background-color: #ffffff; color: black; }
 /* ================================
    Export Buttons
    ================================ */
-#exportCsv, #exportExcel {
+#exportCsv,
+#exportExcel {
   border-radius: 6px;
   font-size: 14px;
   font-weight: bold;
@@ -177,203 +231,53 @@ td.white { background-color: #ffffff; color: black; }
   color: #fff;
 }
 
-#exportCsv:hover, #exportExcel:hover {
+#exportCsv:hover,
+#exportExcel:hover {
   background-color: #138496;
 }
 
 /* ================================
    Select / Deselect Buttons
    ================================ */
-.select-all-btn, .deselect-all-btn {
+.select-all-btn,
+.deselect-all-btn {
   background-color: #6c757d;
   color: white;
 }
 
-.select-all-btn:hover, .deselect-all-btn:hover {
+.select-all-btn:hover,
+.deselect-all-btn:hover {
   background-color: #5a6268;
 }
 
 /* ================================
-   Market Buttons Hover & Active Enhancements
+   Auth Container
    ================================ */
-.market-list button.active {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
-.market-list button:hover:not(.active) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-/* ================================
-   Floating Sign Out Button
-   ================================ */
-#signout-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 8px 14px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 999;
-  transition: background 0.2s, transform 0.2s;
-}
-
-#signout-btn:hover {
-  background-color: #b02a37;
-  transform: translateY(-1px);
-}
-
-/* ================================
-   Responsive Adjustments
-   ================================ */
-@media (max-width: 768px) {
-  .sport-buttons,
-  .market-list,
-  .controls,
-  .auth-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .sport-buttons button,
-  .market-list button,
-  .controls button,
-  #exportCsv,
-  #exportExcel {
-    width: 100%;
-    margin: 4px 0;
-  }
-}
-
-/* Header */
-#header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-/* Log Out button */
-#signout-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  display: none; /* Hidden until login */
-}
-
-#signout-btn:hover {
-  background-color: #c82333;
-}
-
-/* Auth message (sign in/up feedback) */
-#auth-message {
-  margin-top: 10px;
-  color: #333;
-  font-weight: bold;
-  text-align: center;
-}
-
-#header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ccc; /* subtle divider */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* light shadow for depth */
-}
-
-/* Optional: style for the subscription text */
-#subscription-status {
-  font-weight: 600;
-  color: #333;
-  font-size: 15px;
-  letter-spacing: 0.2px;
-}
-
-/* Optional: slightly soften the logout button */
-#signout-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-}
-
-#signout-btn:hover {
-  background-color: #b02a37;
-  transform: translateY(-1px);
-}
-
-
-
-/* Log Out button */
-#signout-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  display: none; /* Hidden until login */
-}
-
-#signout-btn:hover {
-  background-color: #c82333;
-}
-
-/* Auth message (sign in/up feedback) */
-#auth-message {
-  margin-top: 10px;
-  color: #333;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* Auth Container */
 #auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   background: linear-gradient(to right, #1e3c72, #2a5298);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
-/* Card */
 .auth-card {
   background-color: white;
   border-radius: 12px;
   padding: 40px 30px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   text-align: center;
 }
 
-/* Forms */
 .auth-form {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
 }
 
-.auth-form h2 {
-  margin-bottom: 20px;
-  color: #333;
-  font-weight: 600;
-}
-
-/* Inputs */
 .auth-form input {
   padding: 12px 15px;
   margin-bottom: 15px;
@@ -382,11 +286,41 @@ td.white { background-color: #ffffff; color: black; }
   font-size: 16px;
 }
 
-/* Buttons */
+/* ================================
+   Password Field Enhancements
+   ================================ */
+.input-group {
+  position: relative;
+  margin-bottom: 1em;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 36px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #888;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: #0d6efd;
+}
+
+/* ================================
+   Button Styles
+   ================================ */
 .primary-btn {
   background-color: #2a5298;
   color: white;
-  border: none;
   border-radius: 8px;
   padding: 12px;
   cursor: pointer;
@@ -401,12 +335,9 @@ td.white { background-color: #ffffff; color: black; }
 .secondary-btn {
   background-color: #e0e0e0;
   color: #333;
-  border: none;
   border-radius: 8px;
   padding: 12px;
-  cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.2s;
 }
 
 .secondary-btn:hover {
@@ -426,7 +357,6 @@ td.white { background-color: #ffffff; color: black; }
   text-decoration: underline;
 }
 
-/* Divider */
 .divider {
   text-align: center;
   margin: 20px 0;
@@ -434,56 +364,60 @@ td.white { background-color: #ffffff; color: black; }
   color: #888;
 }
 
-/* ================================
-   Mobile Responsiveness Enhancements
-   ================================ */
+/* ===== Global Loader Overlay ===== */
+.global-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
 
-/* General layout scaling */
-@media (max-width: 1024px) {
-  body {
-    margin: 10px;
+.loader-box {
+  background: white;
+  padding: 24px 36px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 5px solid #ccc;
+  border-top: 5px solid #007bff;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
-
-  h1 {
-    font-size: 1.8rem;
-  }
-
-  button {
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-
-  .market-list button,
-  .sport-buttons button {
-    min-width: 110px;
+  to {
+    transform: rotate(360deg);
   }
 }
 
-/* Tablet adjustments */
+/* ================================
+   Responsive Adjustments
+   ================================ */
 @media (max-width: 768px) {
   .sport-buttons,
   .market-list,
   .controls,
-  .date-picker,
-  .export-buttons {
-    display: flex;
+  .auth-bar {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
 
-  .sport-buttons button,
-  .market-list button,
-  .controls button,
-  .date-picker button,
-  .export-buttons button {
+  button {
     width: 100%;
     margin: 6px 0;
-  }
-
-  input[type="date"],
-  input[type="text"],
-  input[type="number"] {
-    width: 100%;
   }
 
   table {
@@ -499,35 +433,599 @@ td.white { background-color: #ffffff; color: black; }
   }
 }
 
-/* Phone (portrait) adjustments */
-@media (max-width: 480px) {
-  h1 {
-    font-size: 1.4rem;
-    text-align: center;
-  }
+/* ================================
+   Subscription Control Buttons
+   ================================ */
+#cancel-subscription-btn {
+  background-color: #b22222;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
 
-  .sport-buttons button,
-  .market-list button {
-    font-size: 13px;
-    padding: 10px;
-  }
+#cancel-subscription-btn:hover {
+  background-color: #8b0000;
+  transform: translateY(-1px);
+}
 
-  #signout-btn {
-    top: 10px;
-    right: 10px;
-    padding: 6px 10px;
-    font-size: 12px;
-  }
+#resume-subscription-btn,
+#subscribeBtn {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
 
-  #progressText {
-    font-size: 12px;
+#resume-subscription-btn:hover,
+#subscribeBtn:hover {
+  background-color: #1e7e34;
+  transform: translateY(-1px);
+}
+
+/* ================================
+   Button Spinner Styles
+   ================================ */
+.button-with-spinner {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spinner-small {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+
+.spinner-small.dark {
+  border: 3px solid rgba(0, 0, 0, 0.2);
+  border-top: 3px solid #000;
+}
+
+button.loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* ================================
+   Fade Animations
+   ================================ */
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Sticky table header for mobile scrolls */
-.odds-table th {
-  position: sticky;
-  top: 0;
-  background-color: #f0f4f7;
-  z-index: 2;
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
+
+/* ================================
+   Modern App Title Styling
+   ================================ */
+.app-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 2.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #222;
+  text-align: center;
+  margin-bottom: 0.4em;
+  background: linear-gradient(90deg, #222 0%, #000 30%, #0d6efd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  animation: fadeDown 0.7s ease;
+}
+
+.app-title::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #0d6efd, #00c3ff);
+  margin: 10px auto 0;
+  border-radius: 2px;
+}
+
+.app-highlight {
+  color: #0d6efd;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.app-dot {
+  color: #00c3ff;
+  font-weight: 900;
+  text-shadow: 0 0 6px rgba(0, 195, 255, 0.7);
+}
+
+/* Fancy drop animation */
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtitle styling with animated underline */
+.app-subtitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0d6efd;
+  text-align: center;
+  letter-spacing: 1.5px;
+  margin-top: -6px;
+  margin-bottom: 1.8em;
+  text-transform: uppercase;
+  position: relative;
+  animation: fadeInSubtitle 0.8s ease-in;
+}
+
+.app-subtitle::after {
+  content: "";
+  display: block;
+  width: 200px;
+  height: 2px;
+  margin: 8px auto 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #00c3ff, #0d6efd, #00c3ff);
+  background-size: 200% 100%;
+  animation: pulseLine 3s linear infinite;
+}
+
+@keyframes fadeInSubtitle {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseLine {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+
+/* ================================
+   Collapsible Section Styles
+   ================================ */
+.collapsible-section {
+  margin-top: 1.5em;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.collapsible-header {
+  padding: 10px 15px;
+  font-size: 1.1em;
+  font-weight: bold;
+  background: #f0f0f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.collapsible-header:hover {
+  background: #e6e6e6;
+}
+
+.collapsible-content {
+  padding: 10px 15px;
+  display: none;
+}
+
+.collapsible-section.active .collapsible-content {
+  display: block;
+}
+
+.toggle-arrow {
+  transition: transform 0.3s ease;
+}
+
+.collapsible-section.active .toggle-arrow {
+  transform: rotate(180deg);
+}
+
+.manual-refresh-btn {
+  background-color: #0077cc;
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.manual-refresh-btn:hover {
+  background-color: #005fa3;
+  transform: translateY(-2px);
+}
+
+.diff-arrow {
+  margin-left: 5px;
+  font-size: 32px;
+  vertical-align: middle;
+}
+
+
+/* ================================
+   🗓️ Date Picker Styling
+================================ */
+#dateInput {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 10px 14px;
+  border: 2px solid #4CAF50;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #222;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s ease-in-out;
+  cursor: pointer;
+}
+
+#dateInput:hover,
+#dateInput:focus {
+  border-color: #2e7d32;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+  outline: none;
+}
+
+/* 🏟️ Game Selector Area */
+#gameFilterContainer {
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+/* =====================================
+   🧱 Game/Event Tiles
+   ===================================== */
+#gameButtonContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 15px;
+  padding: 10px;
+}
+
+/* Default Blue Gradient Tile */
+.game-btn {
+  background: linear-gradient(135deg, #2b5876, #4e4376);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s ease-in-out;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Subtle lift and glow on hover */
+.game-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
+}
+
+/* Active (selected) state — clean green glow */
+.game-btn.active {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+  transform: scale(1.02);
+}
+
+/* Remove focus outline for aesthetics */
+.game-btn:focus {
+  outline: none;
+}
+
+/* Game Title */
+.game-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+
+/* Kickoff Time */
+.game-time {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+#gameButtonContainer {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.consensus-bar {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 10px 0;
+  font-size: 14px;
+  color: #333;
+}
+.consensus-bar strong {
+  color: #007bff;
+}
+
+.no-vig {
+  font-weight: 600;
+  color: #444;
+}
+
+.green-text {
+  color: #0b9e43 !important;
+}
+
+/* Spinner inside Load Data button */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Disabled button style */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================================
+   🏷️ Market Section Containers
+   ================================ */
+.market-buttons {
+  display: none; /* default hidden until JS shows them */
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.market-buttons.active {
+  display: block;
+}
+
+/* Section Header */
+.market-buttons h3 {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2a5298;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 4px;
+}
+
+/* ================================
+   🎯 Market Button Grid
+   ================================ */
+.market-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.market-btn {
+  background: linear-gradient(135deg, #e0f0ff, #cce5ff);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #007bff;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.market-btn:hover {
+  background: linear-gradient(135deg, #d0e7ff, #b3daff);
+  transform: translateY(-2px);
+}
+
+.market-btn.active {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+  transform: scale(1.04);
+}
+
+/* Optional subtle animation */
+@keyframes fadeInMarkets {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.market-list button {
+  animation: fadeInMarkets 0.3s ease;
+}
+
+.fact-check-toggle {
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fact-check-toggle:hover {
+  background-color: #007bff;
+}
+
+/* 💡 Flash blue highlight when row is clicked in Fact Check mode */
+.flash-highlight {
+  background-color: rgba(0, 123, 255, 0.2);
+  animation: flashFade 1s ease-out;
+}
+
+@keyframes flashFade {
+  from { background-color: rgba(0, 123, 255, 0.4); }
+  to { background-color: transparent; }
+}
+/* ================================
+   🧠 Fact Check Modal Styling
+================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background: #1e1e1e;
+  color: #f8f8f8;
+  border-radius: 14px;
+  padding: 32px;
+  width: 750px;          /* ⬆️ wider */
+  max-width: 95%;
+  max-height: 80vh;      /* taller with scrollable area */
+  overflow-y: auto;      /* enables scrolling for large content */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  animation: fadeInScale 0.25s ease-out;
+  line-height: 1.5;
+}
+
+
+.modal-content h2 {
+  margin-top: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #4dabf7;
+  text-align: center;
+}
+
+.modal-content pre {
+  background: #2b2b2b;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 60vh;
+  line-height: 1.4;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.2s ease-in-out;
+}
+.close-btn:hover {
+  color: #fff;
+}
+
+@keyframes fadeInScale {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+
