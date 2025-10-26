@@ -1,3 +1,7 @@
+# ✅ API proxy to backend (Render)
+# This line forwards all /api/* calls to your FastAPI backend on Render
+/api/*  https://bentherebetthat-api.onrender.com/api/:splat  200
+
 # Direct paths for your additional pages
 /reset-password  /reset-password.html  200
 /cancel          /cancel.html          200
