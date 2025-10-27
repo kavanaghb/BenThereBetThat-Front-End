@@ -1565,3 +1565,75 @@ const exportExcelBtn = document.getElementById("exportExcel");
 
 if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportToCSV);
 if (exportExcelBtn) exportExcelBtn.addEventListener("click", exportToExcel);
+
+// ===================================================
+// 🔍 Mobile Zoom / Condensed View Toggle (Auto-Hide + Persistent State)
+// ===================================================
+
+const zoomBtn = document.getElementById("zoomToggleBtn");
+let zoomedOut = localStorage.getItem("zoomedOut") === "true"; // persist state
+let hideTimeout;
+
+// --- Show button only when table is loaded ---
+function showZoomButtonIfTableExists() {
+  const tableExists = document.querySelector(".odds-table");
+  if (tableExists) {
+    document.body.classList.add("table-active");
+  } else {
+    document.body.classList.remove("table-active");
+  }
+}
+
+// Observe table creation/removal dynamically
+const observer = new MutationObserver(() => {
+  showZoomButtonIfTableExists();
+
+  // 🧠 Restore zoom level when table loads
+  const table = document.querySelector(".odds-table");
+  if (table) {
+    table.style.transform = zoomedOut ? "scale(0.9)" : "scale(1)";
+    table.style.transformOrigin = "top left";
+    zoomBtn.textContent = zoomedOut ? "🔍 Zoom In" : "🔎 Zoom Out";
+  }
+});
+observer.observe(document.getElementById("results"), { childList: true, subtree: true });
+
+// --- Toggle Zoom on Click ---
+if (zoomBtn) {
+  zoomBtn.addEventListener("click", () => {
+    const table = document.querySelector(".odds-table");
+    if (!table) return;
+
+    zoomedOut = !zoomedOut;
+    localStorage.setItem("zoomedOut", zoomedOut); // 💾 save user preference
+
+    table.style.transform = zoomedOut ? "scale(0.9)" : "scale(1)";
+    table.style.transformOrigin = "top left";
+    zoomBtn.textContent = zoomedOut ? "🔍 Zoom In" : "🔎 Zoom Out";
+  });
+}
+
+// --- Auto-hide the zoom button after inactivity ---
+function resetZoomButtonHideTimer() {
+  if (!document.body.classList.contains("table-active")) return;
+  zoomBtn.style.opacity = "1";
+  zoomBtn.style.transition = "opacity 0.5s ease-in-out";
+
+  clearTimeout(hideTimeout);
+  hideTimeout = setTimeout(() => {
+    zoomBtn.style.opacity = "0";
+  }, 5000);
+}
+
+// Show button again on user interaction
+["scroll", "touchstart", "mousemove"].forEach((evt) => {
+  document.addEventListener(evt, resetZoomButtonHideTimer, { passive: true });
+});
+
+// Initialize hide timer when button appears
+const buttonObserver = new MutationObserver(() => {
+  if (document.body.classList.contains("table-active")) {
+    resetZoomButtonHideTimer();
+  }
+});
+buttonObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
