@@ -1177,7 +1177,7 @@ for (let i = 0; i < data.length; i += batchSize) {
         return;
       }
 
-      // 🎯 Difference columns with color cues + directional arrows
+     // 🎯 Difference columns with bet recommendation signals (Over/Under)
 if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   const diff = Number(value);
   const isPrize = col === "PrizePicksDifference";
@@ -1185,22 +1185,26 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   const pointVal = Number(row[pointKey]);
   const consensusVal = Number(row.ConsensusPoint);
 
-  if (Number.isFinite(diff)) {
-    // 🎨 Color code by strength
-    if (diff > 2) td.classList.add("huntergreen");
-    else if (diff >= 1.5) td.classList.add("green");
-    else if (diff >= 1.0) td.classList.add("darkyellow");
+  if (Number.isFinite(diff) && Number.isFinite(pointVal) && Number.isFinite(consensusVal)) {
+    // 🎨 Color intensity based on diff
+    if (Math.abs(diff) > 2) td.classList.add("huntergreen");
+    else if (Math.abs(diff) >= 1.5) td.classList.add("green");
+    else if (Math.abs(diff) >= 1.0) td.classList.add("darkyellow");
     else td.classList.add("gray");
 
-    // 🧭 Arrow direction based on comparison to consensus
-    let arrow = "";
-    if (Number.isFinite(consensusVal) && Number.isFinite(pointVal)) {
-      if (pointVal > consensusVal) arrow = "⬆️";
-      else if (pointVal < consensusVal) arrow = "⬇️";
+    // 🧠 Betting signal logic
+    if (pointVal < consensusVal) {
+      // PrizePick line lower → Bet Over
+      td.innerHTML = `O↑ ${diff.toFixed(2)} <span class="bet-signal">(Over)</span>`;
+      td.style.color = "#28a745"; // green
+    } else if (pointVal > consensusVal) {
+      // PrizePick line higher → Bet Under
+      td.innerHTML = `U↓ ${diff.toFixed(2)} <span class="bet-signal">(Under)</span>`;
+      td.style.color = "#dc3545"; // red
+    } else {
+      td.innerHTML = `${diff.toFixed(2)}`;
+      td.style.color = "inherit";
     }
-
-    // 🧮 Final cell text
-    td.innerHTML = `${diff.toFixed(2)} <span class="diff-arrow">${arrow}</span>`;
   } else {
     td.textContent = "—";
   }
@@ -1208,6 +1212,7 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   tr.appendChild(td);
   return;
 }
+
 
 
       // 🧾 Default text/fallback
