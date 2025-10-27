@@ -1252,3 +1252,65 @@ button:disabled {
   }
 }
 
+/* ==============================================
+   📱 Mobile Table Enhancements
+   ============================================== */
+@media (max-width: 768px) {
+  /* Container: allow pinch-zoom and prevent horizontal overflow */
+  #results {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 5px;
+  }
+
+  /* Table: more compact and readable */
+  .odds-table {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  /* Wrap header text for narrower columns */
+  .odds-table th {
+    white-space: normal;
+    word-wrap: break-word;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.2;
+    padding: 6px 4px;
+  }
+
+  /* Cells: slightly larger touch targets */
+  .odds-table td {
+    padding: 8px 4px;
+    font-size: 13px;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  /* Sticky header to keep columns labeled while scrolling */
+  .odds-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff;
+    z-index: 2;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+  }
+
+  /* Allow vertical scroll for large tables */
+  body, html {
+    overflow-x: hidden;
+  }
+
+  /* Make table appear larger visually */
+  .odds-table {
+    transform: scale(1.15);
+    transform-origin: top left;
+  }
+
+  /* Prevent scaling from pushing table off screen */
+  #results {
+    overflow-y: auto;
+  }
+}
