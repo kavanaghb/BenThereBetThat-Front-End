@@ -1182,4 +1182,73 @@ button:disabled {
     padding-bottom: 10px;
   }
 }
+/* ================================================
+   📱 Mobile-Friendly Table Enhancements
+   ================================================ */
+
+/* 1️⃣ Sticky header across all devices */
+.odds-table thead {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 2️⃣ Table scroll and better handling on mobile */
+#results {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 3️⃣ Default table styles (desktop/tablet) remain the same */
+.odds-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* 4️⃣ Mobile-specific adjustments — phones only */
+@media (max-width: 600px) {
+  /* Zoom out slightly so table fits better */
+  body {
+    transform: scale(0.85);
+    transform-origin: top center;
+    overflow-x: hidden;
+  }
+
+  /* Enable pinch zoom & prevent awkward snapping */
+  html, body {
+    touch-action: pan-x pan-y;
+  }
+
+  /* Scrollable container hint */
+  #results::after {
+    content: "← Swipe to scroll →";
+    display: block;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 8px;
+  }
+
+  /* Allow horizontal scroll for table on phones */
+  #results {
+    overflow-x: scroll;
+  }
+
+  /* Wrap long header text so columns are narrower */
+  .odds-table th {
+    white-space: normal;
+    word-wrap: break-word;
+    font-size: 12px;
+    padding: 6px;
+    line-height: 1.2;
+  }
+
+  /* Slightly smaller table text on mobile */
+  .odds-table td {
+    font-size: 12px;
+    padding: 4px;
+  }
+}
 
