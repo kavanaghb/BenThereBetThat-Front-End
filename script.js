@@ -1177,7 +1177,7 @@ for (let i = 0; i < data.length; i += batchSize) {
         return;
       }
 
-     // 🎯 Difference columns with bet recommendation signals (Over/Under)
+// 🎯 Difference columns with bet recommendation signals (Over/Under - enhanced contrast)
 if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   const diff = Number(value);
   const isPrize = col === "PrizePicksDifference";
@@ -1192,18 +1192,21 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
     else if (Math.abs(diff) >= 1.0) td.classList.add("darkyellow");
     else td.classList.add("gray");
 
-    // 🧠 Betting signal logic
+    // 🧠 Betting signal with visible badges
     if (pointVal < consensusVal) {
-      // PrizePick line lower → Bet Over
-      td.innerHTML = `O↑ ${diff.toFixed(2)} <span class="bet-signal">(Over)</span>`;
-      td.style.color = "#28a745"; // green
+      // Bet Over
+      td.innerHTML = `
+        <span class="bet-badge over-badge">O↑ Over</span>
+        <span class="diff-val">${diff.toFixed(2)}</span>
+      `;
     } else if (pointVal > consensusVal) {
-      // PrizePick line higher → Bet Under
-      td.innerHTML = `U↓ ${diff.toFixed(2)} <span class="bet-signal">(Under)</span>`;
-      td.style.color = "#dc3545"; // red
+      // Bet Under
+      td.innerHTML = `
+        <span class="bet-badge under-badge">U↓ Under</span>
+        <span class="diff-val">${diff.toFixed(2)}</span>
+      `;
     } else {
-      td.innerHTML = `${diff.toFixed(2)}`;
-      td.style.color = "inherit";
+      td.innerHTML = `<span class="diff-val">${diff.toFixed(2)}</span>`;
     }
   } else {
     td.textContent = "—";
@@ -1212,6 +1215,7 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   tr.appendChild(td);
   return;
 }
+
 
 
 
@@ -1571,23 +1575,6 @@ const exportExcelBtn = document.getElementById("exportExcel");
 if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportToCSV);
 if (exportExcelBtn) exportExcelBtn.addEventListener("click", exportToExcel);
 
-// ===================================================
-// 🔍 Mobile Zoom / Condensed View Toggle (Auto-Hide + Persistent State)
-// ===================================================
-
-const zoomBtn = document.getElementById("zoomToggleBtn");
-let zoomedOut = localStorage.getItem("zoomedOut") === "true"; // persist state
-let hideTimeout;
-
-// --- Show button only when table is loaded ---
-function showZoomButtonIfTableExists() {
-  const tableExists = document.querySelector(".odds-table");
-  if (tableExists) {
-    document.body.classList.add("table-active");
-  } else {
-    document.body.classList.remove("table-active");
-  }
-}
 
 // Observe table creation/removal dynamically
 const observer = new MutationObserver(() => {
