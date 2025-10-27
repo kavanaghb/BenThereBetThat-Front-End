@@ -1081,351 +1081,100 @@ button:disabled {
 #dateInput:hover::-webkit-calendar-picker-indicator {
   transform: scale(1.2);
 }
-
-/* =====================================
-   📱 Mobile Auth Layout Fix
-   ===================================== */
-@media (max-width: 768px) {
-  #auth-container {
-    align-items: flex-start;  /* move content to top instead of center */
-    padding-top: 60px;        /* add breathing room from top */
-    height: auto;             /* allow natural scroll height */
-    min-height: 100vh;        /* still fill screen visually */
-  }
-
-  .auth-card {
-    width: 95%;
-    max-width: 360px;
-    padding: 28px 20px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-    margin-bottom: 40px; /* space for scroll bounce */
-  }
-
-  .app-title {
-    font-size: 2rem;
-    letter-spacing: 1px;
-  }
-
-  .app-subtitle {
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-  }
-
-  input, button {
-    font-size: 15px;
-  }
-
-  .primary-btn, .secondary-btn {
-    padding: 10px 14px;
-  }
-}
-
-/* ================================
-   📱 Mobile Table Responsiveness
-   ================================ */
-@media (max-width: 768px) {
-  .odds-table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-    border-collapse: separate;
-    border-spacing: 0;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
-    border-radius: 8px;
-  }
-
-  .odds-table thead {
-    background: #f8f9fa;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-  }
-
-  .odds-table th,
-  .odds-table td {
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-
-  .odds-table th {
-    background: #007bff;
-    color: white;
-    text-align: left;
-  }
-
-  /* Make rows more tappable on mobile */
-  .odds-table tr {
-    border-bottom: 1px solid #ddd;
-  }
-
-  /* Soft scroll cue for mobile users */
-  .odds-table::after {
-    content: "⇆";
-    position: absolute;
-    right: 10px;
-    bottom: 8px;
-    font-size: 1.2rem;
-    color: #999;
-    animation: fadeScrollHint 2s ease-in-out infinite;
-  }
-
-  @keyframes fadeScrollHint {
-    0%, 100% { opacity: 0.3; transform: translateX(0); }
-    50% { opacity: 1; transform: translateX(-5px); }
-  }
-
-  /* Ensure no overlap with other UI */
-  #results {
-    overflow-x: auto;
-    padding-bottom: 10px;
-  }
-}
-/* ================================================
-   📱 Mobile-Friendly Table Enhancements
-   ================================================ */
-
-/* 1️⃣ Sticky header across all devices */
-.odds-table thead {
-  position: sticky;
-  top: 0;
-  background-color: #ffffff;
-  z-index: 5;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* 2️⃣ Table scroll and better handling on mobile */
-#results {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 3️⃣ Default table styles (desktop/tablet) remain the same */
-.odds-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-/* 4️⃣ Mobile-specific adjustments — phones only */
-@media (max-width: 600px) {
-  /* Zoom out slightly so table fits better */
-  body {
-    transform: scale(0.85);
-    transform-origin: top center;
-    overflow-x: hidden;
-  }
-
-  /* Enable pinch zoom & prevent awkward snapping */
-  html, body {
-    touch-action: pan-x pan-y;
-  }
-
-  /* Scrollable container hint */
-  #results::after {
-    content: "← Swipe to scroll →";
-    display: block;
-    text-align: center;
-    font-size: 0.8rem;
-    color: #777;
-    margin-top: 8px;
-  }
-
-  /* Allow horizontal scroll for table on phones */
-  #results {
-    overflow-x: scroll;
-  }
-
-  /* Wrap long header text so columns are narrower */
-  .odds-table th {
-    white-space: normal;
-    word-wrap: break-word;
-    font-size: 12px;
-    padding: 6px;
-    line-height: 1.2;
-  }
-
-  /* Slightly smaller table text on mobile */
-  .odds-table td {
-    font-size: 12px;
-    padding: 4px;
-  }
-}
-
-/* ==============================================
-   📱 Mobile Table Enhancements (Final Optimized)
-   ============================================== */
-@media (max-width: 768px) {
-
-  /* Let users pinch and zoom freely */
-  html, body {
-    touch-action: pan-x pan-y;
-    -ms-touch-action: manipulation;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-  }
-
-  /* Table wrapper */
-  #results {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 5px;
-  }
-
-  /* Compact table with better visibility */
-  .odds-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    font-size: 12.5px;
-    background-color: #fefefe;
-    transform: scale(0.9); /* zoomed out by default for full width */
-    transform-origin: top left;
-  }
-
-  /* Sticky headers with clear background and subtle shadow */
-  .odds-table thead th {
-    position: sticky;
-    top: 0;
-    background-color: #f3f6fa;
-    color: #222;
-    font-weight: 700;
-    z-index: 3;
-    border-bottom: 2px solid #ccc;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-  }
-
-  /* Header text wraps cleanly for narrow screens */
-  .odds-table th {
-    white-space: normal;
-    word-wrap: break-word;
-    text-align: center;
-    font-size: 11.5px;
-    line-height: 1.2;
-    padding: 6px 4px;
-  }
-
-  /* Data cells: slightly taller for tap accuracy */
-  .odds-table td {
-    padding: 8px 4px;
-    font-size: 12.5px;
-    line-height: 1.3;
-    text-align: center;
-    vertical-align: middle;
-  }
-
-  /* Event column: cap width and wrap text */
-  .odds-table td:first-child,
-  .odds-table th:first-child {
-    max-width: 120px;
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  /* Scroll assistance message (optional hint) */
-  #results::after {
-    content: "📊 Pinch to zoom in/out • Scroll sideways for more columns";
-    display: block;
-    text-align: center;
-    color: #666;
-    font-size: 11px;
-    margin-top: 6px;
-    opacity: 0.85;
-  }
-}
-
 /* ============================================================
-   📱 MOBILE TABLE EXPERIENCE — FINAL OPTIMIZED VERSION
+   📱 MOBILE TABLE EXPERIENCE — POLISHED RESPONSIVE VERSION
    ============================================================ */
 @media (max-width: 768px) {
-  /* Let users pinch and zoom */
+  /* Let users pinch and zoom naturally */
   html, body {
     touch-action: pan-x pan-y;
     overflow-x: hidden;
     overscroll-behavior: contain;
   }
 
-  /* Table wrapper for smoother scroll */
+  /* Table wrapper — scrollable horizontally */
   #results {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 0 6px;
+    padding: 0 6px 10px 6px;
   }
 
-  /* Compact table styling */
+  /* Compact, zoomable table layout */
   .odds-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-    font-size: 12.5px;
     background-color: #fff;
-    transform: scale(0.9); /* zoomed-out default */
+    font-size: 12.5px;
+    transform: scale(0.9); /* default zoomed-out view */
     transform-origin: top left;
     transition: transform 0.3s ease-in-out;
   }
 
-  /* Sticky headers */
+  /* Sticky headers with subtle shadow for clarity */
   .odds-table thead th {
     position: sticky;
     top: 0;
     background-color: #f3f6fa;
     color: #222;
     font-weight: 700;
-    z-index: 3;
+    z-index: 5;
     border-bottom: 2px solid #ccc;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-  }
-
-  /* Header text wraps for narrow screens */
-  .odds-table th {
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
     white-space: normal;
     word-wrap: break-word;
     text-align: center;
     font-size: 11.5px;
-    line-height: 1.2;
+    line-height: 1.3;
     padding: 6px 4px;
   }
 
-  /* Data cells spacing for better tap accuracy */
+  /* Table cells — readable, not oversized */
   .odds-table td {
-    padding: 8px 4px;
+    padding: 5px 6px;
     font-size: 12.5px;
     line-height: 1.3;
     text-align: center;
     vertical-align: middle;
+    white-space: nowrap;
   }
 
-  /* 🧍 Sticky Player Column (3rd column) */
+  /* 🧍 Sticky Player/Description Column (3rd column) */
   .odds-table th:nth-child(3),
   .odds-table td:nth-child(3) {
     position: sticky;
     left: 0;
     background: linear-gradient(90deg, #f8f9fa, #e9ecef);
-    z-index: 4;
+    z-index: 6;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-    white-space: nowrap;
     font-weight: 600;
+    white-space: nowrap;
+    word-break: keep-all;
+    min-width: 130px;
+    max-width: 180px;
   }
 
-  /* Ensure other columns scroll normally */
-  .odds-table th:nth-child(1),
-  .odds-table td:nth-child(1),
-  .odds-table th:nth-child(2),
-  .odds-table td:nth-child(2) {
-    position: static;
+ /* 📋 Event Column — readable & compact with truncation */
+.odds-table td:first-child,
+.odds-table th:first-child {
+  min-width: 140px;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* truncate long event names */
+  word-break: keep-all;
+}
+
+
+
+  /* Slightly more compact rows */
+  .odds-table tr {
+    border-bottom: 1px solid #ddd;
   }
 
-  /* Shrink the event column and wrap text */
-  .odds-table td:first-child,
-  .odds-table th:first-child {
-    max-width: 120px;
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  /* Scroll assist hint */
+  /* 💬 Scroll + zoom hint */
   #results::after {
-    content: "📊 Pinch to zoom • Scroll sideways for more columns";
+    content: "📊 Pinch to zoom • Swipe → for more columns";
     display: block;
     text-align: center;
     color: #666;
@@ -1434,31 +1183,85 @@ button:disabled {
     opacity: 0.85;
   }
 
-  /* --- Zoom toggle button --- */
+  /* 🕹️ Floating Zoom Button — with smooth fade + bounce */
   #zoomToggleBtn {
     position: fixed;
     bottom: 16px;
     right: 16px;
     background: #007bff;
-    color: white;
+    color: #fff;
     border: none;
     border-radius: 50px;
     padding: 10px 18px;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     z-index: 9999;
     cursor: pointer;
-    display: none; /* hidden by default */
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+    transition: all 0.4s ease;
+  }
+
+  #zoomToggleBtn.show {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    animation: bounceIn 0.6s ease;
+  }
+
+  @keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
   }
 
   #zoomToggleBtn:hover {
     background: #0056b3;
   }
 
-  /* Only show zoom button when a table exists */
+  /* Show button when a table is visible */
   body.table-active #zoomToggleBtn {
     display: block;
+  }
+
+  /* Compact tweak for smaller phones */
+  @media (max-width: 480px) {
+    .odds-table {
+      transform: scale(0.85);
+    }
+
+    .odds-table th,
+    .odds-table td {
+      font-size: 11.5px;
+      padding: 4px 3px;
+    }
+
+    .odds-table th:nth-child(3),
+    .odds-table td:nth-child(3) {
+      min-width: 110px;
+    }
+
+    .odds-table td:first-child,
+    .odds-table th:first-child {
+      min-width: 130px;
+    }
+  }
+}
+/* ======================================
+   📱 Fix: Select/Deselect Buttons on Mobile
+   ====================================== */
+@media (max-width: 600px) {
+  #gameFilterContainer .market-actions,
+  #gameFilterContainer > div {
+    flex-direction: column !important;
+    align-items: stretch;
+  }
+
+  #gameFilterContainer button {
+    width: 100%;
+    margin: 4px 0;
   }
 }
 
