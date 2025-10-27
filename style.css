@@ -1223,8 +1223,10 @@ button:disabled {
 
   /* Show button when a table is visible */
   body.table-active #zoomToggleBtn {
-    display: block;
-  }
+  display: block;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
 
   /* Compact tweak for smaller phones */
   @media (max-width: 480px) {

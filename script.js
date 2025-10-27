@@ -1591,7 +1591,7 @@ const observer = new MutationObserver(() => {
   // 🧠 Restore zoom level when table loads
   const table = document.querySelector(".odds-table");
   if (table) {
-    table.style.transform = zoomedOut ? "scale(0.9)" : "scale(1)";
+    table.style.transform = zoomedOut ? "scale(0.8)" : "scale(1)";
     table.style.transformOrigin = "top left";
     zoomBtn.textContent = zoomedOut ? "🔍 Zoom In" : "🔎 Zoom Out";
   }
