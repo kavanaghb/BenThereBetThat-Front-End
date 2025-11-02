@@ -56,24 +56,31 @@ const gameSearchInput = document.getElementById("gameSearch");
 // ============================================================
 
 // --------------
-// 🧩 Forgot Password
+// 🧩 Forgot Password (Updated for Prod & Dev)
 // --------------
 document.getElementById("forgot-btn")?.addEventListener("click", async () => {
   const email = prompt("Enter your email to reset your password:");
   if (!email) return;
 
   try {
-    // ✅ Force redirect to your actual reset password page
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://bentherebetthat.com/reset-password",
-    });
+    // Detect correct environment redirect
+    const redirectTo =
+      window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1")
+        ? "http://127.0.0.1:5500/reset-password.html"
+        : "https://bentherebetthat.com/reset-password.html";
 
-    if (error) throw error;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 
-    alert("✅ Password reset link sent! Check your email for the reset link.");
+    if (error) {
+      console.error("Password reset error:", error.message);
+      alert("❌ " + (error.message || "Unable to send password reset email."));
+      return;
+    }
+
+    alert("✅ Password reset link sent! Please check your email.");
   } catch (err) {
-    console.error("Password reset error:", err);
-    alert("❌ Unable to send password reset email. Please try again later.");
+    console.error("Unexpected error during password reset:", err);
+    alert("⚠️ Something went wrong. Please try again later.");
   }
 });
 
