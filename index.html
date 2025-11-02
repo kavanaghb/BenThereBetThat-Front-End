@@ -79,22 +79,30 @@
        🏟️ Main Dashboard
   =============================== -->
   <div id="main-content" style="display:none;">
-    <!-- Subscription + Controls Bar -->
-    <div class="auth-bar">
-      <div>
-        <strong id="subscription-status">Subscription: Unknown</strong>
-        <div id="access-until" style="display:none;"></div>
-      </div>
-      <div>
-        <button id="cancel-subscription-btn">Cancel Subscription</button>
-        <button id="resume-subscription-btn">Resume Subscription</button>
-        <button id="subscribeBtn">Subscribe</button>
-        <button id="signout-btn" class="secondary-btn button-with-spinner">
-          Sign Out
-          <div id="logout-spinner" class="spinner-small" style="display:none;"></div>
-        </button>
-      </div>
-    </div>
+   <!-- =================================================== -->
+<!-- 💳 Subscription Management Section -->
+<!-- =================================================== -->
+<div id="subscription-container" style="text-align:center; margin-top: 20px;">
+  <h2 class="app-subtitle">Your Subscription</h2>
+
+  <!-- Subscription Status + Access Info -->
+  <p id="subscription-status" style="font-weight:600; font-size:1.1rem; color:#222;">
+    Subscription: Unknown
+  </p>
+  <p id="access-until" style="display:none; color:#0d6efd; font-weight:600;"></p>
+
+  <!-- Subscription Control Buttons -->
+  <div id="subscription-controls" style="margin-top:12px;">
+    <button id="subscribeBtn" class="primary-btn" style="display:none;">Subscribe</button>
+    <button id="cancel-subscription-btn" class="secondary-btn" style="display:none;">Cancel Subscription</button>
+    <button id="resume-subscription-btn" class="primary-btn" style="display:none;">Resume Subscription</button>
+    <button id="signout-btn" class="secondary-btn button-with-spinner">
+      Sign Out
+      <div id="logout-spinner" class="spinner-small" style="display:none;"></div>
+    </button>
+  </div>
+</div>
+
 
     <!-- Title -->
     <h1 class="app-title">Ben There <span class="app-highlight">Bet That<span class="app-dot">!</span></span></h1>
@@ -195,7 +203,9 @@
         <button id="exportCsv">Export CSV</button>
         <button id="exportExcel">Export Excel</button>
         <button id="factCheckBtn" class="fact-check-toggle">🧠 Fact Check Mode</button>
-      </div>
+        <button id="columnInfoBtn" class="info-btn">ℹ️ Column Info</button>
+    </div>
+
 
       <div id="bookmaker-filters" class="dropdown-container">
         <label><input type="checkbox" value="Fanduel" checked> Fanduel</label>
@@ -208,10 +218,45 @@
     </div>
 
     <!-- 🧾 Results -->
-<div id="results"></div>
-<div id="loading">Loading data...</div>
-<div id="progressText"></div>
+    <div id="results"></div>
+    <div id="loading">Loading data...</div>
+    <div id="progressText"></div>
+    
+<!-- 🔁 View Mode Toggle (temporarily hidden to prevent API usage) -->
+<!--
+<div class="view-toggle">
+  <button id="viewProps" class="toggle-btn active">📊 Player Props</button>
+  <button id="viewGames" class="toggle-btn">🏈 Game Lines</button>
+</div>
+-->
 
+
+
+
+
+    <!-- 📘 Column Info Modal -->
+    <div id="columnInfoModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>📊 Column Guide</h2>
+        <p>Here’s what each column represents and how to interpret it:</p>
+
+        <ul class="info-list">
+          <li><strong>Event:</strong> The matchup (e.g., Home vs Away).</li>
+          <li><strong>Market:</strong> The type of player prop (Points, Saves, Rebounds, etc.).</li>
+          <li><strong>Description:</strong> Player name or specific prop.</li>
+          <li><strong>FanDuel / DraftKings / BetMGM / Fanatics:</strong> Sportsbook lines and odds. If one book’s line is way off, uncheck it above to remove it from the consensus.</li>
+          <li><strong>Consensus:</strong> The average sportsbook line used as a fair baseline to compare against PrizePicks and Underdog lines.</li>
+          <li><strong>BestNoVig:</strong> 🧮 Shows which side (Over or Under) has the best fair win probability after removing the bookmaker’s vig. Based on normalized implied probabilities.</li>
+          <li><strong>PrizePicks:</strong> Fantasy line from PrizePicks. Compared to consensus for potential value.</li>
+          <li><strong>Underdog:</strong> Fantasy line from Underdog Fantasy. Also compared to consensus.</li>
+          <li><strong>PrizePicks Δ:</strong> Difference between the PrizePicks line and the consensus line. Larger differences may indicate stronger edges. Green intensity increases with difference magnitude.</li>
+          <li><strong>Underdog Δ:</strong> Same as above, but for Underdog Fantasy.</li>
+        </ul>
+
+        <button class="secondary-btn close-modal-btn" style="margin-top: 16px;">Close</button>
+      </div>
+    </div>
 <!-- 🧠 Fact Check Modal -->
 <div id="factCheckModal" class="modal-overlay" style="display:none;">
   <div class="modal-content">

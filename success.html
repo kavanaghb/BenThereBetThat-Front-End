@@ -1,13 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Payment Successful</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Successful | Ben There Bet That!</title>
+
+  <!-- Fonts & Styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #0b0b0b;
+      color: #fff;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #121212;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+    h1 {
+      color: #f1c40f;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      margin: 0.5rem 0 1.5rem;
+      color: #ccc;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #f1c40f;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      background-color: #ffe066;
+    }
+    .countdown {
+      color: #999;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>✅ Subscription Successful!</h1>
-  <p>Your payment was received. You now have full access to the site.</p>
-  <a href="index.html">Return to Dashboard</a>
+  <div class="card">
+    <h1>🎉 Payment Successful!</h1>
+    <p>Your subscription is now active. You’ll be redirected to your dashboard shortly.</p>
+    <button onclick="window.location.href='index.html'">Go to Dashboard</button>
+    <p class="countdown">Redirecting in <span id="count">5</span> seconds...</p>
+  </div>
+
+  <script>
+    let count = 5;
+    const timer = setInterval(() => {
+      count--;
+      document.getElementById("count").textContent = count;
+      if (count <= 0) {
+        clearInterval(timer);
+        window.location.href = "index.html";
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
