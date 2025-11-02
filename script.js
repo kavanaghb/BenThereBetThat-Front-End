@@ -5,7 +5,7 @@
 // ----------------------------
 // Global Constants
 // ----------------------------
-const API_BASE = window.API_BASE || https://bentherebetthat-api.onrender.com";
+const API_BASE = window.API_BASE || "https://bentherebetthat-api.onrender.com";
 const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
 const SUPABASE_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
