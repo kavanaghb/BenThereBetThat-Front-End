@@ -63,16 +63,20 @@ document.getElementById("forgot-btn")?.addEventListener("click", async () => {
   if (!email) return;
 
   try {
+    // ✅ Force redirect to your actual reset password page
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
+      redirectTo: "https://bentherebetthat.com/reset-password",
     });
+
     if (error) throw error;
-    alert("✅ Password reset link sent! Check your email.");
+
+    alert("✅ Password reset link sent! Check your email for the reset link.");
   } catch (err) {
     console.error("Password reset error:", err);
-    alert("❌ Unable to send password reset email.");
+    alert("❌ Unable to send password reset email. Please try again later.");
   }
 });
+
 
 // --------------
 // 💰 Subscribe (Stripe Checkout Session)
