@@ -1,0 +1,24 @@
+/* 
+  # ✅ Default security and caching headers for all routes
+  Access-Control-Allow-Origin: *
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Cache-Control: public, max-age=3600
+*/
+
+/api/*
+  Access-Control-Allow-Origin: https://bentherebetthat.com
+  Access-Control-Allow-Methods: GET, POST, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Authorization
+  Access-Control-Allow-Credentials: true
+
+/reset-password.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/success.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/cancel.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
