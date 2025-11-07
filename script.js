@@ -220,8 +220,7 @@ document.getElementById("subscribeBtn")?.addEventListener("click", async () => {
   if (!user) return alert("⚠️ You must be logged in to subscribe.");
 
   const subscribeBtn = document.getElementById("subscribeBtn");
-  const priceId = "price_1SQiMsRQcEP77lM7339QYafe"; // ✅ LIVE price ID
-
+  const priceId = "price_1SQwKqRQcEP77lM7mAFxdp6T"; // ✅ LIVE price ID
   subscribeBtn.disabled = true;
   subscribeBtn.textContent = "Redirecting to Checkout...";
   subscribeBtn.style.opacity = "0.6";
