@@ -1537,8 +1537,9 @@ function setActiveFor(buttons, active = true) {
   );
 }
 
+
 // ===================================================
-// 📊 Load Data Handler (Fixed + Diagnostic Logging + Refresh Logic)
+// 📊 Load Data Handler (with user_id + subscription check + inline banner)
 // ===================================================
 async function loadData() {
   if (!selectedSport || selectedMarkets.length === 0) {
@@ -1559,26 +1560,58 @@ async function loadData() {
   progressText.textContent = "Fetching data...";
   loadingDiv.style.display = "block";
 
-  // ⛔ Disable refresh until load completes (if helper exists)
-  if (typeof setRefreshEnabled === "function") {
-    setRefreshEnabled(false);
-  }
+  if (typeof setRefreshEnabled === "function") setRefreshEnabled(false);
 
-  // Abort previous request if needed
   if (currentController) currentController.abort();
   currentController = new AbortController();
   const signal = currentController.signal;
 
   try {
+    // ✅ Get logged-in user (for subscription validation)
+    const { data: { user } } = await supabase.auth.getUser();
+    const user_id = user?.id || "";
+
+    if (!user_id) {
+      // 🧱 Inline message for guests
+      resultsDiv.innerHTML = `
+        <div class="subscription-banner fade-in">
+          <p>🚫 You must be signed in to access player data.</p>
+          <button id="signinRedirectBtn" class="cta-btn">Sign In</button>
+        </div>`;
+      document.getElementById("signinRedirectBtn")?.addEventListener("click", () => {
+        window.location.href = "/signin.html";
+      });
+      loadingDiv.style.display = "none";
+      return;
+    }
+
+    // ✅ Check subscription status before fetching
+    const subRes = await fetch(`${window.API_BASE}/api/subscription-details?user_id=${user_id}`);
+    const subData = await subRes.json();
+    if (subData.subscription_status !== "active") {
+      // 🚫 Inline banner for non-subscribers
+      resultsDiv.innerHTML = `
+        <div class="subscription-banner fade-in">
+          <h3>🔒 Subscription Required</h3>
+          <p>Your account does not have an active subscription.</p>
+          <button id="subscribeNowBtn" class="cta-btn">Subscribe Now</button>
+        </div>`;
+      document.getElementById("subscribeNowBtn")?.addEventListener("click", () => {
+        window.location.href = "/subscribe.html";
+      });
+      loadingDiv.style.display = "none";
+      return;
+    }
+
+    // ===================================================
+    // 🔍 Build query params
+    // ===================================================
     const params = new URLSearchParams();
     params.append("sport", selectedSport);
     params.append("date", dateInput.value);
+    params.append("user_id", user_id);
     selectedMarkets.forEach((m) => params.append("markets", m));
-
-    // ✅ Include only selected events (if any)
-    if (selectedGameIds.length > 0) {
-      selectedGameIds.forEach((id) => params.append("event_ids", id));
-    }
+    selectedGameIds.forEach((id) => params.append("event_ids", id));
 
     // ===================================================
     // 🔍 Fetch + Inspect Response (Safe + Deduped)
@@ -1599,7 +1632,6 @@ async function loadData() {
       return;
     }
 
-    // ✅ Validate response type
     if (!allData || !Array.isArray(allData)) {
       console.error("🚨 Invalid data from API:", allData);
       alert("No data returned from server — check your filters or backend logs.");
@@ -1607,28 +1639,21 @@ async function loadData() {
       return;
     }
 
-    // ✅ Deduplicate before rendering
+    // ✅ Deduplicate + Render
     const cleanedData = dedupeMarkets(allData);
     console.log(`🧹 Deduped from ${allData.length} → ${cleanedData.length} rows`);
     console.log("📦 Sample row:", cleanedData[0]);
 
     progressText.textContent = "Rendering table...";
-
-    // Wait for the table to render
     await renderTableInBatches(cleanedData);
 
-    // 🧩 Store immutable master dataset for reset + filtering
     window.fullDataset = JSON.parse(JSON.stringify(cleanedData));
     window.lastRenderedData = cleanedData;
-
-    // ✅ Clear progress text after rendering completes
     progressText.textContent = "";
 
-    // ✅ Enable refresh button once data successfully loaded
     if (typeof setRefreshEnabled === "function") {
       setRefreshEnabled(cleanedData.length > 0);
     }
-
   } catch (err) {
     if (err.name === "AbortError") {
       progressText.textContent = "⚠️ Loading stopped.";
@@ -1637,17 +1662,12 @@ async function loadData() {
       alert("Frontend error: " + err.message);
       progressText.textContent = "❌ Error fetching data (see console).";
     }
-
-    // ⛔ Disable refresh after error
-    if (typeof setRefreshEnabled === "function") {
-      setRefreshEnabled(false);
-    }
-
+    if (typeof setRefreshEnabled === "function") setRefreshEnabled(false);
   } finally {
-    // Always hide the loading overlay
     loadingDiv.style.display = "none";
   }
 }
+
 
 
 // ===================================================
