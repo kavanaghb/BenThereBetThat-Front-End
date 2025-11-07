@@ -216,26 +216,29 @@ document.getElementById("forgot-btn")?.addEventListener("click", async () => {
 // 💳 Subscribe (Stripe Checkout Session)
 // ===================================================
 document.getElementById("subscribeBtn")?.addEventListener("click", async () => {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return alert("⚠️ You must be logged in.");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return alert("⚠️ You must be logged in to subscribe.");
 
   const subscribeBtn = document.getElementById("subscribeBtn");
-  const priceId = "price_1SQiMsRQcEP77lM7339QYafe"; // 🔧 replace with LIVE price ID before launch
+  const priceId = "price_1SQiMsRQcEP77lM7339QYafe"; // ✅ LIVE price ID
 
   subscribeBtn.disabled = true;
-  subscribeBtn.textContent = "Redirecting...";
+  subscribeBtn.textContent = "Redirecting to Checkout...";
   subscribeBtn.style.opacity = "0.6";
 
   try {
-    // ✅ use global safeFetch helper for reliable timeout + error handling
-    const data = await safeFetch(`${window.API_BASE}/create-checkout-session`, {
+    const response = await fetch(`${window.API_BASE}/api/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: user.id, price_id: priceId }),
     });
 
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
     if (data?.url) {
-      window.location.href = data.url; // 🔁 redirect to Stripe checkout
+      console.log("✅ Redirecting to Stripe Checkout:", data.url);
+      window.location.href = data.url;
     } else {
       alert("⚠️ Could not start checkout. Please try again later.");
     }
@@ -258,11 +261,8 @@ document.getElementById("cancel-subscription-btn")?.addEventListener("click", as
   const cancelBtn = document.getElementById("cancel-subscription-btn");
 
   try {
-    const user = (await supabase.auth.getUser())?.data?.user;
-    if (!user) {
-      alert("⚠️ You must be logged in to cancel your subscription.");
-      return;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return alert("⚠️ You must be logged in to cancel your subscription.");
 
     if (!confirm("Are you sure you want to cancel your subscription at the period end?")) return;
 
@@ -278,7 +278,7 @@ document.getElementById("cancel-subscription-btn")?.addEventListener("click", as
 
     if (data?.success) {
       alert("✅ Your subscription will end at the current billing period.");
-      checkSubscriptionStatus(user.id); // 🔄 refresh UI
+      checkSubscriptionStatus(user.id);
     } else {
       alert("⚠️ Unable to cancel subscription. Please contact support.");
     }
@@ -292,6 +292,8 @@ document.getElementById("cancel-subscription-btn")?.addEventListener("click", as
   }
 });
 
+
+
 // ===================================================
 // 🔄 Resume Subscription (Reactivate)
 // ===================================================
@@ -299,11 +301,8 @@ document.getElementById("resume-subscription-btn")?.addEventListener("click", as
   const resumeBtn = document.getElementById("resume-subscription-btn");
 
   try {
-    const user = (await supabase.auth.getUser())?.data?.user;
-    if (!user) {
-      alert("⚠️ You must be logged in to resume your subscription.");
-      return;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return alert("⚠️ You must be logged in to resume your subscription.");
 
     resumeBtn.disabled = true;
     resumeBtn.textContent = "Resuming...";
@@ -317,7 +316,7 @@ document.getElementById("resume-subscription-btn")?.addEventListener("click", as
 
     if (data?.success) {
       alert("✅ Your subscription has been resumed successfully!");
-      checkSubscriptionStatus(user.id); // 🔄 refresh UI
+      checkSubscriptionStatus(user.id);
     } else {
       alert("⚠️ Unable to resume subscription. Please contact support.");
     }
@@ -331,6 +330,8 @@ document.getElementById("resume-subscription-btn")?.addEventListener("click", as
   }
 });
 
+
+
 // ===================================================
 // 🧾 Manage Billing Button (Stripe Portal)
 // ===================================================
@@ -338,27 +339,18 @@ document.getElementById("manageBillingBtn")?.addEventListener("click", async () 
   const manageBillingBtn = document.getElementById("manageBillingBtn");
 
   try {
-    const user = (await supabase.auth.getUser())?.data?.user;
-    if (!user) {
-      alert("⚠️ You must be signed in to manage your billing.");
-      return;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return alert("⚠️ You must be signed in to manage your billing.");
 
-    // 🕹️ UI Feedback
     manageBillingBtn.disabled = true;
     manageBillingBtn.textContent = "Opening...";
     manageBillingBtn.style.opacity = "0.6";
 
-    // ✅ 1️⃣ Fetch customer_id from backend using safeFetch
     const customerData = await safeFetch(`${window.API_BASE}/api/get-customer-id?user_id=${user.id}`);
     const customer_id = customerData?.customer_id;
-    if (!customer_id) {
-      alert("⚠️ Unable to retrieve your billing information. Please contact support.");
-      return;
-    }
+    if (!customer_id) return alert("⚠️ Unable to retrieve your billing information.");
 
-    // ✅ 2️⃣ Create Stripe billing portal session
-    const portalData = await safeFetch(`${window.API_BASE}/create-billing-portal-session`, {
+    const portalData = await safeFetch(`${window.API_BASE}/api/create-billing-portal-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ customer_id }),
@@ -366,13 +358,11 @@ document.getElementById("manageBillingBtn")?.addEventListener("click", async () 
 
     if (!portalData?.url) throw new Error("No billing portal URL returned.");
 
-    // 🌐 Redirect to Stripe-hosted billing portal
     window.location.href = portalData.url;
   } catch (err) {
     console.error("❌ Billing portal error:", err);
     alert("⚠️ We couldn’t open your billing page. Please try again in a few seconds.");
   } finally {
-    // ♻️ Restore button state
     manageBillingBtn.disabled = false;
     manageBillingBtn.textContent = "Manage Billing";
     manageBillingBtn.style.opacity = "1";
@@ -415,16 +405,29 @@ async function checkSubscriptionStatus(user_id) {
     // -----------------------------------------------------------
     // ⚙️ Enable or Disable Data Buttons
     // -----------------------------------------------------------
-    const enableLoad = (enable) => {
-      if (!loadBtn) return;
-      loadBtn.disabled = !enable;
-      loadBtn.style.opacity = enable ? "1" : "0.5";
-      loadBtn.style.cursor = enable ? "pointer" : "not-allowed";
-      loadBtn.title = enable ? "" : "Data available only for active subscribers";
-      setRefreshEnabled(false);
-    };
+    // -----------------------------------------------------------
+// ⚙️ Enable or Disable Load Data Button
+// -----------------------------------------------------------
+const enableLoad = (enable) => {
+  const loadBtn = document.getElementById("loadData");
+  const refreshBtn = document.getElementById("refreshBtn");
+  if (!loadBtn || !refreshBtn) return;
 
-    enableLoad(subStatus === "active");
+  [loadBtn, refreshBtn].forEach((btn) => {
+    btn.disabled = !enable;
+    btn.style.opacity = enable ? "1" : "0.5";
+    btn.style.cursor = enable ? "pointer" : "not-allowed";
+    btn.title = enable
+      ? ""
+      : "Data available only for active subscribers";
+  });
+
+  setRefreshEnabled(enable);
+};
+
+// ✅ Only active users can load or refresh
+enableLoad(subStatus === "active");
+
 
     // -----------------------------------------------------------
     // 🗓️ Handle Access Dates and Status Display
