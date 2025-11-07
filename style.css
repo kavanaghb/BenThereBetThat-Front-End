@@ -251,15 +251,47 @@ td.white {
 }
 
 /* ================================
-   Difference Arrows
+   🎯 Odds Arrow & Tooltip Styling
    ================================ */
 .diff-arrow {
-  font-weight: 900;
-  font-size: 20px;
+  font-weight: 700;
+  font-size: 18px;
   margin-left: 4px;
+  cursor: help;
+  user-select: none;
+  transition: transform 0.15s ease, color 0.15s ease;
   vertical-align: middle;
-  color: #ff4500;
 }
+
+/* Hover grow animation (desktop focus only) */
+@media (hover: hover) {
+  .diff-arrow:hover {
+    transform: scale(1.25);
+    filter: brightness(1.1);
+  }
+}
+
+/* Optional: For future use if you prefer custom styled tooltips */
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  background: #333;
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transform: translateY(-150%);
+  z-index: 9999;
+}
+
+/* 📱 Touch devices: prevent accidental zoom on long-press tooltip */
+@media (hover: none) {
+  .diff-arrow {
+    touch-action: manipulation;
+  }
+}
+
 
 /* ================================
    Loading / Progress
@@ -1064,7 +1096,7 @@ button:disabled {
   to { background-color: transparent; }
 }
 /* ================================
-   🧠 Fact Check Modal Styling
+   🧠 Modal Styling (Shared Base)
 ================================ */
 .modal-overlay {
   position: fixed;
@@ -1075,6 +1107,7 @@ button:disabled {
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(2px);
+  animation: fadeInScale 0.25s ease-out;
 }
 
 .modal-content {
@@ -1082,23 +1115,21 @@ button:disabled {
   color: #f8f8f8;
   border-radius: 14px;
   padding: 32px;
-  width: 750px;          /* ⬆️ wider */
+  width: 750px;
   max-width: 95%;
-  max-height: 80vh;      /* taller with scrollable area */
-  overflow-y: auto;      /* enables scrolling for large content */
+  max-height: 80vh;
+  overflow-y: auto;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
   font-family: 'Poppins', sans-serif;
   position: relative;
-  animation: fadeInScale 0.25s ease-out;
   line-height: 1.5;
 }
-
 
 .modal-content h2 {
   margin-top: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #4dabf7;
+  color: #4dabf7; /* default modal header color */
   text-align: center;
 }
 
@@ -1130,6 +1161,29 @@ button:disabled {
   from { transform: scale(0.9); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* ================================
+   🧩 Fact Check Modal Overrides
+   ================================ */
+#factCheckModal.modal-overlay {
+  background: rgba(0, 0, 0, 0.8); /* darker overlay for readability */
+}
+
+#factCheckModal .modal-content {
+  background: #1e1e1e;
+  color: #f9f9f9;
+}
+
+#factCheckModal h2 {
+  color: #ffd700; /* gold header for contrast */
+}
+
+#factCheckModal pre {
+  background: #2c2c2c;
+  color: #eaeaea;
+  word-wrap: break-word; /* better wrapping on long lines */
+}
+
 
 /* =====================================
    🗓️ Enhanced Date Picker Styling
@@ -1371,7 +1425,7 @@ button:disabled {
 .gray-text { color: #888; font-weight: 600; }
 
 /* ================================
-   ℹ️ Column Info Modal (Updated)
+   📘 Dashboard Tutorial / Column Info Modal
    ================================ */
 .info-btn {
   background: #3498db;
@@ -1400,103 +1454,132 @@ button:disabled {
   height: 100%;
   overflow-y: auto;
   background-color: rgba(0, 0, 0, 0.65);
-  padding-top: 60px;
+  padding: 40px 12px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
 }
 
 /* Modal container */
-.modal-content {
-  background-color: #ffffff;
+.tutorial-content {
+  background: #fff;
   color: #222;
   margin: auto;
   border-radius: 12px;
-  padding: 24px 28px;
+  padding: 20px 24px 80px;
   max-width: 640px;
+  width: 95%;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   animation: fadeIn 0.4s ease;
   line-height: 1.6;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
-/* Title */
-.modal-content h2 {
-  margin-top: 0;
-  font-size: 22px;
-  font-weight: 700;
-  color: #111;
+.tutorial-content h2 {
+  text-align: center;
+  color: #0d6efd;
   border-bottom: 2px solid #e6e6e6;
   padding-bottom: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-/* Paragraph intro */
-.modal-content p {
-  color: #222;
-  font-size: 15px;
-  margin-bottom: 16px;
-}
-
-/* List of column explanations */
-.info-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+.tutorial-step {
+  background: #f9f9f9;
+  border-left: 4px solid #0d6efd;
+  padding: 12px 16px;
+  margin: 12px 0;
   border-radius: 8px;
-  overflow: hidden;
 }
 
-/* Alternating background stripes for readability */
-.info-list li {
-  padding: 10px 12px;
-  font-size: 15px;
-  color: #222;
-  background: #fafafa;
-  border-bottom: 1px solid #eee;
+.tutorial-step h3 {
+  margin-top: 0;
+  color: #0d6efd;
 }
 
-.info-list li:nth-child(even) {
-  background: #f0f0f0;
+.color-box {
+  display:inline-block;
+  width:14px;
+  height:14px;
+  border-radius:3px;
+  margin-right:6px;
+}
+.color-box.green { background:#c3e6cb; }
+.color-box.red { background:#f5c6cb; }
+
+.formula-box {
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:8px;
+  padding:10px 14px;
+  margin-top:8px;
+}
+.formula-box pre {
+  background:#f1f1f1;
+  padding:8px;
+  border-radius:6px;
+  font-size:0.9rem;
+  overflow-x:auto;
 }
 
-/* Highlighted key terms */
-.info-list strong {
-  color: #000;
-  font-weight: 600;
-}
+.filter-guide li { margin:6px 0; }
 
-/* Close button */
+/* Close (X) */
 .close {
-  color: #999;
-  float: right;
-  font-size: 26px;
+  color: #666;
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  font-size: 28px;
   font-weight: bold;
   cursor: pointer;
   transition: color 0.2s ease;
 }
-
 .close:hover {
   color: #000;
 }
 
-/* Close button for mobile-friendly bottom button */
+/* Sticky bottom "Got It!" button */
 .close-modal-btn {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
   background: #3498db;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
+  border-radius: 0 0 12px 12px;
+  padding: 14px 16px;
   font-weight: 600;
-  margin-top: 20px;
   cursor: pointer;
   transition: background 0.2s ease;
+  text-align: center;
 }
 .close-modal-btn:hover {
   background: #2980b9;
 }
 
-/* Subtle entrance animation */
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .tutorial-content {
+    padding: 16px 14px 70px;
+    font-size: 14px;
+  }
+  .tutorial-content h2 {
+    font-size: 18px;
+  }
+  .close {
+    top: 6px;
+    right: 10px;
+    font-size: 30px;
+  }
+}
+
+/* Entrance animation */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
 
 /* ================================
    🔁 View Mode Toggle Buttons
@@ -1538,4 +1621,913 @@ button:disabled {
   padding: 24px 20px;
   margin: 20px auto;
   max-width: 420px;
+}
+
+/* ================================
+   🎯 Optimal Filter Buttons (Smooth Active Transition)
+   ================================ */
+.filter-group {
+  margin: 12px 0 18px;
+  text-align: center;
+  flex-wrap: wrap;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  transition: all 0.35s ease-in-out; /* smoother growth/shadow */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1);
+}
+
+/* 🟢 PrizePicks +EV */
+#filterPrizePicksOptimalBtn {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: #fff;
+}
+#filterPrizePicksOptimalBtn:hover {
+  background: linear-gradient(135deg, #34ce57, #218838);
+  transform: translateY(-2px);
+}
+
+/* 🔵 Underdog +EV */
+#filterUnderdogOptimalBtn {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: #fff;
+}
+#filterUnderdogOptimalBtn:hover {
+  background: linear-gradient(135deg, #3399ff, #004085);
+  transform: translateY(-2px);
+}
+
+/* 🟣 Fantasy Value */
+#filterFantasyEdgeBtn {
+  background: linear-gradient(135deg, #6f42c1, #4b2f6d);
+  color: #fff;
+}
+#filterFantasyEdgeBtn:hover {
+  background: linear-gradient(135deg, #8e5ed7, #563d7c);
+  transform: translateY(-2px);
+}
+
+/* ⚔️ DFS Line Difference (≥ 2) */
+#filterDfsDifferenceBtn {
+  background: linear-gradient(135deg, #ff6b6b, #c0392b);
+  color: #fff;
+}
+#filterDfsDifferenceBtn:hover {
+  background: linear-gradient(135deg, #ff8787, #a93226);
+  transform: translateY(-2px);
+}
+
+/* 🟡 High Confidence (52%+) */
+#filterHighNoVigBtn {
+  background: linear-gradient(135deg, #f1c40f, #f39c12);
+  color: #222;
+}
+#filterHighNoVigBtn:hover {
+  background: linear-gradient(135deg, #f9e79f, #f5b041);
+  transform: translateY(-2px);
+}
+
+/* ♻️ Reset Filters */
+#clearOptimalFiltersBtn {
+  background: #555;
+  color: #fff;
+}
+#clearOptimalFiltersBtn:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+/* ================================
+   🌟 Active Filter (Smooth Highlight)
+   ================================ */
+.active-filter {
+  transform: scale(1.15);
+  filter: brightness(1.18);
+  box-shadow: 0 0 18px 5px rgba(13, 110, 253, 0.8);
+  border: 2px solid #fff;
+  outline: 2px solid rgba(13, 110, 253, 0.9);
+  z-index: 5;
+  transition: all 0.35s ease-in-out; /* smoother transform & shadow */
+  animation: filterPulse 2s ease-in-out infinite;
+  animation-delay: 0.2s; /* prevents instant flicker */
+}
+
+/* 💫 Softer pulse glow */
+@keyframes filterPulse {
+  0%   { box-shadow: 0 0 10px rgba(13, 110, 253, 0.4); }
+  50%  { box-shadow: 0 0 26px rgba(13, 110, 253, 1); }
+  100% { box-shadow: 0 0 10px rgba(13, 110, 253, 0.4); }
+}
+
+.active-filter:hover {
+  transform: scale(1.18);
+  animation-play-state: paused;
+}
+
+/* 🧭 Mobile scaling tweak */
+@media (max-width: 600px) {
+  .active-filter {
+    transform: scale(1.1);
+  }
+}
+
+
+/* ================================
+   Buttons
+   ================================ */
+button {
+  padding: 10px 16px;
+  margin: 4px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ================================
+   🎛️ Filter Button Highlighting
+   ================================ */
+.active-filter {
+  background-color: #007bff !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+/* ================================
+   🎯 Filter Button Accent Styles
+   ================================ */
+
+/* Base style (already defined, but we’ll enhance with color coding) */
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 18px;
+  text-align: center;
+}
+
+.filter-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+/* 🟢 PrizePicks +EV */
+#filterPrizePicksOptimalBtn {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+}
+#filterPrizePicksOptimalBtn:hover {
+  background: linear-gradient(135deg, #34ce57, #1e7e34);
+  transform: translateY(-2px);
+}
+
+/* 🔵 Underdog +EV */
+#filterUnderdogOptimalBtn {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: #fff;
+}
+#filterUnderdogOptimalBtn:hover {
+  background: linear-gradient(135deg, #3399ff, #004085);
+  transform: translateY(-2px);
+}
+
+/* 🟣 Fantasy Value Plays */
+#filterFantasyEdgeBtn {
+  background: linear-gradient(135deg, #6f42c1, #563d7c);
+  color: #fff;
+}
+#filterFantasyEdgeBtn:hover {
+  background: linear-gradient(135deg, #8e5ed7, #4b2f6d);
+  transform: translateY(-2px);
+}
+
+/* 🟡 High Confidence (52%+) */
+#filterHighNoVigBtn {
+  background: linear-gradient(135deg, #f1c40f, #f39c12);
+  color: #222;
+}
+#filterHighNoVigBtn:hover {
+  background: linear-gradient(135deg, #f9e79f, #f5b041);
+  transform: translateY(-2px);
+}
+
+/* ♻️ Reset Filters */
+#clearOptimalFiltersBtn {
+  background: #555;
+  color: #fff;
+}
+#clearOptimalFiltersBtn:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+/* 🔘 Active State Highlight */
+.active-filter {
+  box-shadow: 0 0 10px rgba(13, 110, 253, 0.6);
+  transform: translateY(-1px) scale(1.03);
+  filter: brightness(1.1);
+}
+
+/* ⚔️ DFS Line Difference (≥ 2) */
+#filterDfsDifferenceBtn {
+  background: linear-gradient(135deg, #ff7675, #d63031);
+  color: #fff;
+}
+#filterDfsDifferenceBtn:hover {
+  background: linear-gradient(135deg, #ff6b6b, #c0392b);
+  transform: translateY(-2px);
+}
+
+
+/* ================================
+   ✨ Smooth Fade-In for Table Reset
+   ================================ */
+@keyframes fadeInRow {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#results table tbody tr.fade-in {
+  animation: fadeInRow 0.25s ease-in-out;
+}
+
+/* ================================
+   ⚡ Mismatch Badge — Responsive + Improved
+   ================================ */
+.mismatch-badge {
+  display: inline-block;
+  background: rgba(217, 79, 79, 0.1);
+  border: 1px solid #d94f4f;
+  color: #d94f4f;
+  padding: 2px 5px;
+  border-radius: 6px;
+  margin-left: 5px;
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition: all 0.2s ease-in-out;
+}
+
+.mismatch-badge:hover {
+  background: #d94f4f;
+  color: white;
+}
+
+/* 🌐 Responsive adjustments */
+@media (max-width: 800px) {
+  .mismatch-badge {
+    display: block;
+    margin-top: 3px;
+    margin-left: 0;
+    text-align: center;
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+}
+
+@media (max-width: 500px) {
+  .mismatch-badge {
+    font-size: 9.5px;
+    border-radius: 4px;
+    padding: 2px 4px;
+  }
+}
+/* ===================================================
+   💬 Support Modal Styling (Fixed Contrast)
+=================================================== */
+#supportModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+#supportModal .modal-content {
+  background: #fff;
+  color: #1e293b; /* ✅ ensure readable dark text */
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+#supportModal .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #555; /* ✅ visible on white background */
+}
+
+#supportModal h2 {
+  margin-top: 0;
+  color: #0f172a; /* dark slate title */
+}
+
+#supportModal p {
+  color: #334155; /* slightly softer paragraph text */
+  line-height: 1.5;
+}
+
+#supportModal a {
+  color: #0d6efd;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#supportModal a:hover {
+  text-decoration: underline;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================================================
+   🔧 Layout Reset for Main Dashboard
+   =================================================== */
+
+/* Auth screen stays centered */
+#auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Main dashboard should fill the viewport normally */
+#main-content {
+  display: none; /* still hidden until login */
+  width: 100%;
+  height: auto;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+/* Prevent main-content from inheriting flex centering */
+body {
+  display: block;
+}
+
+/* ===================================================
+   🧱 Full-Width Main Dashboard Reset
+   =================================================== */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background: #fff;
+}
+
+/* Force main-content to break out of any flexbox parent */
+#main-content {
+  flex: none !important;
+  align-self: stretch !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  display: block !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Ensure the inner dashboard content can expand freely */
+#main-content * {
+  max-width: unset;
+}
+
+/* ===================================================
+   ✨ UI POLISH PATCH — Ben There Bet That!
+   ---------------------------------------------------
+   Adds subtle spacing, color, and alignment refinements
+   =================================================== */
+
+/* 🧭 Overall spacing balance */
+#main-content {
+  padding-top: 12px !important;
+}
+
+/* 🔖 Subscription section */
+#subscription-container {
+  margin-top: 8px !important;
+  margin-bottom: 18px !important;
+  padding: 20px 18px !important;
+  text-align: center;
+}
+
+#subscription-container h2.app-subtitle {
+  font-size: 1rem !important;
+  color: #555 !important;
+  margin-bottom: 8px !important;
+}
+
+#subscription-status {
+  font-size: 1rem !important;
+  color: #222 !important;
+}
+
+#subscription-status span {
+  color: #28a745 !important;
+  font-weight: 700 !important;
+}
+
+/* Group subscription buttons neatly */
+#subscription-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 🏈 Sport button styling (modern neutral theme) */
+.sport-buttons button {
+  background: linear-gradient(135deg, #eef2f7, #d9e2ec) !important;
+  border: 1px solid #ccd6e0 !important;
+  color: #222 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  padding: 14px 22px !important;
+}
+
+.sport-buttons button:hover {
+  background: linear-gradient(135deg, #f6f9ff, #dee8f7) !important;
+  transform: translateY(-2px);
+}
+
+.sport-buttons button.active {
+  background: linear-gradient(135deg, #0d6efd, #007bff) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(13, 110, 253, 0.5) !important;
+  transform: scale(1.05);
+}
+
+/* 📆 Date + Controls spacing */
+.date-controls,
+.controls,
+.filter-group {
+  margin-top: 8px;
+  margin-bottom: 14px;
+}
+
+/* Buttons in groups wrap cleanly */
+.date-controls button,
+.controls button {
+  margin: 4px 6px;
+}
+
+/* 🧮 Export and Fact Check area */
+#exportCsv,
+#exportExcel,
+#factCheckBtn,
+#columnInfoBtn {
+  margin: 4px 6px;
+}
+
+/* 💡 Add subtle top shadow to data area */
+#results {
+  margin-top: 14px;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+}
+
+/* 📱 Mobile-friendly tightening */
+@media (max-width: 600px) {
+  #subscription-container {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .sport-buttons {
+    gap: 8px;
+  }
+
+  .filter-group {
+    gap: 6px;
+  }
+
+  .date-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-controls button {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   📘 Tutorial Modal Enhancements
+   ============================================ */
+.tutorial-content {
+  max-width: 800px;
+  width: 95%;
+  padding: 32px 24px 90px;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  background: #ffffff;
+  color: #222;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+.tutorial-step + .tutorial-step {
+  margin-top: 22px;
+}
+
+.tutorial-divider {
+  margin: 24px 0;
+  border: none;
+  border-top: 2px solid #eee;
+}
+
+.formula-box {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-family: monospace;
+}
+
+.formula-box pre {
+  background: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.pro-tip {
+  background: #e8f4ff;
+  border-left: 4px solid #007bff;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.color-box {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.color-box.green { background: #28a745; }
+.color-box.red { background: #dc3545; }
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .tutorial-content { padding: 20px 16px 80px; font-size: 15px; }
+  .tutorial-content h2 { font-size: 1.4rem; }
+  .odds-table th, .odds-table td { font-size: 13px; padding: 6px; }
+}
+
+/* =============================================
+   📐 Formula & Table Enhancements for Tutorial
+   ============================================= */
+.subheader {
+  margin-top: 18px;
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0d6efd;
+}
+
+.scroll-table {
+  overflow-x: auto;
+  margin: 10px 0 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.scroll-table table {
+  min-width: 620px;
+}
+
+.odds-table th, .odds-table td {
+  text-align: center;
+  padding: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.odds-table th {
+  background-color: #f3f6fa;
+  font-weight: 700;
+  color: #333;
+}
+
+.odds-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.odds-table tr:nth-child(odd) {
+  background-color: #fff;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .odds-table th, .odds-table td {
+    font-size: 13px;
+    padding: 6px;
+  }
+  .subheader {
+    font-size: 1rem;
+  }
+}
+
+/* ============================
+   ✨ Fade / Slide Animation
+   ============================ */
+.fade-in-modal {
+  animation: fadeSlideIn 0.35s ease both;
+}
+@keyframes fadeSlideIn {
+  0% {opacity:0; transform:translateY(20px);}
+  100% {opacity:1; transform:translateY(0);}
+}
+
+/* ============================
+   📱 Collapsible Sections
+   ============================ */
+.collapse-toggle {
+  width: 100%;
+  background: #f3f6fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+.collapse-toggle:hover {
+  background: #eaf0ff;
+}
+.collapsible-content {
+  display: none;
+  margin-top: 10px;
+}
+.collapsible-section.active .collapsible-content {
+  display: block;
+  animation: fadeSlideIn 0.25s ease;
+}
+
+/* Responsive tweaks */
+@media (max-width:768px){
+  .collapse-toggle {font-size:15px;}
+  .odds-table th,.odds-table td{font-size:13px;}
+}
+
+/* =======================================
+   🔄 Subscription Loading Overlay
+   ======================================= */
+.subscription-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 15, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(3px);
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+.subscription-spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #00ff99;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.subscription-loading-text {
+  font-size: 1rem;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hidden by default */
+.subscription-loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* =========================================
+   🪄 Smooth Table Refresh Animation
+   ========================================= */
+/* =========================================
+   ⚡ Results Area Base Transition (light fade)
+   ========================================= */
+#results {
+  transition: opacity 0.15s ease;
+  will-change: opacity;
+}
+
+
+/* ===================================================
+   ✨ Shimmer Overlay for Table Refresh
+   =================================================== */
+.shimmer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(1.5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 100;
+}
+
+.shimmer-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.shimmer-overlay:not(.hidden) {
+  opacity: 1;
+  visibility: visible;
+}
+
+.shimmer-bar {
+  width: 65%;
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.7) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.site-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #777;
+  margin-top: 40px;
+  padding: 16px 10px;
+  border-top: 1px solid #eee;
+  background-color: #fafafa;
+}
+
+.site-footer .disclaimer {
+  margin-bottom: 6px;
+  line-height: 1.4;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.site-footer .copyright {
+  font-size: 12px;
+  color: #999;
+}
+
+
+/* =========================================
+   🧾 Login Page Disclaimer — In-Card Style
+   ========================================= */
+#auth-container .login-disclaimer {
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+  line-height: 1.4;
+  margin-top: 18px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e5e5;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  background: transparent;
+  display: block;
+}
+
+/* =========================================
+   🔒 Hide main dashboard until user is logged in
+   ========================================= */
+body.auth-mode #main-content {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* =========================================
+   🔒 Auth Mode Layout — Mobile Friendly
+   ========================================= */
+body.auth-mode {
+  background: #0b3d91; /* match your current site blue */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto; /* ✅ allows vertical scrolling on small screens */
+}
+
+/* Keep login card nicely centered */
+.auth-card {
+  background: #fff;
+  padding: 30px 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  max-width: 380px;
+  width: 90%;
+  margin: 60px auto; /* ✅ spacing for smaller screens */
+}
+
+/* Fullscreen flex container for auth background */
+#auth-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(180deg, #0b3d91 0%, #003366 100%);
+}
+
+.login-disclaimer {
+  margin-top: 20px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #777;
+  text-align: center;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
 }

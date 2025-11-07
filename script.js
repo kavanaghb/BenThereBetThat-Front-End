@@ -1,4 +1,56 @@
 // ===================================================
+// 🧠 Global Error & Debug Handler (Silent-Safe Version)
+// ===================================================
+
+let lastErrorShown = "";
+window.onerror = function (msg, src, line, col, err) {
+  const formatted = [
+    "⚠️ JavaScript Error Detected!",
+    `🧩 Message: ${msg}`,
+    `📄 File: ${src || "(unknown)"}`,
+    `📍 Line: ${line}:${col}`,
+    err ? `🪲 Stack: ${err.stack || "n/a"}` : ""
+  ].join("\n");
+
+  // 🧩 Define known harmless messages to ignore
+  const ignoredPatterns = [
+    "checkSubscriptionStatus is not defined",
+    "ResizeObserver loop limit exceeded",
+    "Script error",
+    "ResizeObserver loop completed",
+    "null (reading",
+    "Cannot read properties of null",
+  ];
+
+  const isIgnored = ignoredPatterns.some(p => msg?.includes(p));
+  if (isIgnored) {
+    console.warn("⚠️ Ignored non-fatal JS error:", msg);
+    return true; // ✅ Suppress browser alert + default error output
+  }
+
+  // Avoid repeat alerts for the same error
+  if (formatted !== lastErrorShown) {
+    alert(formatted);
+    lastErrorShown = formatted;
+  }
+
+  // Always log full info for debugging
+  console.group("%c🚨 JS ERROR", "color:red;font-weight:bold");
+  console.error(formatted);
+  console.groupEnd();
+
+  // Return false so console still shows stack traces
+  return false;
+};
+
+// Initial startup log
+console.log(
+  `%c✅ script.js loaded & global error handler active — ${new Date().toLocaleTimeString()}`,
+  "color:green;font-weight:bold;"
+);
+
+
+// ===================================================
 // 🎮 Sports Odds Dashboard — Full Fixed Script
 // ===================================================
 
@@ -34,6 +86,89 @@ const loadDataBtn = document.getElementById("loadData");
 const stopBtn = document.getElementById("stopBtn");
 const refreshBtn = document.getElementById("refreshBtn");
 const loadingDiv = document.getElementById("loading");
+// ============================================================
+// 🚦 Temporary Button Lock (before login/subscription check)
+// ============================================================
+function disableDataButtonsTemporarily() {
+  if (loadDataBtn) {
+    loadDataBtn.disabled = true;
+    loadDataBtn.style.opacity = "0.5";
+    loadDataBtn.style.cursor = "not-allowed";
+    loadDataBtn.title = "Please sign in and subscribe to enable data loading";
+  }
+  if (refreshBtn) {
+    refreshBtn.disabled = true;
+    refreshBtn.style.opacity = "0.5";
+    refreshBtn.style.cursor = "not-allowed";
+    refreshBtn.title = "Please sign in and subscribe to enable data loading";
+  }
+}
+// ============================================================
+// 🕹️ Refresh Button Controller
+// ============================================================
+function setRefreshEnabled(enabled) {
+  if (!refreshBtn) return;
+  if (enabled) {
+    refreshBtn.disabled = false;
+    refreshBtn.style.opacity = "";
+    refreshBtn.style.cursor = "";
+    refreshBtn.title = "";
+  } else {
+    refreshBtn.disabled = true;
+    refreshBtn.style.opacity = "0.5";
+    refreshBtn.style.cursor = "not-allowed";
+    refreshBtn.title = "Load data first to enable refresh";
+  }
+}
+
+function setRefreshEnabled(isEnabled) {
+  const refreshBtn = document.getElementById("refreshBtn");
+  if (!refreshBtn) return;
+
+  refreshBtn.disabled = !isEnabled;
+  refreshBtn.style.opacity = isEnabled ? "1.0" : "0.5";
+  refreshBtn.style.cursor = isEnabled ? "pointer" : "not-allowed";
+  refreshBtn.title = isEnabled ? "" : "Refresh available after data loads.";
+}
+// ===================================================
+// 🌐 Global Fetch Wrapper (with timeout + spinner + alerts)
+// ===================================================
+async function safeFetch(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const overlay =
+    document.getElementById("subscription-loading-overlay") ||
+    document.getElementById("gameLoadingSpinner");
+
+  if (overlay) overlay.classList.remove("hidden");
+
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") {
+      alert("⚠️ Request timed out. Please check your connection and try again.");
+    } else if (!navigator.onLine) {
+      alert("⚠️ You appear to be offline. Please reconnect and try again.");
+    } else {
+      console.error("🌐 safeFetch error:", err);
+      alert("⚠️ Error connecting to server. Please try again in a few seconds.");
+    }
+    throw err;
+  } finally {
+    if (overlay) overlay.classList.add("hidden");
+  }
+}
+
+
+// ============================================================
+// 🚀 Initialize UI Lockdown
+// ============================================================
+disableDataButtonsTemporarily();
+setRefreshEnabled(false); // ⛔ Grey out refresh until first successful load
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
 const ncaabMarkets = document.getElementById("ncaabMarkets");
@@ -51,120 +186,339 @@ const selectAllGamesBtn = document.getElementById("selectAllGames");
 const deselectAllGamesBtn = document.getElementById("deselectAllGames");
 const gameSearchInput = document.getElementById("gameSearch");
 
+
+
+
 // ============================================================
 // 💳 Stripe Checkout + Subscription Management (Frontend)
 // ============================================================
 
 // --------------
-// 🧩 Forgot Password (Updated for Prod & Dev)
+// 🧩 Forgot Password
 // --------------
 document.getElementById("forgot-btn")?.addEventListener("click", async () => {
   const email = prompt("Enter your email to reset your password:");
   if (!email) return;
 
   try {
-    // Detect correct environment redirect
-    const redirectTo =
-      window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1")
-        ? "http://127.0.0.1:5500/reset-password.html"
-        : "https://bentherebetthat.com/reset-password.html";
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-
-    if (error) {
-      console.error("Password reset error:", error.message);
-      alert("❌ " + (error.message || "Unable to send password reset email."));
-      return;
-    }
-
-    alert("✅ Password reset link sent! Please check your email.");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw error;
+    alert("✅ Password reset link sent! Check your email.");
   } catch (err) {
-    console.error("Unexpected error during password reset:", err);
-    alert("⚠️ Something went wrong. Please try again later.");
+    console.error("Password reset error:", err);
+    alert("❌ Unable to send password reset email.");
   }
 });
 
-
-// --------------
-// 💰 Subscribe (Stripe Checkout Session)
-// --------------
+// ===================================================
+// 💳 Subscribe (Stripe Checkout Session)
+// ===================================================
 document.getElementById("subscribeBtn")?.addEventListener("click", async () => {
   const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return alert("You must be logged in.");
+  if (!user) return alert("⚠️ You must be logged in.");
+
+  const subscribeBtn = document.getElementById("subscribeBtn");
+  const priceId = "price_1SQiMsRQcEP77lM7339QYafe"; // 🔧 replace with LIVE price ID before launch
+
+  subscribeBtn.disabled = true;
+  subscribeBtn.textContent = "Redirecting...";
+  subscribeBtn.style.opacity = "0.6";
 
   try {
-    const priceId = "price_1SIzajExPCuJMaCrq8ADxMmx"; // 🔧 replace with your actual Stripe price ID
-    const res = await fetch(`${window.API_BASE}/create-checkout-session`, {
+    // ✅ use global safeFetch helper for reliable timeout + error handling
+    const data = await safeFetch(`${window.API_BASE}/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: user.id, price_id: priceId }),
     });
 
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
+    if (data?.url) {
+      window.location.href = data.url; // 🔁 redirect to Stripe checkout
     } else {
-      alert("❌ Error creating checkout session.");
+      alert("⚠️ Could not start checkout. Please try again later.");
     }
   } catch (err) {
-    console.error("Checkout error:", err);
-    alert("❌ Unable to start checkout.");
+    console.error("❌ Checkout error:", err);
+    alert("⚠️ Error connecting to server. Please try again in a few seconds.");
+  } finally {
+    subscribeBtn.disabled = false;
+    subscribeBtn.textContent = "Subscribe";
+    subscribeBtn.style.opacity = "1";
   }
 });
 
-// --------------
-// 🛑 Cancel Subscription
-// --------------
+
+
+// ===================================================
+// 🛑 Cancel Subscription (End at Period End)
+// ===================================================
 document.getElementById("cancel-subscription-btn")?.addEventListener("click", async () => {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return alert("You must be logged in.");
-
-  if (!confirm("Cancel your subscription? You’ll retain access until the end of your billing cycle.")) return;
+  const cancelBtn = document.getElementById("cancel-subscription-btn");
 
   try {
-    const res = await fetch(`${window.API_BASE}/api/cancel-subscription`, {
+    const user = (await supabase.auth.getUser())?.data?.user;
+    if (!user) {
+      alert("⚠️ You must be logged in to cancel your subscription.");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to cancel your subscription at the period end?")) return;
+
+    cancelBtn.disabled = true;
+    cancelBtn.textContent = "Processing...";
+    cancelBtn.style.opacity = "0.6";
+
+    const data = await safeFetch(`${window.API_BASE}/api/cancel-subscription`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: user.id }),
     });
-    const data = await res.json();
 
-    if (data.success) {
-      alert(data.message);
-      await checkSubscriptionStatus(user.id);
+    if (data?.success) {
+      alert("✅ Your subscription will end at the current billing period.");
+      checkSubscriptionStatus(user.id); // 🔄 refresh UI
     } else {
-      alert("❌ Error canceling subscription.");
+      alert("⚠️ Unable to cancel subscription. Please contact support.");
     }
   } catch (err) {
-    console.error("Cancel error:", err);
+    console.error("❌ Cancel subscription error:", err);
+    alert("⚠️ Error connecting to server. Please try again shortly.");
+  } finally {
+    cancelBtn.disabled = false;
+    cancelBtn.textContent = "Cancel Subscription";
+    cancelBtn.style.opacity = "1";
   }
 });
 
-// --------------
-// 🔁 Resume Subscription
-// --------------
+// ===================================================
+// 🔄 Resume Subscription (Reactivate)
+// ===================================================
 document.getElementById("resume-subscription-btn")?.addEventListener("click", async () => {
-  const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return alert("You must be logged in.");
+  const resumeBtn = document.getElementById("resume-subscription-btn");
 
   try {
-    const res = await fetch(`${window.API_BASE}/api/resume-subscription`, {
+    const user = (await supabase.auth.getUser())?.data?.user;
+    if (!user) {
+      alert("⚠️ You must be logged in to resume your subscription.");
+      return;
+    }
+
+    resumeBtn.disabled = true;
+    resumeBtn.textContent = "Resuming...";
+    resumeBtn.style.opacity = "0.6";
+
+    const data = await safeFetch(`${window.API_BASE}/api/resume-subscription`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: user.id }),
     });
-    const data = await res.json();
 
-    if (data.success) {
-      alert(data.message);
-      await checkSubscriptionStatus(user.id);
+    if (data?.success) {
+      alert("✅ Your subscription has been resumed successfully!");
+      checkSubscriptionStatus(user.id); // 🔄 refresh UI
     } else {
-      alert("❌ Error resuming subscription.");
+      alert("⚠️ Unable to resume subscription. Please contact support.");
     }
   } catch (err) {
-    console.error("Resume error:", err);
+    console.error("❌ Resume subscription error:", err);
+    alert("⚠️ Error connecting to server. Please try again shortly.");
+  } finally {
+    resumeBtn.disabled = false;
+    resumeBtn.textContent = "Resume Subscription";
+    resumeBtn.style.opacity = "1";
   }
 });
+
+// ===================================================
+// 🧾 Manage Billing Button (Stripe Portal)
+// ===================================================
+document.getElementById("manageBillingBtn")?.addEventListener("click", async () => {
+  const manageBillingBtn = document.getElementById("manageBillingBtn");
+
+  try {
+    const user = (await supabase.auth.getUser())?.data?.user;
+    if (!user) {
+      alert("⚠️ You must be signed in to manage your billing.");
+      return;
+    }
+
+    // 🕹️ UI Feedback
+    manageBillingBtn.disabled = true;
+    manageBillingBtn.textContent = "Opening...";
+    manageBillingBtn.style.opacity = "0.6";
+
+    // ✅ 1️⃣ Fetch customer_id from backend using safeFetch
+    const customerData = await safeFetch(`${window.API_BASE}/api/get-customer-id?user_id=${user.id}`);
+    const customer_id = customerData?.customer_id;
+    if (!customer_id) {
+      alert("⚠️ Unable to retrieve your billing information. Please contact support.");
+      return;
+    }
+
+    // ✅ 2️⃣ Create Stripe billing portal session
+    const portalData = await safeFetch(`${window.API_BASE}/create-billing-portal-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customer_id }),
+    });
+
+    if (!portalData?.url) throw new Error("No billing portal URL returned.");
+
+    // 🌐 Redirect to Stripe-hosted billing portal
+    window.location.href = portalData.url;
+  } catch (err) {
+    console.error("❌ Billing portal error:", err);
+    alert("⚠️ We couldn’t open your billing page. Please try again in a few seconds.");
+  } finally {
+    // ♻️ Restore button state
+    manageBillingBtn.disabled = false;
+    manageBillingBtn.textContent = "Manage Billing";
+    manageBillingBtn.style.opacity = "1";
+  }
+});
+
+
+// ===================================================
+// 🔍 Check Subscription Status (Frontend UI Updater)
+// ===================================================
+async function checkSubscriptionStatus(user_id) {
+  const overlay = document.getElementById("subscription-loading-overlay");
+  if (overlay) overlay.classList.remove("hidden"); // 🔄 show spinner
+
+  try {
+    // ✅ Unified safe fetch with timeout + user alerts
+    const data = await safeFetch(`${window.API_BASE}/api/subscription-details?user_id=${user_id}`);
+
+    const subStatus = data.subscription_status || "inactive";
+    const accessUntil = data.access_until;
+    const lastPayment = data.last_payment_date;
+
+    console.log("💳 Subscription status:", subStatus, "Access until:", accessUntil);
+
+    // --- UI Elements ---
+    const statusEl = document.getElementById("subscription-status");
+    const accessEl = document.getElementById("access-until");
+    const subscribeBtn = document.getElementById("subscribeBtn");
+    const cancelBtn = document.getElementById("cancel-subscription-btn");
+    const resumeBtn = document.getElementById("resume-subscription-btn");
+    const manageBillingBtn = document.getElementById("manageBillingBtn");
+    const loadBtn = document.getElementById("loadData");
+
+    // 🧹 Reset all buttons + hide date
+    [subscribeBtn, cancelBtn, resumeBtn, manageBillingBtn].forEach((btn) => {
+      if (btn) btn.style.display = "none";
+    });
+    if (accessEl) accessEl.style.display = "none";
+
+    // -----------------------------------------------------------
+    // ⚙️ Enable or Disable Data Buttons
+    // -----------------------------------------------------------
+    const enableLoad = (enable) => {
+      if (!loadBtn) return;
+      loadBtn.disabled = !enable;
+      loadBtn.style.opacity = enable ? "1" : "0.5";
+      loadBtn.style.cursor = enable ? "pointer" : "not-allowed";
+      loadBtn.title = enable ? "" : "Data available only for active subscribers";
+      setRefreshEnabled(false);
+    };
+
+    enableLoad(subStatus === "active");
+
+    // -----------------------------------------------------------
+    // 🗓️ Handle Access Dates and Status Display
+    // -----------------------------------------------------------
+    if (accessUntil) {
+      const accessDate = new Date(accessUntil);
+      const today = new Date();
+      const diffMs = accessDate - today;
+      const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (subStatus === "pending_cancel") {
+        accessEl.textContent = `Access until: ${accessDate.toLocaleDateString()} (${daysLeft} days left)`;
+        accessEl.style.display = "block";
+      } else if (subStatus === "inactive" || subStatus === "canceled") {
+        accessEl.textContent =
+          daysLeft > 0
+            ? `Access until: ${accessDate.toLocaleDateString()} (${daysLeft} days left)`
+            : `Access expired on ${accessDate.toLocaleDateString()}`;
+        accessEl.style.display = "block";
+      } else {
+        // Active → hide date to avoid clutter
+        accessEl.style.display = "none";
+      }
+    }
+
+    // -----------------------------------------------------------
+    // 🎛️ Determine Which Buttons to Show
+    // -----------------------------------------------------------
+    switch (subStatus) {
+      case "active":
+        if (cancelBtn) cancelBtn.style.display = "inline-block";
+        if (manageBillingBtn) manageBillingBtn.style.display = "inline-block";
+        break;
+
+      case "pending_cancel":
+        if (resumeBtn) resumeBtn.style.display = "inline-block";
+        if (accessEl) accessEl.style.display = "block";
+        break;
+
+      case "inactive":
+      case "canceled": {
+        let showSubscribe = true;
+        if (lastPayment) {
+          const lastPayDate = new Date(lastPayment);
+          const today = new Date();
+          const diffDays = Math.floor((today - lastPayDate) / (1000 * 60 * 60 * 24));
+          if (diffDays < 31) {
+            accessEl.style.display = "block";
+            accessEl.textContent = `Access ended recently (${31 - diffDays} days until renewal eligible)`;
+            showSubscribe = false;
+          }
+        }
+        if (showSubscribe && subscribeBtn) subscribeBtn.style.display = "inline-block";
+        break;
+      }
+
+      default:
+        if (subscribeBtn) subscribeBtn.style.display = "inline-block";
+    }
+
+    // -----------------------------------------------------------
+    // 🧾 Update Text Status Label
+    // -----------------------------------------------------------
+    if (statusEl) {
+      const label = subStatus
+        .charAt(0)
+        .toUpperCase() +
+        subStatus.slice(1).replace("_", " ");
+      statusEl.textContent = `Subscription: ${label}`;
+      statusEl.style.color =
+        subStatus === "active"
+          ? "#22bb33"
+          : subStatus === "pending_cancel"
+          ? "#e67e22"
+          : "#cc0000";
+    }
+  } catch (err) {
+    console.error("❌ Error fetching subscription status:", err);
+    const statusEl = document.getElementById("subscription-status");
+    if (statusEl) {
+      statusEl.textContent = "Subscription: Error fetching status";
+      statusEl.style.color = "#ff4444";
+    }
+    const loadBtn = document.getElementById("loadData");
+    if (loadBtn) {
+      loadBtn.disabled = true;
+      loadBtn.style.opacity = "0.5";
+      loadBtn.style.cursor = "not-allowed";
+    }
+  } finally {
+    // ✅ Always hide overlay, even on failure
+    if (overlay) overlay.classList.add("hidden");
+  }
+}
 
 
 
@@ -262,6 +616,23 @@ if (factCheckBtn && !window.factCheckEnabled) {
   });
   window.factCheckEnabled = true;
 }
+// 🕹️ Toggle Refresh Button State
+function setRefreshEnabled(enabled) {
+  const refreshBtn = document.getElementById("refreshBtn");
+  if (!refreshBtn) return;
+
+  if (enabled) {
+    refreshBtn.disabled = false;
+    refreshBtn.style.opacity = "";
+    refreshBtn.style.cursor = "";
+    refreshBtn.title = "";
+  } else {
+    refreshBtn.disabled = true;
+    refreshBtn.style.opacity = "0.5";
+    refreshBtn.style.cursor = "not-allowed";
+    refreshBtn.title = "Load data first to enable refresh";
+  }
+}
 
 /** ===================================================
  * 🧮 STEP 1: Compute true No-Vig fair probability (Over/Under normalization)
@@ -334,7 +705,7 @@ function computeNoVig(data, row) {
 }
 
 /** ===================================================
- * 🧠 Table Fact-Check listener (shows Consensus + No-Vig in modal)
+ * 🧠 Table Fact-Check listener (With-Vig + True No-Vig comparison)
  * =================================================== */
 function attachFactCheckListener(data) {
   const tbody = document.querySelector("#results table tbody");
@@ -344,10 +715,11 @@ function attachFactCheckListener(data) {
     tr.addEventListener("click", () => {
       if (!window.factCheckActive) return;
 
-      // 💡 Flash highlight feedback
+      // Flash highlight for feedback
       tr.classList.add("flash-highlight");
       setTimeout(() => tr.classList.remove("flash-highlight"), 800);
 
+      // Identify which row was clicked
       const cells = Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim());
       const eventName = cells[0];
       const description = cells[2];
@@ -359,79 +731,128 @@ function attachFactCheckListener(data) {
       );
       if (!row) return;
 
-      // --- Market (vig-included) implied probabilities per book
-      const impliedProbs = [];
-      const details = getSelectedBooksArray().map((b) => {
-        const point = row[b + "Point"] || "N/A";
-        const price = parseFloat(row[b + "Price"]);
-        if (isNaN(price)) return `• ${b}: N/A (N/A) → N/A`;
-        const prob = americanToProb(price);
-        impliedProbs.push(prob);
-        return `• ${b}: ${point} (${price > 0 ? "+" + price : price}) → ${(prob * 100).toFixed(2)}%`;
-      });
+     // -------------------------------
+// 🧮 Compute With-Vig & No-Vig Probabilities (Enhanced Version)
+// -------------------------------
+const books = getSelectedBooksArray();
+const impliedLines = [];
+const noVigLines = [];
 
-      const marketProb = impliedProbs.length
-        ? (impliedProbs.reduce((a, b) => a + b, 0) / impliedProbs.length) * 100
-        : null;
+const fmtAmerican = (n) => Number.isFinite(n) ? (n > 0 ? `+${n}` : `${n}`) : "N/A";
+const toProb = (odds) => {
+  if (!Number.isFinite(odds)) return null;
+  return odds > 0 ? 100 / (odds + 100) : (-odds) / ((-odds) + 100);
+};
 
-      // --- Compute true no-vig for both sides
-      const nv = computeNoVigBothSides(window.lastRenderedData || data, row);
+const sideTxt = (row.Outcome || row.OverUnder || "").toLowerCase();
+const isOver = sideTxt.includes("over");
+const isUnder = sideTxt.includes("under");
+const oppSide = isOver ? "under" : isUnder ? "over" : null;
 
-      // Per-book no-vig lines
-      let perBookLines = [];
-      if (nv.perBook.length) {
-        perBookLines = nv.perBook.map(({ book, over, under }) =>
-          `• ${book}: Over ${over.toFixed(2)}% | Under ${under.toFixed(2)}%`
-        );
-      } else {
-        perBookLines = ["• No matching Over/Under pairs across selected books."];
-      }
+// Find the opposite outcome (for true no-vig calc)
+const opposite = oppSide
+  ? (window.lastRenderedData || data).find(
+      (r) =>
+        (r.Event || "").toLowerCase().trim() === (row.Event || "").toLowerCase().trim() &&
+        (r.Market || "").toLowerCase().trim() === (row.Market || "").toLowerCase().trim() &&
+        (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
+        (r.Outcome || r.OverUnder || "").toLowerCase().includes(oppSide)
+    )
+  : null;
 
-      // Average no-vig percentages
-      const avgOverTxt = nv.avgOver != null ? nv.avgOver.toFixed(2) + "%" : "—";
-      const avgUnderTxt = nv.avgUnder != null ? nv.avgUnder.toFixed(2) + "%" : "—";
+for (const book of books) {
+  const overOdds  = parseFloat(row[`${book}Price`]);
+  const underOdds = opposite ? parseFloat(opposite[`${book}Price`]) : NaN;
 
-      // Determine this row’s fair % for its side
-      let rowSideFairTxt = "—";
-      if (nv.sideIsOver && nv.avgOver != null) rowSideFairTxt = nv.avgOver.toFixed(2) + "%";
-      if (nv.sideIsUnder && nv.avgUnder != null) rowSideFairTxt = nv.avgUnder.toFixed(2) + "%";
-      if (rowSideFairTxt === "—" && nv.fallbackSide != null)
-        rowSideFairTxt = nv.fallbackSide.toFixed(2) + "%";
+  // Identify Over/Under sides consistently
+  const rowIsOver = (row.Outcome || row.OverUnder || "").toLowerCase().includes("over");
+  const O = rowIsOver ? overOdds : underOdds;
+  const U = rowIsOver ? underOdds : overOdds;
 
-      // --- Build Fact-Check modal text
-      const box =
-        "🧠 FACT CHECK DETAILS\n" +
-        `📊 ${row.Event} — ${row.Description} (${row.Outcome || "Even"})\n` +
-        `Consensus Point: ${row.ConsensusPoint ?? "N/A"}\n` +
-        `Average Price: ${
-          Number.isFinite(getConsensusPrice(row))
-            ? getConsensusPrice(row).toFixed(2)
-            : "N/A"
-        }\n` +
-        "Implied Probabilities (per book):\n" +
-        details.join("\n") +
-        `\nConsensus (Market) Probability: ${
-          marketProb != null ? marketProb.toFixed(2) + "%" : "N/A"
-        }\n` +
-        "\n🎯 No-Vig (per book):\n" +
-        perBookLines.join("\n") +
-        `\n🧮 No-Vig Averages — Over: ${avgOverTxt} • Under: ${avgUnderTxt}\n` +
-        `➡️ Selected Side (Fair): ${rowSideFairTxt}`;
+  const Otxt = fmtAmerican(O);
+  const Utxt = fmtAmerican(U);
 
-      const modal = document.getElementById("factCheckModal");
-      const detailsEl = document.getElementById("factCheckDetails");
-      const closeBtn = modal.querySelector(".close-btn");
-      if (!modal || !detailsEl || !closeBtn) return;
+  // 📈 With-vig probabilities
+  const pO = toProb(O);
+  const pU = toProb(U);
+  const Owith = pO != null ? (pO * 100).toFixed(2) + "%" : "—";
+  const Uwith = pU != null ? (pU * 100).toFixed(2) + "%" : "—";
+  impliedLines.push(`• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`);
 
-      detailsEl.textContent = box;
-      modal.style.display = "flex";
-      closeBtn.onclick = () => (modal.style.display = "none");
-      modal.onclick = (e) => {
-        if (e.target === modal) modal.style.display = "none";
-      };
+  // 🎯 No-vig normalization (only if both sides exist)
+  if (pO != null && pU != null) {
+    const total = pO + pU;
+    if (total > 0 && total < 2.0) {
+      const fairO = (pO / total) * 100;
+      const fairU = (pU / total) * 100;
+      noVigLines.push(
+        `• ${book}: O ${Otxt} / U ${Utxt} → Over ${fairO.toFixed(2)}% | Under ${fairU.toFixed(2)}%`
+      );
+    } else {
+      noVigLines.push(
+        `• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`
+      );
+    }
+  } else {
+    // Fallback if only one side exists
+    noVigLines.push(
+      `• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`
+    );
+  }
+}
+
+// 📊 Compute averages using your existing helper
+const nv = computeNoVigBothSides(window.lastRenderedData || data, row);
+const avgOverTxt = nv.avgOver != null ? nv.avgOver.toFixed(2) + "%" : "—";
+const avgUnderTxt = nv.avgUnder != null ? nv.avgUnder.toFixed(2) + "%" : "—";
+
+let rowSideFairTxt = "—";
+if (nv.sideIsOver && nv.avgOver != null) rowSideFairTxt = nv.avgOver.toFixed(2) + "%";
+if (nv.sideIsUnder && nv.avgUnder != null) rowSideFairTxt = nv.avgUnder.toFixed(2) + "%";
+if (rowSideFairTxt === "—" && nv.fallbackSide != null)
+  rowSideFairTxt = nv.fallbackSide.toFixed(2) + "%";
+
+// 🧠 Assemble text for modal
+const factText = `
+🧠 FACT CHECK DETAILS
+📊 ${row.Event} — ${row.Description} (${row.Outcome || "Even"})
+Consensus Point: ${row.ConsensusPoint ?? "—"}
+Average Price: ${
+  Number.isFinite(getConsensusPrice(row))
+    ? getConsensusPrice(row).toFixed(2)
+    : "—"
+}
+
+📈 With-Vig Probabilities (per book):
+${impliedLines.join("\n")}
+
+🎯 No-Vig Probabilities (per book):
+${noVigLines.join("\n")}
+
+🧮 No-Vig Averages — Over: ${avgOverTxt} • Under: ${avgUnderTxt}
+➡️ Selected Side (Fair): ${rowSideFairTxt}
+`;
+
+// -------------------------------
+// 🪟 Display Modal
+// -------------------------------
+const modal = document.getElementById("factCheckModal");
+const detailsEl = document.getElementById("factCheckDetails");
+const closeBtn = modal.querySelector(".close-btn");
+if (!modal || !detailsEl || !closeBtn) return;
+
+detailsEl.textContent = factText;
+modal.style.display = "flex";
+closeBtn.onclick = () => (modal.style.display = "none");
+modal.onclick = (e) => {
+  if (e.target === modal) modal.style.display = "none";
+};
+
     });
   });
 }
+
+
 
 
 
@@ -1114,7 +1535,7 @@ function setActiveFor(buttons, active = true) {
 }
 
 // ===================================================
-// 📊 Load Data Handler (Fixed + Diagnostic Logging)
+// 📊 Load Data Handler (Fixed + Diagnostic Logging + Refresh Logic)
 // ===================================================
 async function loadData() {
   if (!selectedSport || selectedMarkets.length === 0) {
@@ -1130,10 +1551,15 @@ async function loadData() {
   const activeGameBtns = document.querySelectorAll(".game-btn.active");
   const selectedGameIds = Array.from(activeGameBtns).map((b) => b.dataset.id);
 
-  // Clear UI
+  // Clear UI + show loading state
   resultsDiv.innerHTML = "";
   progressText.textContent = "Fetching data...";
   loadingDiv.style.display = "block";
+
+  // ⛔ Disable refresh until load completes (if helper exists)
+  if (typeof setRefreshEnabled === "function") {
+    setRefreshEnabled(false);
+  }
 
   // Abort previous request if needed
   if (currentController) currentController.abort();
@@ -1151,52 +1577,54 @@ async function loadData() {
       selectedGameIds.forEach((id) => params.append("event_ids", id));
     }
 
-// ===================================================
-// 🔍 Fetch + Inspect Response (Safe + Deduped)
-// ===================================================
-const res = await fetch(`${API_BASE}/api/data?${params.toString()}`, { signal });
-const text = await res.text();
-console.log("📦 Raw API Response:", text);
-
-if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-
-let allData;
-try {
-  allData = JSON.parse(text);
-} catch (parseErr) {
-  console.error("❌ JSON Parse Error:", parseErr);
-  progressText.textContent = "❌ Failed to parse API response.";
-  loadingDiv.style.display = "none";
-  return;
-}
-
-// ✅ Validate response type
-if (!allData || !Array.isArray(allData)) {
-  console.error("🚨 Invalid data from API:", allData);
-  alert("No data returned from server — check your filters or backend logs.");
-  loadingDiv.style.display = "none";
-  return;
-}
-
-// ✅ Deduplicate before rendering
-const cleanedData = dedupeMarkets(allData);
-console.log(`🧹 Deduped from ${allData.length} → ${cleanedData.length} rows`);
-console.log("📦 Sample row:", cleanedData[0]);
-
-progressText.textContent = "Rendering table...";
-
-// Wait for the table to render
-await renderTableInBatches(cleanedData);
-
-// ✅ Clear progress text after rendering completes
-progressText.textContent = "";
-
-
-
-
     // ===================================================
-    // 🧹 Validate & Render
+    // 🔍 Fetch + Inspect Response (Safe + Deduped)
     // ===================================================
+    const res = await fetch(`${API_BASE}/api/data?${params.toString()}`, { signal });
+    const text = await res.text();
+    console.log("📦 Raw API Response:", text);
+
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+    let allData;
+    try {
+      allData = JSON.parse(text);
+    } catch (parseErr) {
+      console.error("❌ JSON Parse Error:", parseErr);
+      progressText.textContent = "❌ Failed to parse API response.";
+      loadingDiv.style.display = "none";
+      return;
+    }
+
+    // ✅ Validate response type
+    if (!allData || !Array.isArray(allData)) {
+      console.error("🚨 Invalid data from API:", allData);
+      alert("No data returned from server — check your filters or backend logs.");
+      loadingDiv.style.display = "none";
+      return;
+    }
+
+    // ✅ Deduplicate before rendering
+    const cleanedData = dedupeMarkets(allData);
+    console.log(`🧹 Deduped from ${allData.length} → ${cleanedData.length} rows`);
+    console.log("📦 Sample row:", cleanedData[0]);
+
+    progressText.textContent = "Rendering table...";
+
+    // Wait for the table to render
+    await renderTableInBatches(cleanedData);
+
+    // 🧩 Store immutable master dataset for reset + filtering
+    window.fullDataset = JSON.parse(JSON.stringify(cleanedData));
+    window.lastRenderedData = cleanedData;
+
+    // ✅ Clear progress text after rendering completes
+    progressText.textContent = "";
+
+    // ✅ Enable refresh button once data successfully loaded
+    if (typeof setRefreshEnabled === "function") {
+      setRefreshEnabled(cleanedData.length > 0);
+    }
 
   } catch (err) {
     if (err.name === "AbortError") {
@@ -1206,10 +1634,18 @@ progressText.textContent = "";
       alert("Frontend error: " + err.message);
       progressText.textContent = "❌ Error fetching data (see console).";
     }
+
+    // ⛔ Disable refresh after error
+    if (typeof setRefreshEnabled === "function") {
+      setRefreshEnabled(false);
+    }
+
   } finally {
+    // Always hide the loading overlay
     loadingDiv.style.display = "none";
   }
 }
+
 
 // ===================================================
 // 🎯 Event Listeners
@@ -1262,20 +1698,37 @@ function getConsensusDisplay(row) {
 
 
 
+
+
 // ===================================================
 // 🧮 Table Renderer + Local Consensus Summary + No Fetch (Final Cleaned + Safe Dedup Version)
 // ===================================================
 
-// 🔁 Safe helper to re-render without recursion
 function rerenderConsensusTable(data) {
   resultsDiv.innerHTML = "<p>Updating consensus...</p>";
-  setTimeout(() => renderTableInBatches(data), 50);
+  // 🧠 Mark this as a filtered reload so cached Best No-Vig % values are reused
+  setTimeout(() => renderTableInBatches(data, 50, true), 50);
 }
 
-async function renderTableInBatches(data, batchSize = 50) {
-  // 🧹 Clear previous results and cache dataset
+async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
+  // 🧹 Clear previous results and cache dataset pointer
   resultsDiv.innerHTML = "";
-  window.lastRenderedData = data; // 💾 cache last dataset globally
+  window.lastRenderedData = data;
+
+  // 💾 Keep a stable dataset for resets (only set once)
+  if (!window.fullDataset || !window.fullDataset.length) {
+    window.fullDataset = data;
+  }
+
+  // ⚙️ Only initialize cache once — never wipe during filtered renders
+  if (!window.baseNoVigCache) {
+    window.baseNoVigCache = {};
+  }
+  if (isFiltered) {
+    console.log("♻️ Reusing existing baseNoVigCache for filtered render.");
+  } else {
+    console.log("🧮 Fresh full render — baseNoVigCache intact or newly created.");
+  }
 
   // 🧩 Restore selected books from localStorage
   const savedBooks = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
@@ -1287,36 +1740,7 @@ async function renderTableInBatches(data, batchSize = 50) {
 
   const summaryDiv = document.getElementById("consensus-summary");
 
-  // ===================================================
-  // 🧮 American Odds → Implied Probability Helper
-  // ===================================================
-  const americanToProb = (price) => {
-    const v = parseFloat(price);
-    if (isNaN(v)) return null;
-    return v > 0 ? 100 / (v + 100) : (-v) / ((-v) + 100);
-  };
-
-  // ===================================================
-  // 🏦 Average Consensus Price per Row
-  // ===================================================
-  const getConsensusPrice = (row) => {
-    const bookPriceKeys = {
-      Fanduel: "FanduelPrice",
-      DraftKings: "DraftKingsPrice",
-      BetMGM: "BetMGMPrice",
-      Fanatics: "FanaticsPrice",
-    };
-
-    const activeBooks =
-      selectedBooks.size > 0 ? [...selectedBooks] : Object.keys(bookPriceKeys);
-
-    const values = activeBooks
-      .map((b) => parseFloat(row[bookPriceKeys[b]]))
-      .filter((v) => !isNaN(v));
-
-    if (!values.length) return null;
-    return values.reduce((a, b) => a + b, 0) / values.length;
-  };
+ 
 
   // ===================================================
 // ===================================================
@@ -1439,14 +1863,14 @@ const finalData = deduped.length > 0 ? deduped : data;
 window.groupedFinal = groupedFinal;
 
 // ✅ Render table (call your rendering function)
-await renderOddsTable(finalData, batchSize, groupedFinal);
+await renderOddsTable(finalData, batchSize, groupedFinal, isFiltered);
 
 }
 
 // ===================================================
 // 🧱 Odds Table Renderer (with integrated Fact Check + highlight flash)
 // ===================================================
-async function renderOddsTable(data, batchSize = 50, groupedFinal = {}) {
+async function renderOddsTable(data, batchSize = 50, groupedFinal = {}, isFiltered = false) {
 
   if (!Array.isArray(data) || data.length === 0) {
     resultsDiv.innerHTML = "<p>No data available to render.</p>";
@@ -1598,7 +2022,7 @@ thead.querySelectorAll("th").forEach((th, i) => {
   table.appendChild(tbody);
   resultsDiv.appendChild(table);
 
- // ===================================================
+// ===================================================
 // 🧱 Render rows in batches for smoother performance
 // ===================================================
 for (let i = 0; i < data.length; i += batchSize) {
@@ -1624,104 +2048,173 @@ for (let i = 0; i < data.length; i += batchSize) {
         value = Number.isFinite(num) ? num.toFixed(2) : "—";
       }
 
-     // 🎲 Combine sportsbook line + price + direction arrow
-if (["FanduelPoint", "DraftKingsPoint", "BetMGMPoint", "FanaticsPoint"].includes(col)) {
-  const priceCol = col.replace("Point", "Price");
-  const lineNum = Number(row[col]);
-  const priceNum = Number(row[priceCol]);
+      // 🎲 Sportsbook columns: show line, odds, and favored-arrow tooltip
+      if (["FanduelPoint", "DraftKingsPoint", "BetMGMPoint", "FanaticsPoint"].includes(col)) {
+        const priceCol = col.replace("Point", "Price");
+        const lineNum = Number(row[col]);
+        const priceNum = Number(row[priceCol]);
 
-  // Determine directional arrow (use existing logic from your backend)
-  // row.DirectionArrow should already be available per row, otherwise fallback to ⟷
-  const arrow = row.DirectionArrow || "⟷";
+        // 💡 Determine Over/Under odds for favored-side logic
+        const overOdds = Number(row.OverPrice);
+        const underOdds = Number(row.UnderPrice);
 
-  const arrowSpan = document.createElement("span");
-  arrowSpan.textContent = ` ${arrow}`;
-  arrowSpan.classList.add("diff-arrow");
+        let arrow = "⟷";
+        let arrowColor = "#888";
+        let tooltip = "Even odds";
 
-  if (arrow === "▲") arrowSpan.style.color = "#28a745"; // green = Over
-  else if (arrow === "▼") arrowSpan.style.color = "#d94f4f"; // red = Under
-  else arrowSpan.style.color = "#888"; // gray = Even / N/A
+        if (Number.isFinite(overOdds) && Number.isFinite(underOdds)) {
+          if (overOdds < underOdds) {
+            arrow = "▲";
+            arrowColor = "#28a745";
+            tooltip = "Over favored";
+          } else if (underOdds < overOdds) {
+            arrow = "▼";
+            arrowColor = "#d94f4f";
+            tooltip = "Under favored";
+          } else {
+            arrow = "⟷";
+            arrowColor = "#888";
+            tooltip = "Even odds";
+          }
+        } else if (Number.isFinite(priceNum)) {
+          // fallback if only this cell’s price exists
+          arrow = priceNum < 0 ? "▲" : priceNum > 0 ? "▼" : "⟷";
+          arrowColor = priceNum < 0 ? "#28a745" : priceNum > 0 ? "#d94f4f" : "#888";
+          tooltip = priceNum < 0 ? "Over favored" : priceNum > 0 ? "Under favored" : "Even odds";
+        }
 
-  if (Number.isFinite(lineNum) && Number.isFinite(priceNum)) {
-    td.textContent = `${lineNum.toFixed(2)} (${priceNum > 0 ? `+${priceNum}` : priceNum})`;
-    td.appendChild(arrowSpan);
-  } else if (Number.isFinite(lineNum)) {
-    td.textContent = lineNum.toFixed(2);
-    td.appendChild(arrowSpan);
-  } else {
-    td.textContent = "—";
-  }
+        // Build the arrow span
+        const arrowSpan = document.createElement("span");
+        arrowSpan.textContent = ` ${arrow}`;
+        arrowSpan.classList.add("diff-arrow");
+        arrowSpan.style.color = arrowColor;
+        arrowSpan.title = tooltip;
 
-  tr.appendChild(td);
-  return;
-}
+        if (Number.isFinite(lineNum) && Number.isFinite(priceNum)) {
+          td.textContent = `${lineNum.toFixed(2)} (${priceNum > 0 ? `+${priceNum}` : priceNum})`;
+          td.appendChild(arrowSpan);
+        } else if (Number.isFinite(lineNum)) {
+          td.textContent = lineNum.toFixed(2);
+          td.appendChild(arrowSpan);
+        } else {
+          td.textContent = "—";
+        }
 
+        tr.appendChild(td);
+        return; // continue next column
+      }
 
-// ===================================================
-// 🧠 Consensus column — show ONLY Fair (No-Vig) % + sort-ready
-// ===================================================
-// ===================================================
-// 🧠 Consensus column — show Consensus line only (no %)
-// ===================================================
-if (col === "ConsensusPoint") {
-  const consensusPoint = Number(row.ConsensusPoint);
-  const consensusPrice = getConsensusPrice(row);
+      // ===================================================
+      // 🧠 Consensus column — show Consensus line only
+      // ===================================================
+      if (col === "ConsensusPoint") {
+        const consensusPoint = Number(row.ConsensusPoint);
+        const consensusPrice = getConsensusPrice(row);
+        const parts = [];
 
-  const parts = [];
-  if (Number.isFinite(consensusPoint)) parts.push(consensusPoint.toFixed(2));
-  if (Number.isFinite(consensusPrice))
-    parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
+        if (Number.isFinite(consensusPoint)) parts.push(consensusPoint.toFixed(2));
+        if (Number.isFinite(consensusPrice))
+          parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
 
-  td.textContent = parts.join(" ") || "—";
-  td.dataset.sort = consensusPrice || 0; // keep sorting usable
-  tr.appendChild(td);
-  return;
-}
-
+        td.textContent = parts.join(" ") || "—";
+        td.dataset.sort = consensusPrice || 0;
+        tr.appendChild(td);
+        return;
+      }
 
 // ===================================================
 // 🌟 NEW COLUMN — Best No-Vig Win % (Over vs Under)
 // ===================================================
 if (col === "BestNoVig") {
+  // 🔒 If this is a filtered re-render, reuse cached Best No-Vig values
+  if (isFiltered && window.baseNoVigCache) {
+    const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
+    const cached = window.baseNoVigCache[cacheKey];
+    if (cached) {
+      td.textContent = cached.text;
+      td.dataset.sort = cached.pct ?? 0;
+      row.NoVigWinProb = cached.pct ?? null;
+      row.BestNoVigSide = cached.side ?? null;
+      tr.appendChild(td);
+      return; // ✅ skip recompute, use cached values
+    }
+  }
+
+  // 🧮 Fresh compute for first render (unfiltered)
   const nv = computeNoVigBothSides(window.lastRenderedData || data, row);
   let text = "—";
   let pct = 0;
+  let side = null;
+  let arrow = "";
 
   if (nv.avgOver != null && nv.avgUnder != null) {
     const over = nv.avgOver;
     const under = nv.avgUnder;
-
     const isOverBetter = over > under;
     pct = isOverBetter ? over : under;
-    const side = isOverBetter ? "Over" : "Under";
-    const arrow = isOverBetter ? "▲" : "▼";
-
-    // 🧮 Build label
+    side = isOverBetter ? "Over" : "Under";
+    arrow = isOverBetter ? "▲" : "▼";
     text = `${arrow} 🧮 ${side} ${pct.toFixed(2)}%`;
-
-    // 🎨 Conditional formatting — only highlight if statistically meaningful
-    if (pct >= 52) td.style.color = "#007b1a";        // dark green (strong edge)
-    else if (pct >= 51) td.style.color = "#29a329";   // medium green
-    else td.style.color = "";                         // default text color
   } else if (nv.fallbackSide != null) {
-    const side = nv.sideIsOver ? "Over" : "Under";
+    side = nv.sideIsOver ? "Over" : "Under";
     pct = nv.fallbackSide;
     text = `🧮 ${side} ${pct.toFixed(2)}%`;
-
-    if (pct >= 52) td.style.color = "#007b1a";
-    else if (pct >= 51) td.style.color = "#29a329";
   }
 
-  td.textContent = text;
-  td.dataset.sort = pct.toFixed(2);
-  tr.appendChild(td);
-  return;
+  // 🎨 Basic color tiering for confidence
+  if (pct >= 54) td.style.color = "#007b1a";
+  else if (pct >= 52) td.style.color = "#29a329";
+
+  // ✅ Store numeric value and side for filters
+  row.NoVigWinProb = Number.isFinite(pct) ? pct : null;
+  row.BestNoVigSide = side;
+
+  // ✅ Cache original Best No-Vig values for reuse on filters
+  if (row.Event && row.Market && row.Description) {
+    const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
+    window.baseNoVigCache[cacheKey] = { pct, side, text };
+  }
+
+// 🧩 NEW ADDITION — Market vs. Model disagreement indicator
+const marketFavoredOver =
+  ["FanduelPrice", "DraftKingsPrice", "BetMGMPrice", "FanaticsPrice"]
+    .some(k => Number(row[k]) < 0); // if any book's Over price is shorter (more juiced)
+const marketFavored = marketFavoredOver ? "Over" : "Under";
+const modelFavored = side || "—";
+
+// 🖊️ Render cell first (so we don't overwrite appended badge)
+td.textContent = text;
+td.dataset.sort = Number.isFinite(pct) ? pct.toFixed(2) : 0;
+
+// ✅ Only show mismatch if sides differ AND the fair win % difference is meaningful
+if (
+  marketFavored !== "—" &&
+  modelFavored !== "—" &&
+  marketFavored !== modelFavored &&
+  Math.abs((row.NoVigWinProb ?? pct) - 50) >= 2 // require at least 2% edge
+) {
+  const badge = document.createElement("span");
+  badge.textContent = "⚡ Mismatch";
+  badge.classList.add("mismatch-badge");
+  badge.title = `Market favors ${marketFavored}, model favors ${modelFavored}`;
+  badge.style.marginLeft = "4px";
+  badge.style.fontSize = "11px";
+  badge.style.color = "#d94f4f";
+  badge.style.fontWeight = "bold";
+  td.appendChild(badge);
+}
+
+tr.appendChild(td);
+return;
+
 }
 
 
 
 
-// 🎯 Difference columns with bet recommendation signals (Over/Under - enhanced contrast)
+// ===================================================
+// 🎯 Difference Columns (Restored + Filter Compatible)
+// ===================================================
 if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   const diff = Number(value);
   const isPrize = col === "PrizePicksDifference";
@@ -1729,31 +2222,39 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   const pointVal = Number(row[pointKey]);
   const consensusVal = Number(row.ConsensusPoint);
 
+  // ✅ Calculate and classify difference color tiers
   if (Number.isFinite(diff) && Number.isFinite(pointVal) && Number.isFinite(consensusVal)) {
-    // 🎨 Color intensity based on diff
     if (Math.abs(diff) > 2) td.classList.add("huntergreen");
     else if (Math.abs(diff) >= 1.5) td.classList.add("green");
     else if (Math.abs(diff) >= 1.0) td.classList.add("darkyellow");
     else td.classList.add("gray");
 
-    // 🧠 Betting signal with visible badges
+    // ✅ Store the filter-friendly side marker on the data row
     if (pointVal < consensusVal) {
-      // Bet Over
-      td.innerHTML = `
-        <span class="bet-badge over-badge">O↑ Over</span>
-        <span class="diff-val">${diff.toFixed(2)}</span>
-      `;
+      td.innerHTML = `<span class="bet-badge over-badge">O↑ Over</span>
+                      <span class="diff-val">${diff.toFixed(2)}</span>`;
+      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = "over";
     } else if (pointVal > consensusVal) {
-      // Bet Under
-      td.innerHTML = `
-        <span class="bet-badge under-badge">U↓ Under</span>
-        <span class="diff-val">${diff.toFixed(2)}</span>
-      `;
+      td.innerHTML = `<span class="bet-badge under-badge">U↓ Under</span>
+                      <span class="diff-val">${diff.toFixed(2)}</span>`;
+      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = "under";
     } else {
       td.innerHTML = `<span class="diff-val">${diff.toFixed(2)}</span>`;
+      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = null;
     }
+
+    // 🧩 Log data markers (for debugging filters)
+    console.debug(
+      `Row marker → ${isPrize ? "PrizePicks" : "Underdog"}:`,
+      row.Description,
+      "|",
+      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"]
+    );
+
   } else {
     td.textContent = "—";
+    // Ensure marker resets if no valid data
+    row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = null;
   }
 
   tr.appendChild(td);
@@ -1763,8 +2264,7 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
 
 
 
-
-      // 🧾 Default text/fallback
+      // 🧾 Default fallback
       td.textContent =
         value === undefined || value === null || value === "" ? "—" : String(value);
       tr.appendChild(td);
@@ -1776,11 +2276,407 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
   // Yield between batches to keep UI responsive
   await new Promise((r) => setTimeout(r, 0));
 }
+
 // ===================================================
 // ✅ Attach Fact Check listener after table is rendered
 // ===================================================
 attachFactCheckListener(data);
 }
+
+
+// ===================================================
+// 🧮 Filters that match visible table fields (Δ columns)
+// ===================================================
+
+// Helper to extract direction and numeric value from Δ strings
+function parseDelta(deltaText) {
+  const text = (deltaText || "").toLowerCase();
+  const isOver = text.includes("over");
+  const isUnder = text.includes("under");
+  const value = parseFloat(text.match(/(-?\d+(\.\d+)?)/)?.[0] || "0");
+  return { isOver, isUnder, value };
+}
+
+// ===================================================
+// 🧮 Optimal Filters Logic — must come before setupOptimalFilters()
+// ===================================================
+
+// ------------------------------
+// 🔎 Helpers
+// ------------------------------
+function getBestSide(row) {
+  if (row.BestNoVigSide) return row.BestNoVigSide.toLowerCase();
+  const t = (row.BestNoVig || "").toLowerCase();
+  if (t.includes("over")) return "over";
+  if (t.includes("under")) return "under";
+  return null;
+}
+
+function getPPside(row) {
+  if (row._PrizePicksSide) return row._PrizePicksSide.toLowerCase();
+  const pp = Number(row.PrizePickPoint);
+  const cons = Number(row.ConsensusPoint);
+  if (Number.isFinite(pp) && Number.isFinite(cons)) {
+    return pp < cons ? "over" : pp > cons ? "under" : null;
+  }
+  return null;
+}
+
+function getUDside(row) {
+  if (row._UnderdogSide) return row._UnderdogSide.toLowerCase();
+  const ud = Number(row.UnderdogPoint);
+  const cons = Number(row.ConsensusPoint);
+  if (Number.isFinite(ud) && Number.isFinite(cons)) {
+    return ud < cons ? "over" : ud > cons ? "under" : null;
+  }
+  return null;
+}
+
+function hasMeaningfulDelta(val, min = 0.25) {
+  const n = Number(val);
+  return Number.isFinite(n) && Math.abs(n) >= min;
+}
+
+// ===================================================
+// 🎯 Robust Optimal Filters — derive best side from groupedFinal
+// ===================================================
+
+// Get the best side (over/under) using groupedFinal (preferred) or computeNoVigBothSides (fallback)
+function getBestSideStrict(row) {
+  const baseKey = `${(row.Event || "").toLowerCase().trim()}|${(row.Market || "").toLowerCase().trim()}|${(row.Description || "").toLowerCase().trim()}`;
+
+  // 1) Use groupedFinal if present (built in renderTableInBatches)
+  const gf = (window.groupedFinal && window.groupedFinal[baseKey]) ? window.groupedFinal[baseKey] : null;
+  if (gf) {
+    const overProb  = gf.Over?.prob ?? null;
+    const underProb = gf.Under?.prob ?? null;
+    if (overProb != null || underProb != null) {
+      if (overProb != null && underProb != null) {
+        return overProb >= underProb ? "over" : "under";
+      }
+      if (overProb != null)  return "over";
+      if (underProb != null) return "under";
+    }
+  }
+
+  // 2) Fallback: compute on the fly from the currently rendered dataset
+  const dataForCompute = Array.isArray(window.lastRenderedData) && window.lastRenderedData.length
+    ? window.lastRenderedData
+    : Array.isArray(window.fullDataset) ? window.fullDataset : [];
+
+  const nv = computeNoVigBothSides(dataForCompute, row);
+  if (nv && (nv.avgOver != null || nv.avgUnder != null)) {
+    if (nv.avgOver != null && nv.avgUnder != null) {
+      return nv.avgOver >= nv.avgUnder ? "over" : "under";
+    }
+    if (nv.avgOver != null)  return "over";
+    if (nv.avgUnder != null) return "under";
+  }
+
+  return null;
+}
+
+// Direction of PrizePicks relative to consensus (over if PP line < consensus)
+function getPPside(row) {
+  const pp = Number(row.PrizePickPoint);
+  const cons = Number(row.ConsensusPoint);
+  if (!Number.isFinite(pp) || !Number.isFinite(cons)) return null;
+  return pp < cons ? "over" : pp > cons ? "under" : null;
+}
+
+// Direction of Underdog relative to consensus
+function getUDside(row) {
+  const ud = Number(row.UnderdogPoint);
+  const cons = Number(row.ConsensusPoint);
+  if (!Number.isFinite(ud) || !Number.isFinite(cons)) return null;
+  return ud < cons ? "over" : ud > cons ? "under" : null;
+}
+
+// Numeric Δ guard
+function hasMeaningfulDelta(val, min = 0.25) {
+  const n = Number(val);
+  return Number.isFinite(n) && Math.abs(n) >= min;
+}
+
+// ================================
+// 🧪 Filters
+// ================================
+window.addEventListener("DOMContentLoaded", () => {
+  // ===========================================
+  // ♻️ Clear All Filters (Restore Full Table)
+  // ===========================================
+  function clearAllOptimalFilters() {
+    console.log("♻️ Clearing all optimal filters...");
+
+    // 🔹 Remove active filter button highlight
+    document
+      .querySelectorAll(".active-filter")
+      .forEach((b) => b.classList.remove("active-filter"));
+    window.activeOptimalFilter = null;
+
+    // 🔹 Restore the most complete dataset available
+    const base =
+      Array.isArray(window.fullDataset) && window.fullDataset.length
+        ? window.fullDataset
+        : Array.isArray(window.lastRenderedData)
+        ? window.lastRenderedData
+        : [];
+
+    if (!Array.isArray(base) || base.length === 0) {
+      console.warn("⚠️ No cached data to restore.");
+      const resultsDiv = document.getElementById("results");
+      if (resultsDiv)
+        resultsDiv.innerHTML = `
+          <div class="no-results-message">
+            <p>No data available to display.</p>
+          </div>`;
+      return;
+    }
+
+    // 🔹 Re-render full table using cached no-vig data
+    renderTableInBatches(base, 50, true);
+    console.log(`✅ Filters cleared — restored ${base.length} rows.`);
+  }
+
+  // ===========================================
+  // ✅ PrizePicks Optimal — uses true best side + Δ guard
+  // ===========================================
+  function filterPrizePicksOptimal(data) {
+    if (!Array.isArray(data)) return [];
+    const seen = new Set();
+
+    const result = data.filter((row) => {
+      const key = `${(row.Event || "")}|${(row.Market || "")}|${(row.Description || "")}`;
+      if (seen.has(key)) return false;
+
+      const bestSide = (row.BestNoVigSide || "").toLowerCase();
+      const ppPoint = Number(row.PrizePickPoint);
+      const cons = Number(row.ConsensusPoint);
+      const delta = Number(row.PrizePicksDifference);
+
+      if (!bestSide || !Number.isFinite(ppPoint) || !Number.isFinite(cons)) return false;
+      if (!Number.isFinite(delta) || Math.abs(delta) < 0.25) return false;
+
+      const favorable =
+        (bestSide === "over" && ppPoint < cons) ||
+        (bestSide === "under" && ppPoint > cons);
+
+      if (favorable) {
+        seen.add(key);
+        return true;
+      }
+      return false;
+    });
+
+    console.log(`🎯 PrizePicks Optimal: ${result.length}/${data.length} rows`);
+    return result;
+  }
+
+  // ===========================================
+  // ✅ Underdog Optimal — uses stored BestNoVigSide + Δ guard
+  // ===========================================
+  function filterUnderdogOptimal(data) {
+    if (!Array.isArray(data)) return [];
+    const seen = new Set();
+
+    const result = data.filter((row) => {
+      const key = `${(row.Event || "")}|${(row.Market || "")}|${(row.Description || "")}`;
+      if (seen.has(key)) return false;
+
+      const bestSide = (row.BestNoVigSide || "").toLowerCase();
+      const udPoint = Number(row.UnderdogPoint);
+      const cons = Number(row.ConsensusPoint);
+      const delta = Number(row.UnderdogDifference);
+
+      if (!bestSide || !Number.isFinite(udPoint) || !Number.isFinite(cons)) return false;
+      if (!Number.isFinite(delta) || Math.abs(delta) < 0.25) return false;
+
+      const favorable =
+        (bestSide === "over" && udPoint < cons) ||
+        (bestSide === "under" && udPoint > cons);
+
+      if (favorable) {
+        seen.add(key);
+        return true;
+      }
+      return false;
+    });
+
+    console.log(`🎯 Underdog Optimal: ${result.length}/${data.length} rows`);
+    return result;
+  }
+
+  // ===========================================
+  // ✅ Fantasy Edge — PrizePicks or Underdog Δ ≥ 0.25
+  // ===========================================
+  function filterFantasyEdge(data) {
+    if (!Array.isArray(data)) return [];
+    const out = data.filter((row) => {
+      const pp = Number(row.PrizePicksDifference);
+      const ud = Number(row.UnderdogDifference);
+      return (Number.isFinite(pp) && Math.abs(pp) >= 0.25) ||
+             (Number.isFinite(ud) && Math.abs(ud) >= 0.25);
+    });
+    console.log(`🎯 Fantasy Edge: ${out.length}/${data.length} match`);
+    return out;
+  }
+
+  // ===========================================
+  // ✅ High No-Vig (DOM-only)
+  // ===========================================
+  function filterHighNoVig(threshold = 54) {
+    const table = document.querySelector("#results table");
+    if (!table) return;
+    const rows = table.querySelectorAll("tbody tr");
+    let visibleCount = 0;
+
+    rows.forEach((row) => {
+      const bestNoVigCell = Array.from(row.querySelectorAll("td"))
+        .find((td) => td.textContent.includes("🧮"));
+      const match = bestNoVigCell?.textContent.match(/([\d.]+)%/);
+      const pct = match ? parseFloat(match[1]) : NaN;
+      const show = Number.isFinite(pct) && pct >= threshold;
+      row.style.display = show ? "" : "none";
+      if (show) visibleCount++;
+    });
+
+    console.log(`💪 High No-Vig ≥ ${threshold}% → showing ${visibleCount} rows`);
+  }
+
+  // ===========================================
+  // ⚔️ DFS Line Difference (≥ 2.0 points difference)
+  // ===========================================
+  function filterDfsDifference(data) {
+    if (!Array.isArray(data)) return [];
+
+    const filtered = data.filter((row) => {
+      const ppRaw = String(row.PrizePickPoint || row.PrizePicksPoint || "").trim();
+      const udRaw = String(row.UnderdogPoint || "").trim();
+      if (!ppRaw || !udRaw || ppRaw === "—" || udRaw === "—") return false;
+
+      const ppVal = parseFloat(ppRaw);
+      const udVal = parseFloat(udRaw);
+      if (!Number.isFinite(ppVal) || !Number.isFinite(udVal)) return false;
+
+      return Math.abs(ppVal - udVal) >= 2;
+    });
+
+    console.log(`⚔️ DFS Difference (≥2): ${filtered.length}/${data.length} rows`);
+    return filtered;
+  }
+// ===================================================
+// 🧮 Filter Button Wiring (Toggle + Reset)
+// ===================================================
+const filterBtns = {
+  prize: document.getElementById("filterPrizePicksOptimalBtn"),
+  underdog: document.getElementById("filterUnderdogOptimalBtn"),
+  fantasy: document.getElementById("filterFantasyEdgeBtn"),
+  dfs: document.getElementById("filterDfsDifferenceBtn"),
+  high: document.getElementById("filterHighNoVigBtn"),
+  clear: document.getElementById("clearOptimalFiltersBtn"),
+};
+
+let activeFilter = null;
+
+function clearActiveHighlights() {
+  Object.values(filterBtns).forEach((btn) => btn?.classList.remove("active-filter"));
+}
+
+Object.entries(filterBtns).forEach(([key, btn]) => {
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const base =
+      Array.isArray(window.fullDataset) && window.fullDataset.length
+        ? window.fullDataset
+        : Array.isArray(window.lastRenderedData)
+        ? window.lastRenderedData
+        : [];
+
+    let filtered = [];
+
+    if (activeFilter === key && key !== "clear") {
+      activeFilter = null;
+      clearActiveHighlights();
+      clearAllOptimalFilters();
+      return;
+    }
+
+    switch (key) {
+      case "prize":
+        filtered = filterPrizePicksOptimal(base);
+        break;
+      case "underdog":
+        filtered = filterUnderdogOptimal(base);
+        break;
+      case "fantasy":
+        filtered = filterFantasyEdge(base);
+        break;
+      case "dfs":
+        filtered = filterDfsDifference(base);
+        break;
+      case "high":
+        filterHighNoVig(54);
+        clearActiveHighlights();
+        btn.classList.add("active-filter");
+        activeFilter = key;
+        return;
+      case "clear":
+        clearActiveHighlights();
+        clearAllOptimalFilters();
+        activeFilter = null;
+        return;
+    }
+
+    clearActiveHighlights();
+    btn.classList.add("active-filter");
+    activeFilter = key;
+
+const resultsDiv = document.getElementById("results");
+const shimmer = document.getElementById("shimmerOverlay");
+
+// 🧠 Smooth transition with shimmer mask
+if (shimmer) {
+  shimmer.classList.remove("hidden"); // show shimmer overlay
+}
+
+const currentScroll = window.scrollY || document.documentElement.scrollTop;
+
+setTimeout(() => {
+  if (filtered.length > 0) {
+    rerenderConsensusTable(filtered);
+    window.lastRenderedData = filtered;
+    console.log(`✅ Applied filter "${key}" → ${filtered.length}/${base.length} rows`);
+  } else {
+    console.log(`⚠️ Filter "${key}" → 0 results (showing no-results message)`);
+
+    resultsDiv.innerHTML = `
+      <div class="no-results-message fade-in">
+        <p>⚠️ No props matched your filters.</p>
+        <button id="resetFiltersInline" class="reset-inline-btn">Reset Filters</button>
+      </div>
+    `;
+    document
+      .getElementById("resetFiltersInline")
+      ?.addEventListener("click", clearAllOptimalFilters);
+  }
+
+  // ✅ Hide shimmer after render completes
+  if (shimmer) {
+    setTimeout(() => shimmer.classList.add("hidden"), 250);
+  }
+
+  window.scrollTo({ top: currentScroll, behavior: "instant" });
+}, 100);
+
+
+
+
+});
+});
+
+});
+
 
 
 
@@ -1907,96 +2803,67 @@ supabase.auth.getSession().then(({ data }) => {
 });
 
 // --- Auth State Listener ---
-supabase.auth.onAuthStateChange(async (event, session) => {
+supabase.auth.onAuthStateChange((event, session) => {
+  const body = document.body;
+  const authContainer = document.getElementById("auth-container");
+  const mainContent = document.getElementById("main-content");
+
   if (session && session.user) {
-    console.log("Auth state changed: user logged in");
-    showMainContent();
-    await checkSubscriptionStatus(session.user.id); // ✅ updated call
+    console.log("✅ Authenticated user:", session.user.email);
+    // Show dashboard, hide login
+    body.classList.remove("auth-mode");
+    authContainer.style.display = "none";
+    mainContent.style.display = "block";
   } else {
-    console.log("Auth state changed: user logged out");
-    authContainer.style.display = "flex";
+    console.log("🚪 User logged out or not authenticated");
+    // Hide dashboard completely
+    body.classList.add("auth-mode");
+    authContainer.style.display = "block";
     mainContent.style.display = "none";
   }
 });
 
+// Set initial state on page load
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const body = document.body;
+
+  if (session && session.user) {
+    body.classList.remove("auth-mode");
+  } else {
+    body.classList.add("auth-mode");
+  }
+})();
 
 
-// ============================================================
-// 💳 Subscription Status Checker + UI Updater
-// ============================================================
 
-async function checkSubscriptionStatus(user_id) {
-  try {
-    const res = await fetch(`${window.API_BASE}/api/subscription-details?user_id=${user_id}`);
-    const data = await res.json();
-
-    const statusEl = document.getElementById("subscription-status");
-    const accessEl = document.getElementById("access-until");
-    const subscribeBtn = document.getElementById("subscribeBtn");
-    const cancelBtn = document.getElementById("cancel-subscription-btn");
-    const resumeBtn = document.getElementById("resume-subscription-btn");
-
-    // Reset visibility
-    subscribeBtn.style.display = "none";
-    cancelBtn.style.display = "none";
-    resumeBtn.style.display = "none";
-    accessEl.style.display = "none";
-
-    const subStatus = data.subscription_status || "inactive";
-    const accessUntil = data.access_until;
-    const lastPayment = data.last_payment_date;
-
-    statusEl.textContent = `Subscription: ${subStatus.charAt(0).toUpperCase() + subStatus.slice(1)}`;
-
-    // -----------------------------------------------------------
-    // 🗓️ Compute Remaining Days
-    // -----------------------------------------------------------
-    if (accessUntil) {
-      const accessDate = new Date(accessUntil);
-      const today = new Date();
-      const diffMs = accessDate - today;
-      const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-      if (daysLeft > 0) {
-        accessEl.style.display = "block";
-        accessEl.textContent = `Access until: ${accessDate.toLocaleDateString()} (${daysLeft} days left)`;
-      } else {
-        accessEl.style.display = "block";
-        accessEl.textContent = `Access expired on ${accessDate.toLocaleDateString()}`;
-      }
+// -----------------------------------------------------------
+// ⚙️ Enable or Disable Data Buttons
+// -----------------------------------------------------------
+if (typeof subStatus !== "undefined") {
+  if (subStatus === "active") {
+    // ✅ Active subscribers can load data
+    if (loadBtn) {
+      loadBtn.disabled = false;
+      loadBtn.style.opacity = "1";
+      loadBtn.style.cursor = "pointer";
+      loadBtn.title = "";
     }
-
-    // -----------------------------------------------------------
-    // 🎛️ Determine Which Buttons to Show
-    // -----------------------------------------------------------
-    if (subStatus === "active") {
-      cancelBtn.style.display = "inline-block";
-    } else if (subStatus === "pending_cancel") {
-      resumeBtn.style.display = "inline-block";
-      if (accessUntil) accessEl.style.display = "block";
-    } else if (subStatus === "inactive" || subStatus === "canceled") {
-      // Check if it's been more than 31 days since last payment
-      let showSubscribe = true;
-      if (lastPayment) {
-        const lastPayDate = new Date(lastPayment);
-        const today = new Date();
-        const diffDays = Math.floor((today - lastPayDate) / (1000 * 60 * 60 * 24));
-        if (diffDays < 31) {
-          accessEl.style.display = "block";
-          accessEl.textContent = `Access ended recently (${31 - diffDays} days until renewal eligible)`;
-          showSubscribe = false;
-        }
-      }
-      if (showSubscribe) subscribeBtn.style.display = "inline-block";
-    } else {
-      subscribeBtn.style.display = "inline-block";
+    // Keep "Refresh" disabled until actual data load occurs
+    setRefreshEnabled(false);
+  } else {
+    // ❌ Inactive / canceled / pending users — disable "Load Data"
+    if (loadBtn) {
+      loadBtn.disabled = true;
+      loadBtn.style.opacity = "0.5";
+      loadBtn.style.cursor = "not-allowed";
+      loadBtn.title = "Data access available only for active subscribers";
     }
-
-  } catch (err) {
-    console.error("❌ Error fetching subscription status:", err);
-    document.getElementById("subscription-status").textContent = "Subscription: Unknown";
+    setRefreshEnabled(false);
   }
 }
+
+
 
 // ===================================================
 // 💾 Export Functions (CSV & Excel)
@@ -2036,31 +2903,46 @@ function exportToCSV() {
   document.body.removeChild(link);
 }
 
-// ===================================================
-// ℹ️ Column Info Modal Logic
-// ===================================================
-const columnModal = document.getElementById("columnInfoModal");
-const columnBtn = document.getElementById("columnInfoBtn");
-const closeBtns = columnModal ? columnModal.querySelectorAll(".close, .close-modal-btn") : [];
+// ===============================
+// 📘 Column Info Modal Controls
+// ===============================
+const columnInfoModal = document.getElementById("columnInfoModal");
+const openInfoBtn = document.getElementById("columnInfoBtn");
+const closeColumnInfo = document.getElementById("closeColumnInfo");
+const bottomCloseColumnInfo = document.getElementById("bottomCloseColumnInfo");
 
-if (columnBtn && columnModal) {
-  columnBtn.addEventListener("click", () => {
-    columnModal.style.display = "block";
-    document.body.style.overflow = "hidden";
+// Open modal
+openInfoBtn?.addEventListener("click", () => {
+  columnInfoModal.style.display = "block";
+  document.body.style.overflow = "hidden"; // lock background scroll
+});
+
+// Close modal (both buttons)
+[closeColumnInfo, bottomCloseColumnInfo].forEach(btn =>
+  btn?.addEventListener("click", () => {
+    columnInfoModal.style.display = "none";
+    document.body.style.overflow = "auto";
+  })
+);
+
+// Close when tapping outside
+window.addEventListener("click", (e) => {
+  if (e.target === columnInfoModal) {
+    columnInfoModal.style.display = "none";
+    document.body.style.overflow = "auto";
+  }
+});
+
+// ==============================
+// 📱 Collapsible Table Controls
+// ==============================
+document.querySelectorAll('.collapse-toggle').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const section = btn.closest('.collapsible-section');
+    section.classList.toggle('active');
+    btn.classList.toggle('open');
   });
-
-  closeBtns.forEach(btn => btn.addEventListener("click", () => {
-    columnModal.style.display = "none";
-    document.body.style.overflow = "";
-  }));
-
-  window.addEventListener("click", (e) => {
-    if (e.target === columnModal) {
-      columnModal.style.display = "none";
-      document.body.style.overflow = "";
-    }
-  });
-}
+});
 
 
 // Export to Excel (.xlsx)
@@ -2224,3 +3106,79 @@ if (viewPropsBtn && viewGamesBtn) {
     }
   });
 }
+
+// ===================================================
+// 💬 Support Button + Modal Logic
+// ===================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const supportBtn = document.getElementById("support-btn");
+  const supportModal = document.getElementById("supportModal");
+  const closeSupportModal = document.getElementById("closeSupportModal");
+  const emailSupportBtn = document.getElementById("emailSupportBtn");
+
+  if (!supportBtn || !supportModal) {
+    console.warn("⚠️ Support elements not found in DOM.");
+    return;
+  }
+
+  // Open modal
+  supportBtn.addEventListener("click", () => {
+    supportModal.style.display = "flex";
+  });
+
+  // Close modal
+  closeSupportModal.addEventListener("click", () => {
+    supportModal.style.display = "none";
+  });
+
+  // Close when clicking outside the modal
+  supportModal.addEventListener("click", (e) => {
+    if (e.target === supportModal) supportModal.style.display = "none";
+  });
+
+  // Launch default mail app
+  emailSupportBtn.addEventListener("click", () => {
+    const subject = encodeURIComponent("Ben There Bet That! Support Request");
+    const body = encodeURIComponent(
+      "Hi Ben There Bet That! team,\n\nI'm experiencing an issue with my account or app.\n\nDetails:\n(Please describe your issue here)\n\nThank you!"
+    );
+    window.location.href = `mailto:bentherebetthat@gmail.com?subject=${subject}&body=${body}`;
+    supportModal.style.display = "none";
+  });
+});
+
+
+// ===================================================
+// 🧩 Diagnostic Startup Check — Verify Script Loading
+// ===================================================
+
+// Confirm script executed
+console.log("✅ script.js loaded and running!");
+
+// Check if DOM and key elements are available
+document.addEventListener("DOMContentLoaded", () => {
+  const prizeBtn = document.getElementById("filterPrizePicksOptimalBtn");
+  const underdogBtn = document.getElementById("filterUnderdogOptimalBtn");
+  const resultsDiv = document.getElementById("results");
+
+  console.group("🔍 DOM Element Diagnostic");
+  console.log("PrizePicks Button:", prizeBtn ? "✅ Found" : "❌ Missing");
+  console.log("Underdog Button:", underdogBtn ? "✅ Found" : "❌ Missing");
+  console.log("Results Div:", resultsDiv ? "✅ Found" : "❌ Missing");
+  console.groupEnd();
+
+  // Confirm your JS is allowed to run (no blocking errors)
+  console.log("🧮 Checking if filters initialized...");
+  if (window.initializeOptimalFilters) {
+    console.log("✅ Filter logic function exists and ready.");
+  } else {
+    console.warn("⚠️ Filter logic function not found — check filter script block.");
+  }
+
+  // Simple sanity check for data
+  if (window.lastRenderedData) {
+    console.log(`📊 lastRenderedData loaded (${window.lastRenderedData.length} rows)`);
+  } else {
+    console.warn("⚠️ lastRenderedData not yet populated — data may not have loaded.");
+  }
+});

@@ -39,41 +39,49 @@
        🔐 Authentication Section
   =============================== -->
   <div id="auth-container">
-    <div class="auth-card">
-      <h1 class="app-title">
-        <span class="app-highlight">Ben</span> There <span class="app-highlight">Bet</span> That<span class="app-dot">!</span>
-      </h1>
-      <p class="app-subtitle">Smart Sports Insights • Real-Time Edge</p>
+  <div class="auth-card">
+    <h1 class="app-title">
+      <span class="app-highlight">Ben</span> There <span class="app-highlight">Bet</span> That<span class="app-dot">!</span>
+    </h1>
+    <p class="app-subtitle">Smart Sports Insights • Real-Time Edge</p>
 
-      <!-- Sign In Form -->
-      <form id="signin-form" class="auth-form">
-        <h2>Sign In</h2>
-        <input type="email" id="signin-email" placeholder="Email" required />
-        <input type="password" id="signin-password" placeholder="Password" required />
-        <button type="submit" id="signin-btn" class="primary-btn">
-          Sign In
-          <span id="signin-spinner" class="spinner" style="display:none;"></span>
-        </button>
-      </form>
+    <!-- Sign In Form -->
+    <form id="signin-form" class="auth-form">
+      <h2>Sign In</h2>
+      <input type="email" id="signin-email" placeholder="Email" required />
+      <input type="password" id="signin-password" placeholder="Password" required />
+      <button type="submit" id="signin-btn" class="primary-btn">
+        Sign In
+        <span id="signin-spinner" class="spinner" style="display:none;"></span>
+      </button>
+    </form>
 
-      <div class="divider">OR</div>
+    <div class="divider">OR</div>
 
-      <!-- Sign Up Form -->
-      <form id="signup-form" class="auth-form">
-        <h2>Create Account</h2>
-        <input type="email" id="signup-email" placeholder="Email" required />
-        <input type="password" id="signup-password" placeholder="Password" required />
-        <input type="password" id="signup-confirm" placeholder="Confirm Password" required />
-        <button type="submit" id="signup-btn" class="secondary-btn">
-          Sign Up
-          <span id="signup-spinner" class="spinner" style="display:none;"></span>
-        </button>
-      </form>
+    <!-- Sign Up Form -->
+    <form id="signup-form" class="auth-form">
+      <h2>Create Account</h2>
+      <input type="email" id="signup-email" placeholder="Email" required />
+      <input type="password" id="signup-password" placeholder="Password" required />
+      <input type="password" id="signup-confirm" placeholder="Confirm Password" required />
+      <button type="submit" id="signup-btn" class="secondary-btn">
+        Sign Up
+        <span id="signup-spinner" class="spinner" style="display:none;"></span>
+      </button>
+    </form>
 
-      <button id="forgot-btn" class="link-btn">Forgot Password?</button>
-      <p id="auth-message"></p>
-    </div>
+    <button id="forgot-btn" class="link-btn">Forgot Password?</button>
+    <p id="auth-message"></p>
+
+    <!-- ✅ Disclaimer should be here, inside auth-card -->
+    <p class="login-disclaimer">
+      <strong>Disclaimer:</strong> Ben There Bet That provides sports analytics and statistics dashboards 
+      for informational and entertainment purposes only. We do not accept wagers, offer fantasy contests, 
+      or facilitate real-money gaming of any kind.
+    </p>
   </div>
+</div>
+
 
   <!-- ===============================
        🏟️ Main Dashboard
@@ -92,16 +100,19 @@
   <p id="access-until" style="display:none; color:#0d6efd; font-weight:600;"></p>
 
   <!-- Subscription Control Buttons -->
-  <div id="subscription-controls" style="margin-top:12px;">
-    <button id="subscribeBtn" class="primary-btn" style="display:none;">Subscribe</button>
-    <button id="cancel-subscription-btn" class="secondary-btn" style="display:none;">Cancel Subscription</button>
-    <button id="resume-subscription-btn" class="primary-btn" style="display:none;">Resume Subscription</button>
-    <button id="signout-btn" class="secondary-btn button-with-spinner">
-      Sign Out
-      <div id="logout-spinner" class="spinner-small" style="display:none;"></div>
-    </button>
-  </div>
+<!-- Subscription Control Buttons -->
+<div id="subscription-controls" style="margin-top:12px;">
+  <button id="subscribeBtn" class="primary-btn" style="display:none;">Subscribe</button>
+  <button id="cancel-subscription-btn" class="secondary-btn" style="display:none;">Cancel Subscription</button>
+  <button id="resume-subscription-btn" class="primary-btn" style="display:none;">Resume Subscription</button>
+  <button id="manageBillingBtn" class="primary-btn" style="display:none;">Manage Billing</button>
+  <button id="signout-btn" class="secondary-btn button-with-spinner">
+    Sign Out
+    <div id="logout-spinner" class="spinner-small" style="display:none;"></div>
+  </button>
+  <button id="support-btn" class="secondary-btn">Contact Support</button>
 </div>
+
 
 
     <!-- Title -->
@@ -216,6 +227,44 @@
 
       <div id="consensus-summary" class="consensus-bar"></div>
     </div>
+    
+      
+<!-- ================================
+     🎯 Optimal Bets Filter Controls
+================================ -->
+<div id="optimalFilters" class="filter-group">
+  <button id="filterPrizePicksOptimalBtn" class="filter-btn"
+          title="Show PrizePicks lines with the strongest positive expected value">
+    📈 PrizePicks +EV
+  </button>
+
+  <button id="filterUnderdogOptimalBtn" class="filter-btn"
+          title="Show Underdog lines with the strongest positive expected value">
+    🧩 Underdog +EV
+  </button>
+
+  <button id="filterFantasyEdgeBtn" class="filter-btn"
+          title="Highlights props with point descrepncies bettwen DFS and bookmakers">
+    🎮 Point Value Plays
+  </button>
+
+  <button id="filterHighNoVigBtn" class="filter-btn"
+          title="Show bets with ≥ 54% fair win probability (after removing vig)">
+    🎯 High Confidence (54%+)
+  </button>
+
+  <button id="filterDfsDifferenceBtn" class="filter-btn"
+          title="Show props where PrizePicks and Underdog lines differ by 2+ points">
+    ⚔️ DFS Line Difference (≥ 2)
+  </button>
+
+  <button id="clearOptimalFiltersBtn" class="filter-btn secondary-btn"
+          title="Reset all filters and show full results">
+    ♻️ Reset Filters
+  </button>
+</div>
+
+
 
     <!-- 🧾 Results -->
     <div id="results"></div>
@@ -230,33 +279,209 @@
 </div>
 -->
 
+<!-- ✨ Loading shimmer overlay -->
+<div id="shimmerOverlay" class="shimmer-overlay hidden">
+  <div class="shimmer-bar"></div>
+</div>
 
 
+<!-- ===================================================
+     📘 Dashboard Tutorial / Column Info Modal
+=================================================== -->
+<div id="columnInfoModal" class="modal fade-in-modal">
+  <div class="modal-content tutorial-content">
+    <span class="close" id="closeColumnInfo">&times;</span>
+    <h2>📘 How to Read the Dashboard</h2>
+    <p>
+      This quick tutorial explains each column, how to interpret the <strong>No-Vig</strong> metrics,
+      and how to understand long-term probabilities on <strong>PrizePicks</strong> and
+      <strong>Underdog Fantasy</strong>.
+    </p>
 
+    <!-- 1️⃣ Event & Market -->
+    <section class="tutorial-step">
+      <h3>🎯 1. Event & Market</h3>
+      <p><strong>Event</strong> lists the game (e.g., <em>Chiefs vs Bills</em>).</p>
+      <p><strong>Market</strong> identifies the prop type — Passing Yards, Rebounds, Strikeouts, etc.</p>
+    </section>
 
-    <!-- 📘 Column Info Modal -->
-    <div id="columnInfoModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>📊 Column Guide</h2>
-        <p>Here’s what each column represents and how to interpret it:</p>
+    <!-- 2️⃣ Sportsbook Columns -->
+    <section class="tutorial-step">
+      <h3>💰 2. Sportsbook Columns</h3>
+      <p>
+        Each sportsbook (FanDuel, DraftKings, BetMGM, Fanatics) shows its line and odds.
+        Toggle checkboxes above the table to include/exclude books in the <strong>Consensus</strong>.
+      </p>
+    </section>
 
-        <ul class="info-list">
-          <li><strong>Event:</strong> The matchup (e.g., Home vs Away).</li>
-          <li><strong>Market:</strong> The type of player prop (Points, Saves, Rebounds, etc.).</li>
-          <li><strong>Description:</strong> Player name or specific prop.</li>
-          <li><strong>FanDuel / DraftKings / BetMGM / Fanatics:</strong> Sportsbook lines and odds. If one book’s line is way off, uncheck it above to remove it from the consensus.</li>
-          <li><strong>Consensus:</strong> The average sportsbook line used as a fair baseline to compare against PrizePicks and Underdog lines.</li>
-          <li><strong>BestNoVig:</strong> 🧮 Shows which side (Over or Under) has the best fair win probability after removing the bookmaker’s vig. Based on normalized implied probabilities.</li>
-          <li><strong>PrizePicks:</strong> Fantasy line from PrizePicks. Compared to consensus for potential value.</li>
-          <li><strong>Underdog:</strong> Fantasy line from Underdog Fantasy. Also compared to consensus.</li>
-          <li><strong>PrizePicks Δ:</strong> Difference between the PrizePicks line and the consensus line. Larger differences may indicate stronger edges. Green intensity increases with difference magnitude.</li>
-          <li><strong>Underdog Δ:</strong> Same as above, but for Underdog Fantasy.</li>
-        </ul>
+    <!-- 3️⃣ Consensus & No-Vig -->
+    <section class="tutorial-step">
+      <h3>📊 3. Consensus & No-Vig Odds</h3>
+      <p><strong>Consensus</strong> = average sportsbook line (your fair baseline).</p>
+      <p><strong>Best No-Vig</strong> removes the vig to find the “true” win probability.</p>
 
-        <button class="secondary-btn close-modal-btn" style="margin-top: 16px;">Close</button>
+      <div class="formula-box">
+        <h4>🧮 No-Vig Formula</h4>
+        <pre>
+P_over  = 100 / (A + 100)
+P_under =  B / (B + 100)
+Fair Over %  = (P_over / (P_over + P_under)) × 100
+Fair Under % = (P_under / (P_over + P_under)) × 100
+        </pre>
+        <p>The higher value is highlighted in the <strong>Best No-Vig</strong> column.</p>
       </div>
-    </div>
+    </section>
+
+    <!-- 4️⃣ DFS Lines -->
+    <section class="tutorial-step">
+      <h3>🎮 4. DFS Lines (PrizePicks / Underdog)</h3>
+      <p>Compare DFS lines to Consensus to spot +EV (expected value) edges.</p>
+      <ul>
+        <li><span class="color-box green"></span> DFS line <em>below</em> Consensus → potential <strong>Over</strong>.</li>
+        <li><span class="color-box red"></span> DFS line <em>above</em> Consensus → potential <strong>Under</strong>.</li>
+      </ul>
+    </section>
+<!-- 5️⃣ Filter Buttons -->
+<section class="tutorial-step">
+  <h3>⚙️ 5. Filter Buttons Explained</h3>
+  <ul class="filter-guide">
+    <li>
+      📈 <strong>PrizePicks +EV</strong> — highlights player props where the
+      <em>PrizePicks line offers value</em> versus consensus. Uses no-vig odds to
+      find when the projected outcome (Over/Under) is truly favorable and the line
+      differs by at least <code>0.25</code> points. Perfect for spotting soft lines
+      on PrizePicks before they move.
+    </li>
+    <li>
+      🧩 <strong>Underdog +EV</strong> — highlights player props where the
+      <em>UnderDogs line offers value</em> versus consensus. Uses no-vig odds to
+      find when the projected outcome (Over/Under) is truly favorable and the line
+      differs by at least <code>0.25</code> points. Perfect for spotting soft lines
+      on UnderDogs before they move.
+    </li>
+    <li>
+      🎮 <strong>Point Value Plays</strong> — shows all significant player prop
+      discrepancies between <em>DFS platforms (PrizePicks & Underdog)</em> and
+      major sportsbooks. Great for building multi-card plays or cross-site line
+      shopping. Uses an internal difference threshold of <code>≥ 0.25</code> to
+      focus only on meaningful gaps.
+    </li>
+    <li>
+      🎯 <strong>High Confidence (54%+)</strong> — displays only the props where
+      the calculated <em>no-vig fair win probability</em> is at least
+      <strong>54%</strong>. In other words, these are lines where your model or the
+      market implies a strong statistical edge. Excellent for value bettors looking
+      for consistent advantage plays.
+    </li>
+    <li>
+      ⚔️ <strong>DFS Line Diff (≥ 2)</strong> — isolates props where
+      <em>PrizePicks and Underdog differ by 2+ points</em> on the same player and
+      stat. These represent large discrepancies between the DFS operators themselves
+      — often signaling uncertain or fast-moving player projections.
+    </li>
+    <li>
+      ♻️ <strong>Reset Filters</strong> — clears all active filters and restores the
+      full dataset. Use this to return to the master odds table after exploring a
+      specific edge type or view. Also appears automatically when a filter returns
+      no results.
+    </li>
+  </ul>
+</section>
+
+
+    <!-- 6️⃣ Pro Tip -->
+    <section class="tutorial-step">
+      <h3>💡 Pro Tip</h3>
+      <p>
+        Combine <em>Consensus</em> + <em>No-Vig %</em> + <em>DFS Δ</em>
+        to find strong edges. If DFS line &lt; Consensus and No-Vig Over &gt; 54 %, that’s a high-value indicator.
+      </p>
+    </section>
+
+    <hr class="tutorial-divider" />
+
+    <!-- 7️⃣ Math Insight -->
+    <section class="tutorial-step">
+      <h3>📘 Math Insight — Fixed Odds & Long-Term Probabilities</h3>
+      <p>
+        DFS sites use fixed payout multipliers (<strong>M×</strong>).
+        The <strong>break-even probability</strong> shows how often each pick must win to be neutral long-term.
+      </p>
+
+      <div class="formula-box">
+        <h4>📐 Break-Even Probability Formula</h4>
+        <pre>
+If an entry pays M× when all n picks win:
+ Wⁿ × M = 1 → W = (1 / M)^(1/n)
+
+Where W = per-pick win probability, n = picks, M = payout multiplier.
+Example: 2-Pick paying 3× ⇒ (1/3)^(1/2) ≈ 0.577 → 57.7 %.
+        </pre>
+      </div>
+      <p>
+        A higher multiplier increases variance but doesn’t dramatically raise the required win rate.
+      </p>
+    </section>
+
+    <!-- 8️⃣ PrizePicks Collapsible Table -->
+    <section class="tutorial-step collapsible-section">
+      <button class="collapse-toggle">📊 PrizePicks — Power & Flex Play Efficiency</button>
+      <div class="collapsible-content">
+        <div class="scroll-table">
+          <table class="odds-table">
+            <thead>
+              <tr><th>Lineup Type</th><th>Picks Needed</th><th>Payout ×</th><th>Implied Odds</th><th>Break-Even %</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5"><strong>Power Play</strong></td></tr>
+              <tr><td>2-Pick</td><td>2/2</td><td>3×</td><td>-136.6</td><td>57.7%</td></tr>
+              <tr><td>3-Pick</td><td>3/3</td><td>6×</td><td>-141</td><td>58.5%</td></tr>
+              <tr><td>4-Pick</td><td>4/4</td><td>10×</td><td>-128.3</td><td>56.2%</td></tr>
+              <tr><td>5-Pick</td><td>5/5</td><td>20×</td><td>-124.5</td><td>55.5%</td></tr>
+              <tr><td>6-Pick</td><td>6/6</td><td>37.5×</td><td>-122.5</td><td>55.0%</td></tr>
+              <tr><td colspan="5"><strong>Flex Play</strong></td></tr>
+              <tr><td>3-Pick</td><td>3/3 (or 2/3)</td><td>3× (or 1×)</td><td>-148.8</td><td>59.8%</td></tr>
+              <tr><td>4-Pick</td><td>4/4 (or 3/4)</td><td>6× (or 1.5×)</td><td>-132</td><td>56.9%</td></tr>
+              <tr><td>5-Pick</td><td>5/5 (or 4/5, 3/5)</td><td>10× (or 2×, 0.4×)</td><td>-118.6</td><td>54.2%</td></tr>
+              <tr><td>6-Pick</td><td>6/6 (or 5/6, 4/6)</td><td>25× (or 2×, 0.4×)</td><td>-118.4</td><td>54.2%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9️⃣ Underdog Collapsible Table -->
+    <section class="tutorial-step collapsible-section">
+      <button class="collapse-toggle">📈 Underdog Fantasy — Standard & Insured Entries</button>
+      <div class="collapsible-content">
+        <div class="scroll-table">
+          <table class="odds-table">
+            <thead>
+              <tr><th>Lineup Type</th><th>Picks Needed</th><th>Payout ×</th><th>Implied Odds</th><th>Break-Even %</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5"><strong>Standard</strong></td></tr>
+              <tr><td>2-Pick</td><td>2/2</td><td>3×</td><td>-136</td><td>57.7%</td></tr>
+              <tr><td>3-Pick</td><td>3/3</td><td>6×</td><td>-122</td><td>55.0%</td></tr>
+              <tr><td>4-Pick</td><td>4/4</td><td>10×</td><td>-128</td><td>56.2%</td></tr>
+              <tr><td>5-Pick</td><td>5/5</td><td>20×</td><td>-122</td><td>54.9%</td></tr>
+              <tr><td colspan="5"><strong>Insured</strong></td></tr>
+              <tr><td>3-Pick</td><td>3/3 (or 2/3)</td><td>3× (or 1×)</td><td>-136.6</td><td>57.7%</td></tr>
+              <tr><td>4-Pick</td><td>4/4 (or 3/4)</td><td>6× (or 1.5×)</td><td>-132</td><td>56.9%</td></tr>
+              <tr><td>5-Pick</td><td>5/5 (or 4/5)</td><td>10× (or 2.5×)</td><td>-127</td><td>56.0%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <button class="primary-btn close-modal-btn" id="bottomCloseColumnInfo">Got It!</button>
+  </div>
+</div>
+
+
+
+    
 <!-- 🧠 Fact Check Modal -->
 <div id="factCheckModal" class="modal-overlay" style="display:none;">
   <div class="modal-content">
@@ -265,13 +490,51 @@
     <pre id="factCheckDetails"></pre>
   </div>
 </div>
+<!-- ===================================================
+     💬 Support Modal
+=================================================== -->
+<div id="supportModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <span class="close-btn" id="closeSupportModal">&times;</span>
+    <h2>Contact Support</h2>
+    <p>If you need help, please email us at:</p>
+    <p>
+      <a href="mailto:bentherebetthat@gmail.com" id="supportEmailLink">
+        <strong>bentherebetthat@gmail.com</strong>
+      </a>
+    </p>
+    <p>Include any details about your issue so we can assist you quickly.</p>
+    <button id="emailSupportBtn" class="primary-btn">📧 Email Support</button>
+  </div>
+</div>
+<!-- 🔄 Subscription Loading Overlay -->
+<div id="subscription-loading-overlay" class="subscription-loading-overlay hidden">
+  <div class="subscription-spinner"></div>
+  <p class="subscription-loading-text">Checking your subscription...</p>
+</div>
+<!-- ================================
+     📄 Footer Disclaimer
+================================ -->
+<footer class="site-footer">
+  <p class="disclaimer">
+    <strong>Disclaimer:</strong> Ben There Bet That provides sports analytics and statistics dashboards 
+    for informational and entertainment purposes only. We do not accept wagers, offer fantasy contests, 
+    or facilitate real-money gaming of any kind.
+  </p>
+  <p class="copyright">
+    © 2025 Ben There Bet That. All rights reserved.
+  </p>
+</footer>
 
 
-  <!-- ===============================
-       📜 Scripts
+
+<!-- ===============================
+     📜 Scripts
   =============================== -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html>
+
