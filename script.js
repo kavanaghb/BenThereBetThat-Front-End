@@ -1063,7 +1063,7 @@ async function loadGames(forceRefresh = false) {
     refreshGamesBtn.classList.add("loading");
 
     const res = await fetch(
-      `${API_BASE}/api/events?sport=${selectedSport}&date=${dateInput.value}`
+      `${window.API_BASE}/api/events?sport=${selectedSport}&date=${dateInput.value}`
     );
     if (!res.ok) throw new Error("Failed to fetch events");
     const events = await res.json();
@@ -1583,7 +1583,7 @@ async function loadData() {
     // ===================================================
     // 🔍 Fetch + Inspect Response (Safe + Deduped)
     // ===================================================
-    const res = await fetch(`${API_BASE}/api/data?${params.toString()}`, { signal });
+    const res = await fetch(`${window.API_BASE}/api/data?${params.toString()}`, { signal });
     const text = await res.text();
     console.log("📦 Raw API Response:", text);
 
@@ -2760,7 +2760,7 @@ signupForm.addEventListener("submit", async (e) => {
 
     const user = data.user;
     if (user) {
-      await fetch(`${API_BASE}/api/create-user`, {
+      await fetch(`${window.API_BASE}/api/create-user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: user.id, email }),
