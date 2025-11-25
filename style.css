@@ -2508,16 +2508,18 @@ body.auth-mode {
   margin: 60px auto; /* ✅ spacing for smaller screens */
 }
 
-/* Fullscreen flex container for auth background */
 #auth-container {
   width: 100%;
   min-height: 100vh;
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* ✅ allows header + form stacking */
+  justify-content: flex-start;
   align-items: center;
-  padding: 20px;
+  padding: 100px 20px 20px; /* ✅ top padding keeps header visible */
   background: linear-gradient(180deg, #0b3d91 0%, #003366 100%);
+  box-sizing: border-box;
 }
+
 
 .login-disclaimer {
   margin-top: 20px;
