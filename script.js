@@ -3573,6 +3573,8 @@ function closeCardViewModal() {
   document.body.style.overflow = "";
 }
 
+document.getElementById("cardCloseBtn")?.addEventListener("click", closeCardViewModal);
+
 
 // ===================================================
 // 🎛 Event Wiring + Initial Load
