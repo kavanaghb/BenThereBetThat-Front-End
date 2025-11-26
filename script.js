@@ -3537,10 +3537,14 @@ function buildPickCardHtml(row) {
 }
 
 
-// Open the modal and render cards
+// ===================================================
+// 📇 Open the modal and render cards
+// ===================================================
 function renderCardViewModal() {
   const modal = document.getElementById("cardViewModal");
   const content = document.getElementById("cardViewContent");
+  const closeBtn = document.getElementById("cardCloseBtn");
+
   if (!modal || !content) return;
 
   const base =
@@ -3552,6 +3556,7 @@ function renderCardViewModal() {
     content.innerHTML = `<p>No data available. Load a sport + markets first.</p>`;
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
+    if (closeBtn) closeBtn.classList.remove("hidden");
     return;
   }
 
@@ -3559,22 +3564,41 @@ function renderCardViewModal() {
   const topN = sortedRows.slice(0, 40);
 
   content.innerHTML = topN.map(buildPickCardHtml).join("");
- 
 
+  // Show modal
   modal.classList.remove("hidden");
   document.body.style.overflow = "hidden";
+
+  // ⭐ Show floating close button
+  if (closeBtn) {
+    closeBtn.classList.remove("hidden");
+  }
 }
 
-// Close the modal
+// ===================================================
+// ❌ Close the modal
+// ===================================================
 function closeCardViewModal() {
   const modal = document.getElementById("cardViewModal");
+  const closeBtn = document.getElementById("cardCloseBtn");
   if (!modal) return;
+
   modal.classList.add("hidden");
   document.body.style.overflow = "";
+
+  // ⭐ Hide floating close button
+  if (closeBtn) {
+    closeBtn.classList.add("hidden");
+  }
 }
 
-document.getElementById("cardCloseBtn")?.addEventListener("click", closeCardViewModal);
-
+// ===================================================
+// ⭐ Register floating close button — SINGLE listener
+// ===================================================
+const cardCloseBtn = document.getElementById("cardCloseBtn");
+if (cardCloseBtn) {
+  cardCloseBtn.addEventListener("click", closeCardViewModal);
+}
 
 // ===================================================
 // 🎛 Event Wiring + Initial Load

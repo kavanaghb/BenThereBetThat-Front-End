@@ -3276,20 +3276,82 @@ body.auth-mode {
   }
 }
 
-/* Floating X or Close Button for Card View */
-.card-close-btn {
+/* =====================================================
+   🅧 Floating Close Button — Final Version
+===================================================== */
+#cardCloseBtn {
   position: fixed;
-  top: 14px;
-  right: 14px;
-  z-index: 99999;
-  padding: 8px 12px;
-  font-size: 14px;
-  border-radius: 10px;
-  background: #0d6efd;
-  color: #fff;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.65);
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
   border: none;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 9999;
+  backdrop-filter: blur(3px);
+  opacity: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
+
+#cardCloseBtn.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#cardCloseBtn:hover {
+  transform: scale(1.1);
+}
+
+/* =====================================================
+   📱 Mobile — Tap-to-Card wraps to its own line
+===================================================== */
+@media (max-width: 480px) {
+
+  /* Export buttons row wraps */
+  #header-container .export-buttons {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Tap-to-Card takes full width */
+  #tapToCardBtn {
+    display: block !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+  }
+
+  /* Extra breathing room for the top of modal */
+  .card-modal-content {
+    padding-top: 60px !important;
+  }
+}
+
+/* =====================================================
+   ✨ Modal animation polish
+===================================================== */
+.card-modal:not(.hidden) .card-modal-content {
+  animation: slideUpFade 0.25s ease-out;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 @media (min-width: 700px) {
   /* On desktop/landscape push it into layout instead of floating */
