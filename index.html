@@ -220,6 +220,8 @@
         <button id="exportExcel">Export Excel</button>
         <button id="factCheckBtn" class="fact-check-toggle">🧠 Fact Check Mode</button>
         <button id="columnInfoBtn" class="info-btn">ℹ️ Column Info</button>
+        <button id="tapToCardBtn" class="info-btn">📇 Tap-to-Card View</button>
+
     </div>
 
 
@@ -512,11 +514,21 @@ Example: 2-Pick paying 3× ⇒ (1/3)^(1/2) ≈ 0.577 → 57.7 %.
     <button id="emailSupportBtn" class="primary-btn">📧 Email Support</button>
   </div>
 </div>
+
 <!-- 🔄 Subscription Loading Overlay -->
 <div id="subscription-loading-overlay" class="subscription-loading-overlay hidden">
   <div class="subscription-spinner"></div>
   <p class="subscription-loading-text">Checking your subscription...</p>
 </div>
+
+
+<!-- 📱 Card View Modal (Option C / Pro) -->
+<div id="cardViewModal" class="card-modal hidden">
+  <div class="card-modal-content" id="cardViewContent"></div>
+</div>
+
+
+
 <!-- ================================
      📄 Footer Disclaimer
 ================================ -->

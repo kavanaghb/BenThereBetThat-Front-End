@@ -401,10 +401,8 @@ async function checkSubscriptionStatus(user_id) {
     });
     if (accessEl) accessEl.style.display = "none";
 
-    // -----------------------------------------------------------
-    // ⚙️ Enable or Disable Data Buttons
-    // -----------------------------------------------------------
-    // -----------------------------------------------------------
+
+// -----------------------------------------------------------
 // ⚙️ Enable or Disable Load Data Button
 // -----------------------------------------------------------
 const enableLoad = (enable) => {
@@ -580,6 +578,160 @@ if (bookmakerFilters) {
 }
 
 // ===================================================
+// ⭐ LOAD TEAM LOGOS FROM JSON
+// ===================================================
+let TEAM_LOGO_MAP = {};
+
+async function loadMetaMaps() {
+  try {
+    // FIXED: correct relative path for Live Server
+    const res = await fetch("team_logos.json");
+
+    TEAM_LOGO_MAP = await res.json();
+    console.log("Loaded TEAM_LOGO_MAP:", Object.keys(TEAM_LOGO_MAP).length);
+  } catch (err) {
+    console.error("Failed to load team_logos.json:", err);
+    TEAM_LOGO_MAP = {};
+  }
+}
+
+// ===================================================
+// ⭐ GET TEAM LOGO URL — Final Working Version
+// ===================================================
+function getTeamLogoUrl(teamName) {
+  if (!teamName) {
+    console.warn("❌ getTeamLogoUrl(): no teamName received");
+    return null;
+  }
+
+  const key = teamName.toLowerCase().trim();
+  const meta = TEAM_LOGO_MAP[key];
+
+  if (!meta) {
+    console.warn(`❌ No logo meta found for key="${key}"`);
+    return null;
+  }
+
+  const baseByLeague = {
+    nfl:   "https://a.espncdn.com/i/teamlogos/nfl/500",
+    nba:   "https://a.espncdn.com/i/teamlogos/nba/500",
+    mlb:   "https://a.espncdn.com/i/teamlogos/mlb/500",
+    nhl:   "https://a.espncdn.com/i/teamlogos/nhl/500",
+    ncaaf: "https://a.espncdn.com/i/teamlogos/ncaa/500",
+    ncaab: "https://a.espncdn.com/i/teamlogos/ncaa/500"
+  };
+
+  const base = baseByLeague[meta.league];
+  const url = `${base}/${meta.slug}.png`;
+
+  console.log(
+    `🟦 Logo URL generated for "${teamName}" (league=${meta.league} slug=${meta.slug}):`,
+    url
+  );
+
+  return url;
+}
+
+
+
+// ===================================================
+// ⭐ EXTRACT TEAM NAMES ("Team A vs Team B")
+// ===================================================
+function extractTeams(eventStr) {
+  if (!eventStr || typeof eventStr !== "string") return [null, null];
+
+  const parts = eventStr.split(/vs/i);
+  if (parts.length !== 2) return [null, null];
+
+  return [
+    parts[0].trim(),
+    parts[1].trim()
+  ];
+}
+
+
+// ===================================================
+// 📇 Helper: build a sorted list for Tap-to-Card view
+// ===================================================
+function getSortedCardRows(baseData) {
+  if (!Array.isArray(baseData)) return [];
+
+  const key = window.activeOptimalFilter || null;
+
+  function num(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function abs(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.abs(n) : 0;
+  }
+
+  const rows = baseData.slice();
+
+  rows.sort((a, b) => {
+    const ppA = num(a.PrizePicksDifference);
+    const ppB = num(b.PrizePicksDifference);
+    const udA = num(a.UnderdogDifference);
+    const udB = num(b.UnderdogDifference);
+    const nvA = num(a.NoVigWinProb);
+    const nvB = num(b.NoVigWinProb);
+
+    switch (key) {
+
+      // ---------------------------------------------------
+      // ⭐ PrizePicks + EV → sort descending by PP diff
+      // ---------------------------------------------------
+      case "prize":
+        return ppB - ppA;
+
+      // ---------------------------------------------------
+      // ⭐ Underdog + EV → sort descending by UD diff
+      // ---------------------------------------------------
+      case "underdog":
+        return udB - udA;
+
+      // ---------------------------------------------------
+      // ⭐ Point Value Plays → largest absolute point diff
+      // ---------------------------------------------------
+      case "fantasy":
+      case "pointvalue":
+        return Math.max(abs(udB), abs(ppB)) - Math.max(abs(udA), abs(ppA));
+
+      // ---------------------------------------------------
+      // ⭐ High Confidence → by No-Vig Win % descending
+      // ---------------------------------------------------
+      case "high":
+        return nvB - nvA;
+
+      // ---------------------------------------------------
+      // ⭐ DFS Line Difference (>2) 
+      //     → largest absolute PP/UD difference
+      // ---------------------------------------------------
+      case "dfs":
+        const dfsA = Math.max(abs(ppA), abs(udA));
+        const dfsB = Math.max(abs(ppB), abs(udB));
+        return dfsB - dfsA;
+
+      // ---------------------------------------------------
+      // ⭐ Default Sort → blended edge + EV boost
+      // ---------------------------------------------------
+      default:
+        const edgeA = Math.max(abs(ppA), abs(udA));
+        const edgeB = Math.max(abs(ppB), abs(udB));
+        const boostA = nvA ? (nvA - 50) / 5 : 0;
+        const boostB = nvB ? (nvB - 50) / 5 : 0;
+        return (edgeB + boostB) - (edgeA + boostA);
+    }
+  });
+
+  return rows;
+}
+
+
+
+// ===================================================
 // 🌍 GLOBAL BOOKMAKER LIST + HELPERS (Unified)
 // ===================================================
 window.BOOKMAKERS = ["Fanduel", "DraftKings", "BetMGM", "Fanatics"];
@@ -635,6 +787,8 @@ function setRefreshEnabled(enabled) {
     refreshBtn.title = "Load data first to enable refresh";
   }
 }
+
+
 
 /** ===================================================
  * 🧮 STEP 1: Compute true No-Vig fair probability (Over/Under normalization)
@@ -2424,19 +2578,22 @@ function hasMeaningfulDelta(val, min = 0.25) {
 // 🧪 Filters
 // ================================
 window.addEventListener("DOMContentLoaded", () => {
+
   // ===========================================
   // ♻️ Clear All Filters (Restore Full Table)
   // ===========================================
   function clearAllOptimalFilters() {
     console.log("♻️ Clearing all optimal filters...");
 
-    // 🔹 Remove active filter button highlight
+    // 🔹 Remove the blue-glow active filter highlight
     document
       .querySelectorAll(".active-filter")
       .forEach((b) => b.classList.remove("active-filter"));
+
+    // 🔹 Reset the global card-sorter filter state
     window.activeOptimalFilter = null;
 
-    // 🔹 Restore the most complete dataset available
+    // 🔹 Choose best available dataset
     const base =
       Array.isArray(window.fullDataset) && window.fullDataset.length
         ? window.fullDataset
@@ -2455,10 +2612,16 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 🔹 Re-render full table using cached no-vig data
+    // 🔹 Restore full unfiltered table
     renderTableInBatches(base, 50, true);
+
     console.log(`✅ Filters cleared — restored ${base.length} rows.`);
   }
+
+  // 🔹 Make available globally so card-view can call it if needed
+  window.clearAllOptimalFilters = clearAllOptimalFilters;
+});
+
 
   // ===========================================
   // ✅ PrizePicks Optimal — uses true best side + Δ guard
@@ -2601,7 +2764,9 @@ const filterBtns = {
 let activeFilter = null;
 
 function clearActiveHighlights() {
-  Object.values(filterBtns).forEach((btn) => btn?.classList.remove("active-filter"));
+  Object.values(filterBtns).forEach((btn) =>
+    btn?.classList.remove("active-filter")
+  );
 }
 
 Object.entries(filterBtns).forEach(([key, btn]) => {
@@ -2617,87 +2782,107 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
 
     let filtered = [];
 
+    // --------------------------------------
+    // Toggle OFF if clicking same filter
+    // --------------------------------------
     if (activeFilter === key && key !== "clear") {
       activeFilter = null;
+      window.activeOptimalFilter = null;     // ← NEW: disable modal sort
       clearActiveHighlights();
       clearAllOptimalFilters();
       return;
     }
 
+    // --------------------------------------
+    // Run the appropriate filter logic
+    // --------------------------------------
     switch (key) {
       case "prize":
         filtered = filterPrizePicksOptimal(base);
+        window.activeOptimalFilter = "prize";   // ← NEW
         break;
+
       case "underdog":
         filtered = filterUnderdogOptimal(base);
+        window.activeOptimalFilter = "underdog"; // ← NEW
         break;
+
       case "fantasy":
         filtered = filterFantasyEdge(base);
+        window.activeOptimalFilter = "pointvalue"; // ← NEW
         break;
+
       case "dfs":
         filtered = filterDfsDifference(base);
+        window.activeOptimalFilter = "dfs";       // ← NEW
         break;
+
       case "high":
         filterHighNoVig(54);
         clearActiveHighlights();
         btn.classList.add("active-filter");
         activeFilter = key;
+        window.activeOptimalFilter = "high";      // ← NEW
+        console.log("🔍 Active filter set:", window.activeOptimalFilter);
         return;
+
       case "clear":
         clearActiveHighlights();
         clearAllOptimalFilters();
         activeFilter = null;
+        window.activeOptimalFilter = null;        // ← NEW
+        console.log("🔄 Filters reset");
         return;
     }
 
+    // --------------------------------------
+    // UI updates after filtering
+    // --------------------------------------
     clearActiveHighlights();
     btn.classList.add("active-filter");
     activeFilter = key;
 
-const resultsDiv = document.getElementById("results");
-const shimmer = document.getElementById("shimmerOverlay");
+    const resultsDiv = document.getElementById("results");
+    const shimmer = document.getElementById("shimmerOverlay");
 
-// 🧠 Smooth transition with shimmer mask
-if (shimmer) {
-  shimmer.classList.remove("hidden"); // show shimmer overlay
-}
+    if (shimmer) shimmer.classList.remove("hidden");
 
-const currentScroll = window.scrollY || document.documentElement.scrollTop;
+    const currentScroll = window.scrollY || document.documentElement.scrollTop;
 
-setTimeout(() => {
-  if (filtered.length > 0) {
-    rerenderConsensusTable(filtered);
-    window.lastRenderedData = filtered;
-    console.log(`✅ Applied filter "${key}" → ${filtered.length}/${base.length} rows`);
-  } else {
-    console.log(`⚠️ Filter "${key}" → 0 results (showing no-results message)`);
+    setTimeout(() => {
+      if (filtered.length > 0) {
+        rerenderConsensusTable(filtered);
+        window.lastRenderedData = filtered;
+        console.log(
+          `✅ Applied filter "${key}" → ${filtered.length}/${base.length} rows`
+        );
+      } else {
+        console.log(
+          `⚠️ Filter "${key}" → 0 results (showing no-results message)`
+        );
 
-    resultsDiv.innerHTML = `
-      <div class="no-results-message fade-in">
-        <p>⚠️ No props matched your filters.</p>
-        <button id="resetFiltersInline" class="reset-inline-btn">Reset Filters</button>
-      </div>
-    `;
-    document
-      .getElementById("resetFiltersInline")
-      ?.addEventListener("click", clearAllOptimalFilters);
-  }
+        resultsDiv.innerHTML = `
+          <div class="no-results-message fade-in">
+            <p>⚠️ No props matched your filters.</p>
+            <button id="resetFiltersInline" class="reset-inline-btn">Reset Filters</button>
+          </div>
+        `;
 
-  // ✅ Hide shimmer after render completes
-  if (shimmer) {
-    setTimeout(() => shimmer.classList.add("hidden"), 250);
-  }
+        document
+          .getElementById("resetFiltersInline")
+          ?.addEventListener("click", clearAllOptimalFilters);
+      }
 
-  window.scrollTo({ top: currentScroll, behavior: "instant" });
-}, 100);
+      if (shimmer) setTimeout(() => shimmer.classList.add("hidden"), 250);
 
+      window.scrollTo({ top: currentScroll, behavior: "instant" });
+    }, 100);
 
-
-
-});
+    console.log("🔍 Active filter set:", window.activeOptimalFilter);
+  });
 });
 
-});
+
 
 
 
@@ -3168,6 +3353,258 @@ document.addEventListener("DOMContentLoaded", () => {
     supportModal.style.display = "none";
   });
 });
+
+
+
+
+// ===================================================//
+// 📇 Tap-to-Card View Modal Logic – Pro Analytics
+// ===================================================
+function buildPickCardHtml(row) {
+  const event = row.Event || "Event";
+  const desc = row.Description || "Player Prop";
+  const market = row.Market || "";
+
+  // ==============================
+  // 🏈 Extract teams for logo display
+  // ==============================
+  const [homeTeam, awayTeam] = extractTeams(event);
+  console.log("📌 Event:", event);
+  console.log("➡️ Extracted Teams:", homeTeam, awayTeam);
+  console.log("🏈 Home Logo:", homeTeam, getTeamLogoUrl(homeTeam));
+  console.log("🏈 Away Logo:", awayTeam, getTeamLogoUrl(awayTeam));
+  const homeLogoUrl = homeTeam ? getTeamLogoUrl(homeTeam) : null;
+  const awayLogoUrl = awayTeam ? getTeamLogoUrl(awayTeam) : null;
+
+
+  // ====================================
+  // 🔢 Data values
+  // ====================================
+  const cons = Number(row.ConsensusPoint);
+  const ppLine = Number(row.PrizePickPoint);
+  const udLine = Number(row.UnderdogPoint);
+  const ppDiff = Number(row.PrizePicksDifference);
+  const udDiff = Number(row.UnderdogDifference);
+  const noVig = Number(row.NoVigWinProb);
+
+  const consStr = Number.isFinite(cons) ? cons.toFixed(2) : "—";
+  const ppLineStr = Number.isFinite(ppLine) ? ppLine.toFixed(2) : "—";
+  const udLineStr = Number.isFinite(udLine) ? udLine.toFixed(2) : "—";
+
+  const ppDiffStr = Number.isFinite(ppDiff) ? `${ppDiff.toFixed(2)} pts` : "—";
+  const udDiffStr = Number.isFinite(udDiff) ? `${udDiff.toFixed(2)} pts` : "—";
+
+  // ====================================
+  // 🎯 EV Strength classification
+  // ====================================
+  const bestSide = (row.BestNoVigSide || "").toLowerCase();
+  const bestSideLabel =
+    bestSide === "over" ? "Over" :
+    bestSide === "under" ? "Under" : null;
+
+  let novigClass = "neutral";
+  if (Number.isFinite(noVig)) {
+    if (noVig >= 54) novigClass = "strong";
+    else if (noVig >= 52) novigClass = "soft";
+  }
+
+  const evPct = Number.isFinite(noVig)
+    ? Math.max(0, Math.min(noVig, 100))
+    : 0;
+
+  const evSideClass = bestSide === "under" ? "under" : "over";
+
+  // ====================================
+  // ⚡ Mismatch logic
+  // ====================================
+  let mismatchText = "";
+  if (row.BestNoVigSide && row._PrizePicksSide &&
+      row._PrizePicksSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()) {
+    mismatchText = "⚡ PrizePicks line opposes the sharp side.";
+  } else if (row.BestNoVigSide && row._UnderdogSide &&
+      row._UnderdogSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()) {
+    mismatchText = "⚡ Underdog line opposes the sharp side.";
+  }
+
+  // ====================================
+  // 🧑 Inline badge formatting
+  // ====================================
+  const novigLabel = Number.isFinite(noVig)
+    ? `${noVig.toFixed(2)}% fair win`
+    : "No-vig not available";
+
+  const novigBadgeClasses = `pro-card-novig-badge ${
+    novigClass === "strong" ? "strong" :
+    novigClass === "soft" ? "soft" : ""
+  }`;
+
+  const ppDeltaClass = !Number.isFinite(ppDiff)
+    ? "neutral"
+    : ppDiff < 0
+      ? (bestSide === "over" ? "pos" : "neg")
+      : (bestSide === "under" ? "pos" : "neg");
+
+  const udDeltaClass = !Number.isFinite(udDiff)
+    ? "neutral"
+    : udDiff < 0
+      ? (bestSide === "over" ? "pos" : "neg")
+      : (bestSide === "under" ? "pos" : "neg");
+
+  const evLabelText = bestSideLabel
+    ? `Model leans ${bestSideLabel}${Number.isFinite(noVig) ? ` · ${noVig.toFixed(1)}%` : ""}`
+    : (Number.isFinite(noVig) ? `Model edge · ${noVig.toFixed(1)}%` : "Model edge");
+
+  // ====================================
+  // 🧩 FINAL HTML
+  // ====================================
+
+
+  return `
+    <article class="pro-pick-card">
+      <header class="pro-card-hero">
+
+        <!-- Player + Event Details -->
+        <div class="pro-card-header-text">
+          <div class="pro-card-player-name">${desc}</div>
+          <div class="pro-card-event">${event}</div>
+          <div class="pro-card-market">${market}</div>
+        </div>
+
+        <!-- ⭐ TEAM LOGOS -->
+<div class="pro-card-team-logos">
+  ${
+    homeLogoUrl
+      ? `<img 
+           src="${homeLogoUrl}" 
+           alt="${homeTeam} logo"
+           class="pro-card-team-logo card-img-fade"
+           loading="lazy"
+           onload="this.classList.add('loaded'); console.log('✅ Logo loaded:', this.src)"
+           onerror="console.error('❌ Logo FAILED to load:', this.src)"
+         />`
+      : ""
+  }
+  ${
+    awayLogoUrl
+      ? `<img 
+           src="${awayLogoUrl}" 
+           alt="${awayTeam} logo"
+           class="pro-card-team-logo card-img-fade"
+           loading="lazy"
+           onload="this.classList.add('loaded'); console.log('✅ Logo loaded:', this.src)"
+           onerror="console.error('❌ Logo FAILED to load:', this.src)"
+         />`
+      : ""
+  }
+</div>
+
+      </header>
+
+      <!-- EV Row -->
+      <section class="pro-card-ev-row">
+        <div class="pro-ev-label"><strong>${evLabelText}</strong></div>
+        <div class="pro-ev-bar-shell">
+          <div class="pro-ev-bar-fill ${evSideClass}" style="width: ${evPct}%;"></div>
+        </div>
+      </section>
+
+      <!-- Metrics -->
+      <section class="pro-card-metrics">
+        <div class="pro-card-metric-row">
+          <span class="pro-metric-label">Consensus</span>
+          <span class="pro-metric-value">${consStr}</span>
+          <span class="pro-metric-delta">
+            <span class="${novigBadgeClasses}">${novigLabel}</span>
+          </span>
+        </div>
+
+        <div class="pro-card-metric-row">
+          <span class="pro-metric-label">PrizePicks</span>
+          <span class="pro-metric-value">${ppLineStr}</span>
+          <span class="pro-metric-delta ${ppDeltaClass}">${ppDiffStr}</span>
+        </div>
+
+        <div class="pro-card-metric-row">
+          <span class="pro-metric-label">Underdog</span>
+          <span class="pro-metric-value">${udLineStr}</span>
+          <span class="pro-metric-delta ${udDeltaClass}">${udDiffStr}</span>
+        </div>
+      </section>
+
+      ${mismatchText ? `<footer class="pro-card-footnote">${mismatchText}</footer>` : ""}
+    </article>
+  `;
+}
+
+
+// Open the modal and render cards
+function renderCardViewModal() {
+  const modal = document.getElementById("cardViewModal");
+  const content = document.getElementById("cardViewContent");
+  if (!modal || !content) return;
+
+  const base =
+    (Array.isArray(window.lastRenderedData) && window.lastRenderedData.length)
+      ? window.lastRenderedData
+      : (Array.isArray(window.fullDataset) ? window.fullDataset : []);
+
+  if (!base.length) {
+    content.innerHTML = `<p>No data available. Load a sport + markets first.</p>`;
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    return;
+  }
+
+  const sortedRows = getSortedCardRows(base);
+  const topN = sortedRows.slice(0, 40);
+
+  content.innerHTML = topN.map(buildPickCardHtml).join("");
+ 
+
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+// Close the modal
+function closeCardViewModal() {
+  const modal = document.getElementById("cardViewModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+
+// ===================================================
+// 🎛 Event Wiring + Initial Load
+// ===================================================
+document.addEventListener("DOMContentLoaded", () => {
+
+  // Load team logos (team_logos.json) and player photos if enabled
+  loadMetaMaps();
+
+  // Tap-to-card modal button
+  const tapBtn = document.getElementById("tapToCardBtn");
+  const modal = document.getElementById("cardViewModal");
+
+  if (tapBtn) {
+    tapBtn.addEventListener("click", () => renderCardViewModal());
+  }
+
+  // Close modal when clicking outside content
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeCardViewModal();
+    });
+  }
+
+  // Escape key closes modal
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeCardViewModal();
+  });
+});
+
+
+
 
 
 // ===================================================

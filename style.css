@@ -2573,3 +2573,705 @@ body.auth-mode {
   background: #ffd166;
   transform: translateY(-2px);
 }
+
+/* ===================================================
+   🔥 Best Picks Card Strip (Option C Hybrid)
+   =================================================== */
+.best-picks-container {
+  margin-top: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px 10px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+  font-family: 'Poppins', sans-serif;
+}
+
+.best-picks-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.best-picks-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.best-picks-context {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-left: 6px;
+}
+
+.best-picks-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.best-picks-sort select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5f5;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Card grid */
+.best-picks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+/* Individual card */
+.best-pick-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.83rem;
+  position: relative;
+}
+
+.best-pick-rank {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.best-pick-header-line {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.best-pick-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.best-pick-market {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+.best-pick-lines {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #111827;
+}
+
+.best-pick-lines span {
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.best-pick-edges {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #111827;
+}
+
+.best-pick-edges strong {
+  font-weight: 700;
+}
+
+.best-pick-edges .edge-pp {
+  color: #16a34a;
+}
+
+.best-pick-edges .edge-ud {
+  color: #0ea5e9;
+}
+
+.best-pick-model {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #334155;
+}
+
+.best-pick-model .side {
+  font-weight: 700;
+}
+
+.best-pick-model .prob {
+  font-weight: 700;
+  color: #047857;
+}
+
+.best-pick-tags {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.best-pick-tag {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #cbd5f5;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* tag colors */
+.best-pick-tag.ev-tag { background: #dcfce7; border-color: #86efac; color: #166534; }
+.best-pick-tag.conf-tag { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.best-pick-tag.dfs-tag { background: #fef3c7; border-color: #fde68a; color: #92400e; }
+.best-pick-tag.mismatch-tag { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
+
+@media (max-width: 600px) {
+  .best-picks-container {
+    padding: 10px 10px 8px;
+  }
+  .best-picks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =======================================================
+   📱 Full-Screen Card View Modal (Pro Analytics)
+======================================================= */
+
+.card-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9000;
+  padding: 18px;
+}
+
+.card-modal.hidden {
+  display: none;
+}
+
+.card-modal-content {
+  background: #ffffff;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  border-radius: 18px;
+  padding: 18px 18px 20px;
+  overflow-y: auto;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Smooth scroll inside modal */
+.card-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+.card-modal-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+/* =======================================================
+   🧑‍💻 Pro Pick Card Layout
+======================================================= */
+
+.pro-pick-card {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 14px 14px 16px;
+  margin-bottom: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* =======================================================
+   🏈 HERO ROW — FIXED FOR TEAM LOGOS
+======================================================= */
+.pro-card-hero {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100%;
+  gap: 12px;
+}
+
+/* Header text */
+.pro-card-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pro-card-player-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pro-card-event {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.pro-card-market {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+  color: #6b7280;
+}
+
+/* =======================================================
+   ⭐ TEAM LOGOS — FINAL CLEAN VERSION
+======================================================= */
+.pro-card-team-logos {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  gap: 6px !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+.pro-card-team-logo {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+/* =======================================================
+   📊 EV Bar + Metrics
+======================================================= */
+
+.pro-card-ev-row {
+  margin-bottom: 10px;
+}
+
+.pro-ev-label {
+  font-size: 11px;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.pro-ev-label strong {
+  color: #111827;
+}
+
+.pro-ev-bar-shell {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.pro-ev-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transform-origin: left center;
+}
+
+.pro-ev-bar-fill.over {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.pro-ev-bar-fill.under {
+  background: linear-gradient(90deg, #dc2626, #f97373);
+}
+
+/* Metrics grid */
+.pro-card-metrics {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.pro-card-metric-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr 1fr;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  align-items: center;
+}
+
+.pro-card-metric-row:nth-child(odd) {
+  background: #f9fafb;
+}
+
+.pro-card-metric-row:last-child {
+  border-bottom: none;
+}
+
+.pro-metric-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.pro-metric-value {
+  font-weight: 700;
+  color: #111827;
+}
+
+.pro-metric-delta {
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Delta coloring */
+.pro-metric-delta.pos {
+  color: #16a34a;
+}
+
+.pro-metric-delta.neg {
+  color: #b91c1c;
+}
+
+.pro-metric-delta.neutral {
+  color: #6b7280;
+}
+
+/* No-vig badge */
+.pro-card-novig-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.pro-card-novig-badge.soft {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.pro-card-novig-badge.strong {
+  border-color: #34d399;
+  background: #059669;
+  color: #ecfdf5;
+}
+
+.pro-card-footnote {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #b91c1c;
+}
+
+/* Fade-in animation */
+.card-img-fade {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+
+.card-img-fade.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .card-modal-content {
+    max-width: 95%;
+    padding: 14px 12px 16px;
+  }
+
+  .pro-card-hero {
+    flex-direction: row; 
+    align-items: flex-start;
+  }
+
+  .pro-card-team-logos {
+    gap: 4px;
+  }
+}
+
+/* =======================================================
+   📱 Full-Screen Card View Modal (Pro Analytics)
+======================================================= */
+
+.card-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9000;
+  padding: 18px;
+}
+
+.card-modal.hidden {
+  display: none;
+}
+
+.card-modal-content {
+  background: #ffffff;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  border-radius: 18px;
+  padding: 18px 18px 20px;
+  overflow-y: auto;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Smooth scroll inside modal */
+.card-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+.card-modal-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+/* =======================================================
+   🧑‍💻 Pro Pick Card Layout
+======================================================= */
+
+.pro-pick-card {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 14px 14px 16px;
+  margin-bottom: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* =======================================================
+   🏈 HERO ROW — FIXED FOR TEAM LOGOS
+======================================================= */
+.pro-card-hero {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100%;
+  gap: 12px;
+}
+
+/* Header text */
+.pro-card-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pro-card-player-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pro-card-event {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.pro-card-market {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+  color: #374151;   /* slightly darker */
+  margin-top: 1px;
+}
+
+/* =======================================================
+   ⭐ TEAM LOGOS — FINAL CLEAN VERSION
+======================================================= */
+.pro-card-team-logos {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  gap: 6px !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+.pro-card-team-logo {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+/* =======================================================
+   📊 EV Bar + Metrics
+======================================================= */
+
+.pro-card-ev-row {
+  margin-bottom: 10px;
+}
+
+.pro-ev-label {
+  font-size: 11px;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.pro-ev-label strong {
+  color: #111827;
+}
+
+.pro-ev-bar-shell {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.pro-ev-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transform-origin: left center;
+}
+
+.pro-ev-bar-fill.over {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.pro-ev-bar-fill.under {
+  background: linear-gradient(90deg, #dc2626, #f97373);
+}
+
+/* Metrics grid */
+.pro-card-metrics {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.pro-card-metric-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr 1fr;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  align-items: center;
+}
+
+.pro-card-metric-row:nth-child(odd) {
+  background: #f9fafb;
+}
+
+.pro-card-metric-row:last-child {
+  border-bottom: none;
+}
+
+.pro-metric-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.pro-metric-value {
+  font-weight: 700;
+  color: #111827;
+}
+
+.pro-metric-delta {
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Delta coloring */
+.pro-metric-delta.pos {
+  color: #16a34a;
+}
+
+.pro-metric-delta.neg {
+  color: #b91c1c;
+}
+
+.pro-metric-delta.neutral {
+  color: #6b7280;
+}
+
+/* No-vig badge */
+.pro-card-novig-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.pro-card-novig-badge.soft {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.pro-card-novig-badge.strong {
+  border-color: #34d399;
+  background: #059669;
+  color: #ecfdf5;
+}
+
+.pro-card-footnote {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #b91c1c;
+}
+
+/* Fade-in animation */
+.card-img-fade {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+
+.card-img-fade.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .card-modal-content {
+    max-width: 95%;
+    padding: 14px 12px 16px;
+  }
+
+  .pro-card-hero {
+    flex-direction: row; 
+    align-items: flex-start;
+  }
+
+  .pro-card-team-logos {
+    gap: 4px;
+  }
+}

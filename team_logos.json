@@ -1,0 +1,766 @@
+{
+  "arizona cardinals": {
+    "league": "nfl",
+    "slug": "ari"
+  },
+  "atlanta falcons": {
+    "league": "nfl",
+    "slug": "atl"
+  },
+  "baltimore ravens": {
+    "league": "nfl",
+    "slug": "bal"
+  },
+  "buffalo bills": {
+    "league": "nfl",
+    "slug": "buf"
+  },
+  "carolina panthers": {
+    "league": "nfl",
+    "slug": "car"
+  },
+  "chicago bears": {
+    "league": "nfl",
+    "slug": "chi"
+  },
+  "cincinnati bengals": {
+    "league": "nfl",
+    "slug": "cin"
+  },
+  "cleveland browns": {
+    "league": "nfl",
+    "slug": "cle"
+  },
+  "dallas cowboys": {
+    "league": "nfl",
+    "slug": "dal"
+  },
+  "denver broncos": {
+    "league": "nfl",
+    "slug": "den"
+  },
+  "detroit lions": {
+    "league": "nfl",
+    "slug": "det"
+  },
+  "green bay packers": {
+    "league": "nfl",
+    "slug": "gb"
+  },
+  "houston texans": {
+    "league": "nfl",
+    "slug": "hou"
+  },
+  "indianapolis colts": {
+    "league": "nfl",
+    "slug": "ind"
+  },
+  "jacksonville jaguars": {
+    "league": "nfl",
+    "slug": "jax"
+  },
+  "kansas city chiefs": {
+    "league": "nfl",
+    "slug": "kc"
+  },
+  "las vegas raiders": {
+    "league": "nfl",
+    "slug": "lv"
+  },
+  "los angeles chargers": {
+    "league": "nfl",
+    "slug": "lac"
+  },
+  "los angeles rams": {
+    "league": "nfl",
+    "slug": "lar"
+  },
+  "miami dolphins": {
+    "league": "nfl",
+    "slug": "mia"
+  },
+  "minnesota vikings": {
+    "league": "nfl",
+    "slug": "min"
+  },
+  "new england patriots": {
+    "league": "nfl",
+    "slug": "ne"
+  },
+  "new orleans saints": {
+    "league": "nfl",
+    "slug": "no"
+  },
+  "new york giants": {
+    "league": "nfl",
+    "slug": "nyg"
+  },
+  "new york jets": {
+    "league": "nfl",
+    "slug": "nyj"
+  },
+  "philadelphia eagles": {
+    "league": "nfl",
+    "slug": "phi"
+  },
+  "pittsburgh steelers": {
+    "league": "nfl",
+    "slug": "pit"
+  },
+  "san francisco 49ers": {
+    "league": "nfl",
+    "slug": "sf"
+  },
+  "seattle seahawks": {
+    "league": "nfl",
+    "slug": "sea"
+  },
+  "tampa bay buccaneers": {
+    "league": "nfl",
+    "slug": "tb"
+  },
+  "tennessee titans": {
+    "league": "nfl",
+    "slug": "ten"
+  },
+  "washington commanders": {
+    "league": "nfl",
+    "slug": "wsh"
+  },
+  "anaheim ducks": {
+    "league": "nhl",
+    "slug": "ana"
+  },
+  "boston bruins": {
+    "league": "nhl",
+    "slug": "bos"
+  },
+  "buffalo sabres": {
+    "league": "nhl",
+    "slug": "buf"
+  },
+  "calgary flames": {
+    "league": "nhl",
+    "slug": "cgy"
+  },
+  "carolina hurricanes": {
+    "league": "nhl",
+    "slug": "car"
+  },
+  "chicago blackhawks": {
+    "league": "nhl",
+    "slug": "chi"
+  },
+  "colorado avalanche": {
+    "league": "nhl",
+    "slug": "col"
+  },
+  "columbus blue jackets": {
+    "league": "nhl",
+    "slug": "cbj"
+  },
+  "dallas stars": {
+    "league": "nhl",
+    "slug": "dal"
+  },
+  "detroit red wings": {
+    "league": "nhl",
+    "slug": "det"
+  },
+  "edmonton oilers": {
+    "league": "nhl",
+    "slug": "edm"
+  },
+  "florida panthers": {
+    "league": "nhl",
+    "slug": "fla"
+  },
+  "los angeles kings": {
+    "league": "nhl",
+    "slug": "la"
+  },
+  "minnesota wild": {
+    "league": "nhl",
+    "slug": "min"
+  },
+  "montreal canadiens": {
+    "league": "nhl",
+    "slug": "mtl"
+  },
+  "nashville predators": {
+    "league": "nhl",
+    "slug": "nsh"
+  },
+  "new jersey devils": {
+    "league": "nhl",
+    "slug": "nj"
+  },
+  "new york islanders": {
+    "league": "nhl",
+    "slug": "nyi"
+  },
+  "new york rangers": {
+    "league": "nhl",
+    "slug": "nyr"
+  },
+  "ottawa senators": {
+    "league": "nhl",
+    "slug": "ott"
+  },
+  "philadelphia flyers": {
+    "league": "nhl",
+    "slug": "phi"
+  },
+  "pittsburgh penguins": {
+    "league": "nhl",
+    "slug": "pit"
+  },
+  "san jose sharks": {
+    "league": "nhl",
+    "slug": "sj"
+  },
+  "seattle kraken": {
+    "league": "nhl",
+    "slug": "sea"
+  },
+  "st. louis blues": {
+    "league": "nhl",
+    "slug": "stl"
+  },
+  "tampa bay lightning": {
+    "league": "nhl",
+    "slug": "tb"
+  },
+  "toronto maple leafs": {
+    "league": "nhl",
+    "slug": "tor"
+  },
+  "utah mammoth": {
+    "league": "nhl",
+    "slug": "utah"
+  },
+  "vancouver canucks": {
+    "league": "nhl",
+    "slug": "van"
+  },
+  "vegas golden knights": {
+    "league": "nhl",
+    "slug": "vgk"
+  },
+  "washington capitals": {
+    "league": "nhl",
+    "slug": "wsh"
+  },
+  "winnipeg jets": {
+    "league": "nhl",
+    "slug": "wpg"
+  },
+  "american university eagles": {
+    "league": "ncaab",
+    "slug": "amer"
+  },
+  "arizona state sun devils": {
+    "league": "ncaab",
+    "slug": "asu"
+  },
+  "arizona wildcats": {
+    "league": "ncaab",
+    "slug": "ariz"
+  },
+  "arkansas razorbacks": {
+    "league": "ncaab",
+    "slug": "ark"
+  },
+  "auburn tigers": {
+    "league": "ncaab",
+    "slug": "aub"
+  },
+  "bellarmine knights": {
+    "league": "ncaab",
+    "slug": "bell"
+  },
+  "boise state broncos": {
+    "league": "ncaab",
+    "slug": "bois"
+  },
+  "bradley braves": {
+    "league": "ncaab",
+    "slug": "brad"
+  },
+  "cal poly mustangs": {
+    "league": "ncaab",
+    "slug": "cp"
+  },
+  "california golden bears": {
+    "league": "ncaab",
+    "slug": "cal"
+  },
+  "colorado buffaloes": {
+    "league": "ncaab",
+    "slug": "colo"
+  },
+  "colorado state rams": {
+    "league": "ncaab",
+    "slug": "csu"
+  },
+  "delaware blue hens": {
+    "league": "ncaab",
+    "slug": "del"
+  },
+  "florida a&m rattlers": {
+    "league": "ncaab",
+    "slug": "famu"
+  },
+  "florida gators": {
+    "league": "ncaab",
+    "slug": "fla"
+  },
+  "florida state seminoles": {
+    "league": "ncaab",
+    "slug": "fsu"
+  },
+  "george washington revolutionaries": {
+    "league": "ncaab",
+    "slug": "gw"
+  },
+  "georgetown hoyas": {
+    "league": "ncaab",
+    "slug": "gtwn"
+  },
+  "georgia bulldogs": {
+    "league": "ncaab",
+    "slug": "uga"
+  },
+  "georgia tech yellow jackets": {
+    "league": "ncaab",
+    "slug": "gt"
+  },
+  "hawai'i rainbow warriors": {
+    "league": "ncaab",
+    "slug": "haw"
+  },
+  "howard bison": {
+    "league": "ncaab",
+    "slug": "how"
+  },
+  "iu indianapolis jaguars": {
+    "league": "ncaab",
+    "slug": "iuin"
+  },
+  "idaho vandals": {
+    "league": "ncaab",
+    "slug": "idho"
+  },
+  "indiana hoosiers": {
+    "league": "ncaab",
+    "slug": "iu"
+  },
+  "iowa state cyclones": {
+    "league": "ncaab",
+    "slug": "isu"
+  },
+  "jacksonville state gamecocks": {
+    "league": "ncaab",
+    "slug": "jxst"
+  },
+  "kentucky wildcats": {
+    "league": "ncaab",
+    "slug": "uk"
+  },
+  "louisville cardinals": {
+    "league": "ncaab",
+    "slug": "lou"
+  },
+  "murray state racers": {
+    "league": "ncaab",
+    "slug": "mur"
+  },
+  "northern kentucky norse": {
+    "league": "ncaab",
+    "slug": "nku"
+  },
+  "northwestern wildcats": {
+    "league": "ncaab",
+    "slug": "nu"
+  },
+  "notre dame fighting irish": {
+    "league": "ncaab",
+    "slug": "nd"
+  },
+  "sacramento state hornets": {
+    "league": "ncaab",
+    "slug": "sac"
+  },
+  "san diego state aztecs": {
+    "league": "ncaab",
+    "slug": "sdsu"
+  },
+  "san jos\u00e9 state spartans": {
+    "league": "ncaab",
+    "slug": "sjsu"
+  },
+  "south alabama jaguars": {
+    "league": "ncaab",
+    "slug": "usa"
+  },
+  "south florida bulls": {
+    "league": "ncaab",
+    "slug": "usf"
+  },
+  "southern illinois salukis": {
+    "league": "ncaab",
+    "slug": "siu"
+  },
+  "stanford cardinal": {
+    "league": "ncaab",
+    "slug": "stan"
+  },
+  "stetson hatters": {
+    "league": "ncaab",
+    "slug": "stet"
+  },
+  "uab blazers": {
+    "league": "ncaab",
+    "slug": "uab"
+  },
+  "uc riverside highlanders": {
+    "league": "ncaab",
+    "slug": "ucr"
+  },
+  "uc san diego tritons": {
+    "league": "ncaab",
+    "slug": "ucsd"
+  },
+  "ucla bruins": {
+    "league": "ncaab",
+    "slug": "ucla"
+  },
+  "uconn huskies": {
+    "league": "ncaab",
+    "slug": "conn"
+  },
+  "uic flames": {
+    "league": "ncaab",
+    "slug": "uic"
+  },
+  "usc trojans": {
+    "league": "ncaab",
+    "slug": "usc"
+  },
+  "western kentucky hilltoppers": {
+    "league": "ncaab",
+    "slug": "wku"
+  },
+  "yale bulldogs": {
+    "league": "ncaab",
+    "slug": "yale"
+  },
+  "amherst mammoths": {
+    "league": "ncaaf",
+    "slug": "amh"
+  },
+  "anna maria college amcats": {
+    "league": "ncaaf",
+    "slug": "ann"
+  },
+  "bridgewater state bears": {
+    "league": "ncaaf",
+    "slug": "brst"
+  },
+  "buena vista beavers": {
+    "league": "ncaaf",
+    "slug": "buena"
+  },
+  "carroll university (wi) pioneers": {
+    "league": "ncaaf",
+    "slug": "car"
+  },
+  "claremont-mudd-scripps college stags/athenas": {
+    "league": "ncaaf",
+    "slug": "cla"
+  },
+  "colby college white mules": {
+    "league": "ncaaf",
+    "slug": "colby"
+  },
+  "colorado mesa mavericks": {
+    "league": "ncaaf",
+    "slug": "mesa"
+  },
+  "curry college colonels": {
+    "league": "ncaaf",
+    "slug": "cur"
+  },
+  "dubuque spartans": {
+    "league": "ncaaf",
+    "slug": "dub"
+  },
+  "elmhurst bluejays": {
+    "league": "ncaaf",
+    "slug": "elm"
+  },
+  "grinnell pioneers": {
+    "league": "ncaaf",
+    "slug": "gri"
+  },
+  "luther norse": {
+    "league": "ncaaf",
+    "slug": "lut"
+  },
+  "millikin big blue": {
+    "league": "ncaaf",
+    "slug": "mil"
+  },
+  "morehouse college maroon tigers": {
+    "league": "ncaaf",
+    "slug": "mor"
+  },
+  "north park vikings": {
+    "league": "ncaaf",
+    "slug": "nor"
+  },
+  "redlands bulldogs": {
+    "league": "ncaaf",
+    "slug": "red"
+  },
+  "atlanta hawks": {
+    "league": "nba",
+    "slug": "atl"
+  },
+  "boston celtics": {
+    "league": "nba",
+    "slug": "bos"
+  },
+  "brooklyn nets": {
+    "league": "nba",
+    "slug": "bkn"
+  },
+  "charlotte hornets": {
+    "league": "nba",
+    "slug": "cha"
+  },
+  "chicago bulls": {
+    "league": "nba",
+    "slug": "chi"
+  },
+  "cleveland cavaliers": {
+    "league": "nba",
+    "slug": "cle"
+  },
+  "dallas mavericks": {
+    "league": "nba",
+    "slug": "dal"
+  },
+  "denver nuggets": {
+    "league": "nba",
+    "slug": "den"
+  },
+  "detroit pistons": {
+    "league": "nba",
+    "slug": "det"
+  },
+  "golden state warriors": {
+    "league": "nba",
+    "slug": "gs"
+  },
+  "houston rockets": {
+    "league": "nba",
+    "slug": "hou"
+  },
+  "indiana pacers": {
+    "league": "nba",
+    "slug": "ind"
+  },
+  "la clippers": {
+    "league": "nba",
+    "slug": "lac"
+  },
+  "los angeles lakers": {
+    "league": "nba",
+    "slug": "lal"
+  },
+  "memphis grizzlies": {
+    "league": "nba",
+    "slug": "mem"
+  },
+  "miami heat": {
+    "league": "nba",
+    "slug": "mia"
+  },
+  "milwaukee bucks": {
+    "league": "nba",
+    "slug": "mil"
+  },
+  "minnesota timberwolves": {
+    "league": "nba",
+    "slug": "min"
+  },
+  "new orleans pelicans": {
+    "league": "nba",
+    "slug": "no"
+  },
+  "new york knicks": {
+    "league": "nba",
+    "slug": "ny"
+  },
+  "oklahoma city thunder": {
+    "league": "nba",
+    "slug": "okc"
+  },
+  "orlando magic": {
+    "league": "nba",
+    "slug": "orl"
+  },
+  "philadelphia 76ers": {
+    "league": "nba",
+    "slug": "phi"
+  },
+  "phoenix suns": {
+    "league": "nba",
+    "slug": "phx"
+  },
+  "portland trail blazers": {
+    "league": "nba",
+    "slug": "por"
+  },
+  "sacramento kings": {
+    "league": "nba",
+    "slug": "sac"
+  },
+  "san antonio spurs": {
+    "league": "nba",
+    "slug": "sa"
+  },
+  "toronto raptors": {
+    "league": "nba",
+    "slug": "tor"
+  },
+  "utah jazz": {
+    "league": "nba",
+    "slug": "utah"
+  },
+  "washington wizards": {
+    "league": "nba",
+    "slug": "wsh"
+  },
+  "arizona diamondbacks": {
+    "league": "mlb",
+    "slug": "ari"
+  },
+  "athletics": {
+    "league": "mlb",
+    "slug": "ath"
+  },
+  "atlanta braves": {
+    "league": "mlb",
+    "slug": "atl"
+  },
+  "baltimore orioles": {
+    "league": "mlb",
+    "slug": "bal"
+  },
+  "boston red sox": {
+    "league": "mlb",
+    "slug": "bos"
+  },
+  "chicago cubs": {
+    "league": "mlb",
+    "slug": "chc"
+  },
+  "chicago white sox": {
+    "league": "mlb",
+    "slug": "chw"
+  },
+  "cincinnati reds": {
+    "league": "mlb",
+    "slug": "cin"
+  },
+  "cleveland guardians": {
+    "league": "mlb",
+    "slug": "cle"
+  },
+  "colorado rockies": {
+    "league": "mlb",
+    "slug": "col"
+  },
+  "detroit tigers": {
+    "league": "mlb",
+    "slug": "det"
+  },
+  "houston astros": {
+    "league": "mlb",
+    "slug": "hou"
+  },
+  "kansas city royals": {
+    "league": "mlb",
+    "slug": "kc"
+  },
+  "los angeles angels": {
+    "league": "mlb",
+    "slug": "laa"
+  },
+  "los angeles dodgers": {
+    "league": "mlb",
+    "slug": "lad"
+  },
+  "miami marlins": {
+    "league": "mlb",
+    "slug": "mia"
+  },
+  "milwaukee brewers": {
+    "league": "mlb",
+    "slug": "mil"
+  },
+  "minnesota twins": {
+    "league": "mlb",
+    "slug": "min"
+  },
+  "new york mets": {
+    "league": "mlb",
+    "slug": "nym"
+  },
+  "new york yankees": {
+    "league": "mlb",
+    "slug": "nyy"
+  },
+  "philadelphia phillies": {
+    "league": "mlb",
+    "slug": "phi"
+  },
+  "pittsburgh pirates": {
+    "league": "mlb",
+    "slug": "pit"
+  },
+  "san diego padres": {
+    "league": "mlb",
+    "slug": "sd"
+  },
+  "san francisco giants": {
+    "league": "mlb",
+    "slug": "sf"
+  },
+  "seattle mariners": {
+    "league": "mlb",
+    "slug": "sea"
+  },
+  "st. louis cardinals": {
+    "league": "mlb",
+    "slug": "stl"
+  },
+  "tampa bay rays": {
+    "league": "mlb",
+    "slug": "tb"
+  },
+  "texas rangers": {
+    "league": "mlb",
+    "slug": "tex"
+  },
+  "toronto blue jays": {
+    "league": "mlb",
+    "slug": "tor"
+  },
+  "washington nationals": {
+    "league": "mlb",
+    "slug": "wsh"
+  }
+}
