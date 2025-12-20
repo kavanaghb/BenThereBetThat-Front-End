@@ -2388,6 +2388,8 @@ saveBtn.addEventListener("click", async () => {
 
     if (!res.ok) throw new Error();
     await loadPickTracker();
+    await loadAnalyticsSummary();
+
 
     lockMoneyUI("✅ Saved");
     loadAnalyticsSummary();
@@ -2473,11 +2475,13 @@ editBtn.addEventListener("click", () => {
             }
           );
 
+    
+
           if (!res.ok) throw new Error();
 
           statusEl.textContent = "✅ Saved";
-          lockManualEntry(card);
-          setTimeout(loadPickTracker, 600);
+          await loadPickTracker();
+          await loadAnalyticsSummary();
 
         } catch {
           statusEl.textContent = "❌ Failed to submit";
