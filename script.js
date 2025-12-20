@@ -321,15 +321,12 @@ async function savePickTrackerSlip() {
   }
 
   try {
-    if (!currentSession || !currentSession.access_token) {
-      console.warn("🔒 Save blocked — session not ready yet", currentSession);
-      alert("Session still initializing. Please try again.");
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session || !session.access_token) {
+      alert("Please sign in to save slips.");
       return;
-  }
-
-
-    const session = currentSession;
-
+    }
 
     const payload = {
       platform: window.pickTracker.platform,
@@ -347,7 +344,7 @@ async function savePickTrackerSlip() {
 
     console.log("📤 Saving slip payload:", payload);
 
-    const res = await fetch(`${window.API_BASE}/api/slips/manual`, {
+    const res = await fetch(`${window.API_BASE}/api/slips`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -424,40 +421,6 @@ if (window.supabase && typeof window.supabase.createClient === "function") {
     "⚠️ Supabase library not loaded yet — skipping init in script.js"
   );
 }
-
-
-// ===================================================
-// 🔐 Supabase Auth State Listener (SINGLE SOURCE OF TRUTH)
-// ===================================================
-let currentSession = null;
-
-supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log("🔁 Auth event:", event);
-
-  // Cache session safely
-  currentSession = session || null;
-
-  if (event === "INITIAL_SESSION") {
-    if (session?.user) {
-      await checkSubscriptionStatus(session.user.id);
-      showMainContent();
-    } else {
-      showSignIn();
-    }
-    return;
-  }
-
-  if (event === "SIGNED_IN" && session?.user) {
-    await checkSubscriptionStatus(session.user.id);
-    showMainContent();
-  }
-
-  if (event === "SIGNED_OUT") {
-    showSignIn();
-  }
-});
-
-
 
 
 
@@ -3379,7 +3342,7 @@ if (signinForm && signinBtn) {
       if (!user) throw new Error("No user returned from Supabase.");
 
       // Let Supabase auth state listener handle UI + redirects
-      console.log("✅ Sign-in successful, waiting for auth state change");
+    console.log("✅ Sign-in successful, waiting for auth state change");
 
 
     } catch (err) {
