@@ -422,6 +422,25 @@ if (window.supabase && typeof window.supabase.createClient === "function") {
   );
 }
 
+// ===================================================
+// 🔐 Supabase Auth State Listener (SINGLE SOURCE OF TRUTH)
+// ===================================================
+supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log("🔁 Auth event:", event);
+
+  if (event === "SIGNED_IN" && session?.user) {
+    console.log("🔐 Auth confirmed:", session.user.id);
+
+    await checkSubscriptionStatus(session.user.id);
+    showMainContent();
+  }
+
+  if (event === "SIGNED_OUT") {
+    console.log("🚪 Signed out");
+    showSignIn();
+  }
+});
+
 
 
 // ============================================================
@@ -3341,8 +3360,9 @@ if (signinForm && signinBtn) {
       const user = data?.user;
       if (!user) throw new Error("No user returned from Supabase.");
 
-      await checkSubscriptionStatus(user.id);
-      showMainContent();
+      // Let Supabase auth state listener handle UI + redirects
+      console.log("✅ Sign-in successful, waiting for auth state change");
+
 
     } catch (err) {
       console.error("Sign-in error:", err);
