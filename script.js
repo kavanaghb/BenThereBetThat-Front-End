@@ -322,9 +322,11 @@ async function savePickTrackerSlip() {
 
   try {
     if (!currentSession || !currentSession.access_token) {
-      alert("Please sign in to save slips.");
+      console.warn("🔒 Save blocked — session not ready yet", currentSession);
+      alert("Session still initializing. Please try again.");
       return;
   }
+
 
     const session = currentSession;
 
@@ -345,7 +347,7 @@ async function savePickTrackerSlip() {
 
     console.log("📤 Saving slip payload:", payload);
 
-    const res = await fetch(`${window.API_BASE}/api/slips`, {
+    const res = await fetch(`${window.API_BASE}/api/slips/manual`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -425,34 +427,37 @@ if (window.supabase && typeof window.supabase.createClient === "function") {
 
 
 // ===================================================
-// 🔐 Global Auth Session Cache (Safari-safe)
+// 🔐 Supabase Auth State Listener (SINGLE SOURCE OF TRUTH)
 // ===================================================
 let currentSession = null;
 
-supabase.auth.onAuthStateChange((event, session) => {
-  if (session) currentSession = session;
-  if (event === "SIGNED_OUT") currentSession = null;
-});
-
-
-// ===================================================
-// 🔐 Supabase Auth State Listener (SINGLE SOURCE OF TRUTH)
-// ===================================================
 supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("🔁 Auth event:", event);
 
-  if (event === "SIGNED_IN" && session?.user) {
-    console.log("🔐 Auth confirmed:", session.user.id);
+  // Cache session safely
+  currentSession = session || null;
 
+  if (event === "INITIAL_SESSION") {
+    if (session?.user) {
+      await checkSubscriptionStatus(session.user.id);
+      showMainContent();
+    } else {
+      showSignIn();
+    }
+    return;
+  }
+
+  if (event === "SIGNED_IN" && session?.user) {
     await checkSubscriptionStatus(session.user.id);
     showMainContent();
   }
 
   if (event === "SIGNED_OUT") {
-    console.log("🚪 Signed out");
     showSignIn();
   }
 });
+
+
 
 
 
