@@ -224,6 +224,11 @@ window.addEventListener("error", (e) => {
   📄 Download Excel Template
   </button>
 
+  <button id="openManualSlipBtn" class="tracker-btn">
+  ✍️ Create Manual Slip
+  </button>
+
+
 
   <input
    type="file"
@@ -264,6 +269,52 @@ window.addEventListener("error", (e) => {
 
 
 
+</div>
+
+
+<!-- ===================================== -->
+<!-- ✍️ Manual Slip Builder Modal -->
+<!-- ===================================== -->
+<div id="manualSlipModal" class="import-modal hidden">
+  <div class="import-modal-content">
+
+    <div class="import-modal-header">
+      <h2>✍️ Create Manual Slip</h2>
+      <button id="closeManualSlipBtn" class="import-close-btn">✖</button>
+    </div>
+
+    <!-- Slip Meta -->
+    <div class="manual-slip-meta">
+      <label>Platform</label>
+      <select id="manualSlipPlatform">
+        <option value="prizepicks">PrizePicks</option>
+        <option value="underdog">Underdog</option>
+      </select>
+
+      <label>Title (optional)</label>
+      <input
+        type="text"
+        id="manualSlipTitle"
+        placeholder="e.g. Sunday NBA card"
+      />
+    </div>
+
+    <!-- Picks -->
+    <div id="manualPicksContainer"></div>
+
+    <button id="addManualPickBtn" class="tracker-btn secondary">
+      ➕ Add Pick
+    </button>
+
+    <div class="import-modal-actions">
+      <button id="saveManualSlipBtn" class="tracker-btn primary">
+        💾 Save Slip
+      </button>
+      <button id="cancelManualSlipBtn" class="tracker-btn">
+        Cancel
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ===================================== -->
@@ -1872,9 +1923,202 @@ function startStatusPolling(slipId) {
 }
 
 
-/* =====================================================
-   PICKS + MANUAL ENTRY
-===================================================== */
+// =====================================================
+// ✍️ Manual Slip — Pick Row Builder
+// =====================================================
+function buildManualPickRow() {
+  const row = document.createElement("div");
+  row.className = "manual-pick-row-builder";
+
+  row.innerHTML = `
+    <select class="mp-sport">
+      <option value="">Sport</option>
+      ${MANUAL_SPORTS.map(
+        s => `<option value="${s.value}">${s.label}</option>`
+      ).join("")}
+    </select>
+
+    <input class="mp-event" placeholder="Event (Team A vs Team B)" />
+
+    <input class="mp-date" type="date" />
+
+    <input class="mp-player" placeholder="Player" />
+
+    <select class="mp-market" disabled>
+      <option value="">Market</option>
+    </select>
+
+    <select class="mp-outcome">
+      <option value="over">Over</option>
+      <option value="under">Under</option>
+    </select>
+
+    <input
+      class="mp-line"
+      type="number"
+      step="0.5"
+      placeholder="Line"
+    />
+
+    <button class="tracker-btn secondary remove-manual-pick">✖</button>
+  `;
+
+  // 🔁 Market options update when sport changes
+  const sportSelect = row.querySelector(".mp-sport");
+  const marketSelect = row.querySelector(".mp-market");
+
+  sportSelect.addEventListener("change", () => {
+    const sport = sportSelect.value;
+    const markets = MANUAL_MARKETS_BY_SPORT[sport] || [];
+
+    marketSelect.innerHTML =
+      `<option value="">Market</option>` +
+      markets.map(m => `<option value="${m}">${formatMarketLabel(m)}</option>`).join("");
+
+    marketSelect.disabled = !markets.length;
+  });
+
+  // ❌ Remove row
+  row.querySelector(".remove-manual-pick")
+    .addEventListener("click", () => row.remove());
+
+  return row;
+}
+
+
+// =====================================================
+// ✍️ Manual Slip Builder — Modal Wiring
+// =====================================================
+const manualSlipModal = document.getElementById("manualSlipModal");
+const manualPicksContainer =
+  document.getElementById("manualPicksContainer");
+
+document
+  .getElementById("openManualSlipBtn")
+  ?.addEventListener("click", () => {
+    manualSlipModal.classList.remove("hidden");
+
+    // Reset picks
+    manualPicksContainer.innerHTML = "";
+    manualPicksContainer.appendChild(buildManualPickRow());
+  });
+
+document
+  .getElementById("closeManualSlipBtn")
+  ?.addEventListener("click", () => {
+    manualSlipModal.classList.add("hidden");
+  });
+
+document
+  .getElementById("cancelManualSlipBtn")
+  ?.addEventListener("click", () => {
+    manualSlipModal.classList.add("hidden");
+  });
+
+document
+  .getElementById("addManualPickBtn")
+  ?.addEventListener("click", () => {
+    manualPicksContainer.appendChild(buildManualPickRow());
+  });
+
+
+
+  // =====================================================
+// 💾 Save Manual Slip → API
+// =====================================================
+document
+  .getElementById("saveManualSlipBtn")
+  ?.addEventListener("click", async () => {
+
+    const platform =
+      document.getElementById("manualSlipPlatform").value;
+
+    const title =
+      document.getElementById("manualSlipTitle").value || null;
+
+    const rows = [
+      ...document.querySelectorAll(
+        "#manualPicksContainer .manual-pick-row-builder"
+      )
+    ];
+
+    if (!rows.length) {
+      alert("Add at least one pick.");
+      return;
+    }
+
+    const picks = rows.map(row => ({
+      sport: row.querySelector(".mp-sport")?.value?.trim(),
+      event: row.querySelector(".mp-event")?.value?.trim(),
+      game_date: row.querySelector(".mp-date")?.value,
+      player: row.querySelector(".mp-player")?.value?.trim(),
+      market: row.querySelector(".mp-market")?.value?.trim(),
+      outcome: row.querySelector(".mp-outcome")?.value,
+      line: Number(row.querySelector(".mp-line")?.value)
+    }));
+
+    // 🛑 Minimal validation
+    const invalid = picks.find(
+      p =>
+        !p.sport ||
+        !p.event ||
+        !p.game_date ||
+        !p.player ||
+        !p.market ||
+        !p.outcome ||
+        Number.isNaN(p.line)
+    );
+
+    if (invalid) {
+      alert("Please complete all fields for each pick.");
+      return;
+    }
+
+    try {
+      const token = await getAuthToken();
+
+      const res = await fetch(
+        `${window.API_BASE}/api/slips/manual`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            platform,
+            title,
+            picks
+          })
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err?.detail || "Save failed");
+      }
+
+      // ✅ Success
+      document
+        .getElementById("manualSlipModal")
+        ?.classList.add("hidden");
+
+      document.getElementById("manualSlipTitle").value = "";
+      document.getElementById("manualPicksContainer").innerHTML = "";
+
+      window.winBreakdown = null;
+
+      await loadPickTracker();
+      await loadAnalyticsSummary();
+
+      alert("✅ Manual slip saved");
+
+    } catch (err) {
+      console.error("Manual slip save failed", err);
+      alert("Failed to save manual slip");
+    }
+  });
+
 /* =====================================================
    MARKET + OUTCOME FORMATTERS
 ===================================================== */
@@ -1921,6 +2165,50 @@ function formatOutcomeLabel(outcome) {
 /* =====================================================
    PICKS + MANUAL ENTRY
 ===================================================== */
+
+// =====================================================
+// 🧠 Manual Slip Dropdown Constants
+// =====================================================
+const MANUAL_SPORTS = [
+  { value: "nba", label: "NBA" },
+  { value: "nfl", label: "NFL" },
+  { value: "nhl", label: "NHL" },
+  { value: "mlb", label: "MLB" },
+  { value: "ncaab", label: "NCAAB" },
+  { value: "ncaaf", label: "NCAAF" }
+];
+
+const MANUAL_MARKETS_BY_SPORT = {
+  nba: [
+    "player_points",
+    "player_rebounds",
+    "player_assists",
+    "player_points_rebounds",
+    "player_points_assists",
+    "player_rebounds_assists",
+    "player_points_rebounds_assists"
+  ],
+  nfl: [
+    "player_pass_yds",
+    "player_pass_tds",
+    "player_rush_yds",
+    "player_rec_yds",
+    "player_receptions"
+  ],
+  nhl: [
+    "player_goals",
+    "player_assists",
+    "player_points",
+    "player_shots"
+  ],
+  mlb: [
+    "player_hits",
+    "player_total_bases",
+    "player_home_runs",
+    "player_strikeouts"
+  ]
+};
+
 
 function lockManualEntry(cardEl) {
   cardEl
@@ -2099,6 +2387,7 @@ saveBtn.addEventListener("click", async () => {
     );
 
     if (!res.ok) throw new Error();
+    await loadPickTracker();
 
     lockMoneyUI("✅ Saved");
     loadAnalyticsSummary();

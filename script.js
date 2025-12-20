@@ -166,10 +166,15 @@ function togglePickTrackerSelection(pick) {
     console.log("➕ Pick added to tracker:", key);
   }
 
-  console.log(
-    `📊 Tracker: ${tracker.selections.size} pick(s) selected`
-  );
+  console.log(`📊 Tracker: ${tracker.selections.size} pick(s) selected`);
+
+  // ✅ FIX #3 — force UI refresh for banner & buttons
+updatePickTrackerBarUI();
+
+  // ✅ UI refresh (THIS WAS MISSING)
+  updatePickTrackerBarUI();
 }
+
 
 /**
  * Clear all tracker selections
@@ -502,6 +507,30 @@ async function safeFetch(url, options = {}, timeoutMs = 15000) {
 // ============================================================
 disableDataButtonsTemporarily();
 setRefreshEnabled(false); // ⛔ Grey out refresh until first successful load
+
+// ===================================================
+// 📦 Pick Tracker — Banner Button Wiring (FIX #2)
+// ===================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const clearBtn = document.getElementById("trackerClearBtn");
+  const saveBtn = document.getElementById("trackerSaveBtn");
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      clearPickTrackerSelections();
+      updatePickTrackerBarUI();
+      console.log("🧹 Pick Tracker cleared via banner");
+    });
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      console.log("💾 Save Slip clicked");
+      savePickTrackerSlip();
+    });
+  }
+});
+
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
 const ncaabMarkets = document.getElementById("ncaabMarkets");
