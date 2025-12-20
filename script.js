@@ -321,12 +321,13 @@ async function savePickTrackerSlip() {
   }
 
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session || !session.access_token) {
+    if (!currentSession || !currentSession.access_token) {
       alert("Please sign in to save slips.");
       return;
-    }
+  }
+
+    const session = currentSession;
+
 
     const payload = {
       platform: window.pickTracker.platform,
@@ -421,6 +422,18 @@ if (window.supabase && typeof window.supabase.createClient === "function") {
     "⚠️ Supabase library not loaded yet — skipping init in script.js"
   );
 }
+
+
+// ===================================================
+// 🔐 Global Auth Session Cache (Safari-safe)
+// ===================================================
+let currentSession = null;
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session) currentSession = session;
+  if (event === "SIGNED_OUT") currentSession = null;
+});
+
 
 // ===================================================
 // 🔐 Supabase Auth State Listener (SINGLE SOURCE OF TRUTH)
