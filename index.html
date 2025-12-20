@@ -38,6 +38,25 @@
 
 </head>
 
+<!-- ===================================================
+     📦 Pick Tracker Bottom Bar
+=================================================== -->
+<div id="pickTrackerBar" class="pick-tracker-bar hidden">
+  <div class="tracker-bar-left">
+    <strong id="trackerPlatformLabel">PrizePicks</strong>
+    <span id="trackerPickCount">0 picks selected</span>
+  </div>
+
+  <div class="tracker-bar-right">
+    <button id="trackerClearBtn" class="tracker-btn secondary">
+      Clear
+    </button>
+    <button id="trackerSaveBtn" class="tracker-btn primary" disabled>
+      Save Slip
+    </button>
+  </div>
+</div>
+
 
 <body>
   <!-- ===============================
@@ -132,6 +151,8 @@
       <button data-sport="basketball_ncaab">NCAAB</button>
       <button data-sport="baseball_mlb">MLB</button>
       <button data-sport="icehockey_nhl">NHL</button>
+      <button id="openPickTrackerBtn">📊 Pick Tracker</button>
+
     </div>
 
     <!-- 🏟️ Game Selector -->
@@ -271,6 +292,17 @@
   </button>
 </div>
 
+<!-- ===================================================
+     🎯 Pick Tracker Platform Selector
+=================================================== -->
+<div id="pickTrackerPlatform" class="pick-tracker-platform">
+  <button id="pickTrackerPrizePicksBtn" class="tracker-platform-btn active">
+    PrizePicks
+  </button>
+  <button id="pickTrackerUnderdogBtn" class="tracker-platform-btn">
+    Underdog
+  </button>
+</div>
 
 
     <!-- 🧾 Results -->

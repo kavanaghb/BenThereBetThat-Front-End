@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pick Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script>
+  Chart.register(ChartDataLabels);
+</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+
+  <!-- 🔵 Supabase public env (safe to expose) -->
+  <script>
+    
+    window.SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
+    window.SUPABASE_ANON_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g";
+// =====================================================
+// 🔐 Supabase Session Watchdog (Pick Tracker ONLY)
+// =====================================================
+
+function attachPickTrackerAuthWatchdog() {
+  if (!window.supabaseClient?.auth) {
+    console.warn("⏳ Supabase client not ready — retrying watchdog");
+    setTimeout(attachPickTrackerAuthWatchdog, 200);
+    return;
+  }
+
+  window.supabaseClient.auth.onAuthStateChange((event, session) => {
+    console.log("🔐 Pick Tracker auth event:", event);
+
+    if (event === "TOKEN_REFRESHED" && session?.access_token) {
+      window.authToken = session.access_token;
+      console.log("✅ Pick Tracker token refreshed");
+    }
+
+    if (event === "SIGNED_OUT" || !session) {
+      console.warn("⚠️ Pick Tracker session expired");
+      alert("Your session expired. Reloading the page…");
+      location.reload();
+    }
+  });
+}
+
+// ✅ Attach AFTER client exists
+attachPickTrackerAuthWatchdog();
+
+  
+  
+  
+  </script>
+  
+
+  <script>
+/* =====================================================
+   🧼 Suppress known non-fatal UI binding errors
+===================================================== */
+window.addEventListener("error", (e) => {
+  if (
+    e.message?.includes("addEventListener") ||
+    e.message?.includes("null")
+  ) {
+    e.preventDefault();
+    return false;
+  }
+});
+</script>
+
+  
+  <!-- 🌐 API BASE -->
+  <script>
+    const isLocalhost =
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1";
+
+    window.API_BASE = isLocalhost
+      ? "http://127.0.0.1:5000"
+      : "https://bentherebetthat-api.onrender.com";
+
+    console.log("🌐 API_BASE set to:", window.API_BASE);
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+
+
+
+
+  ...
+  <!-- ===================================== -->
+  <!-- 📊 Analytics Modal -->
+  <!-- ===================================== -->
+  <div id="analyticsModal" class="analytics-modal hidden">
+    <div class="analytics-modal-content">
+
+      <!-- ================= Header ================= -->
+<div class="analytics-header">
+  <h2>📊 Performance Analytics</h2>
+
+  <button id="closeAnalyticsBtn" class="analytics-close-btn">
+    ✖
+  </button>
+</div>
+
+<!-- ================= Tabs ================= -->
+<div class="analytics-tabs">
+<button class="analytics-tab active" data-tab="picks">🥧 Picks</button>
+<button class="analytics-tab" data-tab="slips">🧾 Slips</button>
+
+<button class="analytics-tab" data-tab="pick-trend">
+  📈 Pick Trend
+</button>
+<button class="analytics-tab" data-tab="slip-trend">
+  📉 Slip Trend
+</button>
+<button class="analytics-tab" data-tab="sport">
+  🏆 Pick Win % By Sport
+</button>
+<button class="analytics-tab" data-tab="dollars-trend">💵 Earnings Trend</button>
+<button class="analytics-tab" data-tab="dollars-sport">🏆 $ by Sport</button>
+
+
+</div>
+
+
+
+
+<!-- ===================================== -->
+<!-- 📊 Tab Panels -->
+<!-- ===================================== -->
+<div class="analytics-panels">
+
+  <!-- Picks Pie -->
+  <div class="analytics-panel" data-panel="picks">
+  <div class="pie-chart-wrapper">
+    <canvas id="pickWinsPie"></canvas>
+  </div>
+</div>
+
+<div class="analytics-panel" data-panel="slips">
+  <div class="pie-chart-wrapper">
+    <canvas id="slipWinsPie"></canvas>
+  </div>
+</div>
+
+
+<div class="analytics-panel" data-panel="pick-trend">
+  <div class="chart-card">
+    <canvas id="pickTrendChart"></canvas>
+  </div>
+</div>
+
+<div class="analytics-panel" data-panel="slip-trend">
+  <div class="chart-card">
+    <canvas id="slipTrendChart"></canvas>
+  </div>
+</div>
+
+<!-- 🏆 By Sport -->
+<div class="analytics-panel" data-panel="sport">
+
+  <div class="chart-card">
+    <canvas id="sportWinChart"></canvas>
+  </div>
+
+  <table class="analytics-table">
+    <thead>
+      <tr>
+        <th>Sport</th>
+        <th>Wins</th>
+        <th>Losses</th>
+        <th>Win %</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="sportStatsTable"></tbody>
+  </table>
+
+</div>
+</div>
+
+<div class="analytics-panel" data-panel="dollars-trend">
+  <div class="chart-card">
+    <canvas id="dollarsTrendChart"></canvas>
+  </div>
+</div>
+
+<div class="analytics-panel" data-panel="dollars-sport">
+  <div class="chart-card">
+    <canvas id="dollarsBySportChart"></canvas>
+  </div>
+</div>
+
+
+
+    </div>
+  </div>
+</body>
+
+
+
+  <h1>Pick Tracker</h1>
+
+<div id="trackerStatus">Loading...</div>
+
+<!-- ===================================== -->
+<!-- 🔘 Navigation & Analytics Buttons -->
+<!-- ===================================== -->
+<div class="tracker-button-row">
+  <button id="goHomeBtn" class="tracker-btn">
+    🏠 Back to Home
+  </button>
+
+  <button id="openAnalyticsBtn" class="tracker-btn primary">
+    📊 View Analytics
+  </button>
+  <button id="importExcelBtn" class="tracker-btn secondary">
+    📥 Import Slips (Excel)
+  </button>
+
+  <button id="downloadTemplateBtn" class="tracker-btn">
+  📄 Download Excel Template
+  </button>
+
+
+  <input
+   type="file"
+   id="excelFileInput"
+   accept=".xlsx,.xls"
+   style="display:none"
+/>
+
+<!-- ===================================== -->
+<!-- 👀 Import Preview Modal -->
+<!-- ===================================== -->
+<div id="importPreviewModal" class="import-modal hidden">
+  <div class="import-modal-content">
+    <div class="import-modal-header">
+      <h2>👀 Import Preview</h2>
+      <button id="closeImportPreviewBtn" class="import-close-btn">✖</button>
+    </div>
+
+    <div id="importPreviewSummary" class="import-preview-summary"></div>
+
+    <div id="importPreviewErrorsWrap" class="import-preview-errors hidden">
+      <h3>⚠️ Fix these issues</h3>
+      <div id="importPreviewErrors"></div>
+    </div>
+
+    <div id="importPreviewSlips"></div>
+
+    <div class="import-modal-actions">
+      <button id="confirmImportBtn" class="tracker-btn primary" disabled>
+        ✅ Confirm Import
+      </button>
+      <button id="cancelImportBtn" class="tracker-btn">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+<!-- ===================================== -->
+<!-- 🔍 Slip & Analytics Filters -->
+<!-- ===================================== -->
+
+<div class="tracker-filters">
+
+  <!-- From Date -->
+  <div class="filter-group">
+  <label>From</label>
+  <div class="date-input">
+    <input
+      type="date"
+      id="filterStartDate"
+      placeholder="Select date"
+    />
+    <span class="calendar-icon">📅</span>
+  </div>
+</div>
+
+
+  <!-- To Date -->
+  <div class="filter-group">
+  <label>To</label>
+  <div class="date-input">
+    <input
+      type="date"
+      id="filterEndDate"
+      placeholder="Select date"
+    />
+    <span class="calendar-icon">📅</span>
+  </div>
+</div>
+
+
+  <!-- ⚡ Quick Date Range -->
+  <div class="filter-group">
+    <label>Quick Range</label>
+    <select id="quickDateRange">
+      <option value="">Custom</option>
+      <option value="24h">Last 24 Hours</option>
+      <option value="48h">Last 48 Hours</option>
+      <option value="7d">Last 7 Days</option>
+      <option value="30d">Last 30 Days</option>
+      <option value="all">All Time</option>
+    </select>
+  </div>
+
+  <!-- Platform -->
+  <div class="filter-group">
+    <label>Platform</label>
+    <select id="filterPlatform">
+      <option value="all">All</option>
+      <option value="prizepicks">PrizePicks</option>
+      <option value="underdog">Underdog</option>
+    </select>
+  </div>
+
+  <!-- Apply -->
+  <button id="applyFiltersBtn" class="tracker-btn primary">
+    Apply Filters
+  </button>
+
+</div>
+
+
+<!-- ===================================== -->
+<!-- 📊 Analytics Summary -->
+<!-- ===================================== -->
+<div id="analyticsSummary" class="analytics-card">
+  <h3>📊 Your Performance</h3>
+
+  <div class="analytics-grid">
+    <div class="stat">
+      <div class="stat-label">Slip Win %</div>
+      <div id="slipWinPct" class="stat-value">—</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Pick Win %</div>
+      <div id="pickWinPct" class="stat-value">—</div>
+    </div>
+
+    <!-- 💰 ROI -->
+    <div class="stat">
+      <div class="stat-label">ROI</div>
+      <div id="roiPct" class="stat-value">—</div>
+      <div id="roiSub" class="stat-sub"></div>
+    </div>
+
+    <!-- 🚫 Missing $ -->
+    <div class="stat">
+      <div class="stat-label">Slips w/o $</div>
+      <div id="missingDollarPct" class="stat-value">—</div>
+    </div>
+
+
+    <div class="stat">
+      <div class="stat-label">Slips</div>
+      <div id="slipCounts" class="stat-sub">—</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Picks</div>
+      <div id="pickCounts" class="stat-sub">—</div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<div id="slipList" class="slip-list"></div>
+
+
+  <!-- ♻️ Shared site logic -->
+  <script src="script.js"></script>
+
+  <script>
+  // ✅ Reuse Supabase client created in script.js
+  if (window.supabaseClient) {
+    console.log("🔁 Using existing Supabase client from script.js");
+  } else if (window.supabase) {
+    window.supabaseClient = window.supabase;
+    console.log("🔁 Bound Supabase client from window.supabase");
+  } else {
+    console.error("❌ Supabase client not available");
+  }
+</script>
+
+
+  <!-- 🧠 Pick Tracker Logic -->
+<script>
+console.log("📌 Pick Tracker page loaded");
+
+
+
+// =====================================================
+// 📄 Download Excel Import Template
+// =====================================================
+document.getElementById("downloadTemplateBtn")?.addEventListener("click", () => {
+  window.location.href = `${window.API_BASE}/api/slips/import/template`;
+});
+
+
+
+// =====================================
+// 🔍 Global Slip / Analytics Filters
+// =====================================
+window.activeFilters = {
+  startDate: null,
+  endDate: null,
+  platform: "all"
+};
+
+
+
+
+function buildFilterParams() {
+  const params = new URLSearchParams();
+
+  if (window.activeFilters?.startDate) {
+    params.append("start_date", window.activeFilters.startDate);
+  }
+  if (window.activeFilters?.endDate) {
+    params.append("end_date", window.activeFilters.endDate);
+  }
+  if (
+    window.activeFilters?.platform &&
+    window.activeFilters.platform !== "all"
+  ) {
+    params.append("platform", window.activeFilters.platform);
+  }
+
+  return params.toString();
+}
+
+// =====================================================
+// 🏠 Back / Home button
+// =====================================================
+document.getElementById("goHomeBtn")?.addEventListener("click", () => {
+  window.location.href = "index.html"; // adjust if your home path differs
+});
+
+// =====================================================
+// 📊 Open Analytics Modal (Doughnut-safe)
+// =====================================================
+// =====================================================
+// 📊 Open Analytics Modal (STABLE + CANVAS-SAFE)
+// =====================================================
+document
+  .getElementById("openAnalyticsBtn")
+  ?.addEventListener("click", async () => {
+
+    // 1️⃣ Show modal
+    document
+      .getElementById("analyticsModal")
+      ?.classList.remove("hidden");
+
+    // 2️⃣ Activate PICKS tab + panel ONLY
+    document.querySelectorAll(".analytics-tab")
+      .forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".analytics-panel")
+      .forEach(p => p.classList.remove("active"));
+
+    document
+      .querySelector('.analytics-tab[data-tab="picks"]')
+      ?.classList.add("active");
+
+    document
+      .querySelector('.analytics-panel[data-panel="picks"]')
+      ?.classList.add("active");
+
+    // 3️⃣ Load win data ONCE
+    if (!window.winBreakdown) {
+      await loadWinPies();
+    }
+
+    // 4️⃣ Render ONLY the pick pie (visible panel)
+    renderPie(
+      "pickWinsPie",
+      window.winBreakdown.picks,
+      pickPieChart,
+      c => (pickPieChart = c)
+    );
+  });
+
+// =====================================================
+// 📄 Download Excel Import Template
+// =====================================================
+document.getElementById("downloadTemplateBtn")?.addEventListener("click", () => {
+  window.location.href = `${window.API_BASE}/api/slips/import/template`;
+});
+
+// =====================================================
+// 👀 Excel Import Preview (Upload → Preview → Confirm)
+// =====================================================
+let pendingExcelFile = null;
+
+const importBtn = document.getElementById("importExcelBtn");
+const excelInput = document.getElementById("excelFileInput");
+
+const modal = document.getElementById("importPreviewModal");
+const closeBtn = document.getElementById("closeImportPreviewBtn");
+const cancelBtn = document.getElementById("cancelImportBtn");
+const confirmBtn = document.getElementById("confirmImportBtn");
+
+const summaryEl = document.getElementById("importPreviewSummary");
+const slipsEl = document.getElementById("importPreviewSlips");
+const errorsWrap = document.getElementById("importPreviewErrorsWrap");
+const errorsEl = document.getElementById("importPreviewErrors");
+
+function openImportModal() {
+  modal?.classList.remove("hidden");
+}
+function closeImportModal() {
+  modal?.classList.add("hidden");
+  summaryEl.innerHTML = "";
+  slipsEl.innerHTML = "";
+  errorsEl.innerHTML = "";
+  errorsWrap.classList.add("hidden");
+  confirmBtn.disabled = true;
+  pendingExcelFile = null;
+}
+
+closeBtn?.addEventListener("click", closeImportModal);
+cancelBtn?.addEventListener("click", closeImportModal);
+
+// 1) Click Import → pick file
+importBtn?.addEventListener("click", () => {
+  if (!excelInput) return;
+  excelInput.value = "";
+  excelInput.click();
+});
+
+// 2) After file selected → call PREVIEW endpoint
+excelInput?.addEventListener("change", async () => {
+  const file = excelInput.files?.[0];
+  if (!file) return;
+
+  pendingExcelFile = file;
+
+  summaryEl.innerHTML = "⏳ Generating preview…";
+  slipsEl.innerHTML = "";
+  errorsEl.innerHTML = "";
+  errorsWrap.classList.add("hidden");
+  confirmBtn.disabled = true;
+
+  openImportModal();
+
+  try {
+    const token = await getAuthToken();
+
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const res = await fetch(`${window.API_BASE}/api/slips/import/preview`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.status !== "ok") {
+      throw new Error(data?.message || "Preview failed");
+    }
+
+    renderImportPreview(data);
+  } catch (err) {
+    console.error("Import preview failed", err);
+    summaryEl.innerHTML = `❌ Preview failed: ${err.message || err}`;
+    confirmBtn.disabled = true;
+  }
+});
+
+// 3) Confirm Import → call REAL IMPORT endpoint with SAME file
+confirmBtn?.addEventListener("click", async () => {
+  if (!pendingExcelFile) return;
+
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Importing…";
+
+  try {
+    const token = await getAuthToken();
+
+    const fd = new FormData();
+    fd.append("file", pendingExcelFile);
+
+    const res = await fetch(`${window.API_BASE}/api/slips/import`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data?.detail || data?.message || "Import failed");
+    }
+
+    // ✅ Refresh UI after import
+    closeImportModal();
+    window.winBreakdown = null;
+    await loadSlips();
+    await loadAnalyticsSummary();
+    await loadWinPies();
+
+  } catch (err) {
+    console.error("Import failed", err);
+    alert(`Import failed: ${err.message || err}`);
+  } finally {
+    confirmBtn.textContent = "✅ Confirm Import";
+  }
+});
+
+// Render preview (supports optional: actual_value, stake, payout)
+function renderImportPreview(data) {
+  const slips = data.slips || [];
+  const topErrors = data.errors || [];
+
+  const slipErrors = slips.flatMap(s => s.errors || []);
+  const allErrors = [...topErrors, ...slipErrors];
+
+  summaryEl.innerHTML = `
+    <div><strong>Slips detected:</strong> ${slips.length}</div>
+    <div><strong>Total issues:</strong> ${allErrors.length}</div>
+    <div style="opacity:.8;margin-top:6px;">
+      Optional columns supported:
+      <code>actual_value</code> (per pick),
+      <code>stake</code>/<code>payout</code> (per slip — duplicate on every row).
+    </div>
+  `;
+
+  if (allErrors.length) {
+    errorsWrap.classList.remove("hidden");
+    errorsEl.innerHTML = allErrors.map(e => `
+      <div class="import-error-row">
+        <strong>Row ${e.row}</strong> — <code>${e.field}</code>: ${e.message}
+      </div>
+    `).join("");
+    confirmBtn.disabled = true;
+  } else {
+    errorsWrap.classList.add("hidden");
+    confirmBtn.disabled = false;
+  }
+
+  slipsEl.innerHTML = slips.map(slip => {
+    console.log("PREVIEW SLIP", slip); // ✅ HERE
+    // 🔑 Normalize stake/payout ONCE
+    const stake =
+      slip.stake !== null && slip.stake !== undefined && slip.stake !== ""
+        ? Number(slip.stake)
+        : null;
+
+    const payout =
+      slip.payout !== null && slip.payout !== undefined && slip.payout !== ""
+        ? Number(slip.payout)
+        : null;
+
+    const stakeText =
+      typeof stake === "number" && !Number.isNaN(stake)
+        ? `$${stake.toFixed(2)}`
+        : "—";
+
+    const payoutText =
+      typeof payout === "number" && !Number.isNaN(payout)
+        ? `$${payout.toFixed(2)}`
+        : "—";
+
+    const picksRows = (slip.picks || []).map(p => {
+      const av =
+        p.actual_value !== null &&
+        p.actual_value !== undefined &&
+        p.actual_value !== ""
+          ? p.actual_value
+          : null;
+
+      return `
+        <tr>
+          <td>Row ${p.row}</td>
+          <td>${p.player}</td>
+          <td>${p.market}</td>
+          <td>${p.outcome}</td>
+          <td>${p.line}</td>
+          <td>${av !== null ? av : "—"}</td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <div class="import-slip-preview">
+        <div class="import-slip-title">
+          <div>
+            Slip Group <strong>${slip.slip_group}</strong>
+            — ${String(slip.platform || "").toUpperCase()}
+          </div>
+          <div>${(slip.picks || []).length} picks</div>
+        </div>
+
+        <div class="import-slip-money">
+        <span class="money-chip">
+          💵 Stake: <strong>${stakeText}</strong>
+        </span>
+        <span class="money-chip">
+          🎯 Payout: <strong>${payoutText}</strong>
+        </span>
+      </div>
+
+
+        <table class="import-picks-table">
+          <thead>
+            <tr>
+              <th>Row</th>
+              <th>Player</th>
+              <th>Market</th>
+              <th>Outcome</th>
+              <th>Line</th>
+              <th>Actual (optional)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${picksRows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }).join("");
+}
+
+
+  // =====================================
+// ⚡ Quick Date Range Presets
+// =====================================
+document.getElementById("quickDateRange")?.addEventListener("change", () => {
+  const value = document.getElementById("quickDateRange").value;
+
+  const startInput = document.getElementById("filterStartDate");
+  const endInput = document.getElementById("filterEndDate");
+
+  const now = new Date();
+
+  if (value === "all") {
+    startInput.value = "";
+    endInput.value = "";
+    return;
+  }
+
+  if (!value) return;
+
+  const daysMap = {
+    "24h": 1,
+    "48h": 2,
+    "7d": 7,
+    "30d": 30
+  };
+
+  const days = daysMap[value];
+  if (!days) return;
+
+  const startDate = new Date(now);
+  startDate.setDate(now.getDate() - days);
+
+  startInput.value = startDate.toISOString().slice(0, 10);
+  endInput.value = now.toISOString().slice(0, 10);
+});
+
+
+// =====================================
+// 🔍 Apply Slip & Analytics Filters
+// =====================================
+document.getElementById("applyFiltersBtn")?.addEventListener("click", async () => {
+  window.activeFilters.startDate =
+    document.getElementById("filterStartDate")?.value || null;
+  window.activeFilters.endDate =
+    document.getElementById("filterEndDate")?.value || null;
+  window.activeFilters.platform =
+    document.getElementById("filterPlatform")?.value || "all";
+
+  // 🔥 CLEAR STALE ANALYTICS CACHE
+  window.winBreakdown = null;
+
+  try {
+    await loadSlips();
+
+    if (window.authToken) {
+      await loadAnalyticsSummary();
+      await loadWinPies();
+      await loadTrendCharts();
+      await loadSportAnalytics();
+    }
+  } catch (err) {
+    console.warn("Filter update failed safely:", err);
+  }
+});
+
+
+
+
+
+
+
+
+// Close Analytics modal
+document.getElementById("closeAnalyticsBtn")?.addEventListener("click", () => {
+  document.getElementById("analyticsModal")?.classList.add("hidden");
+});
+
+// =====================================================
+// 📋 Load Slips (FILTER-AWARE)
+// =====================================================
+async function loadSlips() {
+  try {
+    const token = await getAuthToken({ silent: true });
+
+    const params = new URLSearchParams();
+
+    if (window.activeFilters.startDate) {
+      params.append("start_date", window.activeFilters.startDate);
+    }
+    if (window.activeFilters.endDate) {
+      params.append("end_date", window.activeFilters.endDate);
+    }
+    if (
+      window.activeFilters.platform &&
+      window.activeFilters.platform !== "all"
+    ) {
+      params.append("platform", window.activeFilters.platform);
+    }
+
+    const res = await fetch(
+      `${window.API_BASE}/api/slips?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    if (!res.ok) throw new Error("Failed to load slips");
+
+    const { slips } = await res.json();
+
+    renderPickTracker(slips); // ⬅️ your existing renderer
+
+  } catch (err) {
+    console.error("❌ loadSlips failed", err);
+  }
+}
+
+/* =====================================================
+   📊 ANALYTICS
+===================================================== */
+/* =====================================================
+   📊 ANALYTICS (FILTER-AWARE)
+===================================================== */
+async function loadAnalyticsSummary() {
+  try {
+    const params = new URLSearchParams();
+
+    if (window.activeFilters?.startDate) {
+      params.append("start_date", window.activeFilters.startDate);
+    }
+
+    if (window.activeFilters?.endDate) {
+      params.append("end_date", window.activeFilters.endDate);
+    }
+
+    if (
+      window.activeFilters?.platform &&
+      window.activeFilters.platform !== "all"
+    ) {
+      params.append("platform", window.activeFilters.platform);
+    }
+
+    const res = await fetch(
+      `${window.API_BASE}/api/analytics/summary?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${window.authToken}`
+        }
+      }
+    );
+
+    if (!res.ok) throw new Error("Failed to load analytics");
+
+    const data = await res.json();
+    
+    /* ==========================
+   💰 ROI / MONEY SUMMARY
+========================== */
+
+if (data.dollars) {
+  const roiEl = document.getElementById("roiPct");
+  const roiSubEl = document.getElementById("roiSub");
+  const missingEl = document.getElementById("missingDollarPct");
+
+  // --- ROI ---
+  if (data.dollars.roi_pct !== null) {
+    roiEl.textContent = `${data.dollars.roi_pct}%`;
+
+    roiSubEl.textContent =
+      `$${data.dollars.profit.toFixed(2)} on $${data.dollars.stake.toFixed(2)}`;
+
+    roiEl.classList.toggle("positive", data.dollars.roi_pct >= 0);
+    roiEl.classList.toggle("negative", data.dollars.roi_pct < 0);
+  } else {
+    roiEl.textContent = "—";
+    roiSubEl.textContent = "No dollar data yet";
+  }
+
+  // --- Missing $ ---
+  missingEl.textContent = `${data.dollars.missing_pct}%`;
+}
+
+
+    window.analyticsData = data; // 👈 REQUIRED for modal/tab re-renders
+
+
+    /* ==========================
+   SLIPS
+========================== */
+
+const slips = data.slips;
+
+document.getElementById("slipWinPct").textContent =
+  `${slips.win_pct}%`;
+
+document.getElementById("slipCounts").innerHTML = `
+  ${slips.wins}W / ${slips.losses}L (${slips.total})
+  ${
+    slips.pending?.count > 0
+      ? `<div class="pending-text">
+           ⏳ ${slips.pending.count} ungraded (${slips.pending.pct}%)
+         </div>`
+      : ""
+  }
+`;
+
+
+    /* ==========================
+       PICKS
+    ========================== */
+
+
+const picks = data.picks;
+
+document.getElementById("pickWinPct").textContent =
+  `${picks.win_pct}%`;
+
+document.getElementById("pickCounts").innerHTML = `
+  ${picks.wins}W / ${picks.losses}L (${picks.total})
+  ${
+    picks.pending?.count > 0
+      ? `<div class="pending-text">
+           ⏳ ${picks.pending.count} ungraded (${picks.pending.pct}%)
+         </div>`
+      : ""
+  }
+`;
+
+
+  } catch (err) {
+    console.error("❌ Analytics load failed", err);
+  }
+}
+
+
+/* =====================================================
+   🥧 WIN PIE CHARTS
+===================================================== */
+
+let pickPieChart = null;
+let slipPieChart = null;
+let sportWinChart = null;
+
+
+async function loadWinPies() {
+  const qs = buildFilterParams();
+
+  const res = await fetch(
+    `${window.API_BASE}/api/analytics/wins_breakdown?${qs}`,
+    {
+      headers: {
+        Authorization: `Bearer ${window.authToken}`
+      }
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to load win breakdown");
+  }
+
+  window.winBreakdown = await res.json();
+}
+
+
+function resetCanvas(canvasId) {
+  const oldCanvas = document.getElementById(canvasId);
+  if (!oldCanvas) return;
+
+  const parent = oldCanvas.parentNode;
+  const newCanvas = document.createElement("canvas");
+
+  newCanvas.id = canvasId;
+  newCanvas.style.width = "100%";
+  newCanvas.style.height = "100%";
+
+  parent.replaceChild(newCanvas, oldCanvas);
+}
+
+
+
+function renderPie(canvasId, values, existingChart, saveChart) {
+  resetCanvas(canvasId); // 🔥 PREVENT STACKING
+
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (existingChart) {
+    existingChart.destroy();
+  }
+
+
+  const wins = values.win || 0;
+  const losses = values.loss || 0;
+  const pushes = values.push || 0;
+  const total = wins + losses + pushes;
+  const winPct = total ? ((wins / total) * 100).toFixed(1) : "0.0";
+
+  const chart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Wins", "Losses", "Pushes"],
+      datasets: [
+        {
+          data: [wins, losses, pushes],
+          backgroundColor: ["#28a745", "#dc3545", "#6c757d"],
+          borderColor: "#ffffff",
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "65%",
+      layout: { padding: 16 },
+
+      plugins: {
+
+  /* ===== TITLE ===== */
+  title: {
+    display: true,
+    text: canvasId === "pickWinsPie" ? "Pick Results" : "Slip Results",
+    color: "#ffffff",
+    font: {
+      size: 18,
+      weight: "600"
+    },
+    padding: { bottom: 16 }
+  },
+
+  /* ===== LEGEND ===== */
+  legend: {
+    position: "bottom",
+    labels: {
+      color: "#ffffff",
+      padding: 18,
+      boxWidth: 18,
+      font: {
+        size: 13,
+        weight: "500"
+      }
+    }
+  },
+
+  /* ===== TOOLTIP ===== */
+  tooltip: {
+    backgroundColor: "#000",
+    titleColor: "#fff",
+    bodyColor: "#fff"
+  },
+
+  /* ===== DATA LABELS (ALWAYS ON) ===== */
+  datalabels: {
+    color: "#ffffff",
+    font: {
+      weight: "700",
+      size: 14
+    },
+    formatter(value, ctx) {
+      const data = ctx.chart.data.datasets[0].data;
+      const total = data.reduce((a, b) => a + b, 0);
+      const pct = total ? ((value / total) * 100).toFixed(1) : 0;
+      return value > 0 ? `${pct}%` : "";
+    },
+    anchor: "center",
+    align: "center",
+    clamp: true
+  }
+}
+
+    },
+    plugins: [
+      // Center text plugin background safety
+      {
+        id: "centerTextBg",
+        beforeDraw(chart) {
+          const { ctx, chartArea } = chart;
+          const x = (chartArea.left + chartArea.right) / 2;
+          const y = (chartArea.top + chartArea.bottom) / 2;
+
+          ctx.save();
+          ctx.fillStyle = "#111";
+          ctx.beginPath();
+          ctx.arc(x, y, 55, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    ]
+  });
+
+  saveChart(chart);
+}
+
+
+let pickTrendChart = null;
+let slipTrendChart = null;
+
+async function loadTrendCharts() {
+  const qs = buildFilterParams();
+
+  const res = await fetch(
+    `${window.API_BASE}/api/analytics/trends?${qs}`,
+    {
+      headers: {
+        Authorization: `Bearer ${window.authToken}`
+      }
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to load trends");
+
+  const data = await res.json();
+
+  renderTrend(
+    "pickTrendChart",
+    data.pick_trend,
+    "Pick Win % Over Time",
+    pickTrendChart,
+    c => (pickTrendChart = c)
+  );
+
+  renderTrend(
+    "slipTrendChart",
+    data.slip_trend,
+    "Slip Win % Over Time",
+    slipTrendChart,
+    c => (slipTrendChart = c)
+  );
+}
+
+
+function renderTrend(canvasId, rows, title, existingChart, saveChart) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (existingChart) existingChart.destroy();
+
+  const labels = rows.map(r => r.date);
+  const values = rows.map(r => r.win_pct);
+
+  const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: title,
+        data: values,
+        borderColor: "#0d6efd",
+        backgroundColor: "rgba(13,110,253,0.25)",
+        tension: 0.3,
+        fill: true,
+        pointRadius: 5,
+        pointBackgroundColor: "#0d6efd"
+      }]
+    },
+    options: {
+      layout: {
+        padding: {
+          top: 10,
+          bottom: 40
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+
+      plugins: {
+        legend: { display: false },
+
+        /* ✅ TITLE — bright white */
+        title: {
+          display: true,
+          text: title,
+          color: "#ffffff",
+          padding: {
+            top: 8,
+            bottom: 32   // ✅ real visible spacing
+          },
+        font: {
+          size: 18,
+          weight: "600"
+          }
+      }
+      ,
+
+        /* ✅ DATA LABELS — ALWAYS VISIBLE */
+        datalabels: {
+          color: "#ffffff",
+          anchor: "end",
+          align: "top",
+          offset: 6,
+          font: {
+            weight: "600",
+            size: 12
+          },
+          formatter: v => `${v}%`
+        }
+      },
+
+      scales: {
+        x: {
+          ticks: { color: "#ffffff" },
+          grid: { display: false }
+        },
+        y: {
+          min: 0,
+          max: 100,
+          ticks: {
+            display: false   // 🚫 remove left-side % labels
+          },
+          grid: {
+           drawBorder: false,
+            color: "rgba(255,255,255,0.08)" // subtle grid line
+  }
+}
+
+      }
+    },
+    plugins: [ChartDataLabels] // 🔑 REQUIRED
+  });
+
+  saveChart(chart);
+}
+
+async function loadSportAnalytics() {
+  const qs = buildFilterParams();
+
+  const res = await fetch(
+    `${window.API_BASE}/api/analytics/by-sport?${qs}`,
+    {
+      headers: {
+        Authorization: `Bearer ${window.authToken}`
+      }
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to load sport analytics");
+
+  const data = await res.json();
+
+  renderSportChart(data);
+  renderSportTable(data);
+}
+
+function renderSportChart(data) {
+  const ctx = document.getElementById("sportWinChart").getContext("2d");
+
+  if (sportWinChart) sportWinChart.destroy();
+
+  sportWinChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: data.map(d => d.sport),
+      datasets: [{
+        label: "Pick Win %",
+        data: data.map(d => d.win_pct),
+       backgroundColor: data.map(d =>
+          d.win_pct >= 55 ? "rgba(46, 204, 113, 0.85)" : "rgba(231, 76, 60, 0.85)"
+        ),
+       borderColor: data.map(d =>
+         d.win_pct >= 55 ? "rgb(39, 174, 96)" : "rgb(192, 57, 43)"
+       ),
+       borderWidth: 1
+    }]
+
+    },
+    options: {
+  responsive: true,
+  plugins: {
+    legend: {
+      display: false
+    },
+    datalabels: {
+      color: "#ffffff",
+      font: {
+        weight: "bold"
+      },
+      formatter: function (value) {
+        return value + "%";
+      }
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: 100,
+      grid: {
+        color: "rgba(255,255,255,0.08)"
+      },
+      ticks: {
+        color: "#bbbbbb",
+        callback: function (value) {
+          return value + "%";
+        }
+      }
+    },
+    x: {
+      grid: {
+        display: false
+      },
+      ticks: {
+        color: "#bbbbbb"
+      }
+    }
+  }
+}
+
+  });
+}
+function renderSportTable(data) {
+  const tbody = document.getElementById("sportStatsTable");
+
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td><strong>${d.sport}</strong></td>
+      <td>${d.wins}</td>
+      <td>${d.losses}</td>
+      <td>${d.win_pct}%</td>
+      <td>${d.win_pct >= 55 ? "🏆" : ""}</td>
+    </tr>
+  `).join("");
+}
+
+async function loadDollarsTrend() {
+  const token = await getAuthToken();
+  const filters = getActiveFilters();
+  const qs = new URLSearchParams(filters).toString();
+
+  const res = await fetch(
+    `${window.API_BASE}/api/analytics/dollars-trend?${qs}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  if (!res.ok) {
+    console.error("Failed to load dollars trend");
+    return;
+  }
+
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) {
+    console.warn("No dollars trend data");
+    return;
+  }
+
+  const labels = data.map(d => d.date);
+  const values = data.map(d => d.net);
+
+  // 🔁 Safe destroy
+  if (
+    window.dollarsTrendChart &&
+    typeof window.dollarsTrendChart.destroy === "function"
+  ) {
+    window.dollarsTrendChart.destroy();
+  }
+
+  const ctx = document.getElementById("dollarsTrendChart");
+
+  window.dollarsTrendChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Net Profit ($)",
+        data: values,
+        borderWidth: 3,
+        borderColor: "#3b82f6",
+        backgroundColor: "#3b82f6",
+        tension: 0.35,
+        pointRadius: values.length === 1 ? 6 : 4,
+        pointHoverRadius: 8,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: "#f9fafb",
+            font: { size: 13 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `$${ctx.raw}`
+          }
+        },
+        datalabels: {
+          color: "#ffffff",
+          anchor: "end",
+          align: "top",
+          offset: 6,
+          font: {
+            weight: "bold",
+            size: 12
+          },
+          formatter: v => `$${v}`
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Date",
+            color: "#f9fafb",
+            font: { weight: "bold" }
+          },
+          ticks: {
+            color: "#e5e7eb"
+          },
+          grid: {
+            color: "rgba(255,255,255,0.05)"
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Net Profit ($)",
+            color: "#f9fafb",
+            font: { weight: "bold" }
+          },
+          ticks: {
+            color: "#e5e7eb",
+            callback: v => `$${v}`
+          },
+          grid: {
+            color: "rgba(255,255,255,0.08)"
+          }
+        }
+      }
+    }
+  });
+}
+
+
+
+async function loadDollarsBySport() {
+  const token = await getAuthToken();
+  const filters = getActiveFilters();
+  const qs = new URLSearchParams(filters).toString();
+
+  const res = await fetch(
+    `${window.API_BASE}/api/analytics/dollars-by-sport?${qs}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  if (!res.ok) {
+    console.error("Failed to load dollars by sport");
+    return;
+  }
+
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) {
+    console.warn("No dollars-by-sport data");
+    return;
+  }
+
+  const labels = data.map(d => d.sport);
+  const values = data.map(d => d.net);
+
+  const colors = values.map(v =>
+    v >= 0 ? "rgba(34, 197, 94, 0.9)" : "rgba(239, 68, 68, 0.9)"
+  );
+
+  // 🔁 Safe destroy
+  if (
+    window.dollarsBySportChart &&
+    typeof window.dollarsBySportChart.destroy === "function"
+  ) {
+    window.dollarsBySportChart.destroy();
+  }
+
+  const ctx = document.getElementById("dollarsBySportChart");
+
+  window.dollarsBySportChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Net Profit ($)",
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 6,
+        maxBarThickness: 80
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: "#f9fafb",
+            font: {
+              size: 14,
+              weight: "bold"
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `$${ctx.raw}`
+          }
+        },
+        datalabels: {
+          color: "#ffffff",
+          anchor: "center",
+          align: "center",
+          font: {
+            size: 16,
+            weight: "bold"
+          },
+          formatter: v => `$${v}`
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Sport",
+            color: "#f9fafb",
+            font: {
+              size: 14,
+              weight: "bold"
+            }
+          },
+          ticks: {
+            color: "#e5e7eb",
+            font: {
+              size: 13,
+              weight: "bold"
+            }
+          },
+          grid: {
+            color: "rgba(255,255,255,0.05)"
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Net Profit ($)",
+            color: "#f9fafb",
+            font: {
+              size: 14,
+              weight: "bold"
+            }
+          },
+          ticks: {
+            color: "#e5e7eb",
+            font: {
+              size: 13,
+              weight: "bold"
+            },
+            callback: v => `$${v}`
+          },
+          grid: {
+            color: "rgba(255,255,255,0.08)"
+          }
+        }
+      }
+    }
+  });
+}
+
+
+/* =====================================================
+   📑 ANALYTICS TABS (CLEAN VERSION)
+===================================================== */
+/* =====================================================
+   📑 ANALYTICS TABS (FIXED + EXTENDED)
+===================================================== */
+document.querySelectorAll(".analytics-tab").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const target = btn.dataset.tab;
+
+    // ----------------------
+    // Tabs
+    // ----------------------
+    document.querySelectorAll(".analytics-tab")
+      .forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+
+    // ----------------------
+    // Panels
+    // ----------------------
+    document.querySelectorAll(".analytics-panel")
+      .forEach(p => p.classList.remove("active"));
+
+    const panel = document.querySelector(
+      `.analytics-panel[data-panel="${target}"]`
+    );
+    if (!panel) return;
+    panel.classList.add("active");
+
+    // ----------------------
+    // Render ONLY visible tab
+    // ----------------------
+
+    // ----------------------
+// Render ONLY visible tab
+// ----------------------
+
+if (target === "picks" && window.winBreakdown?.picks) {
+  renderPie(
+    "pickWinsPie",
+    window.winBreakdown.picks,
+    pickPieChart,
+    c => (pickPieChart = c)
+  );
+  return;
+}
+
+if (target === "slips" && window.winBreakdown?.slips) {
+  renderPie(
+    "slipWinsPie",
+    window.winBreakdown.slips,
+    slipPieChart,
+    c => (slipPieChart = c)
+  );
+  return;
+}
+
+if (target === "pick-trend" || target === "slip-trend") {
+  loadTrendCharts().catch(console.error);
+  return;
+}
+
+// 🏆 By Sport (pick win %)
+if (target === "sport") {
+  await loadSportAnalytics().catch(console.error);
+  return;
+}
+
+// 💵 Dollars Over Time ✅
+if (target === "dollars-trend") {
+  await loadDollarsTrend().catch(console.error);
+  return;
+}
+
+// 🏆 Dollars by Sport ✅
+if (target === "dollars-sport") {
+  await loadDollarsBySport().catch(console.error);
+  return;
+}
+
+  });
+});
+
+
+
+
+
+
+
+
+async function initAuthToken() {
+  if (!window.supabaseClient) {
+    console.error("❌ Supabase client not initialized");
+    return;
+  }
+
+  const { data, error } =
+    await window.supabaseClient.auth.getSession();
+
+
+  if (error || !data?.session?.access_token) {
+    console.warn("🔒 No active Supabase session");
+    return;
+  }
+
+  window.authToken = data.session.access_token;
+  console.log("🔐 Global authToken initialized");
+}
+
+async function getAuthToken({ silent = false } = {}) {
+  if (!window.supabaseClient) {
+  throw new Error("Supabase client not initialized");
+}
+
+const { data, error } =
+  await window.supabaseClient.auth.getSession();
+
+
+  if (error || !data?.session?.access_token) {
+  console.warn("🔒 Session invalid on Pick Tracker — retrying");
+
+  await new Promise(r => setTimeout(r, 500));
+
+  const retry = await window.supabase.auth.getSession();
+  if (retry?.data?.session?.access_token) {
+    window.authToken = retry.data.session.access_token;
+    return retry.data.session.access_token;
+  }
+
+  if (!silent) {
+    alert("Your session expired. Please reload the page.");
+    location.reload();
+  }
+
+  throw new Error("User not authenticated");
+}
+
+
+  return data.session.access_token;
+}
+
+
+
+// =====================================
+// 🔎 Analytics Filters Helper  ✅ PLACE HERE
+// =====================================
+function getActiveFilters() {
+  const start = document.getElementById("filterStartDate")?.value;
+  const end = document.getElementById("filterEndDate")?.value;
+  const platform = document.getElementById("filterPlatform")?.value;
+
+  const params = {};
+
+  if (start) params.start_date = start;
+  if (end) params.end_date = end;
+  if (platform && platform !== "all") params.platform = platform;
+
+  return params;
+}
+
+
+
+/* =====================================================
+   ESPN MANUAL REFRESH
+===================================================== */
+async function refreshGames() {
+  const statusEl = document.getElementById("refreshGamesStatus");
+  statusEl.textContent = "Refreshing ESPN…";
+
+  try {
+    const token = await getAuthToken();
+    const today = new Date().toISOString().slice(0, 10);
+
+    const res = await fetch(
+      `${window.API_BASE}/api/games/refresh?sport=nba&game_date=${today}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error();
+
+    statusEl.textContent = `✅ ${data.games_updated} games updated`;
+  } catch {
+    statusEl.textContent = "❌ Refresh failed";
+  }
+}
+
+/* =====================================================
+   STATUS POLLING
+===================================================== */
+const statusPollers = new Map();
+
+async function fetchSlipStatus(slipId) {
+  const token = await getAuthToken();
+  const res = await fetch(
+    `${window.API_BASE}/api/slips/${slipId}/status`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) throw new Error();
+  return res.json();
+}
+
+function updateSlipStatusUI(slipId, status) {
+  const el = document.getElementById(`status-${slipId}`);
+  if (!el) return;
+
+  if (status.completed) {
+    el.textContent = "✅ FINAL";
+    el.className = "game-status final";
+    return;
+  }
+
+  if (status.state === "in") {
+    el.textContent = "🔴 LIVE";
+    el.className = "game-status live";
+    return;
+  }
+
+  el.textContent = "⏳";
+  el.className = "game-status scheduled";
+}
+
+function startStatusPolling(slipId) {
+  if (statusPollers.has(slipId)) return;
+
+  const intervalId = setInterval(async () => {
+    try {
+      // 🔐 Ensure we still have a valid session before polling
+      const { data } = await window.supabase.auth.getSession();
+      if (!data?.session?.access_token) {
+        console.warn("🔒 Polling paused — no valid session");
+        throw new Error("NO_SESSION");
+      }
+
+      const status = await fetchSlipStatus(slipId);
+      updateSlipStatusUI(slipId, status);
+
+      // ✅ Stop polling once final
+      if (status.completed) {
+        clearInterval(intervalId);
+        statusPollers.delete(slipId);
+      }
+
+    } catch (err) {
+      console.warn(
+        "🛑 Status polling stopped safely for",
+        slipId,
+        err?.message || err
+      );
+
+      // ✅ Always clean up on ANY error
+      clearInterval(intervalId);
+      statusPollers.delete(slipId);
+
+      // ❌ DO NOT reload the page here
+      // ❌ DO NOT throw — silent stop only
+    }
+  }, 30000);
+
+  statusPollers.set(slipId, intervalId);
+}
+
+
+/* =====================================================
+   PICKS + MANUAL ENTRY
+===================================================== */
+/* =====================================================
+   MARKET + OUTCOME FORMATTERS
+===================================================== */
+
+function formatMarketLabel(market) {
+  if (!market) return "";
+
+  let label = market
+    .replace(/^player_/, "")     // remove player_
+    .replaceAll("_", " ");       // underscores → spaces
+
+  const replacements = {
+    pts: "points",
+    reb: "rebounds",
+    ast: "assists",
+    stl: "steals",
+    blk: "blocks",
+    to: "turnovers",
+    yds: "yards",
+    td: "touchdowns",
+    fg: "field goals",
+    pr: "points + rebounds",
+    pa: "points + assists",
+    ra: "rebounds + assists",
+    pra: "points + rebounds + assists",
+  };
+
+  for (const [key, value] of Object.entries(replacements)) {
+    label = label.replace(
+      new RegExp(`\\b${key}\\b`, "gi"),
+      value
+    );
+  }
+
+  return label;
+}
+
+function formatOutcomeLabel(outcome) {
+  if (!outcome) return "";
+  return outcome.toLowerCase() === "over" ? "Over" : "Under";
+}
+
+
+/* =====================================================
+   PICKS + MANUAL ENTRY
+===================================================== */
+
+function lockManualEntry(cardEl) {
+  cardEl
+    .querySelectorAll("input.manual-input")
+    .forEach(i => i.disabled = true);
+
+  const submitBtn = cardEl.querySelector(".manual-submit-btn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.5";
+    submitBtn.style.cursor = "not-allowed";
+  }
+
+  const editBtn = cardEl.querySelector(".manual-edit-btn");
+  if (editBtn) editBtn.style.display = "inline-block";
+}
+
+function unlockManualEntry(cardEl) {
+  cardEl
+    .querySelectorAll("input.manual-input")
+    .forEach(i => i.disabled = false);
+    
+
+  const submitBtn = cardEl.querySelector(".manual-submit-btn");
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.style.cursor = "pointer";   // ✅ FIX
+    submitBtn.style.opacity = "1";         // ✅ FIX
+  }
+
+  const editBtn = cardEl.querySelector(".manual-edit-btn");
+  if (editBtn) editBtn.style.display = "none";
+}
+
+
+async function loadSlipPicks(slipId, bodyEl, slip) {
+  bodyEl.textContent = "Loading…";
+
+  try {
+    const token = await getAuthToken();
+    const res = await fetch(
+      `${window.API_BASE}/api/slip_picks/${slipId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+
+      const picks = Array.isArray(data)
+        ? data
+        : data?.picks || [];
+
+      if (!picks.length) {
+        throw new Error("No picks returned");
+      }
+
+
+    bodyEl.innerHTML = `
+      <!-- 💰 Slip Stake / Payout -->
+      <div class="slip-money">
+        <div class="money-field">
+          <label>Stake ($)</label>
+          <input type="number" step="0.01" class="slip-stake" placeholder="Optional" />
+        </div>
+
+        <div class="money-field">
+          <label>Payout ($)</label>
+          <input type="number" step="0.01" class="slip-payout" placeholder="Optional" />
+        </div>
+
+        <button class="save-money-btn tracker-btn">Save $</button>
+        <button class="edit-money-btn tracker-btn secondary" style="display:none;">
+          Edit $
+        </button>
+
+        <div class="money-status"></div>
+      </div>
+
+      <hr class="slip-divider" />
+
+      <div class="manual-entry-card" data-slip-id="${slipId}">
+        <h4>✍️ Manual Entry</h4>
+        <div class="manual-picks"></div>
+
+        <div class="manual-actions">
+          <button class="manual-submit-btn">Submit Manual Results</button>
+          <button class="manual-edit-btn" style="display:none;">Edit Manual Results</button>
+        </div>
+
+        <div class="manual-status"></div>
+      </div>
+      
+      <button class="delete-slip-btn" data-slip-id="${slipId}">
+    🗑 Delete
+    </button>
+
+
+
+    `;
+
+    /*/* ============================
+   💰 Money Wiring (FINAL)
+============================ */
+const stakeInput = bodyEl.querySelector(".slip-stake");
+const payoutInput = bodyEl.querySelector(".slip-payout");
+const saveBtn = bodyEl.querySelector(".save-money-btn");
+const editBtn = bodyEl.querySelector(".edit-money-btn");
+const moneyStatus = bodyEl.querySelector(".money-status");
+
+// ----------------------------
+// 🔒 Lock / Unlock helpers
+// ----------------------------
+function lockMoneyUI(message = "💵 Saved") {
+  stakeInput.disabled = true;
+  payoutInput.disabled = true;
+  saveBtn.disabled = true;
+  saveBtn.style.display = "none";
+  editBtn.style.display = "inline-block";
+  moneyStatus.textContent = message;
+}
+
+function unlockMoneyUI() {
+  stakeInput.disabled = false;
+  payoutInput.disabled = false;
+  saveBtn.disabled = false;
+  saveBtn.style.display = "inline-block";
+  editBtn.style.display = "none";
+  moneyStatus.textContent = "✏️ Editing enabled";
+}
+
+// 🧠 INITIAL MONEY STATE (SLIP-LEVEL SOURCE OF TRUTH)
+if (slip.stake !== null && slip.stake !== undefined) {
+  stakeInput.value = slip.stake;
+}
+
+if (slip.payout !== null && slip.payout !== undefined) {
+  payoutInput.value = slip.payout;
+}
+
+if (
+  slip.stake !== null &&
+  slip.stake !== undefined &&
+  slip.payout !== null &&
+  slip.payout !== undefined
+) {
+  lockMoneyUI();
+} else {
+  unlockMoneyUI();
+}
+
+
+
+// ----------------------------
+// 💾 Save money
+// ----------------------------
+saveBtn.addEventListener("click", async () => {
+  const stake =
+    stakeInput.value !== "" ? Number(stakeInput.value) : null;
+  const payout =
+    payoutInput.value !== "" ? Number(payoutInput.value) : null;
+
+  moneyStatus.textContent = "⏳ Saving…";
+
+  try {
+    const token = await getAuthToken();
+    const res = await fetch(
+      `${window.API_BASE}/api/slips/${slipId}/money`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ stake, payout })
+      }
+    );
+
+    if (!res.ok) throw new Error();
+
+    lockMoneyUI("✅ Saved");
+    loadAnalyticsSummary();
+
+  } catch {
+    moneyStatus.textContent = "❌ Failed to save";
+  }
+});
+
+// ----------------------------
+// ✏️ Edit money
+// ----------------------------
+editBtn.addEventListener("click", () => {
+  unlockMoneyUI();
+});
+
+
+    /* ============================
+       ✍️ Manual Picks Rendering
+    ============================ */
+    const card = bodyEl.querySelector(".manual-entry-card");
+    const container = card.querySelector(".manual-picks");
+    const statusEl = card.querySelector(".manual-status");
+
+    let hasManualData = false;
+
+    picks.forEach(p => {
+      if (p.manual_override || p.source === "manual") {
+        hasManualData = true;
+      }
+
+      container.insertAdjacentHTML("beforeend", `
+        <div class="manual-pick-row">
+          <div class="manual-pick-label">
+            <strong>${p.player}</strong>
+            — ${formatMarketLabel(p.market)}
+            <span class="pick-line">
+              (${formatOutcomeLabel(p.outcome)} ${p.line} • ${p.platform})
+            </span>
+          </div>
+
+          <input
+            type="number"
+            step="0.5"
+            class="manual-input"
+            data-pick-id="${p.pick_id}"
+            value="${p.manual_actual_value ?? p.actual_value ?? ""}"
+          />
+        </div>
+      `);
+    });
+
+    if (hasManualData) {
+      lockManualEntry(card);
+      statusEl.textContent = "✅ Manual results saved";
+   
+
+    }
+
+    card.querySelector(".manual-submit-btn")
+      .addEventListener("click", async () => {
+        const payload = {};
+        card.querySelectorAll(".manual-input").forEach(i => {
+          if (i.value !== "") payload[i.dataset.pickId] = i.value;
+        });
+
+        if (!Object.keys(payload).length) {
+          statusEl.textContent = "⚠️ Enter at least one value";
+          return;
+        }
+
+        try {
+          const token = await getAuthToken();
+          const res = await fetch(
+            `${window.API_BASE}/api/slips/${slipId}/manual_results`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify(payload)
+            }
+          );
+
+          if (!res.ok) throw new Error();
+
+          statusEl.textContent = "✅ Saved";
+          lockManualEntry(card);
+          setTimeout(loadPickTracker, 600);
+
+        } catch {
+          statusEl.textContent = "❌ Failed to submit";
+        }
+      });
+
+    card.querySelector(".manual-edit-btn")
+      .addEventListener("click", () => {
+        unlockManualEntry(card);
+        statusEl.textContent = "✏️ Editing enabled";
+      });
+
+    } catch (err) {
+    console.error("❌ loadSlipPicks failed:", err);
+   bodyEl.innerHTML = `
+     <span style="color:red">
+       Failed to load picks
+     </span>
+    `;
+  }
+
+}
+
+
+
+// =====================================================
+// 🧱 Render Slip Cards (SHARED)
+// =====================================================
+function renderPickTracker(slips) {
+  window.loadedSlips = slips;
+  const statusEl = document.getElementById("trackerStatus");
+  const list = document.getElementById("slipList");
+
+  statusEl.textContent = `Loaded ${slips.length} slips`;
+
+  if (!slips.length) {
+    list.innerHTML = `<div class="no-slips">No slips found.</div>`;
+    return;
+  }
+
+// ------------------------------------
+// Render HTML
+// ------------------------------------
+list.innerHTML = slips
+  .map(slip => {
+    const hasMoney =
+      slip.stake !== null &&
+      slip.stake !== undefined &&
+      slip.payout !== null &&
+      slip.payout !== undefined;
+
+    return `
+      <div class="slip-card" data-slip-id="${slip.slip_id}">
+        <div class="slip-header">
+          <div class="slip-title">
+            ${
+              slip.picks && slip.picks.length
+                ? buildSlipCardTitleFromPicks(slip.picks)
+                : `${slip.title || "Slip"}`
+            }
+            <span class="pick-count">(${slip.pick_count})</span>
+          </div>
+
+          <div class="slip-meta">
+            <span class="platform ${slip.platform}">
+              ${slip.platform}
+            </span>
+
+            <span class="result ${slip.slip_result || "pending"}">
+              ${(slip.slip_result || "pending").toUpperCase()}
+            </span>
+
+            ${
+              hasMoney
+                ? `<span class="money-badge success">💵 $ Added</span>`
+                : `<span class="money-badge warning">⚠️ Needs $ Values</span>`
+            }
+
+            ${
+              slip.slip_result === "pending"
+                ? `<span class="game-status" id="status-${slip.slip_id}">⏳</span>`
+                : ``
+            }
+
+            ${
+              slip.manual_required
+                ? `<span class="manual-required">Needs Manual Entry</span>`
+                : slip.slip_result === "pending"
+                  ? `<button class="grade-btn" data-slip-id="${slip.slip_id}">
+                       Grade
+                     </button>`
+                  : ""
+            }
+
+            <!-- 🗑 Delete Slip -->
+            <button
+              class="delete-slip-btn"
+              data-slip-id="${slip.slip_id}"
+              title="Delete slip"
+            >
+              🗑
+            </button>
+          </div>
+        </div>
+
+
+        <div class="slip-body" style="display:none;">
+          <!-- 💰 Money Inputs (Optional) -->
+          <div class="slip-money">
+            <div class="money-field">
+              <label>Stake ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                class="slip-stake"
+                placeholder="Optional"
+              />
+            </div>
+
+            <div class="money-field">
+              <label>Payout ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                class="slip-payout"
+                placeholder="Optional"
+              />
+            </div>
+
+            <button class="save-money-btn tracker-btn">
+              Save $
+            </button>
+
+            <button
+              class="edit-money-btn tracker-btn secondary"
+              style="display:none;"
+            >
+              Edit $
+            </button>
+
+            <div class="money-status"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  })
+  .join("");
+
+
+
+ 
+}
+
+
+
+/* =====================================================
+   LOAD SLIPS
+===================================================== */
+/* =====================================================
+   LOAD SLIPS (INITIAL PAGE LOAD)
+===================================================== */
+async function loadPickTracker() {
+  try {
+    const token = await getAuthToken();
+    const res = await fetch(
+      `${window.API_BASE}/api/slips`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!res.ok) throw new Error();
+    const { slips = [] } = await res.json();
+
+    renderPickTracker(slips); // ✅ shared renderer
+
+  } catch {
+    document.getElementById("trackerStatus").textContent =
+      "Error loading Pick Tracker";
+  }
+}
+
+
+/* =====================================================
+   DELEGATED EVENTS (FINAL, SAFE)
+===================================================== */
+document.addEventListener("click", async e => {
+  const gradeBtn = e.target.closest(".grade-btn");
+  const manualBtn = e.target.closest(".manual-submit-btn");
+  const header = e.target.closest(".slip-header");
+  const deleteBtn = e.target.closest(".delete-slip-btn");
+
+  /* =========================
+     🗑 Delete slip
+  ========================= */
+  if (deleteBtn) {
+    const slipId = deleteBtn.dataset.slipId;
+
+    if (!confirm("Delete this slip? This cannot be undone.")) return;
+
+    try {
+      const token = await getAuthToken();
+      const res = await fetch(
+        `${window.API_BASE}/api/slips/${slipId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (!res.ok) throw new Error();
+
+      // 🔄 HARD refresh state after delete
+      window.winBreakdown = null;
+      await loadPickTracker();
+      await loadAnalyticsSummary();
+
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Failed to delete slip");
+    }
+
+    return;
+  }
+
+  /* =========================
+     📂 Expand / collapse slip
+  ========================= */
+  if (header) {
+    const card = header.closest(".slip-card");
+    if (!card) return;
+
+    const slipId = card.dataset.slipId;
+    const body = card.querySelector(".slip-body");
+    if (!body) return;
+
+    let cardSlip = window.loadedSlips?.find(
+    s => s.slip_id === slipId
+  );
+
+  // 🔁 Fallback: build minimal slip from DOM if state missing
+  if (!cardSlip) {
+    cardSlip = {
+      slip_id: slipId,
+      stake: null,
+     payout: null
+   };
+  }
+
+
+    const open = body.style.display === "block";
+    body.style.display = open ? "none" : "block";
+
+    if (!open && !body.dataset.loaded) {
+      body.dataset.loaded = "true";
+      await loadSlipPicks(slipId, body, cardSlip);
+    }
+
+    return;
+  }
+});
+
+
+/* =====================================================
+   INIT
+===================================================== */
+
+
+(async () => {
+  await initAuthToken();
+
+  // Load analytics WITHOUT blocking slips
+  loadAnalyticsSummary().catch(err =>
+    console.warn("Analytics failed (non-blocking):", err)
+  );
+
+  // Always load slips
+  await loadPickTracker();
+})();
+
+
+
+</script>

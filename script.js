@@ -49,10 +49,326 @@ console.log(
   "color:green;font-weight:bold;"
 );
 
+// ===================================================
+// 📌 Pick Tracker — Core State (NO UI)
+// ===================================================
+
+/**
+ * Global Pick Tracker state
+ * - platform: active platform for slip building
+ * - selections: Map<key, pickData>
+ */
+window.pickTracker = {
+  platform: "prizepicks", // default
+  selections: new Map()
+};
 
 // ===================================================
 // 🎮 Sports Odds Dashboard — Full Fixed Script
 // ===================================================
+
+/**
+ * Determine outcome (over / under) from model best no-vig side
+ */
+function getOutcomeFromRow(row) {
+  if (row.BestNoVigSide) {
+    return row.BestNoVigSide.toLowerCase(); // "over" | "under"
+  }
+
+  // Fallback: try older fields if present
+  if (row.Outcome) {
+    return row.Outcome.toLowerCase();
+  }
+
+  // Final fallback (should be rare)
+  return "over";
+}
+
+function formatSportLabel(sport) {
+  const map = {
+    nba: "🏀 NBA",
+    nfl: "🏈 NFL",
+    mlb: "⚾ MLB",
+    nhl: "🏒 NHL",
+    ncaab: "🏀 NCAAB",
+    ncaaf: "🏈 NCAAF"
+  };
+  return map[sport] || sport?.toUpperCase() || "Sport";
+}
+
+function formatDateLabel(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function buildSlipCardTitleFromPicks(picks = []) {
+  if (!picks.length) return "Slip";
+
+  const sports = [...new Set(picks.map(p => p.sport).filter(Boolean))];
+  const events = [...new Set(picks.map(p => p.event).filter(Boolean))];
+  const dates  = [...new Set(picks.map(p => p.game_date).filter(Boolean))];
+
+  const sportLabel =
+    sports.length === 1 ? formatSportLabel(sports[0]) : "🏆 Multi-Sport";
+
+  const eventLabel =
+    events.length === 1 ? events[0] : `${events.length} Games`;
+
+  const dateLabel =
+    dates.length === 1 ? formatDateLabel(dates[0]) : "Multiple Dates";
+
+  return `${sportLabel} · ${eventLabel} · ${dateLabel}`;
+}
+
+
+
+
+/**
+ * Generate a stable unique key for a pick
+ * (used for both table rows & card views)
+ */
+function getPickTrackerKey(pick) {
+  return [
+    pick.event,
+    pick.player,
+    pick.market,
+    pick.outcome,     // ✅ distinguish Over vs Under
+    pick.line,        // ✅ distinguish different lines
+    pick.platform
+  ].join("|");
+}
+
+function isPickSelected(pick) {
+  const key = getPickTrackerKey(pick);
+  return window.pickTracker.selections.has(key);
+}
+
+
+
+/**
+ * Toggle a pick in the tracker
+ * This function has NO DOM or API side effects
+ */
+function togglePickTrackerSelection(pick) {
+  const tracker = window.pickTracker;
+  const key = getPickTrackerKey(pick);
+
+  if (tracker.selections.has(key)) {
+    tracker.selections.delete(key);
+    console.log("➖ Pick removed from tracker:", key);
+  } else {
+    tracker.selections.set(key, pick);
+    console.log("➕ Pick added to tracker:", key);
+  }
+
+  console.log(
+    `📊 Tracker: ${tracker.selections.size} pick(s) selected`
+  );
+}
+
+/**
+ * Clear all tracker selections
+ */
+function clearPickTrackerSelections() {
+  window.pickTracker.selections.clear();
+  console.log("♻️ Pick Tracker cleared");
+}
+
+/**
+ * Set active Pick Tracker platform
+ * (does NOT affect filters or analytics)
+ */
+function setPickTrackerPlatform(platform) {
+  if (!["prizepicks", "underdog"].includes(platform)) return;
+
+  window.pickTracker.platform = platform;
+  console.log("🎯 Pick Tracker platform set:", platform);
+
+  const prizeBtn = document.getElementById("pickTrackerPrizePicksBtn");
+  const dogBtn = document.getElementById("pickTrackerUnderdogBtn");
+
+  if (!prizeBtn || !dogBtn) return;
+
+  // 🔴 RESET BOTH (neutral)
+  prizeBtn.style.background = "#e0e0e0";
+  prizeBtn.style.color = "#333";
+  prizeBtn.style.boxShadow = "none";
+
+  dogBtn.style.background = "#e0e0e0";
+  dogBtn.style.color = "#333";
+  dogBtn.style.boxShadow = "none";
+
+  // 🟢 ACTIVATE SELECTED
+  if (platform === "prizepicks") {
+    prizeBtn.style.background =
+      "linear-gradient(135deg, #28a745, #1e7e34)";
+    prizeBtn.style.color = "#fff";
+    prizeBtn.style.boxShadow = "0 0 10px rgba(40,167,69,0.6)";
+  } else {
+    dogBtn.style.background =
+      "linear-gradient(135deg, #007bff, #0056b3)";
+    dogBtn.style.color = "#fff";
+    dogBtn.style.boxShadow = "0 0 10px rgba(0,123,255,0.6)";
+  }
+
+  updatePickTrackerBarUI();
+}
+
+
+function bindCardPlatformToggles() {
+  const container = document.getElementById("cardViewContent");
+  if (!container) return;
+
+  container.querySelectorAll(".platform-row").forEach(row => {
+    row.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      const platform = row.dataset.platform;
+      if (!platform) return;
+
+      setPickTrackerPlatform(platform);
+      updateCardPlatformHighlights();
+    });
+  });
+}
+
+function bindCardPlatformToggles() {
+  const container = document.getElementById("cardViewContent");
+  if (!container) return;
+
+  container.querySelectorAll(".platform-row").forEach(row => {
+    row.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      const platform = row.dataset.platform;
+      if (!platform) return;
+
+      setPickTrackerPlatform(platform);
+      updateCardPlatformHighlights();
+    });
+  });
+}
+
+function updateCardPlatformHighlights() {
+  const container = document.getElementById("cardViewContent");
+  if (!container) return;
+
+  const active = window.pickTracker.platform;
+
+  container.querySelectorAll(".platform-row").forEach(row => {
+    const rowPlatform = row.dataset.platform;
+    row.classList.toggle(
+      "active-platform",
+      rowPlatform === active
+    );
+  });
+}
+
+// ===================================================
+// 📦 Pick Tracker — Bottom Bar UI
+// ===================================================
+function updatePickTrackerBarUI() {
+  const bar = document.getElementById("pickTrackerBar");
+  const countEl = document.getElementById("trackerPickCount");
+  const platformEl = document.getElementById("trackerPlatformLabel");
+  const saveBtn = document.getElementById("trackerSaveBtn");
+
+  if (!bar || !countEl || !platformEl) return;
+
+  const count = window.pickTracker.selections.size;
+  const platform = window.pickTracker.platform;
+
+  if (count === 0) {
+    bar.classList.add("hidden");
+    if (saveBtn) saveBtn.disabled = true;
+    return;
+  }
+
+  bar.classList.remove("hidden");
+
+  platformEl.textContent =
+    platform === "underdog" ? "Underdog" : "PrizePicks";
+
+  countEl.textContent =
+    `${count} pick${count !== 1 ? "s" : ""} selected`;
+
+  if (saveBtn) saveBtn.disabled = false;
+}
+
+
+
+// ===================================================
+// 💾 Pick Tracker — Save Slip
+// ===================================================
+
+
+async function savePickTrackerSlip() {
+  const picks = Array.from(window.pickTracker.selections.values());
+
+  if (!picks.length) {
+    alert("No picks selected.");
+    return;
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session || !session.access_token) {
+      alert("Please sign in to save slips.");
+      return;
+    }
+
+    const payload = {
+      platform: window.pickTracker.platform,
+      title: `${window.pickTracker.platform === "underdog" ? "Underdog" : "PrizePicks"} slip (${picks.length} picks)`,
+      picks: picks.map(p => ({
+        sport: p.sport,
+        event: p.event,
+        game_date: p.game_date,
+        player: p.player,
+        market: p.market,
+        outcome: p.outcome,
+        line: Number(p.line)
+      }))
+    };
+
+    console.log("📤 Saving slip payload:", payload);
+
+    const res = await fetch(`${window.API_BASE}/api/slips`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || "Failed to save slip");
+    }
+
+    const data = await res.json();
+    console.log("✅ Slip saved:", data);
+
+    clearPickTrackerSelections();
+    updatePickTrackerBarUI();
+
+    alert("✅ Slip saved to Pick Tracker!");
+
+  } catch (err) {
+    console.error("❌ Save slip failed:", err);
+    alert("Failed to save slip. See console for details.");
+  }
+}
+
+
+
 
 // ----------------------------
 // Global Constants
@@ -60,7 +376,6 @@ console.log(
 const API_BASE = window.API_BASE || "https://bentherebetthat-api.onrender.com";
 const SUPABASE_URL = "https://pkvkezbakcvrhygowogx.supabase.co";
 const SUPABASE_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdmtlemJha2N2cmh5Z293b2d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NjIzMDQsImV4cCI6MjA3NjEzODMwNH0.6C4WQvS8I2slGc7vfftqU7vOkIsryfY7-xwHa7uZj_g";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ----------------------------
 // Element References
@@ -86,6 +401,24 @@ const loadDataBtn = document.getElementById("loadData");
 const stopBtn = document.getElementById("stopBtn");
 const refreshBtn = document.getElementById("refreshBtn");
 const loadingDiv = document.getElementById("loading");
+
+let sb = null;
+
+if (window.supabase && typeof window.supabase.createClient === "function") {
+  supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+  window.supabaseClient = supabase; // optional but useful
+  console.log("🔑 Supabase initialized in script.js");
+} else {
+  console.warn(
+    "⚠️ Supabase library not loaded yet — skipping init in script.js"
+  );
+}
+
+
+
 // ============================================================
 // 🚦 Temporary Button Lock (before login/subscription check)
 // ============================================================
@@ -654,7 +987,10 @@ function extractTeams(eventStr) {
 // 📇 Helper: build a sorted list for Tap-to-Card view
 // ===================================================
 function getSortedCardRows(baseData) {
-  if (!Array.isArray(baseData)) return [];
+  // 🚫 HARD STOP — no data means NO card rows
+  if (!Array.isArray(baseData) || baseData.length === 0) {
+    return [];
+  }
 
   const key = window.activeOptimalFilter || null;
 
@@ -668,6 +1004,7 @@ function getSortedCardRows(baseData) {
     return Number.isFinite(n) ? Math.abs(n) : 0;
   }
 
+  // ✅ Work on a copy only
   const rows = baseData.slice();
 
   rows.sort((a, b) => {
@@ -706,13 +1043,11 @@ function getSortedCardRows(baseData) {
         return nvB - nvA;
 
       // ---------------------------------------------------
-      // ⭐ DFS Line Difference (>2) 
+      // ⭐ DFS Line Difference (>2)
       //     → largest absolute PP/UD difference
       // ---------------------------------------------------
       case "dfs":
-        const dfsA = Math.max(abs(ppA), abs(udA));
-        const dfsB = Math.max(abs(ppB), abs(udB));
-        return dfsB - dfsA;
+        return Math.max(abs(ppB), abs(udB)) - Math.max(abs(ppA), abs(udA));
 
       // ---------------------------------------------------
       // ⭐ Default Sort → blended edge + EV boost
@@ -728,6 +1063,7 @@ function getSortedCardRows(baseData) {
 
   return rows;
 }
+
 
 
 
@@ -2207,11 +2543,51 @@ for (let i = 0; i < data.length; i += batchSize) {
   batch.forEach((row) => {
     const tr = document.createElement("tr");
 
-    // --- Compute consensus values for this row ---
-    row.ConsensusPoint = getConsensusPoint(row);
-    row.ConsensusPrice = getConsensusPrice(row);
-    const consensusPoint = row.ConsensusPoint;
-    const consensusPrice = row.ConsensusPrice;
+    // -----------------------------------
+// 📌 Build pick object ONCE per row
+// -----------------------------------
+const pick = {
+  sport: selectedSport,
+  event: row.Event,
+  game_date: dateInput?.value || null,
+  player: row.Description,
+  market: row.Market,
+  outcome: getOutcomeFromRow(row),
+  line: Number(
+    window.pickTracker.platform === "underdog"
+      ? (row.UnderdogPoint ?? row.PrizePickPoint ?? row.ConsensusPoint)
+      : (row.PrizePickPoint ?? row.ConsensusPoint ?? row.UnderdogPoint)
+  ),
+  platform: window.pickTracker.platform
+};
+
+const pickKey = getPickTrackerKey(pick);
+tr.dataset.pickKey = pickKey;
+
+
+// -----------------------------------
+// 🖱️ Row click → toggle + highlight
+// -----------------------------------
+tr.addEventListener("click", () => {
+  togglePickTrackerSelection(pick);
+
+  const isSelected =
+    window.pickTracker.selections.has(pickKey);
+
+  tr.classList.toggle("tracker-selected", isSelected);
+});
+
+
+
+
+// --- Compute consensus values for this row ---
+row.ConsensusPoint = getConsensusPoint(row);
+row.ConsensusPrice = getConsensusPrice(row);
+const consensusPoint = row.ConsensusPoint;
+const consensusPrice = row.ConsensusPrice;
+
+
+
 
     // --- Render each cell ---
     activeColumns.forEach((col) => {
@@ -2773,12 +3149,11 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
   if (!btn) return;
 
   btn.addEventListener("click", () => {
-    const base =
-      Array.isArray(window.fullDataset) && window.fullDataset.length
-        ? window.fullDataset
-        : Array.isArray(window.lastRenderedData)
-        ? window.lastRenderedData
-        : [];
+      // 🔑 Base must reflect what is currently shown in the table
+    const base = Array.isArray(window.lastRenderedData)
+  ? window.lastRenderedData
+  : [];
+
 
     let filtered = [];
 
@@ -2856,11 +3231,12 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
         console.log(
           `✅ Applied filter "${key}" → ${filtered.length}/${base.length} rows`
         );
+        
       } else {
         console.log(
           `⚠️ Filter "${key}" → 0 results (showing no-results message)`
         );
-
+        window.lastRenderedData = [];
         resultsDiv.innerHTML = `
           <div class="no-results-message fade-in">
             <p>⚠️ No props matched your filters.</p>
@@ -3322,6 +3698,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const supportModal = document.getElementById("supportModal");
   const closeSupportModal = document.getElementById("closeSupportModal");
   const emailSupportBtn = document.getElementById("emailSupportBtn");
+  // ===================================================
+// 🎯 Pick Tracker — Platform Buttons (NEW)
+// ===================================================
+const ppTrackerBtn = document.getElementById("pickTrackerPrizePicksBtn");
+const udTrackerBtn = document.getElementById("pickTrackerUnderdogBtn");
+
+if (ppTrackerBtn && udTrackerBtn) {
+  ppTrackerBtn.addEventListener("click", () => {
+    setPickTrackerPlatform("prizepicks");
+
+    ppTrackerBtn.classList.add("active");
+    udTrackerBtn.classList.remove("active");
+
+    console.log("🎯 Pick Tracker platform → PrizePicks");
+  });
+
+  udTrackerBtn.addEventListener("click", () => {
+    setPickTrackerPlatform("underdog");
+
+    udTrackerBtn.classList.add("active");
+    ppTrackerBtn.classList.remove("active");
+
+    console.log("🎯 Pick Tracker platform → Underdog");
+  });
+}
+
 
   if (!supportBtn || !supportModal) {
     console.warn("⚠️ Support elements not found in DOM.");
@@ -3453,87 +3855,165 @@ function buildPickCardHtml(row) {
   const evLabelText = bestSideLabel
     ? `Model leans ${bestSideLabel}${Number.isFinite(noVig) ? ` · ${noVig.toFixed(1)}%` : ""}`
     : (Number.isFinite(noVig) ? `Model edge · ${noVig.toFixed(1)}%` : "Model edge");
+// ====================================
+// 🧩 FINAL HTML
+// ====================================
+return `
+  <article class="pro-pick-card">
 
-  // ====================================
-  // 🧩 FINAL HTML
-  // ====================================
+    <header class="pro-card-hero">
 
+      <!-- Player + Event Details -->
+      <div class="pro-card-header-text">
+        <div class="pro-card-player-name">${desc}</div>
+        <div class="pro-card-event">${event}</div>
+        <div class="pro-card-market">${market}</div>
+      </div>
 
-  return `
-    <article class="pro-pick-card">
-      <header class="pro-card-hero">
+      <!-- ⭐ TEAM LOGOS -->
+      <div class="pro-card-team-logos">
+        ${
+          homeLogoUrl
+            ? `<img 
+                 src="${homeLogoUrl}" 
+                 alt="${homeTeam} logo"
+                 class="pro-card-team-logo card-img-fade"
+                 loading="lazy"
+                 onload="this.classList.add('loaded')"
+               />`
+            : ""
+        }
+        ${
+          awayLogoUrl
+            ? `<img 
+                 src="${awayLogoUrl}" 
+                 alt="${awayTeam} logo"
+                 class="pro-card-team-logo card-img-fade"
+                 loading="lazy"
+                 onload="this.classList.add('loaded')"
+               />`
+            : ""
+        }
+      </div>
 
-        <!-- Player + Event Details -->
-        <div class="pro-card-header-text">
-          <div class="pro-card-player-name">${desc}</div>
-          <div class="pro-card-event">${event}</div>
-          <div class="pro-card-market">${market}</div>
-        </div>
+    </header>
 
-        <!-- ⭐ TEAM LOGOS -->
-<div class="pro-card-team-logos">
-  ${
-    homeLogoUrl
-      ? `<img 
-           src="${homeLogoUrl}" 
-           alt="${homeTeam} logo"
-           class="pro-card-team-logo card-img-fade"
-           loading="lazy"
-           onload="this.classList.add('loaded'); console.log('✅ Logo loaded:', this.src)"
-           onerror="console.error('❌ Logo FAILED to load:', this.src)"
-         />`
-      : ""
-  }
-  ${
-    awayLogoUrl
-      ? `<img 
-           src="${awayLogoUrl}" 
-           alt="${awayTeam} logo"
-           class="pro-card-team-logo card-img-fade"
-           loading="lazy"
-           onload="this.classList.add('loaded'); console.log('✅ Logo loaded:', this.src)"
-           onerror="console.error('❌ Logo FAILED to load:', this.src)"
-         />`
-      : ""
-  }
-</div>
+    <!-- EV Row -->
+    <section class="pro-card-ev-row">
+      <div class="pro-ev-label"><strong>${evLabelText}</strong></div>
+      <div class="pro-ev-bar-shell">
+        <div class="pro-ev-bar-fill ${evSideClass}" style="width: ${evPct}%;"></div>
+      </div>
+    </section>
 
-      </header>
+    <!-- Metrics -->
+    <section class="pro-card-metrics">
 
-      <!-- EV Row -->
-      <section class="pro-card-ev-row">
-        <div class="pro-ev-label"><strong>${evLabelText}</strong></div>
-        <div class="pro-ev-bar-shell">
-          <div class="pro-ev-bar-fill ${evSideClass}" style="width: ${evPct}%;"></div>
-        </div>
-      </section>
+      <div class="pro-card-metric-row">
+        <span class="pro-metric-label">Consensus</span>
+        <span class="pro-metric-value">${consStr}</span>
+        <span class="pro-metric-delta">
+          <span class="${novigBadgeClasses}">${novigLabel}</span>
+        </span>
+      </div>
 
-      <!-- Metrics -->
-      <section class="pro-card-metrics">
-        <div class="pro-card-metric-row">
-          <span class="pro-metric-label">Consensus</span>
-          <span class="pro-metric-value">${consStr}</span>
-          <span class="pro-metric-delta">
-            <span class="${novigBadgeClasses}">${novigLabel}</span>
-          </span>
-        </div>
+      <!-- PrizePicks (default highlighted) -->
+      <div
+        class="pro-card-metric-row platform-row prizepicks active-platform"
+        data-platform="prizepicks"
+      >
+        <span class="pro-metric-label">PrizePicks</span>
+        <span class="pro-metric-value">${ppLineStr}</span>
+        <span class="pro-metric-delta ${ppDeltaClass}">${ppDiffStr}</span>
+      </div>
 
-        <div class="pro-card-metric-row">
-          <span class="pro-metric-label">PrizePicks</span>
-          <span class="pro-metric-value">${ppLineStr}</span>
-          <span class="pro-metric-delta ${ppDeltaClass}">${ppDiffStr}</span>
-        </div>
+      <!-- Underdog -->
+      <div
+        class="pro-card-metric-row platform-row underdog"
+        data-platform="underdog"
+      >
+        <span class="pro-metric-label">Underdog</span>
+        <span class="pro-metric-value">${udLineStr}</span>
+        <span class="pro-metric-delta ${udDeltaClass}">${udDiffStr}</span>
+      </div>
 
-        <div class="pro-card-metric-row">
-          <span class="pro-metric-label">Underdog</span>
-          <span class="pro-metric-value">${udLineStr}</span>
-          <span class="pro-metric-delta ${udDeltaClass}">${udDiffStr}</span>
-        </div>
-      </section>
+    </section>
 
-      ${mismatchText ? `<footer class="pro-card-footnote">${mismatchText}</footer>` : ""}
-    </article>
-  `;
+    ${mismatchText ? `<footer class="pro-card-footnote">${mismatchText}</footer>` : ""}
+
+    <!-- Pick Tracker Button -->
+    <button
+      class="tap-pick-btn"
+      data-event="${row.Event}"
+      data-player="${row.Description}"
+      data-market="${row.Market}"
+    >
+      ➕ Add to Pick Tracker
+    </button>
+
+  </article>
+`;
+
+}
+// ===================================================
+// 🧠 Deduplicate card rows — prefer model-lean rows
+// ===================================================
+function dedupeCardRowsPreferModel(rows) {
+  const map = new Map();
+
+  rows.forEach(row => {
+    const key = [
+      row.Event,
+      row.Description,
+      row.Market
+    ].join("|").toLowerCase();
+
+    const hasModelLean =
+      row.BestNoVigSide &&
+      row.BestNoVigSide !== "" &&
+      Number.isFinite(row.NoVigWinProb);
+
+    if (!map.has(key)) {
+      map.set(key, row);
+      return;
+    }
+
+    const existing = map.get(key);
+    const existingHasLean =
+      existing.BestNoVigSide &&
+      existing.BestNoVigSide !== "" &&
+      Number.isFinite(existing.NoVigWinProb);
+
+    // ✅ Prefer rows WITH model lean
+    if (hasModelLean && !existingHasLean) {
+      map.set(key, row);
+    }
+  });
+
+  return Array.from(map.values());
+}
+
+// ===================================================
+// 🎨 Sync platform highlight inside card modal
+// ===================================================
+function syncCardPlatformHighlight() {
+  const content = document.getElementById("cardViewContent");
+  if (!content) return;
+
+  const activePlatform = window.pickTracker.platform || "prizepicks";
+
+  content.querySelectorAll(".platform-row").forEach(row => {
+    row.classList.remove("active-platform", "underdog-active");
+  });
+
+  content
+    .querySelectorAll(`.platform-row.${activePlatform}`)
+    .forEach(row => {
+      row.classList.add("active-platform");
+      if (activePlatform === "underdog") {
+        row.classList.add("underdog-active");
+      }
+    });
 }
 
 
@@ -3547,10 +4027,24 @@ function renderCardViewModal() {
 
   if (!modal || !content) return;
 
-  const base =
-    (Array.isArray(window.lastRenderedData) && window.lastRenderedData.length)
+  // 🚫 DO NOT FALL BACK when filters return zero rows
+    const base = Array.isArray(window.lastRenderedData)
       ? window.lastRenderedData
-      : (Array.isArray(window.fullDataset) ? window.fullDataset : []);
+      : [];
+
+      if (!base.length) {
+  content.innerHTML = `
+    <div style="padding:24px;text-align:center;color:#666;">
+      ⚠️ No props matched your filters.
+    </div>
+  `;
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  if (closeBtn) closeBtn.classList.remove("hidden");
+  return;
+}
+
+
 
   if (!base.length) {
     content.innerHTML = `<p>No data available. Load a sport + markets first.</p>`;
@@ -3560,10 +4054,105 @@ function renderCardViewModal() {
     return;
   }
 
-  const sortedRows = getSortedCardRows(base);
-  const topN = sortedRows.slice(0, 40);
+  // 🧠 Sort first
+const sortedRows = getSortedCardRows(base);
+
+// 🧹 Deduplicate — keep only model-lean cards
+const dedupedRows = dedupeCardRowsPreferModel(sortedRows);
+
+// ✂️ Limit cards
+const topN = dedupedRows.slice(0, 40);
+
 
   content.innerHTML = topN.map(buildPickCardHtml).join("");
+
+  bindCardPlatformToggles();
+  updateCardPlatformHighlights(); // ⭐ default PrizePicks highlight
+
+
+// ===================================================
+// 🎨 Sync platform highlight inside card modal
+// ===================================================
+function syncCardPlatformHighlight() {
+  const content = document.getElementById("cardViewContent");
+  if (!content) return;
+
+  const activePlatform = window.pickTracker.platform || "prizepicks";
+
+  content.querySelectorAll(".platform-row").forEach(row => {
+    row.classList.remove("active-platform", "underdog-active");
+  });
+
+  content
+    .querySelectorAll(`.platform-row.${activePlatform}`)
+    .forEach(row => {
+      row.classList.add("active-platform");
+      if (activePlatform === "underdog") {
+        row.classList.add("underdog-active");
+      }
+    });
+}
+
+
+  // ===================================================
+// 🎨 Highlight active platform in cards (default)
+// ===================================================
+const activePlatform = window.pickTracker.platform || "prizepicks";
+
+content.querySelectorAll(".platform-row").forEach(row => {
+  row.classList.remove("active-platform", "underdog");
+});
+
+content.querySelectorAll(`.platform-row.${activePlatform}`).forEach(row => {
+  row.classList.add("active-platform");
+  if (activePlatform === "underdog") {
+    row.classList.add("underdog");
+  }
+});
+
+
+  // ===================================================
+// 🧠 Wire Pick Tracker buttons inside Tap-to-Card view
+// ===================================================
+
+const pickButtons = content.querySelectorAll(".tap-pick-btn");
+
+pickButtons.forEach((btn, index) => {
+  const row = topN[index]; // aligns with rendered order
+
+  const pick = {
+    sport: selectedSport,
+    event: row.Event,
+    game_date: dateInput?.value || null,
+    player: row.Description,
+    market: row.Market,
+    outcome: getOutcomeFromRow(row),
+    line: Number(
+      window.pickTracker.platform === "underdog"
+        ? (row.UnderdogPoint ?? row.PrizePickPoint ?? row.ConsensusPoint)
+        : (row.PrizePickPoint ?? row.ConsensusPoint ?? row.UnderdogPoint)
+    ),
+    platform: window.pickTracker.platform
+  };
+
+  const pickKey = getPickTrackerKey(pick);
+
+  function syncButtonState() {
+    const selected = window.pickTracker.selections.has(pickKey);
+    btn.textContent = selected ? "✔ Picked" : "➕ Add to Pick Tracker";
+    btn.classList.toggle("picked", selected);
+  }
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation(); // prevents modal click issues
+    togglePickTrackerSelection(pick);
+    syncButtonState();
+  });
+
+  // Initial state (important when reopening modal)
+  syncButtonState();
+});
+
 
   // Show modal
   modal.classList.remove("hidden");
@@ -3574,6 +4163,11 @@ function renderCardViewModal() {
     closeBtn.classList.remove("hidden");
   }
 }
+
+
+
+
+
 
 // ===================================================
 // ❌ Close the modal
@@ -3667,3 +4261,41 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("⚠️ lastRenderedData not yet populated — data may not have loaded.");
   }
 });
+
+// ===================================================
+// 🎯 Pick Tracker Platform Button Wiring (STEP 3)
+// ===================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const prizeBtn = document.getElementById("pickTrackerPrizePicksBtn");
+  const dogBtn = document.getElementById("pickTrackerUnderdogBtn");
+
+  if (!prizeBtn || !dogBtn) {
+    console.warn("⚠️ Pick Tracker platform buttons not found");
+    return;
+  }
+
+  prizeBtn.addEventListener("click", () => {
+    setPickTrackerPlatform("prizepicks");
+  });
+
+  dogBtn.addEventListener("click", () => {
+    setPickTrackerPlatform("underdog");
+  });
+
+  // Initial visual + state sync
+  setPickTrackerPlatform(
+    window.pickTracker?.platform || "prizepicks"
+  );
+});
+
+
+// ===================================================
+// PICK TRACKER LOGIC
+// ===================================================
+
+const trackerBtn = document.getElementById("openPickTrackerBtn");
+if (trackerBtn) {
+  trackerBtn.addEventListener("click", () => {
+    window.location.href = "pick-tracker.html";
+  });
+}

@@ -3377,3 +3377,1388 @@ body.auth-mode {
   }
 }
 
+
+/* ===================================================
+   📱Tracking Page CSS
+=================================================== */
+.slip-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+
+
+.slip-meta {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.slip-body {
+  margin-top: 10px;
+  display: none;
+}
+
+.slip-body.open {
+  display: block;
+}
+
+.result-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85em;
+}
+
+.result-pending { background: #eee; }
+.result-win { background: #c8f7c5; }
+.result-loss { background: #f7c5c5; }
+
+.pick-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1fr 0.8fr;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.pick-row:last-child {
+  border-bottom: none;
+}
+
+.pick-player {
+  font-weight: 600;
+}
+
+.pick-market {
+  text-transform: capitalize;
+  color: #555;
+}
+
+.pick-result.win { color: green; }
+.pick-result.loss { color: red; }
+.pick-result.pending { color: gray; }
+
+/* =========================
+   Pick Tracker Styling
+========================= */
+
+.pick-row {
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 1fr 1fr;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.pick-row.win {
+  background: #e7f7ec;
+  color: #1f7a3d;
+}
+
+.pick-row.loss {
+  background: #fdeaea;
+  color: #a83232;
+}
+
+.pick-row.pending {
+  background: #f8f9fa;
+  color: #555;
+}
+
+.pick-player {
+  font-weight: 600;
+}
+
+.pick-market {
+  color: #666;
+}
+
+.pick-line {
+  text-transform: lowercase;
+}
+
+.pick-result {
+  text-align: right;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.slip-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.slip-header {
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slip-header:hover {
+  background: #f6f7f9;
+}
+
+.slip-title {
+  font-weight: 600;
+}
+
+.slip-meta span {
+  margin-left: 8px;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.slip-meta .pending {
+  background: #eee;
+}
+
+.slip-meta .win {
+  background: #c7f3d4;
+  color: #1f7a3d;
+}
+
+.slip-meta .loss {
+  background: #f7c6c6;
+  color: #8a1f1f;
+}
+
+@media (max-width: 600px) {
+  .pick-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .pick-result {
+    text-align: left;
+  }
+}
+
+.slip-subtitle {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
+}
+
+/* =========================
+   Pick Result Icons
+========================= */
+
+.pick-result {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.pick-row.win .pick-result {
+  color: #1f7a3d;
+}
+
+.pick-row.loss .pick-result {
+  color: #a83232;
+}
+
+.pick-row.pending .pick-result {
+  color: #999;
+}
+.pick-row {
+  align-items: center;
+}
+
+.grade-slip-btn {
+  margin-left: 12px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #f8f9fa;
+  cursor: pointer;
+}
+
+.grade-slip-btn:hover {
+  background: #eaecef;
+}
+
+.grade-slip-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.grade-btn.graded {
+  background: #4caf50;
+  color: white;
+  cursor: default;
+}
+
+.manual-required {
+  margin-left: 8px;
+  padding: 4px 8px;
+  background: #ff9800;
+  color: #000;
+  font-size: 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.manual-required {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.game-status {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.game-status.live {
+  color: orange;
+}
+
+.game-status.final {
+  color: green;
+}
+
+.game-status.pre {
+  color: gray;
+}
+
+.game-status.live {
+  color: red;
+  font-weight: bold;
+}
+
+.game-status.final {
+  color: green;
+}
+
+.game-status.scheduled {
+  color: #888;
+}
+
+.manual-entry-card {
+  border: 2px dashed #ccc;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.manual-entry-card input:disabled {
+  background-color: #eee;
+  color: #777;
+}
+
+.manual-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.manual-edit-btn {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.pick-line {
+  font-size: 0.85rem;
+  color: #666;
+  margin-left: 6px;
+}
+
+.manual-pick-label {
+  margin-bottom: 4px;
+}
+
+.analytics-card {
+  background: #111;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.analytics-card h3 {
+  margin: 0 0 12px 0;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.stat {
+  background: #1a1a1a;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.stat-sub {
+  font-size: 0.9rem;
+  margin-top: 6px;
+  color: #ddd;
+}
+
+/* =====================================
+   Tracker Button Row
+===================================== */
+.tracker-button-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tracker-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.tracker-btn.primary {
+  background: #0d6efd;
+}
+
+/* =====================================
+   Analytics Modal
+===================================== */
+/* ===============================
+   Analytics Modal
+================================ */
+
+.analytics-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.analytics-modal.hidden {
+  display: none;
+}
+
+.analytics-modal-content {
+  background: #111;
+  padding: 20px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.analytics-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* ===============================
+   Tabs
+================================ */
+
+.analytics-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.analytics-tab {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.analytics-tab.active {
+  background: #0d6efd;
+}
+
+/* ===============================
+   Panels (CRITICAL)
+================================ */
+
+.analytics-panel {
+  display: none;
+  width: 100%;
+  min-height: 420px;
+}
+
+.analytics-panel.active {
+  display: block;
+}
+
+/* ===============================
+   Charts
+================================ */
+
+.chart-card {
+  flex: 1;
+  min-width: 300px;
+  background: #1a1a1a;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pie-chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 360px;
+}
+
+.pie-chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.trend-chart-wrapper {
+  height: 380px;          /* ⬆️ more vertical space */
+  width: 100%;
+  padding-bottom: 24px;
+  position: relative;
+}
+
+.trend-chart-wrapper canvas {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.chart-card {
+  min-height: 460px;   /* ensures no compression */
+}
+
+
+
+/* Hide all analytics panels by default */
+.analytics-panel {
+  display: none;
+}
+
+/* Only show the active one */
+.analytics-panel.active {
+  display: block;
+}
+.pie-chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 360px; /* REQUIRED */
+}
+
+.pie-chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===============================
+   Performance Summary — FORCE WHITE
+================================= */
+
+.performance-card,
+.performance-card * {
+  color: #ffffff !important;
+}
+
+.performance-card h3,
+.performance-card .stat-label {
+  color: #eaeaea !important;
+}
+
+.performance-card .stat-value {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.performance-card .pending-text {
+  color: #ff4d4f !important;
+  font-weight: 700;
+}
+/* =========================================
+   🔥 FINAL TEXT VISIBILITY FIX (SAFE)
+========================================= */
+
+/* High-level analytics card */
+.analytics-card {
+  color: #ffffff !important;
+}
+
+/* Card title */
+.analytics-card h3 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Labels (Slip Win %, Pick Win %, etc.) */
+.analytics-card .stat-label {
+  color: #eaeaea !important;
+  opacity: 1 !important;
+}
+
+/* Main values (54.3%, 30%, etc.) */
+.analytics-card .stat-value {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 700;
+}
+
+/* Sub text (W/L counts) */
+.analytics-card .stat-sub {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Pending / ungraded text stays red */
+.analytics-card .pending-text {
+  color: #ff4d4f !important;
+  opacity: 1 !important;
+}
+/* =========================================
+   Analytics Modal Title — FORCE WHITE
+========================================= */
+
+.analytics-modal h2,
+.analytics-modal h3 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 768px) {
+  .trend-chart-wrapper {
+    height: 300px;   /* smaller but readable */
+  }
+
+  .chart-card {
+    min-height: 340px;
+  }
+}
+
+.analytics-tab {
+  min-height: 40px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+}
+
+/* ==========================================
+   🏆 Analytics — By Sport Table (Readable)
+   ========================================== */
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 14px;
+  background: transparent;
+}
+
+/* Header row */
+.analytics-table thead th {
+  color: #ffffff;
+  font-weight: 600;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.25); /* strong divider */
+  text-align: center;
+}
+
+/* Body cells */
+.analytics-table tbody td {
+  color: #ffffff;
+  padding: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.12); /* horizontal grid lines */
+  text-align: center;
+}
+
+/* Slight row separation for readability */
+.analytics-table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+
+/* Trophy column emphasis */
+.analytics-table tbody td:last-child {
+  font-size: 16px;
+}
+
+/* Optional: hover highlight */
+.analytics-table tbody tr:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.tracker-filters {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #ddd;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #111;
+  color: #fff;
+}
+.tracker-filters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin: 20px 0;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.tracker-filters input,
+.tracker-filters select {
+  background: #111;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.date-input {
+  position: relative;
+}
+
+.date-input input {
+  padding-right: 34px;
+  min-height: 40px;       /* mobile-friendly */
+}
+
+.calendar-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;  /* tap passes through */
+  opacity: 0.6;
+}
+/* =====================================
+   🔍 Filter Labels – Improve Visibility
+===================================== */
+
+.tracker-filters .filter-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;                /* bright white */
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+/* Slight separation between filter blocks */
+.tracker-filters .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Make filters feel grouped */
+.tracker-filters {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.date-input input {
+  caret-color: transparent;     /* hides text cursor */
+  user-select: none;            /* discourages selection */
+}
+
+.calendar-icon {
+  opacity: 0.9;
+}
+
+.stat-value.positive {
+  color: #3ddc84; /* green */
+}
+
+.stat-value.negative {
+  color: #ff5c5c; /* red */
+}
+
+.slip-money {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 10px;
+}
+
+.money-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.money-field label {
+  font-size: 12px;
+  color: #bbb;
+  margin-bottom: 2px;
+}
+
+.money-field input {
+  width: 90px;
+}
+
+.slip-divider {
+  border: none;
+  border-top: 1px dashed #ddd;
+  margin: 14px 0;
+}
+
+.slip-money {
+  background: #f9fafb;
+  padding: 10px;
+  border-radius: 8px;
+}
+.money-status {
+  font-size: 12px;
+  color: #4caf50;
+  margin-top: 6px;
+}
+
+.slip-money input:disabled {
+  background: #f3f3f3;
+  color: #333;
+  border-color: #ddd;
+}
+
+.tracker-btn.secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+.money-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.money-badge.success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.money-badge.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.money-display {
+  display: flex;
+  gap: 20px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.money-row {
+  color: #16a34a;
+}
+
+.money-badge.success {
+  background: #22c55e;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.money-badge.warning {
+  background: #facc15;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* ===================================================
+   📦 Pick Tracker Bottom Bar
+=================================================== */
+.pick-tracker-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #121212;
+  color: #fff;
+  border-top: 2px solid #f5c842;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 9999;
+}
+
+.pick-tracker-bar.hidden {
+  display: none;
+}
+
+.tracker-bar-left {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.tracker-bar-right {
+  display: flex;
+  gap: 10px;
+}
+
+.tracker-btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.tracker-btn.primary {
+  background: #f5c842;
+  color: #000;
+}
+
+.tracker-btn.secondary {
+  background: #444;
+  color: #fff;
+}
+
+.tracker-btn:disabled {
+  opacity: 0.85;           /* 👈 much less faded */
+  cursor: not-allowed;
+  filter: grayscale(20%);  /* subtle disabled cue */
+}
+
+#tapToCardBtn.active {
+  background: #2563eb;
+  color: white;
+}
+/* ===================================================
+   🟨 Pick Tracker — Selected Row Highlight
+   =================================================== */
+tr.tracker-selected td {
+  background: #fff3bf !important;   /* soft yellow */
+  border-top: 2px solid #f2c200;
+  border-bottom: 2px solid #f2c200;
+}
+
+tr.tracker-selected td:first-child {
+  border-left: 3px solid #f2c200;
+}
+
+tr.tracker-selected td:last-child {
+  border-right: 3px solid #f2c200;
+}
+.picktracker-card-btn {
+  background: #f2c200;
+  border: none;
+  color: #111;
+  font-weight: 800;
+  padding: 8px 14px;
+  border-radius: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,.12);
+}
+
+.picktracker-card-btn.selected {
+  background: #f2c200;
+  opacity: 1;
+}
+
+.picktracker-card-btn:not(.selected) {
+  opacity: .9;
+}
+
+/* Pick Tracker row highlight */
+.tracker-selected {
+  background: rgba(255, 193, 7, 0.18);
+  outline: 2px solid #ffc107;
+}
+
+.tap-pick-btn {
+  margin-top: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tap-pick-btn.picked {
+  background: #f5c400;
+  border-color: #d4a900;
+  color: #000;
+}
+
+/* Active platform highlight */
+.platform-row.active-platform {
+  background: rgba(0, 123, 255, 0.08);
+  border-left: 4px solid #007bff;
+  cursor: pointer;
+}
+
+.platform-row.underdog-active {
+  background: rgba(255, 193, 7, 0.12);
+  border-left: 4px solid #f4b400;
+}
+
+/* Hover affordance */
+.platform-row:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+.platform-row {
+  cursor: pointer;
+  transition: background 0.15s ease, border 0.15s ease;
+}
+
+.platform-row.active-platform {
+  background: #fff4c2;
+  border-left: 4px solid #f5b700;
+}
+
+.platform-row.underdog.active-platform {
+  background: #eaf4ff;
+  border-left-color: #3b82f6;
+}
+
+/* ==============================
+   👀 Import Preview Modal
+============================== */
+.import-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.import-modal.hidden { display: none; }
+
+.import-modal-content {
+  width: min(1000px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.import-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.import-close-btn {
+  border: none;
+  background: #eee;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.import-preview-summary {
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  background: #f6f6f6;
+  border-radius: 10px;
+}
+
+.import-preview-errors {
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: #fff3f3;
+  border: 1px solid #ffd2d2;
+  border-radius: 10px;
+}
+
+.import-preview-errors.hidden { display: none; }
+
+.import-error-row {
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(0,0,0,0.15);
+  font-size: 14px;
+}
+
+.import-slip-preview {
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.import-slip-title {
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.import-slip-meta {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+
+.import-picks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.import-picks-table th,
+.import-picks-table td {
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  padding: 8px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.import-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* 💰 Money Editing States */
+.save-money-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.money-input[disabled] {
+  background: #f2f2f2;
+  color: #555;
+}
+
+.edit-money-btn {
+  margin-left: 8px;
+  background: #eee;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.edit-money-btn:hover {
+  background: #ddd;
+}
+.slip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.slip-title {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pick-count {
+  font-size: 13px;
+  opacity: 0.7;
+}
+.slip-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.platform {
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+}
+
+.result {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.result.win {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.result.loss {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.result.pending {
+  background: #f3f4f6;
+  color: #374151;
+}
+.pick-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 70px 60px;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+
+.pick-row:last-child {
+  border-bottom: none;
+}
+
+.pick-player {
+  font-weight: 600;
+}
+
+.pick-market {
+  opacity: 0.8;
+}
+
+.pick-result.win {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.pick-result.loss {
+  color: #dc2626;
+  font-weight: 700;
+}
+.slip-money-card {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.money-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.money-field label {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.money-input {
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 6px 8px;
+  width: 90px;
+}
+.tracker-btn {
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tracker-btn.primary {
+  background: #22c55e;
+  color: #022c22;
+  border: none;
+}
+
+.tracker-btn.secondary {
+  background: #334155;
+  color: #e5e7eb;
+  border: none;
+}
+.slip-card {
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.slip-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+@media (max-width: 640px) {
+  .pick-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .pick-market,
+  .pick-line,
+  .pick-result {
+    font-size: 13px;
+  }
+}
+@media (max-width: 640px) {
+  .money-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .money-input {
+    width: 100%;
+  }
+
+  .money-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+}
+/* ===============================
+   📱 Analytics Tabs – Mobile
+================================ */
+@media (max-width: 768px) {
+  .analytics-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    overflow-x: hidden; /* kill horizontal scroll */
+  }
+
+  .analytics-tab {
+    width: 100%;
+    min-width: unset;
+    text-align: center;
+    padding: 12px 10px;
+  }
+
+  .analytics-tab span,
+  .analytics-tab div {
+    white-space: normal; /* allow wrapping */
+  }
+}
+.import-slip-money {
+  display: flex;
+  gap: 12px;
+  margin: 6px 0 12px 0;
+  font-size: 14px;
+}
+
+.money-chip {
+  background: #1f2933;
+  color: #f9fafb;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.no-results-card {
+  text-align: center;
+  padding: 30px;
+  color: #555;
+  font-size: 1rem;
+}
+
+/* ================================
+   Pick Tracker Platform Buttons
+   ================================ */
+
+.tracker-platform-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: #f1f1f1;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+/* PrizePicks active */
+.tracker-platform-btn.prize.active {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.6);
+}
+
+/* Underdog active */
+.tracker-platform-btn.underdog.active {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+}
+
+.tracker-platform-btn:hover {
+  transform: translateY(-1px);
+}
+
