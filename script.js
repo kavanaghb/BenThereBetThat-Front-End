@@ -3292,33 +3292,38 @@ function sortTableByColumn(table, columnIndex, ascending) {
 // ===================================================
 
 // --- Sign In ---
-signinForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("signin-email").value.trim();
-  const password = document.getElementById("signin-password").value.trim();
 
-  signinBtn.classList.add("loading");
-  document.getElementById("signin-spinner").style.display = "inline-block";
+if (signinForm) {
+  signinForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const email = document.getElementById("signin-email")?.value.trim();
+    const password = document.getElementById("signin-password")?.value.trim();
 
-    const user = data.user;
-    if (!user) throw new Error("No user returned from Supabase.");
+    signinBtn?.classList.add("loading");
+    document.getElementById("signin-spinner")?.style.display = "inline-block";
 
-    // ✅ Check subscription and redirect to main content
-    await checkSubscriptionStatus(user.id);
+    try {
+      const { data, error } =
+        await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
 
-    showMainContent();
-  } catch (err) {
-    console.error("Sign-in error:", err);
-    alert(`Sign-in failed: ${err.message}`);
-  } finally {
-    signinBtn.classList.remove("loading");
-    document.getElementById("signin-spinner").style.display = "none";
-  }
-});
+      const user = data.user;
+      if (!user) throw new Error("No user returned from Supabase.");
+
+      // ✅ Check subscription and redirect to main content
+      await checkSubscriptionStatus(user.id);
+      showMainContent();
+
+    } catch (err) {
+      console.error("Sign-in error:", err);
+      alert(`Sign-in failed: ${err.message}`);
+    } finally {
+      signinBtn?.classList.remove("loading");
+      document.getElementById("signin-spinner")?.style.display = "none";
+    }
+  });
+}
 
 // --- Sign Up ---
 signupForm.addEventListener("submit", async (e) => {
