@@ -3,16 +3,6 @@
 // 🧠 Global Error & Debug Handler (Silent-Safe Version)
 // ===================================================
 
-// ===================================================
-// 🧯 SAFE DOM EVENT BINDER (GLOBAL)
-// ===================================================
-function safeOn(id, event, handler) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.addEventListener(event, handler);
-}
-
-
 let lastErrorShown = "";
 window.onerror = function (msg, src, line, col, err) {
   const formatted = [
@@ -231,6 +221,22 @@ function setPickTrackerPlatform(platform) {
 }
 
 
+function bindCardPlatformToggles() {
+  const container = document.getElementById("cardViewContent");
+  if (!container) return;
+
+  container.querySelectorAll(".platform-row").forEach(row => {
+    row.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      const platform = row.dataset.platform;
+      if (!platform) return;
+
+      setPickTrackerPlatform(platform);
+      updateCardPlatformHighlights();
+    });
+  });
+}
 
 function bindCardPlatformToggles() {
   const container = document.getElementById("cardViewContent");
@@ -412,74 +418,7 @@ if (window.supabase && typeof window.supabase.createClient === "function") {
   );
 }
 
-// ===================================================
-// 🔐 Auth UI Wiring (SAFE for multi-page + mobile)
-// ===================================================
-if (!window.supabaseClient && !(window.supabase && window.supabase.createClient)) {
-  console.warn("⚠️ Supabase not ready; skipping auth wiring.");
-} else {
-  // ----------------------------
-  // Sign In
-  // ----------------------------
-  if (signinForm) {
-    signinForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
 
-      const email = document.getElementById("signin-email")?.value?.trim();
-      const password = document.getElementById("signin-password")?.value;
-
-      try {
-        const { data, error } =
-          await supabase.auth.signInWithPassword({ email, password });
-
-        if (error) throw error;
-
-        await checkSubscriptionStatus(data.user.id);
-        showMainContent();
-      } catch (err) {
-        console.error("❌ Sign-in error:", err);
-        alert(err.message || "Sign-in failed");
-      }
-    });
-  }
-  // ----------------------------
-  // Sign Up
-  // ----------------------------
-  if (signupForm) {
-    signupForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const email = document.getElementById("signup-email")?.value?.trim();
-      const password = document.getElementById("signup-password")?.value;
-
-      try {
-        const { data, error } =
-          await supabase.auth.signUp({ email, password });
-
-        if (error) throw error;
-
-        alert("✅ Account created! Check your email to confirm.");
-      } catch (err) {
-        console.error("❌ Signup error:", err);
-        alert(err.message || "Signup failed");
-      }
-    });
-  }
-
-  // ----------------------------
-  // Sign Out
-  // ----------------------------
-  if (signoutBtn) {
-    signoutBtn.addEventListener("click", async () => {
-      try {
-        await supabase.auth.signOut();
-        location.reload();
-      } catch (err) {
-        console.error("❌ Sign-out error:", err);
-      }
-    });
-  }
-}
 
 // ============================================================
 // 🚦 Temporary Button Lock (before login/subscription check)
@@ -498,7 +437,23 @@ function disableDataButtonsTemporarily() {
     refreshBtn.title = "Please sign in and subscribe to enable data loading";
   }
 }
-
+// ============================================================
+// 🕹️ Refresh Button Controller
+// ============================================================
+function setRefreshEnabled(enabled) {
+  if (!refreshBtn) return;
+  if (enabled) {
+    refreshBtn.disabled = false;
+    refreshBtn.style.opacity = "";
+    refreshBtn.style.cursor = "";
+    refreshBtn.title = "";
+  } else {
+    refreshBtn.disabled = true;
+    refreshBtn.style.opacity = "0.5";
+    refreshBtn.style.cursor = "not-allowed";
+    refreshBtn.title = "Load data first to enable refresh";
+  }
+}
 
 function setRefreshEnabled(isEnabled) {
   const refreshBtn = document.getElementById("refreshBtn");
@@ -1946,88 +1901,69 @@ function updateSelectedMarkets() {
 }
 
 // 🧠 Main sport button logic (auto-renders markets + select/deselect support)
-if (sportButtons && sportButtons.length > 0) {
-  sportButtons.forEach((btn) => {
-    if (!btn) return;
+sportButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    // --- UI reset ---
+    sportButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedSport = btn.getAttribute("data-sport");
 
-    btn.addEventListener("click", () => {
-      // --- UI reset ---
-      sportButtons.forEach((b) => b && b.classList.remove("active"));
-      btn.classList.add("active");
+    resultsDiv.innerHTML = "";
+    progressText.textContent = "";
+    resetAllMarkets();
 
-      selectedSport = btn.getAttribute("data-sport");
+    if (gameButtonContainer) {
+      gameButtonContainer.style.display = "none";
+      gameButtonContainer.innerHTML = "";
+    }
+    if (gameFilterContainer) gameFilterContainer.style.display = "none";
 
-      if (resultsDiv) resultsDiv.innerHTML = "";
-      if (progressText) progressText.textContent = "";
-      resetAllMarkets();
+    // --- Render market buttons dynamically ---
+    Object.keys(SPORT_MARKETS).forEach((sport) => {
+      const groupEl = document.getElementById(`${sport}Markets`);
+      if (!groupEl) return;
+      const listEl = groupEl.querySelector(".market-list");
+      listEl.innerHTML = "";
 
-      if (gameButtonContainer) {
-        gameButtonContainer.style.display = "none";
-        gameButtonContainer.innerHTML = "";
-      }
-
-      if (gameFilterContainer) {
-        gameFilterContainer.style.display = "none";
-      }
-
-      // --- Render market buttons dynamically ---
-      Object.keys(SPORT_MARKETS).forEach((sport) => {
-        const groupEl = document.getElementById(`${sport}Markets`);
-        if (!groupEl) return;
-
-        const listEl = groupEl.querySelector(".market-list");
-        if (!listEl) return;
-
-        listEl.innerHTML = "";
-
-        if (selectedSport === sport) {
-          groupEl.style.display = "block";
-
-          const markets = SPORT_MARKETS[sport];
-          Object.entries(markets).forEach(([key, label]) => {
-            const btnEl = document.createElement("button");
-            btnEl.textContent = label;
-            btnEl.setAttribute("data-market", key);
-
-            btnEl.addEventListener("click", () => {
-              btnEl.classList.toggle("active");
-              updateSelectedMarkets();
-            });
-
-            listEl.appendChild(btnEl);
+      if (selectedSport === sport) {
+        groupEl.style.display = "block";
+        const markets = SPORT_MARKETS[sport];
+        Object.entries(markets).forEach(([key, label]) => {
+          const btnEl = document.createElement("button");
+          btnEl.textContent = label;
+          btnEl.setAttribute("data-market", key);
+          btnEl.addEventListener("click", () => {
+            btnEl.classList.toggle("active");
+            updateSelectedMarkets();
           });
+          listEl.appendChild(btnEl);
+        });
 
-          // ✅ Rebind Select / Deselect All buttons safely
-          const selectAllBtn = groupEl.querySelector(".select-all-btn");
-          const deselectAllBtn = groupEl.querySelector(".deselect-all-btn");
-
-          if (selectAllBtn) {
-            selectAllBtn.onclick = () => {
-              setActiveFor(marketButtonsIn(groupEl), true);
-              updateSelectedMarkets();
-            };
-          }
-
-          if (deselectAllBtn) {
-            deselectAllBtn.onclick = () => {
-              setActiveFor(marketButtonsIn(groupEl), false);
-              updateSelectedMarkets();
-            };
-          }
-
-        } else {
-          groupEl.style.display = "none";
+        // ✅ Rebind Select/Deselect All buttons for this sport
+        const selectAllBtn = groupEl.querySelector(".select-all-btn");
+        const deselectAllBtn = groupEl.querySelector(".deselect-all-btn");
+        if (selectAllBtn && deselectAllBtn) {
+          selectAllBtn.onclick = () => {
+            setActiveFor(marketButtonsIn(groupEl), true);
+            updateSelectedMarkets();
+          };
+          deselectAllBtn.onclick = () => {
+            setActiveFor(marketButtonsIn(groupEl), false);
+            updateSelectedMarkets();
+          };
         }
-      });
-
-      // 🚀 Load games automatically if date chosen
-      if (dateInput && dateInput.value) {
-        disableLoadData();
-        loadGames();
+      } else {
+        groupEl.style.display = "none";
       }
     });
+
+    // 🚀 Load games automatically if date chosen
+    if (dateInput.value) {
+      disableLoadData();
+      loadGames();
+    }
   });
-}
+});
 
 
 
@@ -3351,8 +3287,38 @@ function sortTableByColumn(table, columnIndex, ascending) {
 
 
 
+// ===================================================
+// 🔐 Authentication Logic (Fixed Redirect)
+// ===================================================
 
+// --- Sign In ---
+signinForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("signin-email").value.trim();
+  const password = document.getElementById("signin-password").value.trim();
 
+  signinBtn.classList.add("loading");
+  document.getElementById("signin-spinner").style.display = "inline-block";
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    const user = data.user;
+    if (!user) throw new Error("No user returned from Supabase.");
+
+    // ✅ Check subscription and redirect to main content
+    await checkSubscriptionStatus(user.id);
+
+    showMainContent();
+  } catch (err) {
+    console.error("Sign-in error:", err);
+    alert(`Sign-in failed: ${err.message}`);
+  } finally {
+    signinBtn.classList.remove("loading");
+    document.getElementById("signin-spinner").style.display = "none";
+  }
+});
 
 // --- Sign Up ---
 signupForm.addEventListener("submit", async (e) => {
