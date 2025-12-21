@@ -1,4 +1,3 @@
-
 // ===================================================
 // 🧠 Global Error & Debug Handler (Silent-Safe Version)
 // ===================================================
@@ -64,6 +63,65 @@ window.pickTracker = {
   selections: new Map()
 };
 
+function updatePickTrackerUI() {
+  // existing code
+}
+
+// ===================================================
+// 🧹 Reset Pick Tracker UI After Submit (CORRECTED)
+// ===================================================
+function resetPickTrackerUI() {
+  console.log("🧹 Resetting Pick Tracker UI");
+
+  /* ===============================
+     1️⃣ Clear Pick Tracker state
+     =============================== */
+  if (window.pickTracker?.selections) {
+    window.pickTracker.selections.clear();
+  }
+
+  /* ===============================
+     2️⃣ Clear highlighted TABLE rows
+     =============================== */
+  document.querySelectorAll("tr").forEach(row => {
+    row.classList.remove("picked", "tracker-selected", "selected", "highlighted");
+    row.style.backgroundColor = "";
+    row.removeAttribute("data-selected");
+  });
+
+  /* ===============================
+     3️⃣ Reset tap-to-card platform buttons
+     =============================== */
+  document.querySelectorAll("button").forEach(btn => {
+    btn.classList.remove("active", "selected", "picked");
+    btn.removeAttribute("data-active");
+    btn.removeAttribute("aria-pressed");
+  });
+
+  /* ===============================
+     4️⃣ Reset card containers (mobile view)
+     =============================== */
+  document.querySelectorAll("[data-pick-key]").forEach(card => {
+    card.classList.remove("selected", "picked", "active");
+    card.removeAttribute("data-selected");
+  });
+
+  /* ===============================
+     5️⃣ Hide Pick Tracker banner
+     =============================== */
+  const banner = document.getElementById("pick-tracker-banner");
+  if (banner) banner.style.display = "none";
+
+  /* ===============================
+     6️⃣ Reset counter text
+     =============================== */
+  const countEl = document.getElementById("tracker-pick-count");
+  if (countEl) countEl.textContent = "0";
+
+  console.log("♻️ Pick Tracker UI fully reset");
+}
+
+
 // ===================================================
 // 🎮 Sports Odds Dashboard — Full Fixed Script
 // ===================================================
@@ -106,6 +164,7 @@ function formatDateLabel(dateStr) {
     year: "numeric"
   });
 }
+// ⚠️ game_date is a calendar label — DO NOT use Date() or timezone logic
 
 function buildSlipCardTitleFromPicks(picks = []) {
   if (!picks.length) return "Slip";
@@ -120,11 +179,18 @@ function buildSlipCardTitleFromPicks(picks = []) {
   const eventLabel =
     events.length === 1 ? events[0] : `${events.length} Games`;
 
+  // ✅ SAFE date formatting — NO Date()
   const dateLabel =
-    dates.length === 1 ? formatDateLabel(dates[0]) : "Multiple Dates";
+    dates.length === 1
+      ? (() => {
+          const [y, m, d] = dates[0].split("-");
+          return `${m}/${d}/${y}`;
+        })()
+      : "Multiple Dates";
 
   return `${sportLabel} · ${eventLabel} · ${dateLabel}`;
 }
+
 
 
 
@@ -167,10 +233,15 @@ function togglePickTrackerSelection(pick) {
     console.log("➕ Pick added to tracker:", key);
   }
 
-  console.log(
-    `📊 Tracker: ${tracker.selections.size} pick(s) selected`
-  );
+  console.log(`📊 Tracker: ${tracker.selections.size} pick(s) selected`);
+
+  // ✅ FIX #3 — force UI refresh for banner & buttons
+updatePickTrackerBarUI();
+
+  // ✅ UI refresh (THIS WAS MISSING)
+  updatePickTrackerBarUI();
 }
+
 
 /**
  * Clear all tracker selections
@@ -357,6 +428,9 @@ async function savePickTrackerSlip() {
     const data = await res.json();
     console.log("✅ Slip saved:", data);
 
+    // ✅ FULL UI RESET (table rows, cards, buttons, banner)
+    resetPickTrackerUI();
+
     clearPickTrackerSelections();
     updatePickTrackerBarUI();
 
@@ -503,6 +577,30 @@ async function safeFetch(url, options = {}, timeoutMs = 15000) {
 // ============================================================
 disableDataButtonsTemporarily();
 setRefreshEnabled(false); // ⛔ Grey out refresh until first successful load
+
+// ===================================================
+// 📦 Pick Tracker — Banner Button Wiring (FIX #2)
+// ===================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const clearBtn = document.getElementById("trackerClearBtn");
+  const saveBtn = document.getElementById("trackerSaveBtn");
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      clearPickTrackerSelections();
+      updatePickTrackerBarUI();
+      console.log("🧹 Pick Tracker cleared via banner");
+    });
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      console.log("💾 Save Slip clicked");
+      savePickTrackerSlip();
+    });
+  }
+});
+
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
 const ncaabMarkets = document.getElementById("ncaabMarkets");
@@ -4288,6 +4386,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.pickTracker?.platform || "prizepicks"
   );
 });
+
 
 // ===================================================
 // PICK TRACKER LOGIC

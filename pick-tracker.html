@@ -510,7 +510,7 @@ document.getElementById("goHomeBtn")?.addEventListener("click", () => {
 });
 
 // =====================================================
-// 📊 Open Analytics Modal (Doughnut-safe)
+//  Open Analytics Modal (Doughnut-safe)
 // =====================================================
 // =====================================================
 // 📊 Open Analytics Modal (STABLE + CANVAS-SAFE)
@@ -551,6 +551,21 @@ document
       c => (pickPieChart = c)
     );
   });
+
+  function toLocalDateLabel(input) {
+  if (!input) return "";
+  const s = String(input);
+
+  // If backend already gave YYYY-MM-DD, keep it (no timezone shifting)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+  // Otherwise parse and convert to LOCAL calendar date safely
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return s;
+
+  // en-CA gives YYYY-MM-DD
+  return d.toLocaleDateString("en-CA");
+}
 
 // =====================================================
 // 📄 Download Excel Import Template
@@ -916,6 +931,30 @@ async function loadSlips() {
 /* =====================================================
    📊 ANALYTICS
 ===================================================== */
+
+// ===================================================
+// 📅 Normalize any date into YYYY-MM-DD (TRUE UTC)
+// ===================================================
+function normalizeDateKey(dateInput) {
+  if (!dateInput) return null;
+
+  // Case 1: already YYYY-MM-DD → trust it, DO NOT new Date()
+  if (typeof dateInput === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+    return dateInput;
+  }
+
+  // Case 2: timestamp → extract UTC date manually
+  const d = new Date(dateInput);
+  if (isNaN(d)) return null;
+
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+
 /* =====================================================
    📊 ANALYTICS (FILTER-AWARE)
 ===================================================== */
@@ -1237,8 +1276,11 @@ function renderTrend(canvasId, rows, title, existingChart, saveChart) {
   const ctx = canvas.getContext("2d");
   if (existingChart) existingChart.destroy();
 
-  const labels = rows.map(r => r.date);
+  // ✅ Normalize dates BEFORE charting
+  const labels = rows.map(r => toLocalDateLabel(r.date));
   const values = rows.map(r => r.win_pct);
+
+
 
   const chart = new Chart(ctx, {
     type: "line",
@@ -1443,7 +1485,8 @@ async function loadDollarsTrend() {
     return;
   }
 
-  const labels = data.map(d => d.date);
+  const labels = data.map(d => normalizeDateKey(d.date));
+
   const values = data.map(d => d.net);
 
   // 🔁 Safe destroy
