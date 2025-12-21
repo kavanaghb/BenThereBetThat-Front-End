@@ -16,11 +16,22 @@ window.onerror = function (msg, src, line, col, err) {
   const ignoredPatterns = [
     "checkSubscriptionStatus is not defined",
     "ResizeObserver loop limit exceeded",
-    "Script error",
     "ResizeObserver loop completed",
-    "null (reading",
+    "Script error",
+
+
+
+    // Chrome/Edge phrasing
     "Cannot read properties of null",
+   "null (reading",
+
+    // iOS Safari phrasing
+    "null is not an object",
+    "undefined is not an object",
+    "evaluating 'signinForm.addEventListener'",
+    "evaluating 'signupForm.addEventListener'",
   ];
+
 
   const isIgnored = ignoredPatterns.some(p => msg?.includes(p));
   if (isIgnored) {
@@ -3390,69 +3401,103 @@ function sortTableByColumn(table, columnIndex, ascending) {
 // ===================================================
 
 // --- Sign In ---
-signinForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("signin-email").value.trim();
-  const password = document.getElementById("signin-password").value.trim();
+// ===================================================
+// 🔐 Authentication Logic (Fixed Redirect)
+// ===================================================
 
-  signinBtn.classList.add("loading");
-  document.getElementById("signin-spinner").style.display = "inline-block";
+// --- Sign In ---
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+if (signinForm) {
+  signinForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const user = data.user;
-    if (!user) throw new Error("No user returned from Supabase.");
+    const email = document.getElementById("signin-email")?.value.trim();
+    const password = document.getElementById("signin-password")?.value.trim();
 
-    // ✅ Check subscription and redirect to main content
-    await checkSubscriptionStatus(user.id);
+    if (!email || !password) {
+      alert("Please enter email and password.");
+      return;
+    }
 
-    showMainContent();
-  } catch (err) {
-    console.error("Sign-in error:", err);
-    alert(`Sign-in failed: ${err.message}`);
-  } finally {
-    signinBtn.classList.remove("loading");
-    document.getElementById("signin-spinner").style.display = "none";
-  }
-});
+    signinBtn.classList.add("loading");
+    const spinner = document.getElementById("signin-spinner");
+    if (spinner) spinner.style.display = "inline-block";
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      if (error) throw error;
+
+      const user = data.user;
+      if (!user) throw new Error("No user returned from Supabase.");
+
+      // ✅ Check subscription and redirect to main content
+      await checkSubscriptionStatus(user.id);
+      showMainContent();
+
+    } catch (err) {
+      console.error("Sign-in error:", err);
+      alert(`Sign-in failed: ${err.message}`);
+    } finally {
+      signinBtn.classList.remove("loading");
+      if (spinner) spinner.style.display = "none";
+    }
+  });
+}
+
 
 // --- Sign Up ---
-signupForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("signup-email").value.trim();
-  const pass = document.getElementById("signup-password").value.trim();
-  const confirm = document.getElementById("signup-confirm").value.trim();
+if (signupForm) {
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  if (pass !== confirm) {
-    alert("Passwords do not match!");
-    return;
-  }
+    const email = document.getElementById("signup-email")?.value.trim();
+    const pass = document.getElementById("signup-password")?.value.trim();
+    const confirm = document.getElementById("signup-confirm")?.value.trim();
 
-  signupBtn.classList.add("loading");
-  document.getElementById("signup-spinner").style.display = "inline-block";
-
-  try {
-    const { data, error } = await supabase.auth.signUp({ email, password: pass });
-    if (error) throw error;
-
-    const user = data.user;
-    if (user) {
-      await fetch(`${window.API_BASE}/api/create-user`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: user.id, email }),
-      });
-      alert("✅ Account created! Please check your email to verify your account before signing in.");
+    if (!email || !pass || !confirm) {
+      alert("Please complete all sign-up fields.");
+      return;
     }
-  } catch (err) {
-    alert(`Sign-up failed: ${err.message}`);
-  } finally {
-    signupBtn.classList.remove("loading");
-    document.getElementById("signup-spinner").style.display = "none";
-  }
-});
+
+    if (pass !== confirm) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    // these elements may not exist on every page
+    if (signupBtn) signupBtn.classList.add("loading");
+    const signupSpinner = document.getElementById("signup-spinner");
+    if (signupSpinner) signupSpinner.style.display = "inline-block";
+
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password: pass });
+      if (error) throw error;
+
+      const user = data.user;
+      if (user) {
+        await fetch(`${window.API_BASE}/api/create-user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: user.id, email }),
+        });
+
+        alert("✅ Account created! Please check your email to verify your account before signing in.");
+      }
+    } catch (err) {
+      alert(`Sign-up failed: ${err.message}`);
+    } finally {
+      if (signupBtn) signupBtn.classList.remove("loading");
+      if (signupSpinner) signupSpinner.style.display = "none";
+    }
+  });
+} else {
+  // Not an error: many pages (like pick-tracker.html) don't include the signup form
+  // console.log("ℹ️ No signup form on this page — skipping signup binding.");
+}
+
 
 // --- Sign Out ---
 signoutBtn.addEventListener("click", async () => {
