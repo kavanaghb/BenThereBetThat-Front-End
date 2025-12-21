@@ -1,3 +1,4 @@
+
 // ===================================================
 // 🧠 Global Error & Debug Handler (Silent-Safe Version)
 // ===================================================
@@ -166,15 +167,10 @@ function togglePickTrackerSelection(pick) {
     console.log("➕ Pick added to tracker:", key);
   }
 
-  console.log(`📊 Tracker: ${tracker.selections.size} pick(s) selected`);
-
-  // ✅ FIX #3 — force UI refresh for banner & buttons
-updatePickTrackerBarUI();
-
-  // ✅ UI refresh (THIS WAS MISSING)
-  updatePickTrackerBarUI();
+  console.log(
+    `📊 Tracker: ${tracker.selections.size} pick(s) selected`
+  );
 }
-
 
 /**
  * Clear all tracker selections
@@ -424,28 +420,6 @@ if (window.supabase && typeof window.supabase.createClient === "function") {
 
 
 
-
-// ===================================================
-// 🔐 Supabase Auth State Listener (SINGLE SOURCE OF TRUTH)
-// ===================================================
-supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log("🔁 Auth event:", event);
-
-  if (event === "SIGNED_IN" && session?.user) {
-    console.log("🔐 Auth confirmed:", session.user.id);
-
-    await checkSubscriptionStatus(session.user.id);
-    showMainContent();
-  }
-
-  if (event === "SIGNED_OUT") {
-    console.log("🚪 Signed out");
-    showSignIn();
-  }
-});
-
-
-
 // ============================================================
 // 🚦 Temporary Button Lock (before login/subscription check)
 // ============================================================
@@ -529,30 +503,6 @@ async function safeFetch(url, options = {}, timeoutMs = 15000) {
 // ============================================================
 disableDataButtonsTemporarily();
 setRefreshEnabled(false); // ⛔ Grey out refresh until first successful load
-
-// ===================================================
-// 📦 Pick Tracker — Banner Button Wiring (FIX #2)
-// ===================================================
-document.addEventListener("DOMContentLoaded", () => {
-  const clearBtn = document.getElementById("trackerClearBtn");
-  const saveBtn = document.getElementById("trackerSaveBtn");
-
-  if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      clearPickTrackerSelections();
-      updatePickTrackerBarUI();
-      console.log("🧹 Pick Tracker cleared via banner");
-    });
-  }
-
-  if (saveBtn) {
-    saveBtn.addEventListener("click", () => {
-      console.log("💾 Save Slip clicked");
-      savePickTrackerSlip();
-    });
-  }
-});
-
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
 const ncaabMarkets = document.getElementById("ncaabMarkets");
@@ -3338,45 +3288,37 @@ function sortTableByColumn(table, columnIndex, ascending) {
 
 
 // ===================================================
-// 🔐 Authentication Logic (Safe Binding)
+// 🔐 Authentication Logic (Fixed Redirect)
 // ===================================================
 
-if (signinForm && signinBtn) {
-  signinForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+// --- Sign In ---
+signinForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("signin-email").value.trim();
+  const password = document.getElementById("signin-password").value.trim();
 
-    const emailEl = document.getElementById("signin-email");
-    const passwordEl = document.getElementById("signin-password");
-    if (!emailEl || !passwordEl) return;
+  signinBtn.classList.add("loading");
+  document.getElementById("signin-spinner").style.display = "inline-block";
 
-    const email = emailEl.value.trim();
-    const password = passwordEl.value.trim();
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
 
-    signinBtn.classList.add("loading");
-    document.getElementById("signin-spinner")?.style.display = "inline-block";
+    const user = data.user;
+    if (!user) throw new Error("No user returned from Supabase.");
 
-    try {
-      const { data, error } =
-        await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+    // ✅ Check subscription and redirect to main content
+    await checkSubscriptionStatus(user.id);
 
-      const user = data?.user;
-      if (!user) throw new Error("No user returned from Supabase.");
-
-      // Let Supabase auth state listener handle UI + redirects
-      console.log("✅ Sign-in successful, waiting for auth state change");
-
-
-    } catch (err) {
-      console.error("Sign-in error:", err);
-      alert(`Sign-in failed: ${err.message}`);
-    } finally {
-      signinBtn.classList.remove("loading");
-      document.getElementById("signin-spinner")?.style.display = "none";
-    }
-  });
-}
-
+    showMainContent();
+  } catch (err) {
+    console.error("Sign-in error:", err);
+    alert(`Sign-in failed: ${err.message}`);
+  } finally {
+    signinBtn.classList.remove("loading");
+    document.getElementById("signin-spinner").style.display = "none";
+  }
+});
 
 // --- Sign Up ---
 signupForm.addEventListener("submit", async (e) => {
@@ -4346,6 +4288,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.pickTracker?.platform || "prizepicks"
   );
 });
+
 
 
 // ===================================================
