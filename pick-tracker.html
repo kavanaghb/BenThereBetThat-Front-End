@@ -387,6 +387,22 @@ window.addEventListener("error", (e) => {
     Apply Filters
   </button>
 
+
+  <!-- 🔍 Slip Search -->
+<div class="slip-search-bar">
+  <input
+    type="text"
+    id="slipSearchInput"
+    placeholder="Search by sport, team, or player..."
+  />
+
+  <label class="slip-search-checkbox">
+    <input type="checkbox" id="completedOnlyCheckbox" />
+    Unfinished only
+
+  </label>
+</div>
+
 </div>
 
 
@@ -874,7 +890,56 @@ document.getElementById("applyFiltersBtn")?.addEventListener("click", async () =
   }
 });
 
+// =====================================
+// 🔍 Slip Search Wiring (Debounced)
+// =====================================
 
+// ⏱️ Debounce helper — prevents filtering on every keystroke
+function debounce(fn, delay = 120) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
+
+// Debounced version of search (input only)
+const debouncedSearch = debounce(applySlipSearchFilter);
+
+// 🔍 Search input → debounced
+document
+  .getElementById("slipSearchInput")
+  ?.addEventListener("input", debouncedSearch);
+
+// ☑️ Checkbox → immediate (no debounce)
+document
+  .getElementById("completedOnlyCheckbox")
+  ?.addEventListener("change", applySlipSearchFilter);
+
+// =====================================
+// 🔍 Build Slip Search Text
+// =====================================
+function buildSlipSearchText(slip) {
+  const parts = [];
+
+  // Always searchable
+  if (slip.title) parts.push(slip.title);
+  if (slip.platform) parts.push(slip.platform);
+
+  // Force sport keywords (CRITICAL)
+  const title = (slip.title || "").toLowerCase();
+  if (title.includes("nba")) parts.push("nba");
+  if (title.includes("nfl")) parts.push("nfl");
+  if (title.includes("mlb")) parts.push("mlb");
+  if (title.includes("nhl")) parts.push("nhl");
+  if (title.includes("ncaab")) parts.push("ncaab");
+  if (title.includes("ncaaf")) parts.push("ncaaf");
+
+  return parts
+    .join(" ")
+    .toLowerCase()
+    .replace(/"/g, "");
+}
 
 
 
@@ -2312,6 +2377,25 @@ async function loadSlipPicks(slipId, bodyEl, slip) {
         ? data
         : data?.picks || [];
 
+        // 🔍 Enhance slip search with player names (post-load)
+      const cardEl = document.querySelector(
+        `.slip-card[data-slip-id="${slipId}"]`
+      );
+
+      if (cardEl && picks.length) {
+        const extra = picks
+          .map(p => `${p.player || ""} ${p.event || ""}`)
+          .join(" ")
+          .toLowerCase();
+
+       cardEl.dataset.search =
+         `${cardEl.dataset.search} ${extra}`.trim();
+
+        applySlipSearchFilter();
+      }
+
+
+
       if (!picks.length) {
         throw new Error("No picks returned");
       }
@@ -2558,6 +2642,7 @@ editBtn.addEventListener("click", () => {
 
 
 
+
 // =====================================================
 // 🧱 Render Slip Cards (SHARED)
 // =====================================================
@@ -2576,6 +2661,7 @@ function renderPickTracker(slips) {
 // ------------------------------------
 // Render HTML
 // ------------------------------------
+
 list.innerHTML = slips
   .map(slip => {
     const hasMoney =
@@ -2584,8 +2670,21 @@ list.innerHTML = slips
       slip.payout !== null &&
       slip.payout !== undefined;
 
+    // 🔍 Search + completion state
+    const searchText = buildSlipSearchText(slip)
+      .replace(/"/g, ""); // safety for HTML attributes
+
+    const isCompleted =
+      slip.slip_result &&
+      slip.slip_result !== "pending";
+
     return `
-      <div class="slip-card" data-slip-id="${slip.slip_id}">
+      <div
+        class="slip-card"
+        data-slip-id="${slip.slip_id}"
+        data-search="${searchText}"
+        data-completed="${isCompleted}"
+      >
         <div class="slip-header">
           <div class="slip-title">
             ${
@@ -2593,6 +2692,7 @@ list.innerHTML = slips
                 ? buildSlipCardTitleFromPicks(slip.picks)
                 : `${slip.title || "Slip"}`
             }
+
             <span class="pick-count">(${slip.pick_count})</span>
           </div>
 
@@ -2638,7 +2738,6 @@ list.innerHTML = slips
           </div>
         </div>
 
-
         <div class="slip-body" style="display:none;">
           <!-- 💰 Money Inputs (Optional) -->
           <div class="slip-money">
@@ -2680,10 +2779,39 @@ list.innerHTML = slips
     `;
   })
   .join("");
+  loadSlipSearchIndex(slips);
+  // ✅ Apply current search + checkbox state to freshly-rendered cards
+  applySlipSearchFilter();
+
+
 
 
 
  
+}
+
+function applySlipSearchFilter() {
+  const term =
+    document.getElementById("slipSearchInput")?.value
+      .trim()
+      .toLowerCase();
+
+  const unfinishedOnly =
+    document.getElementById("completedOnlyCheckbox")?.checked;
+
+  document.querySelectorAll(".slip-card").forEach(card => {
+    const matchesText =
+      !term || card.dataset.search?.includes(term);
+
+    const isCompleted =
+      card.dataset.completed === "true";
+
+    const matchesCompletion =
+      !unfinishedOnly || !isCompleted;
+
+    card.style.display =
+      matchesText && matchesCompletion ? "" : "none";
+  });
 }
 
 
@@ -2713,6 +2841,30 @@ async function loadPickTracker() {
   }
 }
 
+function buildSlipSearchIndex(slip, picks = []) {
+  const parts = [];
+
+  // Sport
+  if (slip.sport) parts.push(slip.sport);
+
+  // Platform (optional but useful)
+  if (slip.platform) parts.push(slip.platform);
+
+  // Team / event names
+  picks.forEach(p => {
+    if (p.event) parts.push(p.event);
+  });
+
+  // Player names
+  picks.forEach(p => {
+    if (p.player) parts.push(p.player);
+  });
+
+  return parts
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
 
 /* =====================================================
    DELEGATED EVENTS (FINAL, SAFE)
@@ -2793,6 +2945,44 @@ document.addEventListener("click", async e => {
   }
 });
 
+async function loadSlipSearchIndex(slips) {
+  try {
+    const token = await getAuthToken();
+
+    const res = await fetch(
+      `${window.API_BASE}/api/slips/search-index`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    if (!res.ok) throw new Error("Search index fetch failed");
+
+    const index = await res.json();
+
+    // 🔗 Attach search text to each slip card
+    slips.forEach(slip => {
+      const card = document.querySelector(
+        `.slip-card[data-slip-id="${slip.slip_id}"]`
+      );
+
+      if (!card) return;
+
+      const base = card.dataset.search || "";
+      const extra = index[slip.slip_id] || "";
+
+      card.dataset.search = `${base} ${extra}`.trim();
+    });
+
+    // 🔁 Re-apply active search
+    applySlipSearchFilter();
+
+  } catch (err) {
+    console.warn("⚠️ Slip search index failed to load", err);
+  }
+}
 
 /* =====================================================
    INIT

@@ -4762,3 +4762,34 @@ tr.tracker-selected td:last-child {
   transform: translateY(-1px);
 }
 
+/* ================================
+   🔍 Slip Search Bar
+================================ */
+.slip-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto; /* pushes it to the right */
+}
+
+#slipSearchInput {
+  min-width: 260px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+}
+
+.slip-search-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.slip-search-checkbox input {
+  width: 18px;
+  height: 18px;
+}
