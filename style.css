@@ -1985,12 +1985,12 @@ button:hover {
    🔧 Layout Reset for Main Dashboard
    =================================================== */
 
-/* Auth screen stays centered */
 #auth-container {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
 }
 
 /* Main dashboard should fill the viewport normally */
@@ -4911,4 +4911,12 @@ tr.tracker-selected td:last-child {
   .promo-badge {
     margin-top: 22px;
   }
+}
+.auth-marketing {
+  max-width: 760px;
+  margin: 0 auto 40px auto;
+  text-align: center;
+}
+.promo-badge {
+  display: block !important;
 }
