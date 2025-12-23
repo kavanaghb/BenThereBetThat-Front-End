@@ -4857,3 +4857,58 @@ tr.tracker-selected td:last-child {
   }
 }
 
+/* ================================
+   Hero Eyebrow (Professional SaaS)
+================================ */
+.marketing-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 10px;
+}
+/* ================================
+   Promo Badge — Mobile First
+================================ */
+.promo-badge {
+  margin: 18px auto 10px;
+  padding: 14px 16px;
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+
+.promo-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  opacity: 0.85;
+}
+
+.promo-code {
+  margin: 6px 0;
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  background: #ffffff;
+  color: #0b3d91;
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 10px;
+}
+
+.promo-subtext {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+/* Slightly larger on desktop */
+@media (min-width: 768px) {
+  .promo-badge {
+    margin-top: 22px;
+  }
+}
