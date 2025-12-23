@@ -4793,3 +4793,67 @@ tr.tracker-selected td:last-child {
   width: 18px;
   height: 18px;
 }
+
+/* ================================
+   Mobile-First Homepage Marketing
+================================ */
+.auth-marketing {
+  max-width: 720px;
+  margin: 0 auto 20px auto;
+  text-align: center;
+  color: #fff;
+  padding: 0 12px;
+}
+
+.marketing-headline {
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.marketing-subheadline {
+  font-size: 1rem;
+  opacity: 0.95;
+  margin-top: 10px;
+}
+
+/* Hide long content on mobile */
+.marketing-extra {
+  display: none;
+}
+
+/* ================================
+   Desktop Enhancements
+================================ */
+@media (min-width: 768px) {
+  .marketing-headline {
+    font-size: 2.2rem;
+  }
+
+  .marketing-subheadline {
+    font-size: 1.1rem;
+  }
+
+  .marketing-extra {
+    display: block;
+    margin-top: 16px;
+  }
+
+  .marketing-bullets {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+  }
+
+  .marketing-bullets li {
+    margin: 6px 0;
+    font-weight: 500;
+  }
+
+  .marketing-offer {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+}
+
