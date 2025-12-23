@@ -1985,13 +1985,7 @@ button:hover {
    🔧 Layout Reset for Main Dashboard
    =================================================== */
 
-#auth-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-height: 100vh;
-  padding: 40px 20px;
-}
+
 
 /* Main dashboard should fill the viewport normally */
 #main-content {
@@ -4920,3 +4914,73 @@ tr.tracker-selected td:last-child {
 .promo-badge {
   display: block !important;
 }
+
+/* ================================
+   MOBILE SCROLL FIX (CRITICAL)
+================================ */
+
+html, body {
+  height: auto;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+}
+
+/* Never lock the auth page vertically */
+#auth-container,
+#page-wrapper {
+  min-height: 100vh;
+  height: auto;
+  overflow-y: visible;
+}
+
+/* iOS Safari fix: allow momentum scrolling */
+@supports (-webkit-touch-callout: none) {
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+/* ================================
+   Footer Visibility Fix (Mobile)
+================================ */
+
+@media (max-width: 768px) {
+  #auth-container {
+    padding-bottom: 140px; /* ensures footer is reachable */
+  }
+
+  .site-footer {
+    margin-top: 40px;
+  }
+}
+/* ================================
+   MOBILE FOOTER HARD FIX
+================================ */
+
+/* Allow full page scroll on mobile */
+@media (max-width: 768px) {
+
+  body {
+    min-height: 100vh;
+    overflow-y: auto !important;
+  }
+
+  #page-wrapper {
+    min-height: auto !important;
+  }
+
+  /* Disable vertical centering on auth layout */
+  #auth-container {
+    align-items: unset !important;
+    justify-content: unset !important;
+    min-height: auto !important;
+    padding-bottom: 180px; /* guaranteed space for footer */
+  }
+
+  /* Footer must participate in normal flow */
+  .site-footer {
+    position: relative !important;
+    margin-top: 40px;
+    padding-bottom: 40px;
+  }
+}
+
