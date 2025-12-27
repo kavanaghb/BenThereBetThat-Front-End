@@ -4931,3 +4931,7 @@ tr.tracker-selected td:last-child {
     margin-top: 12px;
   }
 }
+select[data-locked="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -51,8 +51,7 @@ function attachPickTrackerAuthWatchdog() {
   });
 }
 
-// ✅ Attach AFTER client exists
-attachPickTrackerAuthWatchdog();
+
 
   
   
@@ -92,11 +91,11 @@ window.addEventListener("error", (e) => {
   <link rel="stylesheet" href="style.css" />
 </head>
 
+<body>
 
 
 
-
-  ...
+  
   <!-- ===================================== -->
   <!-- 📊 Analytics Modal -->
   <!-- ===================================== -->
@@ -205,7 +204,7 @@ window.addEventListener("error", (e) => {
 
     </div>
   </div>
-</body>
+
 
 
 
@@ -293,19 +292,26 @@ window.addEventListener("error", (e) => {
 
     <!-- Slip Meta -->
     <div class="manual-slip-meta">
+     <label>Slip Type</label>
+      <select id="manualSlipType">
+       <option value="prop">PrizePicks / Underdog (Props)</option>
+       <option value="regular">Regular Bet Slip</option>
+     </select>
+
       <label>Platform</label>
       <select id="manualSlipPlatform">
-        <option value="prizepicks">PrizePicks</option>
-        <option value="underdog">Underdog</option>
+       <option value="prizepicks">PrizePicks</option>
+       <option value="underdog">Underdog</option>
       </select>
 
       <label>Title (optional)</label>
-      <input
-        type="text"
-        id="manualSlipTitle"
+     <input
+       type="text"
+       id="manualSlipTitle"
         placeholder="e.g. Sunday NBA card"
       />
     </div>
+
 
     <!-- Picks -->
     <div id="manualPicksContainer"></div>
@@ -379,7 +385,9 @@ window.addEventListener("error", (e) => {
       <option value="all">All</option>
       <option value="prizepicks">PrizePicks</option>
       <option value="underdog">Underdog</option>
+      <option value="regular">Regular Bets</option>
     </select>
+
   </div>
 
   <!-- Apply -->
@@ -458,14 +466,38 @@ window.addEventListener("error", (e) => {
 
   <!-- ♻️ Shared site logic -->
   <script src="script.js"></script>
+  <script>
+  // =====================================================
+  // ✅ Create Supabase client (Pick Tracker)
+  // =====================================================
+  if (!window.supabaseClient) {
+    if (
+      window.supabase?.createClient &&
+      window.SUPABASE_URL &&
+      window.SUPABASE_ANON_KEY
+    ) {
+      window.supabaseClient = window.supabase.createClient(
+        window.SUPABASE_URL,
+        window.SUPABASE_ANON_KEY
+      );
+      console.log("✅ Supabase client created (Pick Tracker)");
+    } else {
+      console.error("❌ Supabase SDK or env vars missing");
+    }
+  }
+
+  // =====================================================
+  // ✅ Attach auth watchdog ONLY AFTER client exists
+  // =====================================================
+  attachPickTrackerAuthWatchdog();
+</script>
+
 
   <script>
   // ✅ Reuse Supabase client created in script.js
   if (window.supabaseClient) {
     console.log("🔁 Using existing Supabase client from script.js");
-  } else if (window.supabase) {
-    window.supabaseClient = window.supabase;
-    console.log("🔁 Bound Supabase client from window.supabase");
+
   } else {
     console.error("❌ Supabase client not available");
   }
@@ -2079,27 +2111,93 @@ function buildManualPickRow() {
     <button class="tracker-btn secondary remove-manual-pick">✖</button>
   `;
 
-  // 🔁 Market options update when sport changes
   const sportSelect = row.querySelector(".mp-sport");
   const marketSelect = row.querySelector(".mp-market");
 
+  // 🔁 Populate markets when sport changes
   sportSelect.addEventListener("change", () => {
     const sport = sportSelect.value;
     const markets = MANUAL_MARKETS_BY_SPORT[sport] || [];
 
     marketSelect.innerHTML =
       `<option value="">Market</option>` +
-      markets.map(m => `<option value="${m}">${formatMarketLabel(m)}</option>`).join("");
+      markets
+        .map(
+          m =>
+            `<option value="${m}">${formatMarketLabel(m)}</option>`
+        )
+        .join("");
 
-    marketSelect.disabled = !markets.length;
+    marketSelect.disabled = markets.length === 0;
   });
 
   // ❌ Remove row
-  row.querySelector(".remove-manual-pick")
+  row
+    .querySelector(".remove-manual-pick")
     .addEventListener("click", () => row.remove());
 
   return row;
 }
+
+function buildRegularBetRow() {
+  const row = document.createElement("div");
+  row.className = "manual-pick-row-builder";
+
+  row.innerHTML = `
+    <select class="rb-sport">
+      <option value="">Sport</option>
+      ${MANUAL_SPORTS.map(
+        s => `<option value="${s.value}">${s.label}</option>`
+      ).join("")}
+    </select>
+
+    <input
+      class="rb-event"
+      placeholder="Team A vs Team B"
+    />
+
+    <input
+      type="date"
+      class="rb-date"
+    />
+
+    <select class="rb-bet-type">
+      <option value="spread">Spread</option>
+      <option value="total">Total (Over / Under)</option>
+      <option value="moneyline">Moneyline</option>
+    </select>
+
+    <select class="rb-outcome">
+      <option value="over">Over</option>
+      <option value="under">Under</option>
+    </select>
+
+    <input
+      type="number"
+      step="0.5"
+      class="rb-line"
+      placeholder="Line / Odds"
+    />
+
+    <button class="tracker-btn secondary remove-manual-pick">✖</button>
+  `;
+
+  // Hide Over/Under for moneyline
+  const betType = row.querySelector(".rb-bet-type");
+  const outcome = row.querySelector(".rb-outcome");
+
+  betType.addEventListener("change", () => {
+    outcome.style.display =
+      betType.value === "moneyline" ? "none" : "inline-block";
+  });
+
+  row
+    .querySelector(".remove-manual-pick")
+    .addEventListener("click", () => row.remove());
+
+  return row;
+}
+
 
 
 // =====================================================
@@ -2114,10 +2212,55 @@ document
   ?.addEventListener("click", () => {
     manualSlipModal.classList.remove("hidden");
 
-    // Reset picks
+    const slipTypeSelect =
+      document.getElementById("manualSlipType");
+    const platformSelect =
+      document.getElementById("manualSlipPlatform");
+
+    // Default state
+    slipTypeSelect.value = "prop";
+    platformSelect.disabled = false;
+    platformSelect.value = "prizepicks";
+
     manualPicksContainer.innerHTML = "";
     manualPicksContainer.appendChild(buildManualPickRow());
   });
+
+  document
+  .getElementById("manualSlipType")
+  ?.addEventListener("change", e => {
+
+    const slipType = e.target.value;
+    const isRegular = slipType === "regular";
+    const platformSelect =
+      document.getElementById("manualSlipPlatform");
+
+    // 🔒 Platform handling
+    if (isRegular) {
+      // Force value for regular bets
+      platformSelect.value = "regular";
+
+      // Disable visually but keep value logic-controlled
+      platformSelect.disabled = true;
+      platformSelect.setAttribute("data-locked", "true");
+    } else {
+      // Restore platform selection for prop slips
+      platformSelect.disabled = false;
+      platformSelect.removeAttribute("data-locked");
+      platformSelect.value = "prizepicks";
+    }
+
+    // 🔁 Swap pick row type
+    manualPicksContainer.innerHTML = "";
+    manualPicksContainer.appendChild(
+      isRegular
+        ? buildRegularBetRow()
+        : buildManualPickRow()
+    );
+  });
+
+
+
 
 document
   .getElementById("closeManualSlipBtn")
@@ -2134,8 +2277,16 @@ document
 document
   .getElementById("addManualPickBtn")
   ?.addEventListener("click", () => {
-    manualPicksContainer.appendChild(buildManualPickRow());
+    const slipType =
+      document.getElementById("manualSlipType")?.value || "prop";
+
+    manualPicksContainer.appendChild(
+      slipType === "regular"
+        ? buildRegularBetRow()
+        : buildManualPickRow()
+    );
   });
+
 
 
 
@@ -2146,11 +2297,17 @@ document
   .getElementById("saveManualSlipBtn")
   ?.addEventListener("click", async () => {
 
+    const slipType =
+      document.getElementById("manualSlipType")?.value || "prop";
+
+    const platformSelect =
+      document.getElementById("manualSlipPlatform");
+
     const platform =
-      document.getElementById("manualSlipPlatform").value;
+      slipType === "regular" ? "regular" : platformSelect.value;
 
     const title =
-      document.getElementById("manualSlipTitle").value || null;
+      document.getElementById("manualSlipTitle")?.value || null;
 
     const rows = [
       ...document.querySelectorAll(
@@ -2163,30 +2320,49 @@ document
       return;
     }
 
-    const picks = rows.map(row => ({
-      sport: row.querySelector(".mp-sport")?.value?.trim(),
-      event: row.querySelector(".mp-event")?.value?.trim(),
-      game_date: row.querySelector(".mp-date")?.value,
-      player: row.querySelector(".mp-player")?.value?.trim(),
-      market: row.querySelector(".mp-market")?.value?.trim(),
-      outcome: row.querySelector(".mp-outcome")?.value,
-      line: Number(row.querySelector(".mp-line")?.value)
-    }));
+    // ============================
+    // 🧠 Build Picks (Prop vs Regular)
+    // ============================
+    const picks = rows.map(row => {
+      if (slipType === "regular") {
+        return {
+          sport: row.querySelector(".rb-sport")?.value?.trim(),
+          event: row.querySelector(".rb-event")?.value?.trim(),
+          game_date: row.querySelector(".rb-date")?.value,
+          player: null,
+          market: row.querySelector(".rb-bet-type")?.value,
+          outcome: row.querySelector(".rb-outcome")?.value || null,
+          line: Number(row.querySelector(".rb-line")?.value)
+        };
+      }
 
-    // 🛑 Minimal validation
-    const invalid = picks.find(
-      p =>
-        !p.sport ||
-        !p.event ||
-        !p.game_date ||
-        !p.player ||
-        !p.market ||
-        !p.outcome ||
-        Number.isNaN(p.line)
+      // 🔁 Prop slips (existing behavior)
+      return {
+        sport: row.querySelector(".mp-sport")?.value?.trim(),
+        event: row.querySelector(".mp-event")?.value?.trim(),
+        game_date: row.querySelector(".mp-date")?.value,
+        player: row.querySelector(".mp-player")?.value?.trim(),
+        market: row.querySelector(".mp-market")?.value?.trim(),
+        outcome: row.querySelector(".mp-outcome")?.value,
+        line: Number(row.querySelector(".mp-line")?.value)
+      };
+    });
+
+    // ============================
+    // 🛑 Validation (moneyline-safe)
+    // ============================
+    const invalid = picks.find(p =>
+      !p.sport ||
+      !p.event ||
+      !p.game_date ||
+      !p.market ||
+      (slipType === "prop" && !p.player) ||
+      (p.market !== "moneyline" && !p.outcome) ||
+      Number.isNaN(p.line)
     );
 
     if (invalid) {
-      alert("Please complete all fields for each pick.");
+      alert("Please complete all required fields.");
       return;
     }
 
@@ -2202,10 +2378,12 @@ document
             Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
-            platform,
-            title,
-            picks
-          })
+            slip_type: slipType,
+          platform: slipType === "regular" ? "regular" : platform,
+          title,
+          picks
+        })
+
         }
       );
 
@@ -2214,7 +2392,9 @@ document
         throw new Error(err?.detail || "Save failed");
       }
 
-      // ✅ Success
+      // ============================
+      // ✅ Success cleanup
+      // ============================
       document
         .getElementById("manualSlipModal")
         ?.classList.add("hidden");
@@ -2227,6 +2407,9 @@ document
       await loadPickTracker();
       await loadAnalyticsSummary();
 
+
+
+
       alert("✅ Manual slip saved");
 
     } catch (err) {
@@ -2234,6 +2417,7 @@ document
       alert("Failed to save manual slip");
     }
   });
+
 
 /* =====================================================
    MARKET + OUTCOME FORMATTERS
@@ -2295,41 +2479,117 @@ const MANUAL_SPORTS = [
 ];
 
 const MANUAL_MARKETS_BY_SPORT = {
+  // =====================
+  // 🏀 NBA
+  // =====================
   nba: [
     "player_points",
     "player_rebounds",
     "player_assists",
+    "player_threes",
+
     "player_points_rebounds",
     "player_points_assists",
     "player_rebounds_assists",
     "player_points_rebounds_assists"
   ],
+
+  // =====================
+  // 🏀 NCAAB
+  // =====================
+  ncaab: [
+    "player_points",
+    "player_rebounds",
+    "player_assists",
+    "player_threes",
+
+    "player_points_rebounds",
+    "player_points_assists",
+    "player_rebounds_assists"
+  ],
+
+  // =====================
+  // 🏈 NFL
+  // =====================
   nfl: [
     "player_pass_yds",
     "player_pass_tds",
+
     "player_rush_yds",
+    "player_rush_tds",
+
     "player_rec_yds",
-    "player_receptions"
+    "player_receptions",
+    "player_reception_tds",
+
+    "player_pass_rush_yds",
+    "player_rush_reception_yds",
+
+    "player_kicking_points"
   ],
+
+  // =====================
+  // 🏈 NCAAF
+  // =====================
+  ncaaf: [
+    "player_pass_yds",
+    "player_pass_tds",
+
+    "player_rush_yds",
+    "player_rush_tds",
+
+    "player_rec_yds",
+    "player_receptions",
+    "player_reception_tds",
+
+    "player_pass_rush_yds",
+    "player_rush_reception_yds",
+
+    "player_kicking_points"
+  ],
+
+  // =====================
+  // 🏒 NHL
+  // =====================
   nhl: [
     "player_goals",
     "player_assists",
     "player_points",
-    "player_shots"
+    "player_shots_on_goal"
   ],
+
+  // =====================
+  // ⚾ MLB
+  // =====================
   mlb: [
     "player_hits",
     "player_total_bases",
     "player_home_runs",
-    "player_strikeouts"
+    "player_strikeouts",
+
+    "batter_total_bases",
+    "batter_home_runs",
+
+    "pitcher_strikeouts",
+    "pitcher_walks",
+    "pitcher_earned_runs",
+    "pitcher_outs"
   ]
 };
 
 
+
 function lockManualEntry(cardEl) {
+
+  // Lock prop inputs
   cardEl
     .querySelectorAll("input.manual-input")
     .forEach(i => i.disabled = true);
+
+  // Lock regular bet dropdowns
+  cardEl
+    .querySelectorAll("select.manual-result-select")
+    .forEach(s => s.disabled = true);
 
   const submitBtn = cardEl.querySelector(".manual-submit-btn");
   if (submitBtn) {
@@ -2338,30 +2598,40 @@ function lockManualEntry(cardEl) {
     submitBtn.style.cursor = "not-allowed";
   }
 
-  const editBtn = cardEl.querySelector(".manual-edit-btn");
-  if (editBtn) editBtn.style.display = "inline-block";
+  const manualEditBtn = cardEl.querySelector(".manual-edit-btn");
+  if (manualEditBtn) manualEditBtn.style.display = "inline-block";
+
 }
 
+
 function unlockManualEntry(cardEl) {
+
+  // Enable prop inputs
   cardEl
     .querySelectorAll("input.manual-input")
     .forEach(i => i.disabled = false);
-    
+
+  // Enable regular bet dropdowns
+  cardEl
+    .querySelectorAll("select.manual-result-select")
+    .forEach(s => s.disabled = false);
 
   const submitBtn = cardEl.querySelector(".manual-submit-btn");
   if (submitBtn) {
     submitBtn.disabled = false;
-    submitBtn.style.cursor = "pointer";   // ✅ FIX
-    submitBtn.style.opacity = "1";         // ✅ FIX
+    submitBtn.style.opacity = "1";
+    submitBtn.style.cursor = "pointer";
   }
 
-  const editBtn = cardEl.querySelector(".manual-edit-btn");
-  if (editBtn) editBtn.style.display = "none";
+  const manualEditBtn = cardEl.querySelector(".manual-edit-btn");
+  if (manualEditBtn) manualEditBtn.style.display = "none";
+
 }
 
 
+
 async function loadSlipPicks(slipId, bodyEl, slip) {
-  bodyEl.textContent = "Loading…";
+  bodyEl.innerHTML = "Loading…";
 
   try {
     const token = await getAuthToken();
@@ -2371,144 +2641,97 @@ async function loadSlipPicks(slipId, bodyEl, slip) {
     );
 
     if (!res.ok) throw new Error();
-    const data = await res.json();
+    const picks = await res.json();
 
-      const picks = Array.isArray(data)
-        ? data
-        : data?.picks || [];
+    if (!Array.isArray(picks) || !picks.length) {
+      throw new Error("No picks returned");
+    }
 
-        // 🔍 Enhance slip search with player names (post-load)
-      const cardEl = document.querySelector(
-        `.slip-card[data-slip-id="${slipId}"]`
-      );
+    // ------------------------------------
+    // Render base UI
+    // ------------------------------------
 
-      if (cardEl && picks.length) {
-        const extra = picks
-          .map(p => `${p.player || ""} ${p.event || ""}`)
-          .join(" ")
-          .toLowerCase();
+bodyEl.innerHTML = `
+  <!-- 💰 Slip Stake / Payout -->
+  <div class="slip-money">
+    <div class="money-field">
+      <label>Stake ($)</label>
+      <input type="number" step="0.01" class="slip-stake" placeholder="Optional" />
+    </div>
 
-       cardEl.dataset.search =
-         `${cardEl.dataset.search} ${extra}`.trim();
+    <div class="money-field">
+      <label>Payout ($)</label>
+      <input type="number" step="0.01" class="slip-payout" placeholder="Optional" />
+    </div>
 
-        applySlipSearchFilter();
-      }
-
-
-
-      if (!picks.length) {
-        throw new Error("No picks returned");
-      }
-
-
-    bodyEl.innerHTML = `
-      <!-- 💰 Slip Stake / Payout -->
-      <div class="slip-money">
-        <div class="money-field">
-          <label>Stake ($)</label>
-          <input type="number" step="0.01" class="slip-stake" placeholder="Optional" />
-        </div>
-
-        <div class="money-field">
-          <label>Payout ($)</label>
-          <input type="number" step="0.01" class="slip-payout" placeholder="Optional" />
-        </div>
-
-        <button class="save-money-btn tracker-btn">Save $</button>
-        <button class="edit-money-btn tracker-btn secondary" style="display:none;">
-          Edit $
-        </button>
-
-        <div class="money-status"></div>
-      </div>
-
-      <hr class="slip-divider" />
-
-      <div class="manual-entry-card" data-slip-id="${slipId}">
-        <h4>✍️ Manual Entry</h4>
-        <div class="manual-picks"></div>
-
-        <div class="manual-actions">
-          <button class="manual-submit-btn">Submit Manual Results</button>
-          <button class="manual-edit-btn" style="display:none;">Edit Manual Results</button>
-        </div>
-
-        <div class="manual-status"></div>
-      </div>
-      
-      <button class="delete-slip-btn" data-slip-id="${slipId}">
-    🗑 Delete
+    <button class="save-money-btn tracker-btn">Save $</button>
+    <button class="edit-money-btn tracker-btn secondary" style="display:none;">
+      Edit $
     </button>
 
+    <div class="money-status"></div>
+  </div>
 
+  <hr class="slip-divider" />
 
-    `;
+  <!-- ✍️ Manual Entry -->
+  <div class="manual-entry-card" data-slip-id="${slipId}">
+    <h4>✍️ Manual Entry</h4>
 
-    /*/* ============================
-   💰 Money Wiring (FINAL)
-============================ */
+    <div class="manual-picks"></div>
+
+    <div class="manual-actions">
+      <button class="manual-submit-btn">Submit Manual Results</button>
+      <button class="manual-edit-btn" style="display:none;">
+        Edit Manual Results
+      </button>
+    </div>
+
+    <div class="manual-status"></div>
+  </div>
+`;
+// ============================
+// 💰 Money Wiring
+// ============================
 const stakeInput = bodyEl.querySelector(".slip-stake");
 const payoutInput = bodyEl.querySelector(".slip-payout");
 const saveBtn = bodyEl.querySelector(".save-money-btn");
 const editBtn = bodyEl.querySelector(".edit-money-btn");
 const moneyStatus = bodyEl.querySelector(".money-status");
 
-// ----------------------------
-// 🔒 Lock / Unlock helpers
-// ----------------------------
-function lockMoneyUI(message = "💵 Saved") {
+function lockMoneyUI(msg = "💵 Saved") {
   stakeInput.disabled = true;
   payoutInput.disabled = true;
-  saveBtn.disabled = true;
   saveBtn.style.display = "none";
   editBtn.style.display = "inline-block";
-  moneyStatus.textContent = message;
+  moneyStatus.textContent = msg;
 }
 
 function unlockMoneyUI() {
   stakeInput.disabled = false;
   payoutInput.disabled = false;
-  saveBtn.disabled = false;
   saveBtn.style.display = "inline-block";
   editBtn.style.display = "none";
   moneyStatus.textContent = "✏️ Editing enabled";
 }
 
-// 🧠 INITIAL MONEY STATE (SLIP-LEVEL SOURCE OF TRUTH)
-if (slip.stake !== null && slip.stake !== undefined) {
-  stakeInput.value = slip.stake;
-}
+// Initialize values
+if (slip.stake != null) stakeInput.value = slip.stake;
+if (slip.payout != null) payoutInput.value = slip.payout;
 
-if (slip.payout !== null && slip.payout !== undefined) {
-  payoutInput.value = slip.payout;
-}
-
-if (
-  slip.stake !== null &&
-  slip.stake !== undefined &&
-  slip.payout !== null &&
-  slip.payout !== undefined
-) {
+if (slip.stake != null && slip.payout != null) {
   lockMoneyUI();
 } else {
   unlockMoneyUI();
 }
 
-
-
-// ----------------------------
-// 💾 Save money
-// ----------------------------
 saveBtn.addEventListener("click", async () => {
-  const stake =
-    stakeInput.value !== "" ? Number(stakeInput.value) : null;
-  const payout =
-    payoutInput.value !== "" ? Number(payoutInput.value) : null;
+  const stake = stakeInput.value ? Number(stakeInput.value) : null;
+  const payout = payoutInput.value ? Number(payoutInput.value) : null;
 
   moneyStatus.textContent = "⏳ Saving…";
 
   try {
-    const token = await getAuthToken();
     const res = await fetch(
       `${window.API_BASE}/api/slips/${slipId}/money`,
       {
@@ -2522,122 +2745,217 @@ saveBtn.addEventListener("click", async () => {
     );
 
     if (!res.ok) throw new Error();
-    await loadPickTracker();
-    await loadAnalyticsSummary();
 
-
+    // ✅ Lock UI
     lockMoneyUI("✅ Saved");
-    loadAnalyticsSummary();
+
+    // =====================================================
+    // 🔄 1️⃣ UPDATE IN-MEMORY SLIP (CRITICAL)
+    // =====================================================
+    const slipObj = window.loadedSlips?.find(
+      s => s.slip_id === slipId
+    );
+
+    if (slipObj) {
+      slipObj.stake = stake;
+      slipObj.payout = payout;
+    }
+
+    // =====================================================
+    // 🔄 2️⃣ UPDATE HEADER BADGE IMMEDIATELY
+    // =====================================================
+    const card = bodyEl.closest(".slip-card");
+    const badge = card.querySelector(".money-badge");
+
+    if (badge) {
+      badge.className = "money-badge success";
+      badge.textContent = "💵 $ Added";
+    }
+
+    // =====================================================
+    // 🔄 3️⃣ Analytics refresh (optional but correct)
+    // =====================================================
+    await loadAnalyticsSummary();
 
   } catch {
     moneyStatus.textContent = "❌ Failed to save";
   }
 });
 
-// ----------------------------
-// ✏️ Edit money
-// ----------------------------
-editBtn.addEventListener("click", () => {
-  unlockMoneyUI();
-});
+
+editBtn.addEventListener("click", unlockMoneyUI);
 
 
-    /* ============================
-       ✍️ Manual Picks Rendering
-    ============================ */
-    const card = bodyEl.querySelector(".manual-entry-card");
-    const container = card.querySelector(".manual-picks");
-    const statusEl = card.querySelector(".manual-status");
+    const cardEl = bodyEl.closest(".slip-card");
+    const manualCard = bodyEl.querySelector(".manual-entry-card");
+    const container = manualCard.querySelector(".manual-picks");
+    const statusEl = manualCard.querySelector(".manual-status");
 
-    let hasManualData = false;
+    const isRegularSlip = slip.slip_type === "regular";
 
-    picks.forEach(p => {
-      if (p.manual_override || p.source === "manual") {
-        hasManualData = true;
-      }
+    // ------------------------------------
+    // Render each pick ONCE
+    // ------------------------------------
+    container.innerHTML = picks.map(p => {
+      const label = p.player
+        ? `${p.player} — ${formatMarketLabel(p.market)}`
+        : `${p.event} — ${formatMarketLabel(p.market)}`;
 
-      container.insertAdjacentHTML("beforeend", `
-        <div class="manual-pick-row">
+      return `
+        <div class="manual-pick-row" data-pick-id="${p.pick_id}">
           <div class="manual-pick-label">
-            <strong>${p.player}</strong>
-            — ${formatMarketLabel(p.market)}
-            <span class="pick-line">
-              (${formatOutcomeLabel(p.outcome)} ${p.line} • ${p.platform})
-            </span>
+            ${label}
+            ${p.outcome && p.line !== null ? `(${p.outcome} ${p.line})` : ""}
           </div>
 
-          <input
-            type="number"
-            step="0.5"
-            class="manual-input"
-            data-pick-id="${p.pick_id}"
-            value="${p.manual_actual_value ?? p.actual_value ?? ""}"
-          />
+          ${
+            isRegularSlip
+              ? `
+                <select
+                  class="manual-result-select"
+                  data-pick-id="${p.pick_id}"
+                  disabled
+                >
+                  <option value="">Result</option>
+                  <option value="win" ${p.result === "win" ? "selected" : ""}>Win</option>
+                  <option value="loss" ${p.result === "loss" ? "selected" : ""}>Loss</option>
+                  <option value="push" ${p.result === "push" ? "selected" : ""}>Push</option>
+                </select>
+              `
+              : `
+                <input
+                  type="number"
+                  class="manual-input"
+                  data-pick-id="${p.pick_id}"
+                  placeholder="Actual value"
+                  value="${p.manual_actual_value ?? p.actual_value ?? ""}"
+                  disabled
+                />
+              `
+          }
         </div>
-      `);
-    });
+      `;
+    }).join("");
 
-    if (hasManualData) {
-      lockManualEntry(card);
-      statusEl.textContent = "✅ Manual results saved";
-   
+    // ------------------------------------
+    // Lock by default
+    // ------------------------------------
+    lockManualEntry(manualCard);
+    statusEl.textContent = "🔒 Locked";
 
-    }
-
-    card.querySelector(".manual-submit-btn")
-      .addEventListener("click", async () => {
-        const payload = {};
-        card.querySelectorAll(".manual-input").forEach(i => {
-          if (i.value !== "") payload[i.dataset.pickId] = i.value;
-        });
-
-        if (!Object.keys(payload).length) {
-          statusEl.textContent = "⚠️ Enter at least one value";
-          return;
-        }
-
-        try {
-          const token = await getAuthToken();
-          const res = await fetch(
-            `${window.API_BASE}/api/slips/${slipId}/manual_results`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-              },
-              body: JSON.stringify(payload)
-            }
-          );
-
-    
-
-          if (!res.ok) throw new Error();
-
-          statusEl.textContent = "✅ Saved";
-          await loadPickTracker();
-          await loadAnalyticsSummary();
-
-        } catch {
-          statusEl.textContent = "❌ Failed to submit";
-        }
-      });
-
-    card.querySelector(".manual-edit-btn")
+    // ------------------------------------
+    // Enable editing
+    // ------------------------------------
+    manualCard.querySelector(".manual-edit-btn")
       .addEventListener("click", () => {
-        unlockManualEntry(card);
+        unlockManualEntry(manualCard);
         statusEl.textContent = "✏️ Editing enabled";
       });
 
-    } catch (err) {
-    console.error("❌ loadSlipPicks failed:", err);
-   bodyEl.innerHTML = `
-     <span style="color:red">
-       Failed to load picks
-     </span>
-    `;
-  }
 
+    // ------------------------------------
+    // Submit manual results
+    // ------------------------------------
+ // ------------------------------------
+// Submit manual results (NO COLLAPSE, LIVE UPDATE)
+// ------------------------------------
+manualCard.querySelector(".manual-submit-btn")
+  .addEventListener("click", async () => {
+    const payload = {};
+
+    // Build payload from UI
+    container.querySelectorAll(".manual-pick-row").forEach(row => {
+      const pickId = row.dataset.pickId;
+      if (!pickId) return;
+
+      const resultSelect = row.querySelector(".manual-result-select");
+      const actualInput = row.querySelector(".manual-input");
+
+      // Regular bets
+      if (resultSelect && resultSelect.value) {
+        payload[pickId] = { result: resultSelect.value };
+      }
+
+      // Prop bets
+      if (
+        actualInput &&
+        actualInput.value !== "" &&
+        !Number.isNaN(Number(actualInput.value))
+      ) {
+        payload[pickId] = { actual_value: Number(actualInput.value) };
+      }
+    });
+
+    if (!Object.keys(payload).length) {
+      statusEl.textContent = "⚠️ Enter at least one value";
+      return;
+    }
+
+    statusEl.textContent = "⏳ Saving…";
+
+    try {
+      const res = await fetch(
+        `${window.API_BASE}/api/slips/${slipId}/manual_results`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json(); // 🔑 THIS IS THE KEY
+
+      // Lock UI (keep card OPEN)
+      lockManualEntry(manualCard);
+      statusEl.textContent = "✅ Saved";
+
+      // ------------------------------------
+      // 🔄 UPDATE SLIP HEADER IN PLACE
+      // ------------------------------------
+      const slipCard = bodyEl.closest(".slip-card");
+
+      if (slipCard && data.slip_result) {
+        const resultPill = slipCard.querySelector(".result");
+
+        if (resultPill) {
+          resultPill.textContent = data.slip_result.toUpperCase();
+          resultPill.className = `result ${data.slip_result}`;
+        }
+
+        // Remove manual-required badge
+        const manualFlag =
+          slipCard.querySelector(".manual-required");
+        if (manualFlag) manualFlag.remove();
+
+        // Remove loading status icon
+        const statusIcon =
+          slipCard.querySelector(".game-status");
+        if (statusIcon) statusIcon.remove();
+
+        // Update data attributes (important for filters/search)
+        slipCard.dataset.completed =
+          data.slip_result !== "pending";
+      }
+
+      // Analytics only (no re-render of slips)
+      await loadAnalyticsSummary();
+
+    } catch (err) {
+      console.error("Manual submit failed", err);
+      statusEl.textContent = "❌ Failed to submit";
+    }
+  });
+
+
+  } catch (err) {
+    console.error("❌ loadSlipPicks failed:", err);
+    bodyEl.innerHTML = `<span style="color:red">Failed to load picks</span>`;
+  }
 }
 
 
@@ -2658,137 +2976,88 @@ function renderPickTracker(slips) {
     return;
   }
 
-// ------------------------------------
-// Render HTML
-// ------------------------------------
+  list.innerHTML = slips
+    .map(slip => {
+      const hasMoney =
+        slip.stake !== null &&
+        slip.stake !== undefined &&
+        slip.payout !== null &&
+        slip.payout !== undefined;
 
-list.innerHTML = slips
-  .map(slip => {
-    const hasMoney =
-      slip.stake !== null &&
-      slip.stake !== undefined &&
-      slip.payout !== null &&
-      slip.payout !== undefined;
+      const searchText = buildSlipSearchText(slip).replace(/"/g, "");
+      const isCompleted =
+        slip.slip_result && slip.slip_result !== "pending";
 
-    // 🔍 Search + completion state
-    const searchText = buildSlipSearchText(slip)
-      .replace(/"/g, ""); // safety for HTML attributes
-
-    const isCompleted =
-      slip.slip_result &&
-      slip.slip_result !== "pending";
-
-    return `
-      <div
-        class="slip-card"
-        data-slip-id="${slip.slip_id}"
-        data-search="${searchText}"
-        data-completed="${isCompleted}"
-      >
-        <div class="slip-header">
-          <div class="slip-title">
-            ${
-              slip.picks && slip.picks.length
-                ? buildSlipCardTitleFromPicks(slip.picks)
-                : `${slip.title || "Slip"}`
-            }
-
-            <span class="pick-count">(${slip.pick_count})</span>
-          </div>
-
-          <div class="slip-meta">
-            <span class="platform ${slip.platform}">
-              ${slip.platform}
-            </span>
-
-            <span class="result ${slip.slip_result || "pending"}">
-              ${(slip.slip_result || "pending").toUpperCase()}
-            </span>
-
-            ${
-              hasMoney
-                ? `<span class="money-badge success">💵 $ Added</span>`
-                : `<span class="money-badge warning">⚠️ Needs $ Values</span>`
-            }
-
-            ${
-              slip.slip_result === "pending"
-                ? `<span class="game-status" id="status-${slip.slip_id}">⏳</span>`
-                : ``
-            }
-
-            ${
-              slip.manual_required
-                ? `<span class="manual-required">Needs Manual Entry</span>`
-                : slip.slip_result === "pending"
-                  ? `<button class="grade-btn" data-slip-id="${slip.slip_id}">
-                       Grade
-                     </button>`
-                  : ""
-            }
-
-            <!-- 🗑 Delete Slip -->
-            <button
-              class="delete-slip-btn"
-              data-slip-id="${slip.slip_id}"
-              title="Delete slip"
-            >
-              🗑
-            </button>
-          </div>
-        </div>
-
-        <div class="slip-body" style="display:none;">
-          <!-- 💰 Money Inputs (Optional) -->
-          <div class="slip-money">
-            <div class="money-field">
-              <label>Stake ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                class="slip-stake"
-                placeholder="Optional"
-              />
+      return `
+        <div
+          class="slip-card"
+          data-slip-id="${slip.slip_id}"
+          data-search="${searchText}"
+          data-completed="${isCompleted}"
+        >
+          <div class="slip-header">
+            <div class="slip-title">
+              ${
+                slip.picks && slip.picks.length
+                  ? buildSlipCardTitleFromPicks(slip.picks)
+                  : slip.title || "Slip"
+              }
+              <span class="pick-count">(${slip.pick_count})</span>
             </div>
 
-            <div class="money-field">
-              <label>Payout ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                class="slip-payout"
-                placeholder="Optional"
-              />
+            <div class="slip-meta">
+              <span class="platform ${slip.platform}">
+                ${slip.platform}
+              </span>
+
+              <span class="result ${slip.slip_result || "pending"}">
+                ${(slip.slip_result || "pending").toUpperCase()}
+              </span>
+
+              ${
+                hasMoney
+                  ? `<span class="money-badge success">💵 $ Added</span>`
+                  : `<span class="money-badge warning">⚠️ Needs $ Values</span>`
+              }
+
+              ${
+                slip.slip_result === "pending"
+                  ? `<span class="game-status" id="status-${slip.slip_id}">⏳</span>`
+                  : ``
+              }
+
+              ${
+                slip.manual_required
+                  ? `<span class="manual-required">Needs Manual Entry</span>`
+                  : slip.slip_result === "pending"
+                    ? `<button class="grade-btn" data-slip-id="${slip.slip_id}">
+                         Grade
+                       </button>`
+                    : ""
+              }
+
+              <!-- 🗑 Delete Slip -->
+              <button
+                class="delete-slip-btn"
+                data-slip-id="${slip.slip_id}"
+                title="Delete slip"
+              >
+                🗑
+              </button>
             </div>
-
-            <button class="save-money-btn tracker-btn">
-              Save $
-            </button>
-
-            <button
-              class="edit-money-btn tracker-btn secondary"
-              style="display:none;"
-            >
-              Edit $
-            </button>
-
-            <div class="money-status"></div>
           </div>
+
+          <!-- ⬇️ EMPTY BODY — populated by loadSlipPicks() -->
+          <div class="slip-body" style="display:none;"></div>
         </div>
-      </div>
-    `;
-  })
-  .join("");
+      `;
+    })
+    .join("");
+
   loadSlipSearchIndex(slips);
-  // ✅ Apply current search + checkbox state to freshly-rendered cards
   applySlipSearchFilter();
-
-
-
-
-
- 
 }
+
 
 function applySlipSearchFilter() {
   const term =
@@ -3004,3 +3273,6 @@ async function loadSlipSearchIndex(slips) {
 
 
 </script>
+</body>
+</html>
+
