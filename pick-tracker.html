@@ -2641,11 +2641,26 @@ async function loadSlipPicks(slipId, bodyEl, slip) {
     );
 
     if (!res.ok) throw new Error();
-    const picks = await res.json();
+    const data = await res.json();
+    const picks = Array.isArray(data) ? data : data.picks;
+    bodyEl.closest(".slip-card")._loadedPicks = picks;
 
-    if (!Array.isArray(picks) || !picks.length) {
-      throw new Error("No picks returned");
-    }
+    console.log("🧪 Picks payload for", slipId, picks);
+
+
+
+    if (!Array.isArray(picks) || picks.length === 0) {
+      console.warn("⚠️ No picks found for slip", slipId);
+
+      bodyEl.innerHTML = `
+        <div class="empty-slip">
+          <em>No picks found for this slip.</em>
+        </div>
+      `;
+
+  return; // ✅ DO NOT THROW
+}
+
 
     // ------------------------------------
     // Render base UI
@@ -3229,7 +3244,11 @@ async function loadSlipSearchIndex(slips) {
 
     if (!res.ok) throw new Error("Search index fetch failed");
 
+    // index rows: [{ slip_id, search_text }]
     const index = await res.json();
+    const indexMap = new Map(
+      index.map(row => [row.slip_id, (row.search_text || "").toLowerCase()])
+    );
 
     // 🔗 Attach search text to each slip card
     slips.forEach(slip => {
@@ -3239,14 +3258,18 @@ async function loadSlipSearchIndex(slips) {
 
       if (!card) return;
 
-      const base = card.dataset.search || "";
-      const extra = index[slip.slip_id] || "";
+      // 1️⃣ backend-provided search text (includes PLAYERS)
+      const backendSearch = indexMap.get(slip.slip_id) || "";
 
-      card.dataset.search = `${base} ${extra}`.trim();
+      // 2️⃣ fallback to local build (sport / team)
+      const localSearch = buildSlipSearchText(
+        slip,
+        card._loadedPicks || []
+      );
+
+      // ✅ IMPORTANT: dataset.search (NOT searchText)
+      card.dataset.search = `${backendSearch} ${localSearch}`.trim();
     });
-
-    // 🔁 Re-apply active search
-    applySlipSearchFilter();
 
   } catch (err) {
     console.warn("⚠️ Slip search index failed to load", err);
