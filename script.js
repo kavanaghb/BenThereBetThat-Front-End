@@ -3813,25 +3813,47 @@ if (viewPropsBtn && viewGamesBtn) {
     }
   });
 
-  // 🏈 Game Lines View
-  viewGamesBtn.addEventListener("click", async () => {
-    viewGamesBtn.classList.add("active");
-    viewPropsBtn.classList.remove("active");
-    resultsDiv.innerHTML = "<p>Loading game line data...</p>";
+// 🏈 Game Lines View
+viewGamesBtn.addEventListener("click", async () => {
+  viewGamesBtn.classList.add("active");
+  viewPropsBtn.classList.remove("active");
+  resultsDiv.innerHTML = "<p>Loading game line data...</p>";
 
-    const date = document.getElementById("dateInput").value;
-    const sport = window.selectedSport || "americanfootball_nfl"; // fallback if none selected
+  const date = document.getElementById("dateInput").value;
+  const sport = window.selectedSport || "americanfootball_nfl"; // fallback if none selected
 
-    try {
-      const res = await fetch(`${window.API_BASE}/api/game-lines?sport=${sport}&date=${date}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      renderGameTable(data);
-    } catch (err) {
-      console.error("Error fetching game lines:", err);
-      resultsDiv.innerHTML = "<p>⚠️ Error loading game line data. Please try again.</p>";
+  try {
+    // ===================================================
+    // 🏟️ FIX: Always include selected game IDs
+    // ===================================================
+    const params = new URLSearchParams({
+      sport,
+      date
+    });
+
+    // ✅ THIS IS THE IMPORTANT FIX
+    if (Array.isArray(selectedGames) && selectedGames.length > 0) {
+      selectedGames.forEach(eventId => {
+        params.append("event_ids", eventId);
+      });
     }
-  });
+
+    const res = await fetch(
+      `${window.API_BASE}/api/game-lines?${params.toString()}`
+    );
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    renderGameTable(data);
+
+  } catch (err) {
+    console.error("Error fetching game lines:", err);
+    resultsDiv.innerHTML =
+      "<p>⚠️ Error loading game line data. Please try again.</p>";
+  }
+});
+
 }
 
 // ===================================================
