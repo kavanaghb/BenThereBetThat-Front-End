@@ -4935,3 +4935,43 @@ select[data-locked="true"] {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.start-here-box {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 16px;
+  background: #f8fbff;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.start-here-box h3 {
+  margin-top: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.start-here-box p {
+  margin: 8px 0 14px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.tutorial-btn {
+  display: inline-block;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+.tutorial-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+  opacity: 0.95;
+}
