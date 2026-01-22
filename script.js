@@ -994,23 +994,36 @@ let selectedBooks = new Set(
 );
 
 if (bookmakerFilters) {
-  bookmakerFilters.querySelectorAll("input[type='checkbox']").forEach(cb => {
-    // Initialize checkbox state
+  const checkboxes = bookmakerFilters.querySelectorAll("input[type='checkbox']");
+
+  checkboxes.forEach(cb => {
+    // ✅ Prevent double-binding if this UI is rebuilt/re-rendered
+    if (cb.dataset.bound === "1") return;
+    cb.dataset.bound = "1";
+
+    // ✅ Initialize checkbox state:
+    // If nothing is selected, treat as "all selected"
     cb.checked = selectedBooks.size === 0 || selectedBooks.has(cb.value);
 
     cb.addEventListener("change", () => {
-      // Update selected books set
+      // ✅ Update selectedBooks Set
       if (cb.checked) {
         selectedBooks.add(cb.value);
       } else {
         selectedBooks.delete(cb.value);
       }
 
-      // Persist to localStorage
+      // ✅ If user unchecks everything, interpret as "show all"
+      // (clear the set, and re-check all boxes)
+      if (selectedBooks.size === 0) {
+        checkboxes.forEach(x => (x.checked = true));
+      }
+
+      // ✅ Persist to localStorage
       localStorage.setItem("selectedBooks", JSON.stringify([...selectedBooks]));
 
-      // ✅ Safe re-render only if data exists
-      if (window.lastRenderedData && Array.isArray(window.lastRenderedData) && window.lastRenderedData.length > 0) {
+      // ✅ Safe re-render only if cached data exists
+      if (Array.isArray(window.lastRenderedData) && window.lastRenderedData.length > 0) {
         console.log("🔁 Updating table with current bookmaker filters:", [...selectedBooks]);
         rerenderConsensusTable(window.lastRenderedData);
       } else {
@@ -1019,6 +1032,7 @@ if (bookmakerFilters) {
     });
   });
 }
+
 
 // ===================================================
 // ⭐ LOAD TEAM LOGOS FROM JSON
