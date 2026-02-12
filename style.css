@@ -4975,3 +4975,29 @@ select[data-locked="true"] {
   box-shadow: 0 6px 14px rgba(0,0,0,0.3);
   opacity: 0.95;
 }
+
+
+
+
+
+#outageBanner {
+  background: #ff9800;
+  color: white;
+  padding: 14px;
+  text-align: center;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 99999;
+}
+
+#dismissBanner {
+  margin-left: 15px;
+  background: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
