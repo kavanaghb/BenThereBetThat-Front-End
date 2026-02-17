@@ -161,6 +161,7 @@ function formatSportLabel(sport) {
     mlb: "⚾ MLB",
     nhl: "🏒 NHL",
     ncaab: "🏀 NCAAB",
+    ncaaw: "🏀 WNBA",
     ncaaf: "🏈 NCAAF"
   };
   return map[sport] || sport?.toUpperCase() || "Sport";
@@ -267,37 +268,52 @@ function clearPickTrackerSelections() {
  * (does NOT affect filters or analytics)
  */
 function setPickTrackerPlatform(platform) {
-  if (!["prizepicks", "underdog"].includes(platform)) return;
+  if (!["prizepicks", "underdog", "betr"].includes(platform)) return;
+
 
   window.pickTracker.platform = platform;
   console.log("🎯 Pick Tracker platform set:", platform);
 
   const prizeBtn = document.getElementById("pickTrackerPrizePicksBtn");
   const dogBtn = document.getElementById("pickTrackerUnderdogBtn");
+  const betrBtn = document.getElementById("pickTrackerBetrBtn");
+
 
   if (!prizeBtn || !dogBtn) return;
 
   // 🔴 RESET BOTH (neutral)
-  prizeBtn.style.background = "#e0e0e0";
-  prizeBtn.style.color = "#333";
-  prizeBtn.style.boxShadow = "none";
 
-  dogBtn.style.background = "#e0e0e0";
-  dogBtn.style.color = "#333";
-  dogBtn.style.boxShadow = "none";
+
+  [prizeBtn, dogBtn, betrBtn].forEach(btn => {
+  if (!btn) return;
+  btn.style.background = "#e0e0e0";
+  btn.style.color = "#333";
+  btn.style.boxShadow = "none";
+});
+
 
   // 🟢 ACTIVATE SELECTED
   if (platform === "prizepicks") {
-    prizeBtn.style.background =
-      "linear-gradient(135deg, #28a745, #1e7e34)";
-    prizeBtn.style.color = "#fff";
-    prizeBtn.style.boxShadow = "0 0 10px rgba(40,167,69,0.6)";
-  } else {
-    dogBtn.style.background =
-      "linear-gradient(135deg, #007bff, #0056b3)";
-    dogBtn.style.color = "#fff";
-    dogBtn.style.boxShadow = "0 0 10px rgba(0,123,255,0.6)";
-  }
+  prizeBtn.style.background =
+    "linear-gradient(135deg, #28a745, #1e7e34)";
+  prizeBtn.style.color = "#fff";
+  prizeBtn.style.boxShadow = "0 0 10px rgba(40,167,69,0.6)";
+
+} else if (platform === "underdog") {
+
+  dogBtn.style.background =
+    "linear-gradient(135deg, #007bff, #0056b3)";
+  dogBtn.style.color = "#fff";
+  dogBtn.style.boxShadow = "0 0 10px rgba(0,123,255,0.6)";
+
+} else if (platform === "betr") {
+
+  betrBtn.style.background =
+    "linear-gradient(135deg, #ff6600, #cc5200)";
+  betrBtn.style.color = "#fff";
+  betrBtn.style.boxShadow = "0 0 10px rgba(255,102,0,0.6)";
+}
+
 
   updatePickTrackerBarUI();
 }
@@ -375,7 +391,12 @@ function updatePickTrackerBarUI() {
   bar.classList.remove("hidden");
 
   platformEl.textContent =
-    platform === "underdog" ? "Underdog" : "PrizePicks";
+  platform === "underdog"
+    ? "Underdog"
+    : platform === "betr"
+    ? "Betr"
+    : "PrizePicks";
+
 
   countEl.textContent =
     `${count} pick${count !== 1 ? "s" : ""} selected`;
@@ -406,19 +427,30 @@ async function savePickTrackerSlip() {
       return;
     }
 
-    const payload = {
-      platform: window.pickTracker.platform,
-      title: `${window.pickTracker.platform === "underdog" ? "Underdog" : "PrizePicks"} slip (${picks.length} picks)`,
-      picks: picks.map(p => ({
-        sport: p.sport,
-        event: p.event,
-        game_date: p.game_date,
-        player: p.player,
-        market: p.market,
-        outcome: p.outcome,
-        line: Number(p.line)
-      }))
-    };
+    const platformNameMap = {
+  prizepicks: "PrizePicks",
+  underdog: "Underdog",
+  betr: "Betr"
+};
+
+const platform = window.pickTracker.platform;
+
+const payload = {
+  platform: platform,
+
+  title: `${platformNameMap[platform] || "Slip"} slip (${picks.length} picks)`,
+
+  picks: picks.map(p => ({
+    sport: p.sport,
+    event: p.event,
+    game_date: p.game_date,
+    player: p.player,
+    market: p.market,
+    outcome: p.outcome,
+    line: Number(p.line)
+  }))
+};
+
 
     console.log("📤 Saving slip payload:", payload);
 
@@ -592,10 +624,22 @@ setRefreshEnabled(false); // ⛔ Grey out refresh until first successful load
 // ===================================================
 // 📦 Pick Tracker — Banner Button Wiring (FIX #2)
 // ===================================================
+// ===================================================
+// 📦 Pick Tracker — Banner + Platform Button Wiring
+// ===================================================
 document.addEventListener("DOMContentLoaded", () => {
+
   const clearBtn = document.getElementById("trackerClearBtn");
   const saveBtn = document.getElementById("trackerSaveBtn");
 
+  const prizeBtn = document.getElementById("pickTrackerPrizePicksBtn");
+  const dogBtn = document.getElementById("pickTrackerUnderdogBtn");
+  const betrBtn = document.getElementById("pickTrackerBetrBtn");
+
+
+  // -----------------------------
+  // Clear button
+  // -----------------------------
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
       clearPickTrackerSelections();
@@ -604,17 +648,50 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+
+  // -----------------------------
+  // Save button
+  // -----------------------------
   if (saveBtn) {
     saveBtn.addEventListener("click", () => {
       console.log("💾 Save Slip clicked");
       savePickTrackerSlip();
     });
   }
+
+
+  // -----------------------------
+  // Platform buttons
+  // -----------------------------
+  if (prizeBtn) {
+    prizeBtn.addEventListener("click", () => {
+      setPickTrackerPlatform("prizepicks");
+    });
+  }
+
+  if (dogBtn) {
+    dogBtn.addEventListener("click", () => {
+      setPickTrackerPlatform("underdog");
+    });
+  }
+
+  if (betrBtn) {
+    betrBtn.addEventListener("click", () => {
+      setPickTrackerPlatform("betr");
+    });
+  }
+
+
+  // Initialize default platform UI
+  updatePickTrackerBarUI();
+
 });
+
 
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
-const ncaabMarkets = document.getElementById("ncaabMarkets");
+const ncaabMarkets = document.getElementById("basketball_ncaabMarkets");
+const wnbaMarkets = document.getElementById("basketball_wnbaMarkets"); // ✅ FIXED
 const footballMarkets = document.getElementById("footballMarkets");
 const nbaMarkets = document.getElementById("nbaMarkets");
 const mlbMarkets = document.getElementById("mlbMarkets");
@@ -968,7 +1045,16 @@ enableLoad(subStatus === "active");
 // ===================================================
 // 📚 Global Bookmaker List (used across all modules)
 // ===================================================
-const BOOKMAKERS = ["Fanduel", "DraftKings", "BetMGM", "Fanatics"];
+const BOOKMAKERS = [
+  "Fanduel",
+  "DraftKings",
+  "BetMGM",
+  "Fanatics",
+  "PrizePicks",
+  "Underdog",
+  "Betr"
+];
+
 // ----------------------------
 // Global State
 // ----------------------------
@@ -979,6 +1065,12 @@ let currentController = null;
 const eventCache = {}; // Cache for fetched games
 
 // ===================================================
+// 🎯 Active DFS Platform Filter
+// ===================================================
+window.activePlatformFilter = "all";
+
+
+// ===================================================
 // 🔧 Utility: Safe Event Binding
 // ===================================================
 function safeAddEventListener(el, evt, fn) {
@@ -986,52 +1078,113 @@ function safeAddEventListener(el, evt, fn) {
 }
 
 // ===================================================
-// 🎯 Persistent Bookmaker Filter Logic (Improved Safe Version)
+// 🎯 Persistent Bookmaker Filter Logic (FULL SAFE VERSION)
 // ===================================================
-const bookmakerFilters = document.getElementById("bookmaker-filters");
-let selectedBooks = new Set(
-  JSON.parse(localStorage.getItem("selectedBooks") || "[]")
-);
+
+// ===================================================
+// 🎯 Persistent Bookmaker Filter Logic (FINAL FIXED VERSION)
+// ===================================================
+
+// ===================================================
+// 🎯 Persistent Bookmaker Filter Logic (FINAL SAFE GLOBAL)
+// ===================================================
+
+// Full supported books list
+const ALL_BOOKS = [
+  "fanduel",
+  "draftkings",
+  "betmgm",
+  "fanatics",
+  "prizepicks",
+  "underdog",
+  "betr"
+];
+
+// ✅ Always use ONE global shared Set
+window.selectedBooks =
+  window.selectedBooks instanceof Set
+    ? window.selectedBooks
+    : new Set(
+        JSON.parse(localStorage.getItem("selectedBooks") || "[]")
+      );
+
+// fallback if empty
+if (window.selectedBooks.size === 0) {
+  window.selectedBooks = new Set(ALL_BOOKS);
+}
+
+// ===================================================
+// Wire checkbox UI safely
+// ===================================================
+
+const bookmakerFilters =
+  document.getElementById("bookmaker-filters");
 
 if (bookmakerFilters) {
-  const checkboxes = bookmakerFilters.querySelectorAll("input[type='checkbox']");
+
+  const checkboxes =
+    bookmakerFilters.querySelectorAll("input[type='checkbox']");
 
   checkboxes.forEach(cb => {
-    // ✅ Prevent double-binding if this UI is rebuilt/re-rendered
+
     if (cb.dataset.bound === "1") return;
     cb.dataset.bound = "1";
 
-    // ✅ Initialize checkbox state:
-    // If nothing is selected, treat as "all selected"
-    cb.checked = selectedBooks.size === 0 || selectedBooks.has(cb.value);
+    // initialize state
+    cb.checked = window.selectedBooks.has(cb.value);
 
     cb.addEventListener("change", () => {
-      // ✅ Update selectedBooks Set
-      if (cb.checked) {
-        selectedBooks.add(cb.value);
-      } else {
-        selectedBooks.delete(cb.value);
+
+      if (cb.checked)
+        window.selectedBooks.add(cb.value);
+      else
+        window.selectedBooks.delete(cb.value);
+
+      // fallback if empty
+      if (window.selectedBooks.size === 0) {
+
+        window.selectedBooks = new Set(ALL_BOOKS);
+
+        checkboxes.forEach(x => {
+          x.checked = true;
+        });
+
       }
 
-      // ✅ If user unchecks everything, interpret as "show all"
-      // (clear the set, and re-check all boxes)
-      if (selectedBooks.size === 0) {
-        checkboxes.forEach(x => (x.checked = true));
-      }
+      // save globally
+      localStorage.setItem(
+        "selectedBooks",
+        JSON.stringify([...window.selectedBooks])
+      );
 
-      // ✅ Persist to localStorage
-      localStorage.setItem("selectedBooks", JSON.stringify([...selectedBooks]));
+      console.log(
+        "📚 Active bookmaker filters:",
+        [...window.selectedBooks]
+      );
 
-      // ✅ Safe re-render only if cached data exists
-      if (Array.isArray(window.lastRenderedData) && window.lastRenderedData.length > 0) {
-        console.log("🔁 Updating table with current bookmaker filters:", [...selectedBooks]);
+      // rerender safely
+      if (window.lastRenderedData?.length)
         rerenderConsensusTable(window.lastRenderedData);
-      } else {
-        console.warn("⚠️ No cached data available for re-render — table remains unchanged.");
-      }
+
     });
+
   });
+
 }
+
+// ===================================================
+// Safe helper used everywhere else
+// ===================================================
+function getSelectedBooksArray() {
+
+  if (!selectedBooks || selectedBooks.size === 0) {
+    return ALL_BOOKS;
+  }
+
+  return [...selectedBooks];
+}
+
+
 
 
 // ===================================================
@@ -1194,7 +1347,16 @@ function getSortedCardRows(baseData) {
 // ===================================================
 // 🌍 GLOBAL BOOKMAKER LIST + HELPERS (Unified)
 // ===================================================
-window.BOOKMAKERS = ["Fanduel", "DraftKings", "BetMGM", "Fanatics"];
+window.BOOKMAKERS = [
+  "Fanduel",
+  "DraftKings",
+  "BetMGM",
+  "Fanatics",
+  "PrizePicks",
+  "Underdog",
+  "Betr"
+];
+
 
 /** Convert American odds → implied probability (0–1) */
 function americanToProb(odds) {
@@ -1202,12 +1364,28 @@ function americanToProb(odds) {
   if (!Number.isFinite(v)) return null;
   return v > 0 ? 100 / (v + 100) : (-v) / ((-v) + 100);
 }
+// ===================================================
+// 🛡️ SAFE HELPER — prevents crashes when price missing
+// ===================================================
+function getSafePrice(row, book) {
+  const val = row?.[`${book}Price`];
+
+  if (val === null || val === undefined || val === "") {
+    return null;
+  }
+
+  const num = Number(val);
+
+  return Number.isFinite(num) ? num : null;
+}
+
 
 /** Average all available bookmaker prices (Consensus) */
 function getConsensusPrice(row) {
   const prices = [];
   for (const book of window.BOOKMAKERS) {
-    const price = parseFloat(row[`${book}Price`]);
+    const price = getSafePrice(row, book)
+;
     if (!isNaN(price)) prices.push(price);
   }
   if (!prices.length) return null;
@@ -1276,15 +1454,17 @@ function computeNoVig(data, row) {
   // 🧾 2️⃣ Loop each bookmaker and pair Over/Under prices
   for (const book of window.BOOKMAKERS) {
     const overOdds = isOver
-      ? parseFloat(row[`${book}Price`])
+      ? getSafePrice(row, book)
       : opposite
-      ? parseFloat(opposite[`${book}Price`])
-      : NaN;
+      ? getSafePrice(opposite, book)
+      : null;
+
     const underOdds = isUnder
-      ? parseFloat(row[`${book}Price`])
+      ? getSafePrice(row, book)
       : opposite
-      ? parseFloat(opposite[`${book}Price`])
-      : NaN;
+      ? getSafePrice(opposite, book)
+      : null;
+
 
     if (!Number.isFinite(overOdds) || !Number.isFinite(underOdds)) continue;
 
@@ -1377,8 +1557,9 @@ const opposite = oppSide
   : null;
 
 for (const book of books) {
-  const overOdds  = parseFloat(row[`${book}Price`]);
-  const underOdds = opposite ? parseFloat(opposite[`${book}Price`]) : NaN;
+  const oOdds = opposite ? getSafePrice(opposite, book) : null;
+  const thisOdds = getSafePrice(row, book);
+
 
   // Identify Over/Under sides consistently
   const rowIsOver = (row.Outcome || row.OverUnder || "").toLowerCase().includes("over");
@@ -1478,6 +1659,9 @@ modal.onclick = (e) => {
 // 🧮 Average No-Vig Probability (Book-Aware)
 // ===================================================
 function getAverageNoVigProb(row, data) {
+window.selectedBooks = new Set(
+  JSON.parse(localStorage.getItem("selectedBooks") || "[]")
+);
   const selectedBooks = new Set(
     Array.from(document.querySelectorAll('#bookmaker-filters input[type="checkbox"]:checked'))
       .map(cb => cb.value)
@@ -1557,7 +1741,8 @@ function getConsensusPrice(row) {
   const impliedProbs = [];
 
   for (const book of BOOKMAKERS) {
-    const price = parseFloat(row[`${book}Price`]);
+    const price = getSafePrice(row, book)
+;
     if (isNaN(price)) continue;
 
     const prob = price > 0 ? 100 / (price + 100) : -price / (-price + 100);
@@ -1843,6 +2028,20 @@ const SPORT_MARKETS = {
     "player_points_assists": "Points + Assists",
     "player_rebounds_assists": "Rebounds + Assists",
   },
+
+  "basketball_wnba": {
+    "player_points": "Player Points",
+    "player_assists": "Player Assists",
+    "player_rebounds": "Rebounds",
+    "player_threes": "3-Pointers",
+    "player_points_rebounds_assists": "Points + Rebounds + Assists",
+    "player_points_rebounds": "Points + Rebounds",
+    "player_points_assists": "Points + Assists",
+    "player_rebounds_assists": "Rebounds + Assists"
+  },
+
+
+
   "americanfootball_nfl": {
     "player_pass_tds": "Passing TDs",
     "player_pass_rush_yds": "Pass + Rush Yards",
@@ -1928,8 +2127,9 @@ function computeNoVigBothSides(data, row) {
 
   const books = getSelectedBooksArray();
   for (const book of books) {
-    const oOdds = opposite ? parseFloat(opposite[`${book}Price`]) : NaN;
-    const thisOdds = parseFloat(row[`${book}Price`]);
+    const oOdds = opposite ? getSafePrice(opposite, book) : NaN;
+    const thisOdds = getSafePrice(row, book)
+;
 
     // We need BOTH sides' prices for the **same book** to de-vig correctly
     const overOdds  = isOverRow  ? thisOdds : oOdds;
@@ -1965,7 +2165,8 @@ function computeNoVigBothSides(data, row) {
   if (avgOver == null && avgUnder == null) {
     const implied = [];
     for (const book of getSelectedBooksArray()) {
-      const price = parseFloat(row[`${book}Price`]);
+      const price = getSafePrice(row, book)
+;
       const p = americanToProb(price);
       if (p != null) implied.push(p * 100);
     }
@@ -2340,11 +2541,44 @@ function getConsensusDisplay(row) {
 // 🧮 Table Renderer + Local Consensus Summary + No Fetch (Final Cleaned + Safe Dedup Version)
 // ===================================================
 
+// ===================================================
+// 🧮 Table Renderer + Platform Filter Support
+// ===================================================
 function rerenderConsensusTable(data) {
+
   resultsDiv.innerHTML = "<p>Updating consensus...</p>";
-  // 🧠 Mark this as a filtered reload so cached Best No-Vig % values are reused
-  setTimeout(() => renderTableInBatches(data, 50, true), 50);
+
+  // ===================================================
+  // 🎯 Apply Platform Filter
+  // ===================================================
+  const platform = window.activePlatformFilter || "all";
+
+  let filteredData = data;
+
+  if (platform !== "all") {
+
+    filteredData = data.filter(row => {
+
+      if (platform === "prizepicks")
+        return row.PrizePickPoint != null;
+
+      if (platform === "underdog")
+        return row.UnderdogPoint != null;
+
+      if (platform === "betr")
+        return row.BetrPoint != null;
+
+      return true;
+
+    });
+
+  }
+
+  // 🧠 Mark this as filtered reload so cache reused
+  setTimeout(() => renderTableInBatches(filteredData, 50, true), 50);
+
 }
+
 
 async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
   // 🧹 Clear previous results and cache dataset pointer
@@ -2366,13 +2600,31 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
     console.log("🧮 Fresh full render — baseNoVigCache intact or newly created.");
   }
 
-  // 🧩 Restore selected books from localStorage
-  const savedBooks = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
-  const selectedBooks = new Set(
-    savedBooks.length
-      ? savedBooks
-      : ["Fanduel", "DraftKings", "BetMGM", "Fanatics"]
-  );
+// 🧩 Restore selected books safely from localStorage
+let savedBooks = [];
+
+try {
+  savedBooks = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
+} catch (e) {
+  console.warn("⚠️ Failed to parse selectedBooks from localStorage");
+  savedBooks = [];
+}
+
+const selectedBooks = new Set(
+  savedBooks.length > 0
+    ? savedBooks
+    : [
+        "Fanduel",
+        "DraftKings",
+        "BetMGM",
+        "Fanatics",
+        "PrizePicks",
+        "Underdog",
+        "Betr"
+      ]
+);
+
+console.log("📚 Active books in render:", [...selectedBooks]);
 
   const summaryDiv = document.getElementById("consensus-summary");
 
@@ -2518,34 +2770,72 @@ const bookPointKeys = {
   DraftKings: "DraftKingsPoint",
   BetMGM: "BetMGMPoint",
   Fanatics: "FanaticsPoint",
+
+
 };
+
 const bookPriceKeys = {
   Fanduel: "FanduelPrice",
   DraftKings: "DraftKingsPrice",
   BetMGM: "BetMGMPrice",
   Fanatics: "FanaticsPrice",
+
+
 };
 
-const savedBooks = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
-const selectedBooksSet = new Set(
-  savedBooks.length ? savedBooks : Object.keys(bookPointKeys)
-);
 
-const activeBooks = selectedBooksSet.size
-  ? [...selectedBooksSet]
-  : Object.keys(bookPointKeys);
+// ===================================================
+// ✅ SAFE GLOBAL BOOKMAKER STATE
+// ===================================================
+
+// Always use global shared Set
+window.selectedBooks =
+  window.selectedBooks instanceof Set
+    ? window.selectedBooks
+    : new Set(
+        JSON.parse(localStorage.getItem("selectedBooks") || "[]")
+      );
+
+// fallback to all books if empty
+if (window.selectedBooks.size === 0) {
+  window.selectedBooks = new Set(Object.keys(bookPointKeys));
+}
+
+// Use global everywhere
+const activeBookmakers =
+  window.selectedBooks.size > 0
+    ? [...window.selectedBooks]
+    : Object.keys(bookPointKeys);
 
 
 
 const avg = (arr) =>
   arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
+// ===================================================
+// 🧮 Consensus Point Calculator (FIXED VERSION)
+// ===================================================
 const getConsensusPoint = (row) => {
+
+  // ✅ Use selectedBooks global instead of undefined activeBooks
+  const activeBooks =
+    selectedBooks && selectedBooks.size > 0
+      ? [...selectedBooks]
+      : Object.keys(bookPointKeys);
+
   const vals = activeBooks
-    .map((b) => Number(row[bookPointKeys[b]]))
-    .filter((v) => Number.isFinite(v));
-  const a = avg(vals);
-  return a == null ? null : Number(a.toFixed(2)); // 2dp
+    .map(book => {
+      const key = bookPointKeys[book];
+      if (!key) return null;
+
+      const val = Number(row[key]);
+      return Number.isFinite(val) ? val : null;
+    })
+    .filter(v => v !== null);
+
+  if (!vals.length) return null;
+
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
 };
 
 
@@ -2580,15 +2870,34 @@ const getNoVigProbForRow = (row) => {
 
 const columns = [
   "Event", "Market", "Description", "OverUnder",
-  "FanduelPoint", "DraftKingsPoint", "BetMGMPoint", "FanaticsPoint",
+
+  "FanduelPoint",
+  "DraftKingsPoint",
+  "BetMGMPoint",
+  "FanaticsPoint",
+
+  // ✅ DFS platforms added
+  "PrizePickPoint",
+  "UnderdogPoint",
+  "BetrPoint",
+
   "ConsensusPoint",
-  "BestNoVig",        // 🆕 new column
-  "PrizePickPoint", "UnderdogPoint",
-  "PrizePicksDifference", "UnderdogDifference"
+  "BestNoVig",
+
+  "PrizePicksDifference",
+  "UnderdogDifference",
+  "BetrDifference"
 ];
 
+
  
-  const alwaysShow = ["PrizePicksDifference", "UnderdogDifference", "BestNoVig"];
+  const alwaysShow = [
+  "PrizePicksDifference",
+  "UnderdogDifference",
+  "BetrDifference",
+  "BestNoVig"
+];
+
 const activeColumns = columns.filter(
   col => alwaysShow.includes(col) || data.some(r => r[col] != null && r[col] !== "")
 );
@@ -2670,6 +2979,15 @@ for (let i = 0; i < data.length; i += batchSize) {
     // -----------------------------------
 // 📌 Build pick object ONCE per row
 // -----------------------------------
+
+const platform = window.pickTracker.platform;
+
+const lineMap = {
+  prizepicks: row.PrizePickPoint,
+  underdog: row.UnderdogPoint,
+  betr: row.BetrPoint
+};
+
 const pick = {
   sport: selectedSport,
   event: row.Event,
@@ -2677,13 +2995,18 @@ const pick = {
   player: row.Description,
   market: row.Market,
   outcome: getOutcomeFromRow(row),
+
   line: Number(
-    window.pickTracker.platform === "underdog"
-      ? (row.UnderdogPoint ?? row.PrizePickPoint ?? row.ConsensusPoint)
-      : (row.PrizePickPoint ?? row.ConsensusPoint ?? row.UnderdogPoint)
+    lineMap[platform]
+    ?? row.PrizePickPoint
+    ?? row.UnderdogPoint
+    ?? row.BetrPoint
+    ?? row.ConsensusPoint
   ),
-  platform: window.pickTracker.platform
+
+  platform: platform
 };
+
 
 const pickKey = getPickTrackerKey(pick);
 tr.dataset.pickKey = pickKey;
@@ -2711,240 +3034,255 @@ const consensusPoint = row.ConsensusPoint;
 const consensusPrice = row.ConsensusPrice;
 
 
+// --- Render each cell ---
+activeColumns.forEach((col) => {
+  const td = document.createElement("td");
+  let value = row[col];
 
+  // ===================================================
+  // 🌟 Best No-Vig Win % (Over vs Under) — MUST RUN FIRST
+  // ===================================================
+  if (col === "BestNoVig") {
+    // Ensure cache exists
+    if (!window.baseNoVigCache) window.baseNoVigCache = {};
 
-    // --- Render each cell ---
-    activeColumns.forEach((col) => {
-      const td = document.createElement("td");
-      let value = row[col];
-
-      // 🧮 Force 2 decimals for key numeric columns
-      if (col === "PrizePickPoint" || col === "UnderdogPoint") {
-        const num = Number(value);
-        value = Number.isFinite(num) ? num.toFixed(2) : "—";
-      }
-
-      // 🎲 Sportsbook columns: show line, odds, and favored-arrow tooltip
-      if (["FanduelPoint", "DraftKingsPoint", "BetMGMPoint", "FanaticsPoint"].includes(col)) {
-        const priceCol = col.replace("Point", "Price");
-        const lineNum = Number(row[col]);
-        const priceNum = Number(row[priceCol]);
-
-        // 💡 Determine Over/Under odds for favored-side logic
-        const overOdds = Number(row.OverPrice);
-        const underOdds = Number(row.UnderPrice);
-
-        let arrow = "⟷";
-        let arrowColor = "#888";
-        let tooltip = "Even odds";
-
-        if (Number.isFinite(overOdds) && Number.isFinite(underOdds)) {
-          if (overOdds < underOdds) {
-            arrow = "▲";
-            arrowColor = "#28a745";
-            tooltip = "Over favored";
-          } else if (underOdds < overOdds) {
-            arrow = "▼";
-            arrowColor = "#d94f4f";
-            tooltip = "Under favored";
-          } else {
-            arrow = "⟷";
-            arrowColor = "#888";
-            tooltip = "Even odds";
-          }
-        } else if (Number.isFinite(priceNum)) {
-          // fallback if only this cell’s price exists
-          arrow = priceNum < 0 ? "▲" : priceNum > 0 ? "▼" : "⟷";
-          arrowColor = priceNum < 0 ? "#28a745" : priceNum > 0 ? "#d94f4f" : "#888";
-          tooltip = priceNum < 0 ? "Over favored" : priceNum > 0 ? "Under favored" : "Even odds";
-        }
-
-        // Build the arrow span
-        const arrowSpan = document.createElement("span");
-        arrowSpan.textContent = ` ${arrow}`;
-        arrowSpan.classList.add("diff-arrow");
-        arrowSpan.style.color = arrowColor;
-        arrowSpan.title = tooltip;
-
-        if (Number.isFinite(lineNum) && Number.isFinite(priceNum)) {
-          td.textContent = `${lineNum.toFixed(2)} (${priceNum > 0 ? `+${priceNum}` : priceNum})`;
-          td.appendChild(arrowSpan);
-        } else if (Number.isFinite(lineNum)) {
-          td.textContent = lineNum.toFixed(2);
-          td.appendChild(arrowSpan);
-        } else {
-          td.textContent = "—";
-        }
-
-        tr.appendChild(td);
-        return; // continue next column
-      }
-
-      // ===================================================
-      // 🧠 Consensus column — show Consensus line only
-      // ===================================================
-      if (col === "ConsensusPoint") {
-        const consensusPoint = Number(row.ConsensusPoint);
-        const consensusPrice = getConsensusPrice(row);
-        const parts = [];
-
-        if (Number.isFinite(consensusPoint)) parts.push(consensusPoint.toFixed(2));
-        if (Number.isFinite(consensusPrice))
-          parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
-
-        td.textContent = parts.join(" ") || "—";
-        td.dataset.sort = consensusPrice || 0;
+    // Reuse cached values during filtered re-renders
+    if (isFiltered) {
+      const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
+      const cached = window.baseNoVigCache[cacheKey];
+      if (cached) {
+        td.textContent = cached.text || "—";
+        td.dataset.sort = cached.pct ?? 0;
+        row.NoVigWinProb = cached.pct ?? null;
+        row.BestNoVigSide = cached.side ?? null;
         tr.appendChild(td);
         return;
       }
-
-// ===================================================
-// 🌟 NEW COLUMN — Best No-Vig Win % (Over vs Under)
-// ===================================================
-if (col === "BestNoVig") {
-  // 🔒 If this is a filtered re-render, reuse cached Best No-Vig values
-  if (isFiltered && window.baseNoVigCache) {
-    const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
-    const cached = window.baseNoVigCache[cacheKey];
-    if (cached) {
-      td.textContent = cached.text;
-      td.dataset.sort = cached.pct ?? 0;
-      row.NoVigWinProb = cached.pct ?? null;
-      row.BestNoVigSide = cached.side ?? null;
-      tr.appendChild(td);
-      return; // ✅ skip recompute, use cached values
     }
+
+    // Fresh compute (first render / unfiltered)
+    const baseForCompute =
+      Array.isArray(window.lastRenderedData) && window.lastRenderedData.length
+        ? window.lastRenderedData
+        : Array.isArray(data)
+        ? data
+        : [];
+
+    const nv = computeNoVigBothSides(baseForCompute, row);
+
+    let text = "—";
+    let pct = null;
+    let side = null;
+
+    if (nv && nv.avgOver != null && nv.avgUnder != null) {
+      const over = nv.avgOver;
+      const under = nv.avgUnder;
+      const isOverBetter = over >= under;
+      pct = isOverBetter ? over : under;
+      side = isOverBetter ? "Over" : "Under";
+      text = `${isOverBetter ? "▲" : "▼"} 🧮 ${side} ${pct.toFixed(2)}%`;
+    } else if (nv && nv.fallbackSide != null) {
+      pct = nv.fallbackSide;
+      side = nv.sideIsOver ? "Over" : "Under";
+      text = `🧮 ${side} ${pct.toFixed(2)}%`;
+    }
+
+    // Color tiering
+    if (Number.isFinite(pct)) {
+      if (pct >= 54) td.style.color = "#007b1a";
+      else if (pct >= 52) td.style.color = "#29a329";
+    }
+
+    // Store for filters
+    row.NoVigWinProb = Number.isFinite(pct) ? pct : null;
+    row.BestNoVigSide = side;
+
+    // Cache for later filter re-renders
+    if (row.Event && row.Market && row.Description) {
+      const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
+      window.baseNoVigCache[cacheKey] = { pct, side, text };
+    }
+
+    // Optional “Mismatch” badge (market vs model)
+    // NOTE: this is a lightweight heuristic since we only have one price per book here.
+    const marketFavoredOver =
+      ["FanduelPrice", "DraftKingsPrice", "BetMGMPrice", "FanaticsPrice"].some(
+        (k) => Number(row[k]) < 0
+      );
+    const marketFavored = marketFavoredOver ? "Over" : "Under";
+    const modelFavored = side || "—";
+
+    td.textContent = text;
+    td.dataset.sort = Number.isFinite(pct) ? pct.toFixed(2) : 0;
+
+    if (
+      modelFavored !== "—" &&
+      marketFavored !== "—" &&
+      modelFavored !== marketFavored &&
+      Number.isFinite(pct) &&
+      Math.abs(pct - 50) >= 2
+    ) {
+      const badge = document.createElement("span");
+      badge.textContent = "⚡ Mismatch";
+      badge.classList.add("mismatch-badge");
+      badge.title = `Market favors ${marketFavored}, model favors ${modelFavored}`;
+      badge.style.marginLeft = "4px";
+      badge.style.fontSize = "11px";
+      badge.style.color = "#d94f4f";
+      badge.style.fontWeight = "bold";
+      td.appendChild(badge);
+    }
+
+    tr.appendChild(td);
+    return;
   }
 
-  // 🧮 Fresh compute for first render (unfiltered)
-  const nv = computeNoVigBothSides(window.lastRenderedData || data, row);
-  let text = "—";
-  let pct = 0;
-  let side = null;
-  let arrow = "";
+  // ===================================================
+  // 🛡️ SAFE DFS PLATFORM HANDLING
+  // ===================================================
+  if (col === "PrizePickPoint") value = row.PrizePickPoint ?? null;
+  else if (col === "UnderdogPoint") value = row.UnderdogPoint ?? null;
+  else if (col === "BetrPoint") value = row.BetrPoint ?? null;
 
-  if (nv.avgOver != null && nv.avgUnder != null) {
-    const over = nv.avgOver;
-    const under = nv.avgUnder;
-    const isOverBetter = over > under;
-    pct = isOverBetter ? over : under;
-    side = isOverBetter ? "Over" : "Under";
-    arrow = isOverBetter ? "▲" : "▼";
-    text = `${arrow} 🧮 ${side} ${pct.toFixed(2)}%`;
-  } else if (nv.fallbackSide != null) {
-    side = nv.sideIsOver ? "Over" : "Under";
-    pct = nv.fallbackSide;
-    text = `🧮 ${side} ${pct.toFixed(2)}%`;
+  // ===================================================
+  // 🧮 Format DFS numeric columns
+  // ===================================================
+  if (col === "PrizePickPoint" || col === "UnderdogPoint" || col === "BetrPoint") {
+    const num = Number(value);
+    td.textContent = Number.isFinite(num) ? num.toFixed(2) : "—";
+    tr.appendChild(td);
+    return;
   }
 
-  // 🎨 Basic color tiering for confidence
-  if (pct >= 54) td.style.color = "#007b1a";
-  else if (pct >= 52) td.style.color = "#29a329";
+  // ===================================================
+  // 🎲 Sportsbook columns (line + price + favored arrow)
+  // ===================================================
+  if (["FanduelPoint", "DraftKingsPoint", "BetMGMPoint", "FanaticsPoint"].includes(col)) {
+    const priceCol = col.replace("Point", "Price");
+    const lineNum = Number(row[col]);
+    const priceNum = Number(row[priceCol]);
 
-  // ✅ Store numeric value and side for filters
-  row.NoVigWinProb = Number.isFinite(pct) ? pct : null;
-  row.BestNoVigSide = side;
+    let arrow = "⟷";
+    let arrowColor = "#888";
+    let tooltip = "Even odds";
 
-  // ✅ Cache original Best No-Vig values for reuse on filters
-  if (row.Event && row.Market && row.Description) {
-    const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
-    window.baseNoVigCache[cacheKey] = { pct, side, text };
-  }
+    if (Number.isFinite(priceNum)) {
+      if (priceNum < 0) {
+        arrow = "▲";
+        arrowColor = "#28a745";
+        tooltip = "Over favored";
+      } else if (priceNum > 0) {
+        arrow = "▼";
+        arrowColor = "#d94f4f";
+        tooltip = "Under favored";
+      }
+    }
 
-// 🧩 NEW ADDITION — Market vs. Model disagreement indicator
-const marketFavoredOver =
-  ["FanduelPrice", "DraftKingsPrice", "BetMGMPrice", "FanaticsPrice"]
-    .some(k => Number(row[k]) < 0); // if any book's Over price is shorter (more juiced)
-const marketFavored = marketFavoredOver ? "Over" : "Under";
-const modelFavored = side || "—";
+    const arrowSpan = document.createElement("span");
+    arrowSpan.textContent = ` ${arrow}`;
+    arrowSpan.style.color = arrowColor;
+    arrowSpan.title = tooltip;
 
-// 🖊️ Render cell first (so we don't overwrite appended badge)
-td.textContent = text;
-td.dataset.sort = Number.isFinite(pct) ? pct.toFixed(2) : 0;
-
-// ✅ Only show mismatch if sides differ AND the fair win % difference is meaningful
-if (
-  marketFavored !== "—" &&
-  modelFavored !== "—" &&
-  marketFavored !== modelFavored &&
-  Math.abs((row.NoVigWinProb ?? pct) - 50) >= 2 // require at least 2% edge
-) {
-  const badge = document.createElement("span");
-  badge.textContent = "⚡ Mismatch";
-  badge.classList.add("mismatch-badge");
-  badge.title = `Market favors ${marketFavored}, model favors ${modelFavored}`;
-  badge.style.marginLeft = "4px";
-  badge.style.fontSize = "11px";
-  badge.style.color = "#d94f4f";
-  badge.style.fontWeight = "bold";
-  td.appendChild(badge);
-}
-
-tr.appendChild(td);
-return;
-
-}
-
-
-
-
-// ===================================================
-// 🎯 Difference Columns (Restored + Filter Compatible)
-// ===================================================
-if (col === "PrizePicksDifference" || col === "UnderdogDifference") {
-  const diff = Number(value);
-  const isPrize = col === "PrizePicksDifference";
-  const pointKey = isPrize ? "PrizePickPoint" : "UnderdogPoint";
-  const pointVal = Number(row[pointKey]);
-  const consensusVal = Number(row.ConsensusPoint);
-
-  // ✅ Calculate and classify difference color tiers
-  if (Number.isFinite(diff) && Number.isFinite(pointVal) && Number.isFinite(consensusVal)) {
-    if (Math.abs(diff) > 2) td.classList.add("huntergreen");
-    else if (Math.abs(diff) >= 1.5) td.classList.add("green");
-    else if (Math.abs(diff) >= 1.0) td.classList.add("darkyellow");
-    else td.classList.add("gray");
-
-    // ✅ Store the filter-friendly side marker on the data row
-    if (pointVal < consensusVal) {
-      td.innerHTML = `<span class="bet-badge over-badge">O↑ Over</span>
-                      <span class="diff-val">${diff.toFixed(2)}</span>`;
-      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = "over";
-    } else if (pointVal > consensusVal) {
-      td.innerHTML = `<span class="bet-badge under-badge">U↓ Under</span>
-                      <span class="diff-val">${diff.toFixed(2)}</span>`;
-      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = "under";
+    if (Number.isFinite(lineNum) && Number.isFinite(priceNum)) {
+      td.textContent = `${lineNum.toFixed(2)} (${priceNum > 0 ? `+${priceNum}` : priceNum})`;
+      td.appendChild(arrowSpan);
+    } else if (Number.isFinite(lineNum)) {
+      td.textContent = lineNum.toFixed(2);
+      td.appendChild(arrowSpan);
     } else {
-      td.innerHTML = `<span class="diff-val">${diff.toFixed(2)}</span>`;
-      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = null;
+      td.textContent = "—";
     }
 
-    // 🧩 Log data markers (for debugging filters)
-    console.debug(
-      `Row marker → ${isPrize ? "PrizePicks" : "Underdog"}:`,
-      row.Description,
-      "|",
-      row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"]
-    );
-
-  } else {
-    td.textContent = "—";
-    // Ensure marker resets if no valid data
-    row[isPrize ? "_PrizePicksSide" : "_UnderdogSide"] = null;
+    tr.appendChild(td);
+    return;
   }
 
+  // ===================================================
+  // 🧠 Consensus column
+  // ===================================================
+  if (col === "ConsensusPoint") {
+    const consensusPoint = Number(row.ConsensusPoint);
+    const consensusPrice = getConsensusPrice(row);
+
+    const parts = [];
+    if (Number.isFinite(consensusPoint)) parts.push(consensusPoint.toFixed(2));
+    if (Number.isFinite(consensusPrice))
+      parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
+
+    td.textContent = parts.join(" ") || "—";
+    td.dataset.sort = Number.isFinite(consensusPrice) ? consensusPrice : 0;
+
+    tr.appendChild(td);
+    return;
+  }
+
+  // ===================================================
+  // 🎯 Difference columns (PrizePicks / Underdog / Betr)
+  //   - Adds side markers for filters: _PrizePicksSide, _UnderdogSide, _BetrSide
+  // ===================================================
+  if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "BetrDifference") {
+    const diff = Number(row[col]);
+
+    const pointKey =
+      col === "PrizePicksDifference"
+        ? "PrizePickPoint"
+        : col === "UnderdogDifference"
+        ? "UnderdogPoint"
+        : "BetrPoint";
+
+    const sideKey =
+      col === "PrizePicksDifference"
+        ? "_PrizePicksSide"
+        : col === "UnderdogDifference"
+        ? "_UnderdogSide"
+        : "_BetrSide";
+
+    const pointVal = Number(row[pointKey]);
+    const consVal = Number(row.ConsensusPoint);
+
+    // reset marker by default
+    row[sideKey] = null;
+
+    if (Number.isFinite(diff)) {
+      // color tiering
+      if (Math.abs(diff) >= 2) td.style.color = "#007b1a";
+      else if (Math.abs(diff) >= 1) td.style.color = "#29a329";
+
+      // optional badge + side marker (based on point vs consensus)
+      if (Number.isFinite(pointVal) && Number.isFinite(consVal)) {
+        const isOver = pointVal < consVal;
+        const isUnder = pointVal > consVal;
+
+        if (isOver) row[sideKey] = "over";
+        else if (isUnder) row[sideKey] = "under";
+
+        if (isOver || isUnder) {
+          td.innerHTML = `<span class="bet-badge ${isOver ? "over-badge" : "under-badge"}">${
+            isOver ? "O↑ Over" : "U↓ Under"
+          }</span> <span class="diff-val">${diff.toFixed(2)}</span>`;
+          tr.appendChild(td);
+          return;
+        }
+      }
+
+      td.textContent = diff.toFixed(2);
+    } else {
+      td.textContent = "—";
+    }
+
+    tr.appendChild(td);
+    return;
+  }
+
+  // ===================================================
+  // 🧾 Default fallback
+  // ===================================================
+  td.textContent = value === null || value === undefined || value === "" ? "—" : String(value);
   tr.appendChild(td);
-  return;
-}
+});
 
 
 
-
-      // 🧾 Default fallback
-      td.textContent =
-        value === undefined || value === null || value === "" ? "—" : String(value);
-      tr.appendChild(td);
-    });
 
     tbody.appendChild(tr);
   });
@@ -3192,6 +3530,48 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===========================================
+// ✅ Betr Optimal — uses stored BestNoVigSide + Δ guard
+// ===========================================
+function filterBetrOptimal(data) {
+  if (!Array.isArray(data)) return [];
+
+  const seen = new Set();
+
+  const result = data.filter((row) => {
+    const key = `${(row.Event || "")}|${(row.Market || "")}|${(row.Description || "")}`;
+    if (seen.has(key)) return false;
+
+    const bestSide = (row.BestNoVigSide || "").toLowerCase();
+
+    const betrPoint = Number(row.BetrPoint);
+    const cons = Number(row.ConsensusPoint);
+    const delta = Number(row.BetrDifference);
+
+    // Must have valid data
+    if (!bestSide || !Number.isFinite(betrPoint) || !Number.isFinite(cons))
+      return false;
+
+    // Require meaningful edge
+    if (!Number.isFinite(delta) || Math.abs(delta) < 0.25)
+      return false;
+
+    const favorable =
+      (bestSide === "over" && betrPoint < cons) ||
+      (bestSide === "under" && betrPoint > cons);
+
+    if (favorable) {
+      seen.add(key);
+      return true;
+    }
+
+    return false;
+  });
+
+  console.log(`🎯 Betr Optimal: ${result.length}/${data.length} rows`);
+  return result;
+}
+
+  // ===========================================
   // ✅ Fantasy Edge — PrizePicks or Underdog Δ ≥ 0.25
   // ===========================================
   function filterFantasyEdge(data) {
@@ -3255,11 +3635,13 @@ window.addEventListener("DOMContentLoaded", () => {
 const filterBtns = {
   prize: document.getElementById("filterPrizePicksOptimalBtn"),
   underdog: document.getElementById("filterUnderdogOptimalBtn"),
+  betr: document.getElementById("filterBetrOptimalBtn"),   // ✅ ADD THIS
   fantasy: document.getElementById("filterFantasyEdgeBtn"),
   dfs: document.getElementById("filterDfsDifferenceBtn"),
   high: document.getElementById("filterHighNoVigBtn"),
   clear: document.getElementById("clearOptimalFiltersBtn"),
 };
+
 
 let activeFilter = null;
 
@@ -3305,6 +3687,12 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
         filtered = filterUnderdogOptimal(base);
         window.activeOptimalFilter = "underdog"; // ← NEW
         break;
+
+      case "betr":
+        filtered = filterBetrOptimal(base);
+        window.activeOptimalFilter = "betr";
+        break;
+
 
       case "fantasy":
         filtered = filterFantasyEdge(base);
@@ -3881,28 +4269,71 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===================================================
 // 🎯 Pick Tracker — Platform Buttons (NEW)
 // ===================================================
+// ===================================================
+// 🎯 Pick Tracker — Platform Buttons (UPDATED: PrizePicks, Underdog, Betr)
+// ===================================================
 const ppTrackerBtn = document.getElementById("pickTrackerPrizePicksBtn");
 const udTrackerBtn = document.getElementById("pickTrackerUnderdogBtn");
+const betrTrackerBtn = document.getElementById("pickTrackerBetrBtn");
 
-if (ppTrackerBtn && udTrackerBtn) {
+function setActiveTrackerButton(activePlatform) {
+
+  if (ppTrackerBtn)
+    ppTrackerBtn.classList.toggle(
+      "active",
+      activePlatform === "prizepicks"
+    );
+
+  if (udTrackerBtn)
+    udTrackerBtn.classList.toggle(
+      "active",
+      activePlatform === "underdog"
+    );
+
+  if (betrTrackerBtn)
+    betrTrackerBtn.classList.toggle(
+      "active",
+      activePlatform === "betr"
+    );
+
+}
+
+if (ppTrackerBtn) {
   ppTrackerBtn.addEventListener("click", () => {
+
     setPickTrackerPlatform("prizepicks");
 
-    ppTrackerBtn.classList.add("active");
-    udTrackerBtn.classList.remove("active");
+    setActiveTrackerButton("prizepicks");
 
     console.log("🎯 Pick Tracker platform → PrizePicks");
-  });
 
-  udTrackerBtn.addEventListener("click", () => {
-    setPickTrackerPlatform("underdog");
-
-    udTrackerBtn.classList.add("active");
-    ppTrackerBtn.classList.remove("active");
-
-    console.log("🎯 Pick Tracker platform → Underdog");
   });
 }
+
+if (udTrackerBtn) {
+  udTrackerBtn.addEventListener("click", () => {
+
+    setPickTrackerPlatform("underdog");
+
+    setActiveTrackerButton("underdog");
+
+    console.log("🎯 Pick Tracker platform → Underdog");
+
+  });
+}
+
+if (betrTrackerBtn) {
+  betrTrackerBtn.addEventListener("click", () => {
+
+    setPickTrackerPlatform("betr");
+
+    setActiveTrackerButton("betr");
+
+    console.log("🎯 Pick Tracker platform → Betr");
+
+  });
+}
+
 
 
   if (!supportBtn || !supportModal) {
@@ -3965,16 +4396,20 @@ function buildPickCardHtml(row) {
   const cons = Number(row.ConsensusPoint);
   const ppLine = Number(row.PrizePickPoint);
   const udLine = Number(row.UnderdogPoint);
+  const betrLine = Number(row.BetrPoint);
   const ppDiff = Number(row.PrizePicksDifference);
   const udDiff = Number(row.UnderdogDifference);
+  const betrDiff = Number(row.BetrDifference);
   const noVig = Number(row.NoVigWinProb);
 
   const consStr = Number.isFinite(cons) ? cons.toFixed(2) : "—";
   const ppLineStr = Number.isFinite(ppLine) ? ppLine.toFixed(2) : "—";
   const udLineStr = Number.isFinite(udLine) ? udLine.toFixed(2) : "—";
+  const betrLineStr = Number.isFinite(betrLine) ? betrLine.toFixed(2) : "—";
 
   const ppDiffStr = Number.isFinite(ppDiff) ? `${ppDiff.toFixed(2)} pts` : "—";
   const udDiffStr = Number.isFinite(udDiff) ? `${udDiff.toFixed(2)} pts` : "—";
+  const betrDiffStr = Number.isFinite(betrDiff) ? `${betrDiff.toFixed(2)} pts` : "—";
 
   // ====================================
   // 🎯 EV Strength classification
@@ -3996,17 +4431,46 @@ function buildPickCardHtml(row) {
 
   const evSideClass = bestSide === "under" ? "under" : "over";
 
-  // ====================================
-  // ⚡ Mismatch logic
-  // ====================================
-  let mismatchText = "";
-  if (row.BestNoVigSide && row._PrizePicksSide &&
-      row._PrizePicksSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()) {
-    mismatchText = "⚡ PrizePicks line opposes the sharp side.";
-  } else if (row.BestNoVigSide && row._UnderdogSide &&
-      row._UnderdogSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()) {
-    mismatchText = "⚡ Underdog line opposes the sharp side.";
-  }
+// ====================================
+// ⚡ Mismatch logic (FULL — detect ALL platform mismatches)
+// ====================================
+let mismatchPlatforms = [];
+
+if (
+  row.BestNoVigSide &&
+  row._PrizePicksSide &&
+  row._PrizePicksSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()
+) {
+  mismatchPlatforms.push("PrizePicks");
+}
+
+if (
+  row.BestNoVigSide &&
+  row._UnderdogSide &&
+  row._UnderdogSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()
+) {
+  mismatchPlatforms.push("Underdog");
+}
+
+if (
+  row.BestNoVigSide &&
+  row._BetrSide &&
+  row._BetrSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()
+) {
+  mismatchPlatforms.push("Betr");
+}
+
+// Build final message
+let mismatchText = "";
+
+if (mismatchPlatforms.length === 1) {
+  mismatchText = `⚡ ${mismatchPlatforms[0]} line opposes the sharp side.`;
+}
+else if (mismatchPlatforms.length > 1) {
+  mismatchText =
+    `⚡ ${mismatchPlatforms.join(" & ")} lines oppose the sharp side.`;
+}
+
 
   // ====================================
   // 🧑 Inline badge formatting
@@ -4031,6 +4495,13 @@ function buildPickCardHtml(row) {
     : udDiff < 0
       ? (bestSide === "over" ? "pos" : "neg")
       : (bestSide === "under" ? "pos" : "neg");
+
+  const betrDeltaClass = !Number.isFinite(betrDiff)
+  ? "neutral"
+  : betrDiff < 0
+    ? (bestSide === "over" ? "pos" : "neg")
+    : (bestSide === "under" ? "pos" : "neg");
+
 
   const evLabelText = bestSideLabel
     ? `Model leans ${bestSideLabel}${Number.isFinite(noVig) ? ` · ${noVig.toFixed(1)}%` : ""}`
@@ -4116,7 +4587,18 @@ return `
         <span class="pro-metric-value">${udLineStr}</span>
         <span class="pro-metric-delta ${udDeltaClass}">${udDiffStr}</span>
       </div>
+      
+      <!-- Betr -->
+      <div
+        class="pro-card-metric-row platform-row betr"
+        data-platform="betr"
+      >     
+        <span class="pro-metric-label">Betr</span>
+        <span class="pro-metric-value">${betrLineStr}</span>
+        <span class="pro-metric-delta ${betrDeltaClass}">${betrDiffStr}</span>
+      </div>
 
+      
     </section>
 
     ${mismatchText ? `<footer class="pro-card-footnote">${mismatchText}</footer>` : ""}
@@ -4291,47 +4773,102 @@ content.querySelectorAll(`.platform-row.${activePlatform}`).forEach(row => {
 });
 
 
-  // ===================================================
+// ===================================================
 // 🧠 Wire Pick Tracker buttons inside Tap-to-Card view
 // ===================================================
 
 const pickButtons = content.querySelectorAll(".tap-pick-btn");
 
 pickButtons.forEach((btn, index) => {
-  const row = topN[index]; // aligns with rendered order
+
+  const row = topN[index];
+
+  const platform = window.pickTracker.platform;
+
+  let selectedLine = null;
+
+  if (platform === "prizepicks") {
+
+    selectedLine =
+      row.PrizePickPoint ??
+      row.UnderdogPoint ??
+      row.BetrPoint ??
+      row.ConsensusPoint;
+
+  }
+  else if (platform === "underdog") {
+
+    selectedLine =
+      row.UnderdogPoint ??
+      row.PrizePickPoint ??
+      row.BetrPoint ??
+      row.ConsensusPoint;
+
+  }
+  else if (platform === "betr") {
+
+    selectedLine =
+      row.BetrPoint ??
+      row.PrizePickPoint ??
+      row.UnderdogPoint ??
+      row.ConsensusPoint;
+
+  }
+  else {
+
+    selectedLine =
+      row.PrizePickPoint ??
+      row.UnderdogPoint ??
+      row.BetrPoint ??
+      row.ConsensusPoint;
+
+  }
 
   const pick = {
+
     sport: selectedSport,
     event: row.Event,
     game_date: dateInput?.value || null,
     player: row.Description,
     market: row.Market,
     outcome: getOutcomeFromRow(row),
-    line: Number(
-      window.pickTracker.platform === "underdog"
-        ? (row.UnderdogPoint ?? row.PrizePickPoint ?? row.ConsensusPoint)
-        : (row.PrizePickPoint ?? row.ConsensusPoint ?? row.UnderdogPoint)
-    ),
-    platform: window.pickTracker.platform
+
+    line: Number(selectedLine),
+
+    platform: platform
+
   };
 
   const pickKey = getPickTrackerKey(pick);
 
   function syncButtonState() {
-    const selected = window.pickTracker.selections.has(pickKey);
-    btn.textContent = selected ? "✔ Picked" : "➕ Add to Pick Tracker";
+
+    const selected =
+      window.pickTracker.selections.has(pickKey);
+
+    btn.textContent =
+      selected
+        ? "✔ Picked"
+        : "➕ Add to Pick Tracker";
+
     btn.classList.toggle("picked", selected);
+
   }
 
   btn.addEventListener("click", (e) => {
-    e.stopPropagation(); // prevents modal click issues
+
+    e.stopPropagation();
+
     togglePickTrackerSelection(pick);
+
     syncButtonState();
+
   });
 
-  // Initial state (important when reopening modal)
   syncButtonState();
+
 });
+
 
 
   // Show modal

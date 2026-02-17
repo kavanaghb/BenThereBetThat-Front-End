@@ -4978,7 +4978,28 @@ select[data-locked="true"] {
 
 
 
+/* =================================================== */
+/* 🎯 Platform Filter Buttons */
+/* =================================================== */
 
+.platform-filter-btn {
+
+  padding: 6px 14px;
+  margin-right: 6px;
+  border-radius: 6px;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  font-weight: bold;
+
+}
+
+.platform-filter-btn.active {
+
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+
+}
 
 
 

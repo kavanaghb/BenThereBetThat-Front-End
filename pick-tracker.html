@@ -300,8 +300,9 @@ window.addEventListener("error", (e) => {
 
       <label>Platform</label>
       <select id="manualSlipPlatform">
-       <option value="prizepicks">PrizePicks</option>
-       <option value="underdog">Underdog</option>
+        <option value="prizepicks">PrizePicks</option>
+        <option value="underdog">Underdog</option>
+        <option value="betr">Betr</option>   <!-- ✅ ADD THIS -->
       </select>
 
       <label>Title (optional)</label>
@@ -385,8 +386,10 @@ window.addEventListener("error", (e) => {
       <option value="all">All</option>
       <option value="prizepicks">PrizePicks</option>
       <option value="underdog">Underdog</option>
+      <option value="betr">Betr</option>   <!-- ✅ ADD -->
       <option value="regular">Regular Bets</option>
     </select>
+
 
   </div>
 
@@ -2469,14 +2472,19 @@ function formatOutcomeLabel(outcome) {
 // =====================================================
 // 🧠 Manual Slip Dropdown Constants
 // =====================================================
+// =====================================================
+// 🧠 Manual Slip Dropdown Constants
+// =====================================================
 const MANUAL_SPORTS = [
   { value: "nba", label: "NBA" },
+  { value: "wnba", label: "WNBA" },   // ✅ ADD THIS LINE
   { value: "nfl", label: "NFL" },
   { value: "nhl", label: "NHL" },
   { value: "mlb", label: "MLB" },
   { value: "ncaab", label: "NCAAB" },
   { value: "ncaaf", label: "NCAAF" }
 ];
+
 
 const MANUAL_MARKETS_BY_SPORT = {
   // =====================
@@ -2506,6 +2514,20 @@ const MANUAL_MARKETS_BY_SPORT = {
     "player_points_rebounds",
     "player_points_assists",
     "player_rebounds_assists"
+  ],
+
+  // 🏀 WNBA
+// =====================
+  wnba: [
+    "player_points",
+    "player_rebounds",
+    "player_assists",
+    "player_threes",
+
+    "player_points_rebounds",
+    "player_points_assists",
+    "player_rebounds_assists",
+    "player_points_rebounds_assists"
   ],
 
   // =====================

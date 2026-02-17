@@ -79,12 +79,12 @@
 
   <div class="auth-marketing">
     <h1 class="marketing-headline">
-      Build smarter PrizePicks & Underdog slips using live Vegas odds
+      Build smarter PrizePicks, Underdog and BETR slips using live Vegas odds
     </h1>
 
     <p class="marketing-subheadline">
       Compare real-time Vegas lines from 4 major sportsbooks against
-      PrizePicks and Underdog Fantasy. Filter edges, auto-build slips,
+      PrizePicks, Underdog Fantasy and BETR. Filter edges, auto-build slips,
       and track ROI.
     </p>
 
@@ -99,7 +99,7 @@
     <div class="marketing-extra">
       <ul class="marketing-bullets">
         <li>Live Vegas odds from 4 major sportsbooks</li>
-        <li>Instant comparison to PrizePicks & Underdog Fantasy</li>
+        <li>Instant comparison to PrizePicks, Underdog Fantasy and BETR</li>
         <li>Smart filters to surface the best value props</li>
         <li>Auto-build slips in seconds</li>
         <li>Track picks, slips, ROI, and trends by sport</li>
@@ -216,6 +216,7 @@
       <button data-sport="americanfootball_ncaaf">NCAAF</button>
       <button data-sport="basketball_nba">NBA</button>
       <button data-sport="basketball_ncaab">NCAAB</button>
+      <button data-sport="basketball_wnba">WNBA</button>
       <button data-sport="baseball_mlb">MLB</button>
       <button data-sport="icehockey_nhl">NHL</button>
       <button id="openPickTrackerBtn">📊 Pick Tracker</button>
@@ -244,62 +245,81 @@
 </div>
 
 
-    <!-- 🏷️ Market Sections -->
-    <div id="market-sections">
-      <div id="americanfootball_nflMarkets" class="market-buttons" style="display:none;">
-        <h3>NFL Markets</h3>
-        <div class="market-actions">
-          <button id="selectAllNFL" class="select-all-btn">Select All</button>
-          <button id="deselectAllNFL" class="deselect-all-btn">Deselect All</button>
-        </div>
-        <div class="market-list"></div>
-      </div>
+<!-- 🏷️ Market Sections -->
+<div id="market-sections">
 
-      <div id="americanfootball_ncaafMarkets" class="market-buttons" style="display:none;">
-        <h3>NCAAF Markets</h3>
-        <div class="market-actions">
-          <button id="selectAllNCAAF" class="select-all-btn">Select All</button>
-          <button id="deselectAllNCAAF" class="deselect-all-btn">Deselect All</button>
-        </div>
-        <div class="market-list"></div>
-      </div>
-
-      <div id="basketball_nbaMarkets" class="market-buttons" style="display:none;">
-        <h3>NBA Markets</h3>
-        <div class="market-actions">
-          <button id="selectAllNBA" class="select-all-btn">Select All</button>
-          <button id="deselectAllNBA" class="deselect-all-btn">Deselect All</button>
-        </div>
-        <div class="market-list"></div>
-      </div>
-
-      <div id="basketball_ncaabMarkets" class="market-buttons" style="display:none;">
-        <h3>NCAAB Markets</h3>
-        <div class="market-actions">
-          <button id="selectAllNCAAB" class="select-all-btn">Select All</button>
-          <button id="deselectAllNCAAB" class="deselect-all-btn">Deselect All</button>
-        </div>
-        <div class="market-list"></div>
-      </div>
-
-      <div id="baseball_mlbMarkets" class="market-buttons" style="display:none;">
-        <h3>MLB Markets</h3>
-        <div class="market-actions">
-          <button id="selectAllMLB" class="select-all-btn">Select All</button>
-          <button id="deselectAllMLB" class="deselect-all-btn">Deselect All</button>
-        </div>
-        <div class="market-list"></div>
-      </div>
-
-      <div id="icehockey_nhlMarkets" class="market-buttons" style="display:none;">
-        <h3>NHL Markets</h3>
-        <div class="market-actions">
-          <button id="selectAllHockey" class="select-all-btn">Select All</button>
-          <button id="deselectAllHockey" class="deselect-all-btn">Deselect All</button>
-        </div>
-        <div class="market-list"></div>
-      </div>
+  <!-- NFL -->
+  <div id="americanfootball_nflMarkets" class="market-buttons" style="display:none;">
+    <h3>NFL Markets</h3>
+    <div class="market-actions">
+      <button id="selectAllNFL" class="select-all-btn">Select All</button>
+      <button id="deselectAllNFL" class="deselect-all-btn">Deselect All</button>
     </div>
+    <div class="market-list"></div>
+  </div>
+
+  <!-- NCAAF -->
+  <div id="americanfootball_ncaafMarkets" class="market-buttons" style="display:none;">
+    <h3>NCAAF Markets</h3>
+    <div class="market-actions">
+      <button id="selectAllNCAAF" class="select-all-btn">Select All</button>
+      <button id="deselectAllNCAAF" class="deselect-all-btn">Deselect All</button>
+    </div>
+    <div class="market-list"></div>
+  </div>
+
+  <!-- NBA -->
+  <div id="basketball_nbaMarkets" class="market-buttons" style="display:none;">
+    <h3>NBA Markets</h3>
+    <div class="market-actions">
+      <button id="selectAllNBA" class="select-all-btn">Select All</button>
+      <button id="deselectAllNBA" class="deselect-all-btn">Deselect All</button>
+    </div>
+    <div class="market-list"></div>
+  </div>
+
+  <!-- NCAAB -->
+  <div id="basketball_ncaabMarkets" class="market-buttons" style="display:none;">
+    <h3>NCAAB Markets</h3>
+    <div class="market-actions">
+      <button id="selectAllNCAAB" class="select-all-btn">Select All</button>
+      <button id="deselectAllNCAAB" class="deselect-all-btn">Deselect All</button>
+    </div>
+    <div class="market-list"></div>
+  </div>
+
+  <!-- WNCAAB -->
+  <div id="basketball_wnbaMarkets" class="market-buttons" style="display:none;">
+    <h3>WNBA Markets</h3>
+    <div class="market-actions">
+      <button id="selectAllWNBA" class="select-all-btn">Select All</button>
+      <button id="deselectAllWNBA" class="deselect-all-btn">Deselect All</button>
+    </div>
+    <div class="market-list"></div>
+  </div>
+
+  <!-- MLB -->
+  <div id="baseball_mlbMarkets" class="market-buttons" style="display:none;">
+    <h3>MLB Markets</h3>
+    <div class="market-actions">
+      <button id="selectAllMLB" class="select-all-btn">Select All</button>
+      <button id="deselectAllMLB" class="deselect-all-btn">Deselect All</button>
+    </div>
+    <div class="market-list"></div>
+  </div>
+
+  <!-- NHL -->
+  <div id="icehockey_nhlMarkets" class="market-buttons" style="display:none;">
+    <h3>NHL Markets</h3>
+    <div class="market-actions">
+      <button id="selectAllHockey" class="select-all-btn">Select All</button>
+      <button id="deselectAllHockey" class="deselect-all-btn">Deselect All</button>
+    </div>
+    <div class="market-list"></div>
+  </div>
+
+</div>
+
 
     <!-- 🧩 Header Actions -->
     <div id="header-container" style="position: sticky; top: 0; z-index: 10; background-color: #fff; padding: 10px;">
@@ -318,6 +338,10 @@
         <label><input type="checkbox" value="DraftKings" checked> DraftKings</label>
         <label><input type="checkbox" value="BetMGM" checked> BetMGM</label>
         <label><input type="checkbox" value="Fanatics" checked> Fanatics</label>
+        <label><input type="checkbox" value="PrizePicks"> PrizePicks</label>
+        <label><input type="checkbox" value="Underdog"> Underdog</label>
+        <label><input type="checkbox" value="Betr"> Betr</label>
+
       </div>
 
       <div id="consensus-summary" class="consensus-bar"></div>
@@ -336,6 +360,10 @@
   <button id="filterUnderdogOptimalBtn" class="filter-btn"
           title="Show Underdog lines with the strongest positive expected value">
     🧩 Underdog +EV
+  </button>
+
+  <button id="filterBetrOptimalBtn" class="filter-btn">
+    Betr +EV
   </button>
 
   <button id="filterFantasyEdgeBtn" class="filter-btn"
@@ -363,13 +391,37 @@
      🎯 Pick Tracker Platform Selector
 =================================================== -->
 <div id="pickTrackerPlatform" class="pick-tracker-platform">
-  <button id="pickTrackerPrizePicksBtn" class="tracker-platform-btn active">
+
+  <button
+    id="pickTrackerPrizePicksBtn"
+    class="tracker-platform-btn active"
+    data-platform="prizepicks"
+  >
     PrizePicks
   </button>
-  <button id="pickTrackerUnderdogBtn" class="tracker-platform-btn">
+
+  <button
+    id="pickTrackerUnderdogBtn"
+    class="tracker-platform-btn"
+    data-platform="underdog"
+  >
     Underdog
   </button>
+
+  <button
+    id="pickTrackerBetrBtn"
+    class="tracker-platform-btn"
+    data-platform="betr"
+  >
+    Betr
+  </button>
+
 </div>
+
+
+
+
+
 
 
     <!-- 🧾 Results -->
