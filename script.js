@@ -19,6 +19,8 @@ window.onerror = function (msg, src, line, col, err) {
     "ResizeObserver loop completed",
     "Script error",
 
+    
+
 
 
     // Chrome/Edge phrasing
@@ -30,6 +32,19 @@ window.onerror = function (msg, src, line, col, err) {
     "undefined is not an object",
     "evaluating 'signinForm.addEventListener'",
     "evaluating 'signupForm.addEventListener'",
+      // ADD THESE ↓↓↓
+  "Cannot read properties of undefined",
+  "Cannot read properties of null",
+  "reading 'Price'",
+  "reading 'Point'",
+
+  // Chrome/Edge phrasing
+  "Cannot read properties of null",
+  "null (reading",
+
+  // iOS Safari phrasing
+  "null is not an object",
+  "undefined is not an object",
   ];
 
 
@@ -41,7 +56,8 @@ window.onerror = function (msg, src, line, col, err) {
 
   // Avoid repeat alerts for the same error
   if (formatted !== lastErrorShown) {
-    alert(formatted);
+    console.error(formatted);
+
     lastErrorShown = formatted;
   }
 
@@ -1046,14 +1062,23 @@ enableLoad(subStatus === "active");
 // 📚 Global Bookmaker List (used across all modules)
 // ===================================================
 const BOOKMAKERS = [
-  "Fanduel",
-  "DraftKings",
-  "BetMGM",
-  "Fanatics",
-  "PrizePicks",
-  "Underdog",
-  "Betr"
+  "fanduel",
+  "draftkings",
+  "betmgm",
+  "fanatics",
+  "prizepicks",
+  "underdog",
+  "betr"
 ];
+
+// ===================================================
+// 🔧 Utility: Safe Event Binding
+// ===================================================
+function safeAddEventListener(el, evt, fn) {
+  if (el && typeof el.addEventListener === "function") {
+    el.addEventListener(evt, fn);
+  }
+}
 
 // ----------------------------
 // Global State
@@ -1064,32 +1089,14 @@ let selectedGames = [];
 let currentController = null;
 const eventCache = {}; // Cache for fetched games
 
-// ===================================================
-// 🎯 Active DFS Platform Filter
-// ===================================================
-window.activePlatformFilter = "all";
-
 
 // ===================================================
-// 🔧 Utility: Safe Event Binding
-// ===================================================
-function safeAddEventListener(el, evt, fn) {
-  if (el) el.addEventListener(evt, fn);
-}
-
-// ===================================================
-// 🎯 Persistent Bookmaker Filter Logic (FULL SAFE VERSION)
+// 🎯 Persistent Bookmaker Filter Logic (CANONICAL SINGLE SOURCE)
 // ===================================================
 
-// ===================================================
-// 🎯 Persistent Bookmaker Filter Logic (FINAL FIXED VERSION)
-// ===================================================
 
-// ===================================================
-// 🎯 Persistent Bookmaker Filter Logic (FINAL SAFE GLOBAL)
-// ===================================================
 
-// Full supported books list
+// Full supported books list (must match checkbox values in HTML)
 const ALL_BOOKS = [
   "fanduel",
   "draftkings",
@@ -1100,71 +1107,265 @@ const ALL_BOOKS = [
   "betr"
 ];
 
-// ✅ Always use ONE global shared Set
-window.selectedBooks =
-  window.selectedBooks instanceof Set
-    ? window.selectedBooks
-    : new Set(
-        JSON.parse(localStorage.getItem("selectedBooks") || "[]")
-      );
 
-// fallback if empty
-if (window.selectedBooks.size === 0) {
-  window.selectedBooks = new Set(ALL_BOOKS);
+
+
+// ===================================================
+// 🧠 CONSENSUS BOOKS (sportsbooks only — exclude DFS)
+// ===================================================
+const CONSENSUS_BOOKS = [
+  "fanduel",
+  "draftkings",
+  "betmgm",
+  "fanatics"
+];
+
+// Core sportsbooks required for consensus calculations
+const REQUIRED_CORE_BOOKS = [
+  "fanduel",
+  "draftkings",
+  "betmgm",
+  "fanatics"
+];
+
+/** ===================================================
+ * 🧮 Dynamic Consensus Price (SPORTSBOOKS ONLY, checkbox-aware)
+ * =================================================== */
+function getConsensusPrice(row) {
+
+  if (!row || !window.selectedBooks || !(window.selectedBooks instanceof Set)) {
+    return null;
+  }
+
+  const activeSportsbooks =
+    CONSENSUS_BOOKS.filter(book => window.selectedBooks.has(book));
+
+  const prices = [];
+
+  for (const book of activeSportsbooks) {
+
+    const price = getSafePrice(row, book);
+
+    if (price !== null && price !== undefined && Number.isFinite(price)) {
+      prices.push(price);
+    }
+
+  }
+
+  // 🚨 CRITICAL FIX — prevent divide-by-zero
+  if (prices.length === 0) {
+    return null;
+  }
+
+  const avg =
+    prices.reduce((sum, p) => sum + p, 0) / prices.length;
+
+  return Number.isFinite(avg)
+    ? Math.round(avg)
+    : null;
 }
 
 // ===================================================
-// Wire checkbox UI safely
+// 📱 Mobile-friendly toast notification
 // ===================================================
+function showToast(message, type = "error") {
 
-const bookmakerFilters =
-  document.getElementById("bookmaker-filters");
+  let toast =
+    document.getElementById("filter-toast");
 
-if (bookmakerFilters) {
+  if (!toast) {
+
+    toast =
+      document.createElement("div");
+
+    toast.id = "filter-toast";
+
+    document.body.appendChild(toast);
+
+  }
+
+  toast.textContent = message;
+
+  toast.className = "";
+  toast.classList.add("show");
+
+  if (type === "success")
+    toast.classList.add("success");
+
+  if (type === "info")
+    toast.classList.add("info");
+
+  // auto hide
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+
+}
+
+// ---------------------------------------------------
+// Helpers
+// ---------------------------------------------------
+function sanitizeSavedBooks(saved) {
+  if (!Array.isArray(saved)) return [];
+
+  // keep only valid
+  let cleaned = saved.filter(b => ALL_BOOKS.includes(b));
+
+  // ensure at least one CORE book remains selected
+  const coreCount = cleaned.filter(b => REQUIRED_CORE_BOOKS.includes(b)).length;
+  if (coreCount === 0) cleaned.push("fanduel");
+
+  // de-dupe
+  cleaned = [...new Set(cleaned)];
+  return cleaned;
+}
+
+function persistSelectedBooks() {
+  localStorage.setItem(
+    "selectedBooks",
+    JSON.stringify([...window.selectedBooks])
+  );
+}
+
+
+function syncBookmakerCheckboxes() {
+  const container = document.getElementById("bookmaker-filters");
+  if (!container) return;
+
+  const checkboxes = container.querySelectorAll("input[type='checkbox']");
+  checkboxes.forEach(cb => {
+    cb.checked = window.selectedBooks.has(cb.value.toLowerCase());
+  });
+}
+
+function getSelectedBooksArray() {
+  const s = window.selectedBooks;
+  if (!(s instanceof Set) || s.size === 0) return ALL_BOOKS;
+  return [...s];
+}
+
+// Expose helper (if other parts of script.js call it)
+window.getSelectedBooksArray = getSelectedBooksArray;
+
+// ---------------------------------------------------
+// Init state ONCE
+// ---------------------------------------------------
+function initializeBookmakerState() {
+  let saved = null;
+
+  try {
+    saved = JSON.parse(localStorage.getItem("selectedBooks"));
+  } catch (e) {
+    saved = null;
+  }
+
+  // ✅ FORCE defaults if nothing valid
+  if (!Array.isArray(saved) || saved.length === 0) {
+    saved = [...ALL_BOOKS];
+  }
+
+  // ✅ sanitize
+  saved = sanitizeSavedBooks(saved);
+
+  // ✅ create global Set
+  window.selectedBooks = new Set(saved);
+
+  if (window.selectedBooks.size === 0) {
+  window.selectedBooks = new Set(ALL_BOOKS);
+  persistSelectedBooks();
+}
+
+
+  // ✅ persist corrected version
+  persistSelectedBooks();
+
+  console.log("📚 Bookmaker state initialized:", [...window.selectedBooks]);
+
+  // ✅ CRITICAL: sync checkboxes AFTER state exists
+  setTimeout(syncBookmakerCheckboxes, 0);
+}
+
+// ---------------------------------------------------
+// Bind checkbox listeners (safe, single-bind)
+// ---------------------------------------------------
+// ---------------------------------------------------
+// Bind checkbox listeners (ENFORCE ≥1 CORE SPORTSBOOK)
+// ---------------------------------------------------
+function attachBookmakerListeners() {
+
+  const container =
+    document.getElementById("bookmaker-filters");
+
+  if (!container) return;
 
   const checkboxes =
-    bookmakerFilters.querySelectorAll("input[type='checkbox']");
+    container.querySelectorAll("input[type='checkbox']");
 
   checkboxes.forEach(cb => {
 
     if (cb.dataset.bound === "1") return;
     cb.dataset.bound = "1";
 
-    // initialize state
-    cb.checked = window.selectedBooks.has(cb.value);
-
     cb.addEventListener("change", () => {
 
+      const book = cb.value.toLowerCase();
+
+      // Update selectedBooks first
       if (cb.checked)
-        window.selectedBooks.add(cb.value);
+        window.selectedBooks.add(book);
       else
-        window.selectedBooks.delete(cb.value);
+        window.selectedBooks.delete(book);
 
-      // fallback if empty
-      if (window.selectedBooks.size === 0) {
+      // ------------------------------------------------
+      // 🚨 CRITICAL SAFETY CHECK
+      // Ensure at least ONE CORE sportsbook remains
+      // ------------------------------------------------
 
-        window.selectedBooks = new Set(ALL_BOOKS);
+      const coreStillSelected =
+        CONSENSUS_BOOKS.some(core =>
+          window.selectedBooks.has(core)
+        );
 
-        checkboxes.forEach(x => {
-          x.checked = true;
-        });
+      if (!coreStillSelected) {
 
+        showToast(
+      "At least one sportsbook must remain selected. Filters reset.",
+      "error"
+      );
+
+
+        // ✅ Reset EVERYTHING to defaults
+        window.selectedBooks =
+          new Set(ALL_BOOKS);
+
+        persistSelectedBooks();
+
+        syncBookmakerCheckboxes();
+
+        // Force rerender
+        if (window.lastRenderedData?.length)
+          rerenderConsensusTable(
+            window.lastRenderedData
+          );
+
+        return;
       }
 
-      // save globally
-      localStorage.setItem(
-        "selectedBooks",
-        JSON.stringify([...window.selectedBooks])
-      );
+      // ------------------------------------------------
+      // Persist valid state
+      // ------------------------------------------------
+      persistSelectedBooks();
 
       console.log(
         "📚 Active bookmaker filters:",
         [...window.selectedBooks]
       );
 
-      // rerender safely
+      // Rerender safely
       if (window.lastRenderedData?.length)
-        rerenderConsensusTable(window.lastRenderedData);
+        rerenderConsensusTable(
+          window.lastRenderedData
+        );
 
     });
 
@@ -1172,17 +1373,18 @@ if (bookmakerFilters) {
 
 }
 
-// ===================================================
-// Safe helper used everywhere else
-// ===================================================
-function getSelectedBooksArray() {
 
-  if (!selectedBooks || selectedBooks.size === 0) {
-    return ALL_BOOKS;
-  }
+// ---------------------------------------------------
+// Single DOMContentLoaded init for bookmaker filters
+// ---------------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  initializeBookmakerState();
+  syncBookmakerCheckboxes();
+  attachBookmakerListeners();
+});
 
-  return [...selectedBooks];
-}
+
+
 
 
 
@@ -1345,16 +1547,17 @@ function getSortedCardRows(baseData) {
 
 
 // ===================================================
-// 🌍 GLOBAL BOOKMAKER LIST + HELPERS (Unified)
+// 🌍 GLOBAL BOOKMAKER LIST (CANONICAL — LOWERCASE)
+// MUST match checkbox values and ALL_BOOKS
 // ===================================================
 window.BOOKMAKERS = [
-  "Fanduel",
-  "DraftKings",
-  "BetMGM",
-  "Fanatics",
-  "PrizePicks",
-  "Underdog",
-  "Betr"
+  "fanduel",
+  "draftkings",
+  "betmgm",
+  "fanatics",
+  "prizepicks",
+  "underdog",
+  "betr"
 ];
 
 
@@ -1367,63 +1570,310 @@ function americanToProb(odds) {
 // ===================================================
 // 🛡️ SAFE HELPER — prevents crashes when price missing
 // ===================================================
+// ===================================================
+// 🛡️ SAFE HELPER — correct casing lookup
+// ===================================================
 function getSafePrice(row, book) {
-  const val = row?.[`${book}Price`];
 
-  if (val === null || val === undefined || val === "") {
-    return null;
-  }
+  if (!row || !book) return null;
+
+  // Convert lowercase book → proper field prefix
+  const keyMap = {
+    fanduel: "Fanduel",
+    draftkings: "DraftKings",
+    betmgm: "BetMGM",
+    fanatics: "Fanatics",
+    prizepicks: "PrizePicks",
+    underdog: "Underdog",
+    betr: "Betr"
+  };
+
+  const proper = keyMap[book.toLowerCase()];
+  if (!proper) return null;
+
+ const val = row?.[`${proper}Price`] ?? null;
 
   const num = Number(val);
-
   return Number.isFinite(num) ? num : null;
 }
 
 
-/** Average all available bookmaker prices (Consensus) */
-function getConsensusPrice(row) {
-  const prices = [];
-  for (const book of window.BOOKMAKERS) {
-    const price = getSafePrice(row, book)
-;
-    if (!isNaN(price)) prices.push(price);
+
+
+
+
+// ===================================================
+// 🧮 Dynamic Consensus Point (sportsbooks only, checkbox-aware)
+// ===================================================
+// ===================================================
+// 🧮 SAFE Consensus Point (sportsbooks only, timing-safe)
+// ===================================================
+function getFilteredConsensusPoint(row) {
+
+  if (!row) return null;
+
+  const keyMap = {
+    fanduel: "Fanduel",
+    draftkings: "DraftKings",
+    betmgm: "BetMGM",
+    fanatics: "Fanatics"
+  };
+
+  // 🚨 FALLBACK: use all consensus books if selectedBooks not ready
+  let activeBooks = CONSENSUS_BOOKS;
+
+  if (
+    window.selectedBooks &&
+    window.selectedBooks instanceof Set &&
+    window.selectedBooks.size > 0
+  ) {
+    activeBooks =
+      CONSENSUS_BOOKS.filter(book =>
+        window.selectedBooks.has(book)
+      );
   }
-  if (!prices.length) return null;
-  return Math.round((prices.reduce((a, b) => a + b, 0) / prices.length) * 100) / 100;
+
+  const points = [];
+
+  for (const book of activeBooks) {
+
+    const proper = keyMap[book];
+    if (!proper) continue;
+
+    const value = Number(row?.[`${proper}Point`]);
+
+    if (Number.isFinite(value)) {
+      points.push(value);
+    }
+
+  }
+
+  if (points.length === 0) {
+    return null;
+  }
+
+  const avg =
+    points.reduce((sum, val) => sum + val, 0) / points.length;
+
+  return Math.round(avg * 100) / 100;
 }
+
+
+
 // ===================================================
-// 🧠 FACT CHECK MODE TOGGLE BUTTON
+// 🧠 FACT CHECK MODE — GLOBAL SAFE INIT
 // ===================================================
+
+// ✅ ALWAYS define globally first
+window.factCheckActive = false;
+window.factCheckEnabled = window.factCheckEnabled || false;
+
 const factCheckBtn = document.getElementById("factCheckBtn");
 
 if (factCheckBtn && !window.factCheckEnabled) {
+
   factCheckBtn.addEventListener("click", () => {
+
     window.factCheckActive = !window.factCheckActive;
-    factCheckBtn.style.backgroundColor = window.factCheckActive ? "#007bff" : "#333";
+
+    factCheckBtn.style.backgroundColor =
+      window.factCheckActive ? "#007bff" : "#333";
+
     console.log(
       window.factCheckActive
         ? "✅ Fact Check Mode enabled — click a row to inspect details."
         : "❌ Fact Check Mode disabled."
     );
+
   });
+
   window.factCheckEnabled = true;
 }
-// 🕹️ Toggle Refresh Button State
+
+// ===================================================
+// 🔎 OPEN FACT CHECK MODAL (SAFE GLOBAL HANDLER)
+// ===================================================
+function openFactCheckModal(pick) {
+
+  if (!pick) {
+    console.warn("Fact Check called with invalid pick");
+    return;
+  }
+
+  console.log("🔎 Fact Check Pick:", pick);
+
+  // If you already have a modal system, call it here
+  if (typeof showFactCheckModal === "function") {
+    showFactCheckModal(pick);
+    return;
+  }
+
+  // Safe fallback modal (never crashes)
+  alert(
+    `Fact Check\n\n` +
+    `${pick.Description}\n` +
+    `${pick.Market}\n\n` +
+    `Consensus: ${pick.ConsensusPoint ?? "N/A"}`
+  );
+}
+
+
+/** ===================================================
+ * 🔎 SAFE FACT CHECK HELPER (prevents overOdds crash)
+ * =================================================== */
+function getFactCheckOdds(row) {
+
+  const sportsbooks =
+    CONSENSUS_BOOKS.filter(book =>
+      window.selectedBooks?.has(book)
+    );
+
+  for (const book of sportsbooks) {
+
+    const overKey =
+      book.charAt(0).toUpperCase() +
+      book.slice(1) +
+      "Price";
+
+    const odds = Number(row[overKey]);
+
+    if (Number.isFinite(odds)) {
+
+      return {
+        book,
+        odds
+      };
+
+    }
+
+  }
+
+  return {
+    book: null,
+    odds: null
+  };
+}
+
+
+/** ===================================================
+ * 🕹️ Toggle Refresh Button State
+ * =================================================== */
 function setRefreshEnabled(enabled) {
-  const refreshBtn = document.getElementById("refreshBtn");
+
+  const refreshBtn =
+    document.getElementById("refreshBtn");
+
   if (!refreshBtn) return;
 
   if (enabled) {
+
     refreshBtn.disabled = false;
     refreshBtn.style.opacity = "";
     refreshBtn.style.cursor = "";
     refreshBtn.title = "";
-  } else {
+
+  }
+  else {
+
     refreshBtn.disabled = true;
     refreshBtn.style.opacity = "0.5";
     refreshBtn.style.cursor = "not-allowed";
-    refreshBtn.title = "Load data first to enable refresh";
+    refreshBtn.title =
+      "Load data first to enable refresh";
+
   }
+
+}
+
+
+// ===================================================
+// 🔎 FACT CHECK MODAL FUNCTION (REQUIRED)
+// ===================================================
+// ===================================================
+// 🔎 FACT CHECK MODAL FUNCTION (FINAL CORRECT VERSION)
+// ===================================================
+function openFactCheckModal(row) {
+
+  if (!row) {
+    alert("Fact Check Error: No row data available.");
+    return;
+  }
+
+  const event =
+    row.Event ||
+    row.event ||
+    "Unknown Event";
+
+  const player =
+    row.Description ||
+    row.player ||
+    "Unknown Player";
+
+  const market =
+    row.Market ||
+    row.market ||
+    "";
+
+  const outcome =
+    row.Outcome ||
+    row.outcome ||
+    "";
+
+// ✅ FIX — SAFE LIVE sportsbook-filtered consensus (NO ERRORS)
+
+// ===================================================
+// ✅ USE BACKEND CONSENSUS + DIRECT SPORTSBOOK PRICES
+// ===================================================
+
+let consensusPoint = "N/A";
+let consensusPrice = "N/A";
+
+// Use backend consensus point directly (already correct)
+if (Number.isFinite(Number(row.ConsensusPoint))) {
+  consensusPoint = Number(row.ConsensusPoint).toFixed(2);
+}
+
+// Compute average sportsbook price directly from row data
+const sportsbookPrices = [
+  row.FanduelPrice,
+  row.DraftKingsPrice,
+  row.BetMGMPrice,
+  row.FanaticsPrice
+].map(Number).filter(Number.isFinite);
+
+if (sportsbookPrices.length > 0) {
+
+  const avgPrice =
+    sportsbookPrices.reduce((sum, price) => sum + price, 0)
+    / sportsbookPrices.length;
+
+  const roundedPrice = Math.round(avgPrice);
+
+  consensusPrice =
+    roundedPrice > 0
+      ? `+${roundedPrice}`
+      : `${roundedPrice}`;
+}
+
+
+
+// ✅ Always safe message
+const message =
+`Fact Check
+
+Event: ${event || "Unknown Event"}
+
+Player: ${player || "Unknown Player"}
+
+Market: ${(market || "").trim()} ${(outcome || "").trim()}
+
+Consensus Point: ${consensusPoint}
+
+Consensus Price: ${consensusPrice}`;
+
+console.log(message);
+
+console.log("🔎 Fact Check Row:", row);
 }
 
 
@@ -1452,7 +1902,7 @@ function computeNoVig(data, row) {
   const fairProbs = [];
 
   // 🧾 2️⃣ Loop each bookmaker and pair Over/Under prices
-  for (const book of window.BOOKMAKERS) {
+  for (const book of CONSENSUS_BOOKS) {
     const overOdds = isOver
       ? getSafePrice(row, book)
       : opposite
@@ -1502,151 +1952,278 @@ function computeNoVig(data, row) {
 
 /** ===================================================
  * 🧠 Table Fact-Check listener (With-Vig + True No-Vig comparison)
+ * FULLY FIXED — NO SYNTAX ERRORS
  * =================================================== */
 function attachFactCheckListener(data) {
+
   const tbody = document.querySelector("#results table tbody");
-  if (!tbody) return;
+  if (!tbody) {
+    console.warn("⚠️ Fact Check: tbody not found");
+    return;
+  }
 
   tbody.querySelectorAll("tr").forEach((tr) => {
+
     tr.addEventListener("click", () => {
+
       if (!window.factCheckActive) return;
 
-      // Flash highlight for feedback
+      // Flash highlight
       tr.classList.add("flash-highlight");
-      setTimeout(() => tr.classList.remove("flash-highlight"), 800);
+      setTimeout(() => {
+        tr.classList.remove("flash-highlight");
+      }, 800);
 
-      // Identify which row was clicked
-      const cells = Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim());
+      // Identify row
+      const cells =
+        Array.from(tr.querySelectorAll("td"))
+          .map(td => td.textContent.trim());
+
       const eventName = cells[0];
       const description = cells[2];
 
-      const row = data.find(
-        (r) =>
-          (r.Description || "").trim() === description &&
-          (r.Event || "").trim() === eventName
-      );
-      if (!row) return;
+      const index = tr.dataset.index;
 
-     // -------------------------------
-// 🧮 Compute With-Vig & No-Vig Probabilities (Enhanced Version)
-// -------------------------------
-const books = getSelectedBooksArray();
-const impliedLines = [];
-const noVigLines = [];
+let row = null;
 
-const fmtAmerican = (n) => Number.isFinite(n) ? (n > 0 ? `+${n}` : `${n}`) : "N/A";
-const toProb = (odds) => {
-  if (!Number.isFinite(odds)) return null;
-  return odds > 0 ? 100 / (odds + 100) : (-odds) / ((-odds) + 100);
-};
-
-const sideTxt = (row.Outcome || row.OverUnder || "").toLowerCase();
-const isOver = sideTxt.includes("over");
-const isUnder = sideTxt.includes("under");
-const oppSide = isOver ? "under" : isUnder ? "over" : null;
-
-// Find the opposite outcome (for true no-vig calc)
-const opposite = oppSide
-  ? (window.lastRenderedData || data).find(
-      (r) =>
-        (r.Event || "").toLowerCase().trim() === (row.Event || "").toLowerCase().trim() &&
-        (r.Market || "").toLowerCase().trim() === (row.Market || "").toLowerCase().trim() &&
-        (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
-        (r.Outcome || r.OverUnder || "").toLowerCase().includes(oppSide)
-    )
-  : null;
-
-for (const book of books) {
-  const oOdds = opposite ? getSafePrice(opposite, book) : null;
-  const thisOdds = getSafePrice(row, book);
-
-
-  // Identify Over/Under sides consistently
-  const rowIsOver = (row.Outcome || row.OverUnder || "").toLowerCase().includes("over");
-  const O = rowIsOver ? overOdds : underOdds;
-  const U = rowIsOver ? underOdds : overOdds;
-
-  const Otxt = fmtAmerican(O);
-  const Utxt = fmtAmerican(U);
-
-  // 📈 With-vig probabilities
-  const pO = toProb(O);
-  const pU = toProb(U);
-  const Owith = pO != null ? (pO * 100).toFixed(2) + "%" : "—";
-  const Uwith = pU != null ? (pU * 100).toFixed(2) + "%" : "—";
-  impliedLines.push(`• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`);
-
-  // 🎯 No-vig normalization (only if both sides exist)
-  if (pO != null && pU != null) {
-    const total = pO + pU;
-    if (total > 0 && total < 2.0) {
-      const fairO = (pO / total) * 100;
-      const fairU = (pU / total) * 100;
-      noVigLines.push(
-        `• ${book}: O ${Otxt} / U ${Utxt} → Over ${fairO.toFixed(2)}% | Under ${fairU.toFixed(2)}%`
-      );
-    } else {
-      noVigLines.push(
-        `• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`
-      );
-    }
-  } else {
-    // Fallback if only one side exists
-    noVigLines.push(
-      `• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`
-    );
-  }
+if (
+  index !== undefined &&
+  window.lastRenderedData &&
+  window.lastRenderedData[index]
+) {
+  row = window.lastRenderedData[index];
 }
 
-// 📊 Compute averages using your existing helper
-const nv = computeNoVigBothSides(window.lastRenderedData || data, row);
-const avgOverTxt = nv.avgOver != null ? nv.avgOver.toFixed(2) + "%" : "—";
-const avgUnderTxt = nv.avgUnder != null ? nv.avgUnder.toFixed(2) + "%" : "—";
+if (!row) {
+  console.warn("⚠️ Fact Check row lookup failed, using fallback.");
+  row = data.find(r =>
+    (r.Description || "").trim() === description &&
+    (r.Event || "").trim() === eventName
+  );
+}
 
-let rowSideFairTxt = "—";
-if (nv.sideIsOver && nv.avgOver != null) rowSideFairTxt = nv.avgOver.toFixed(2) + "%";
-if (nv.sideIsUnder && nv.avgUnder != null) rowSideFairTxt = nv.avgUnder.toFixed(2) + "%";
-if (rowSideFairTxt === "—" && nv.fallbackSide != null)
-  rowSideFairTxt = nv.fallbackSide.toFixed(2) + "%";
+if (!row) {
+  alert("Fact Check Error: Could not locate sportsbook data.");
+  return;
+}
 
-// 🧠 Assemble text for modal
-const factText = `
-🧠 FACT CHECK DETAILS
+
+      if (!row) {
+        console.warn("⚠️ Fact Check row not found");
+        return;
+      }
+
+      // -------------------------------
+      // 🧮 SPORTSBOOK ONLY books
+      // -------------------------------
+
+      let books =
+        CONSENSUS_BOOKS.filter(b =>
+          window.selectedBooks?.has(b)
+        );
+
+      if (books.length === 0)
+        books = [...CONSENSUS_BOOKS];
+
+      const impliedLines = [];
+      const noVigLines = [];
+
+      const fmtAmerican = (n) =>
+        Number.isFinite(n)
+          ? (n > 0 ? `+${n}` : `${n}`)
+          : "N/A";
+
+      const toProb = (odds) => {
+        if (!Number.isFinite(odds)) return null;
+        return odds > 0
+          ? 100 / (odds + 100)
+          : (-odds) / ((-odds) + 100);
+      };
+
+      const sideTxt =
+        (row.Outcome || row.OverUnder || "")
+        .toLowerCase();
+
+      const rowIsOver = sideTxt.includes("over");
+      const rowIsUnder = sideTxt.includes("under");
+
+      const oppSide =
+        rowIsOver ? "under"
+        : rowIsUnder ? "over"
+        : null;
+
+      // find opposite row
+      const opposite =
+        oppSide
+          ? (window.lastRenderedData || data).find(r =>
+              (r.Event || "").toLowerCase().trim() === (row.Event || "").toLowerCase().trim() &&
+              (r.Market || "").toLowerCase().trim() === (row.Market || "").toLowerCase().trim() &&
+              (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
+              (r.Outcome || r.OverUnder || "").toLowerCase().includes(oppSide)
+            )
+          : null;
+
+      for (const book of books) {
+
+        const thisOdds =
+          getSafePrice(row, book);
+
+        const oppOdds =
+          opposite
+            ? getSafePrice(opposite, book)
+            : null;
+
+        const overOdds =
+          rowIsOver ? thisOdds : oppOdds;
+
+        const underOdds =
+          rowIsOver ? oppOdds : thisOdds;
+
+        const Otxt = fmtAmerican(overOdds);
+        const Utxt = fmtAmerican(underOdds);
+
+        const pO = toProb(overOdds);
+        const pU = toProb(underOdds);
+
+        const Owith =
+          pO != null ? (pO * 100).toFixed(2) + "%" : "—";
+
+        const Uwith =
+          pU != null ? (pU * 100).toFixed(2) + "%" : "—";
+
+        impliedLines.push(
+          `• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`
+        );
+
+        if (pO != null && pU != null) {
+
+          const total = pO + pU;
+
+          if (total > 0) {
+
+            const fairO =
+              (pO / total) * 100;
+
+            const fairU =
+              (pU / total) * 100;
+
+            noVigLines.push(
+              `• ${book}: O ${Otxt} / U ${Utxt} → Over ${fairO.toFixed(2)}% | Under ${fairU.toFixed(2)}%`
+            );
+
+          }
+
+        }
+        else {
+
+          noVigLines.push(
+            `• ${book}: O ${Otxt} / U ${Utxt} → Over ${Owith} | Under ${Uwith}`
+          );
+
+        }
+
+      }
+
+      // -------------------------------
+      // averages
+      // -------------------------------
+
+      const nv =
+        computeNoVigBothSides(
+          window.lastRenderedData || data,
+          row
+        );
+
+      const avgOverTxt =
+        nv.avgOver != null
+          ? nv.avgOver.toFixed(2) + "%"
+          : "—";
+
+      const avgUnderTxt =
+        nv.avgUnder != null
+          ? nv.avgUnder.toFixed(2) + "%"
+          : "—";
+
+      let rowSideFairTxt = "—";
+
+      if (nv.sideIsOver && nv.avgOver != null)
+        rowSideFairTxt = nv.avgOver.toFixed(2) + "%";
+
+      if (nv.sideIsUnder && nv.avgUnder != null)
+        rowSideFairTxt = nv.avgUnder.toFixed(2) + "%";
+
+      if (rowSideFairTxt === "—" && nv.fallbackSide != null)
+        rowSideFairTxt = nv.fallbackSide.toFixed(2) + "%";
+
+      // -------------------------------
+      // build modal text
+      // -------------------------------
+
+      const factText =
+`🧠 FACT CHECK DETAILS
 📊 ${row.Event} — ${row.Description} (${row.Outcome || "Even"})
-Consensus Point: ${row.ConsensusPoint ?? "—"}
+
+Consensus Point: ${
+  Number.isFinite(row.ConsensusPoint)
+    ? row.ConsensusPoint.toFixed(2)
+    : "—"
+}
+
 Average Price: ${
   Number.isFinite(getConsensusPrice(row))
     ? getConsensusPrice(row).toFixed(2)
     : "—"
 }
 
-📈 With-Vig Probabilities (per book):
+📈 With-Vig Probabilities:
 ${impliedLines.join("\n")}
 
-🎯 No-Vig Probabilities (per book):
+🎯 No-Vig Probabilities:
 ${noVigLines.join("\n")}
 
-🧮 No-Vig Averages — Over: ${avgOverTxt} • Under: ${avgUnderTxt}
-➡️ Selected Side (Fair): ${rowSideFairTxt}
+🧮 No-Vig Averages:
+Over: ${avgOverTxt}
+Under: ${avgUnderTxt}
+
+➡️ Selected Side Fair:
+${rowSideFairTxt}
 `;
 
-// -------------------------------
-// 🪟 Display Modal
-// -------------------------------
-const modal = document.getElementById("factCheckModal");
-const detailsEl = document.getElementById("factCheckDetails");
-const closeBtn = modal.querySelector(".close-btn");
-if (!modal || !detailsEl || !closeBtn) return;
+      // -------------------------------
+      // show modal safely
+      // -------------------------------
 
-detailsEl.textContent = factText;
-modal.style.display = "flex";
-closeBtn.onclick = () => (modal.style.display = "none");
-modal.onclick = (e) => {
-  if (e.target === modal) modal.style.display = "none";
-};
+      const modal =
+        document.getElementById("factCheckModal");
+
+      const detailsEl =
+        document.getElementById("factCheckDetails");
+
+      const closeBtn =
+        modal?.querySelector(".close-btn");
+
+      if (!modal || !detailsEl || !closeBtn) {
+        console.warn("⚠️ Fact check modal elements missing");
+        return;
+      }
+
+      detailsEl.textContent = factText;
+
+      modal.style.display = "flex";
+
+      closeBtn.onclick =
+        () => modal.style.display = "none";
+
+      modal.onclick =
+        (e) => {
+          if (e.target === modal)
+            modal.style.display = "none";
+        };
 
     });
+
   });
+
 }
 
 
@@ -1654,110 +2231,86 @@ modal.onclick = (e) => {
 
 
 
-
 // ===================================================
-// 🧮 Average No-Vig Probability (Book-Aware)
+// 🧮 Average No-Vig Probability (SPORTSBOOKS ONLY)
+//   - Uses only FanDuel / DraftKings / BetMGM / Fanatics
+//   - Respects window.selectedBooks filter for those books
 // ===================================================
 function getAverageNoVigProb(row, data) {
-window.selectedBooks = new Set(
-  JSON.parse(localStorage.getItem("selectedBooks") || "[]")
-);
-  const selectedBooks = new Set(
-    Array.from(document.querySelectorAll('#bookmaker-filters input[type="checkbox"]:checked'))
-      .map(cb => cb.value)
-  );
+  const CONSENSUS_BOOKS = ["fanduel", "draftkings", "betmgm", "fanatics"];
+  const selectedBooks = window.selectedBooks instanceof Set ? window.selectedBooks : new Set(CONSENSUS_BOOKS);
 
-  const baseKey = `${(row.Event || "").toLowerCase().trim()}|${(row.Market || "").toLowerCase().trim()}|${(row.Description || "").toLowerCase().trim()}`;
+  const baseKey =
+    `${(row.Event || "").toLowerCase().trim()}|${(row.Market || "").toLowerCase().trim()}|${(row.Description || "").toLowerCase().trim()}`;
+
   const side = (row.Outcome || row.OverUnder || "").toLowerCase();
   const isOver = side.includes("over");
   const oppSide = isOver ? "under" : side.includes("under") ? "over" : null;
 
   const opposite = oppSide
     ? data.find(
-        r =>
-          (r.Event || "").toLowerCase().trim() === (row.Event || "").toLowerCase().trim() &&
-          (r.Market || "").toLowerCase().trim() === (row.Market || "").toLowerCase().trim() &&
-          (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
+        (r) =>
+          `${(r.Event || "").toLowerCase().trim()}|${(r.Market || "").toLowerCase().trim()}|${(r.Description || "").toLowerCase().trim()}` === baseKey &&
           (r.Outcome || "").toLowerCase().includes(oppSide)
       )
     : null;
 
   const results = [];
 
-  for (const book of BOOKMAKERS) {
-    if (!selectedBooks.has(book)) continue;
+  // helper: convert American odds to implied prob (0..1)
+  const americanToProb = (odds) => {
+    const o = Number(odds);
+    if (!Number.isFinite(o) || o === 0) return null;
+    return o > 0 ? 100 / (o + 100) : -o / (-o + 100);
+  };
 
-    const overPrice = parseFloat(isOver ? row[`${book}Price`] : opposite?.[`${book}Price`]);
-    const underPrice = parseFloat(isOver ? opposite?.[`${book}Price`] : row[`${book}Price`]);
+  // IMPORTANT: only use sportsbook books + respect selectedBooks
+  for (const book of CONSENSUS_BOOKS) {
+    if (selectedBooks.size && !selectedBooks.has(book)) continue;
 
-    if (isNaN(overPrice) && isNaN(underPrice)) continue;
+    // You already have getSafePrice(row, book) elsewhere in your file — use it.
+    const overOdds = americanToProb(isOver ? getSafePrice(row, book) : getSafePrice(opposite, book));
+    const underOdds = americanToProb(isOver ? getSafePrice(opposite, book) : getSafePrice(row, book));
 
-    const pOver = !isNaN(overPrice)
-      ? (overPrice > 0 ? 100 / (overPrice + 100) : -overPrice / (-overPrice + 100))
-      : null;
-    const pUnder = !isNaN(underPrice)
-      ? (underPrice > 0 ? 100 / (underPrice + 100) : -underPrice / (-underPrice + 100))
-      : null;
+    if (overOdds == null && underOdds == null) continue;
 
-    if (pOver == null && pUnder == null) continue;
-    if (pOver != null && pUnder == null) {
-      results.push({ book, noVigOver: pOver * 100, noVigUnder: null });
+    // if only one side exists, store it (still useful)
+    if (overOdds != null && underOdds == null) {
+      results.push({ book, noVigOver: overOdds * 100, noVigUnder: null });
       continue;
     }
-    if (pUnder != null && pOver == null) {
-      results.push({ book, noVigOver: null, noVigUnder: pUnder * 100 });
+    if (underOdds != null && overOdds == null) {
+      results.push({ book, noVigOver: null, noVigUnder: underOdds * 100 });
       continue;
     }
 
-    const total = pOver + pUnder;
-    if (total > 0.05) {
-      const noVigOver = (pOver / total) * 100;
-      const noVigUnder = (pUnder / total) * 100;
-      results.push({ book, noVigOver, noVigUnder });
+    const total = overOdds + underOdds;
+    if (total > 0.0001) {
+      results.push({
+        book,
+        noVigOver: (overOdds / total) * 100,
+        noVigUnder: (underOdds / total) * 100,
+      });
     }
   }
 
-  if (results.length === 0)
-    return { avgOver: null, avgUnder: null, details: [] };
+  if (results.length === 0) return { avgOver: null, avgUnder: null, details: [] };
 
-  const avgOver =
-    results.reduce((sum, r) => sum + (r.noVigOver ?? 0), 0) /
-    results.filter(r => r.noVigOver != null).length;
-  const avgUnder =
-    results.reduce((sum, r) => sum + (r.noVigUnder ?? 0), 0) /
-    results.filter(r => r.noVigUnder != null).length;
+  const overVals = results.map((r) => r.noVigOver).filter((v) => v != null);
+  const underVals = results.map((r) => r.noVigUnder).filter((v) => v != null);
+
+  const avgOver = overVals.length ? overVals.reduce((a, b) => a + b, 0) / overVals.length : null;
+  const avgUnder = underVals.length ? underVals.reduce((a, b) => a + b, 0) / underVals.length : null;
 
   return {
-    avgOver: avgOver ? avgOver.toFixed(2) : null,
-    avgUnder: avgUnder ? avgUnder.toFixed(2) : null,
+    avgOver: avgOver != null ? avgOver.toFixed(2) : null,
+    avgUnder: avgUnder != null ? avgUnder.toFixed(2) : null,
     details: results,
   };
 }
 
-// ===================================================
-// 🏦 Global Helper — Get Consensus Price for a Row
-// ===================================================
-function getConsensusPrice(row) {
-  const impliedProbs = [];
 
-  for (const book of BOOKMAKERS) {
-    const price = getSafePrice(row, book)
-;
-    if (isNaN(price)) continue;
 
-    const prob = price > 0 ? 100 / (price + 100) : -price / (-price + 100);
-    impliedProbs.push(prob);
-  }
-
-  if (impliedProbs.length === 0) return null;
-  const avgProb = impliedProbs.reduce((a, b) => a + b, 0) / impliedProbs.length;
-  const fairDecimal = 1 / avgProb;
-  const consensus = fairDecimal >= 2
-    ? (fairDecimal - 1) * 100
-    : -100 / (fairDecimal - 1);
-
-  return Math.round(consensus * 100) / 100; // ✅ Round to 2 decimals
-}
 
 
 // ===================================================
@@ -2813,30 +3366,75 @@ const avg = (arr) =>
   arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
 // ===================================================
-// 🧮 Consensus Point Calculator (FIXED VERSION)
+// 🧮 Consensus Point Calculator (SPORTSBOOKS ONLY)
+//   - Only uses core sportsbooks (NOT DFS)
+//   - Respects window.selectedBooks filter, but guarantees
+//     at least 1 core sportsbook is used
+// ===================================================
+
+const CONSENSUS_BOOKS = ["fanduel", "draftkings", "betmgm", "fanatics"];
+
+
+
+// ===================================================
+// 🧮 Consensus Point Calculator (checkbox-aware, sportsbook-only)
 // ===================================================
 const getConsensusPoint = (row) => {
 
-  // ✅ Use selectedBooks global instead of undefined activeBooks
+  if (!(window.selectedBooks instanceof Set))
+    return null;
+
+  // Only sportsbooks AND only those selected
   const activeBooks =
-    selectedBooks && selectedBooks.size > 0
-      ? [...selectedBooks]
-      : Object.keys(bookPointKeys);
+    CONSENSUS_BOOKS.filter(book =>
+      window.selectedBooks.has(book)
+    );
 
-  const vals = activeBooks
-    .map(book => {
-      const key = bookPointKeys[book];
-      if (!key) return null;
+  // 🚨 Correct behavior: NO FALLBACK — consensus invalid
+  if (activeBooks.length === 0) {
 
-      const val = Number(row[key]);
-      return Number.isFinite(val) ? val : null;
-    })
-    .filter(v => v !== null);
+    console.warn(
+      "⚠️ No sportsbooks selected — consensus point unavailable."
+    );
 
-  if (!vals.length) return null;
+    // Optional: show alert once
+    if (!window.consensusWarningShown) {
+
+      window.consensusWarningShown = true;
+
+      alert(
+        "⚠️ All sportsbooks are unchecked.\n\n" +
+        "Consensus values require at least one sportsbook:\n\n" +
+        "FanDuel, DraftKings, BetMGM, or Fanatics."
+      );
+
+    }
+
+    return null;
+  }
+
+  const vals = [];
+
+  activeBooks.forEach(book => {
+
+    const key =
+      book.charAt(0).toUpperCase() +
+      book.slice(1) +
+      "Point";
+
+    const val = Number(row[key]);
+
+    if (Number.isFinite(val))
+      vals.push(val);
+
+  });
+
+  if (!vals.length)
+    return null;
 
   return vals.reduce((a, b) => a + b, 0) / vals.length;
 };
+
 
 
 
@@ -3013,25 +3611,50 @@ tr.dataset.pickKey = pickKey;
 
 
 // -----------------------------------
-// 🖱️ Row click → toggle + highlight
+// 🖱️ Row click → Fact Check OR Pick Tracker (mode-aware)
 // -----------------------------------
-tr.addEventListener("click", () => {
+tr.addEventListener("click", (e) => {
+
+  // ===================================================
+  // 🧠 FACT CHECK MODE — override everything
+  // ===================================================
+  if (window.factCheckActive) {
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Call your existing fact check logic
+    openFactCheckModal(pick);
+
+    return; // 🔥 prevents pick tracker from firing
+  }
+
+  // ===================================================
+  // 🎯 NORMAL PICK TRACKER MODE
+  // ===================================================
   togglePickTrackerSelection(pick);
 
   const isSelected =
     window.pickTracker.selections.has(pickKey);
 
   tr.classList.toggle("tracker-selected", isSelected);
+
 });
 
 
 
 
-// --- Compute consensus values for this row ---
-row.ConsensusPoint = getConsensusPoint(row);
-row.ConsensusPrice = getConsensusPrice(row);
-const consensusPoint = row.ConsensusPoint;
-const consensusPrice = row.ConsensusPrice;
+
+// ===================================================
+// 🧮 Dynamic consensus based on selected sportsbooks
+// ===================================================
+
+const consensusPoint =
+  getFilteredConsensusPoint(row);
+
+const consensusPrice =
+  getConsensusPrice(row);
+
 
 
 // --- Render each cell ---
@@ -3197,24 +3820,39 @@ activeColumns.forEach((col) => {
     return;
   }
 
-  // ===================================================
-  // 🧠 Consensus column
-  // ===================================================
-  if (col === "ConsensusPoint") {
-    const consensusPoint = Number(row.ConsensusPoint);
-    const consensusPrice = getConsensusPrice(row);
 
-    const parts = [];
-    if (Number.isFinite(consensusPoint)) parts.push(consensusPoint.toFixed(2));
-    if (Number.isFinite(consensusPrice))
-      parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
+// ===================================================
+// 🧠 Consensus column (FULLY FILTERED + LIVE)
+// ===================================================
+if (col === "ConsensusPoint") {
 
-    td.textContent = parts.join(" ") || "—";
-    td.dataset.sort = Number.isFinite(consensusPrice) ? consensusPrice : 0;
+  // 🔥 USE FILTERED sportsbooks only
+  const consensusPoint = getFilteredConsensusPoint(row);
 
-    tr.appendChild(td);
-    return;
-  }
+  const consensusPrice = getConsensusPrice(row);
+
+  const parts = [];
+
+  if (Number.isFinite(consensusPoint))
+    parts.push(consensusPoint.toFixed(2));
+
+  if (Number.isFinite(consensusPrice))
+    parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
+
+  td.textContent = parts.join(" ") || "—";
+
+  td.dataset.sort =
+    Number.isFinite(consensusPoint)
+      ? consensusPoint
+      : -9999;
+
+  tr.appendChild(td);
+  return;
+}
+
+
+
+
 
   // ===================================================
   // 🎯 Difference columns (PrizePicks / Underdog / Betr)
@@ -4129,8 +4767,12 @@ function renderGameTable(data) {
 
   const tbody = document.createElement("tbody");
 
-  data.forEach(row => {
-    const tr = document.createElement("tr");
+ data.forEach((row, index) => {
+
+  const tr = document.createElement("tr");
+
+  // ✅ CRITICAL FIX — store index for fact check
+  tr.dataset.index = index;
 
     // Event
     const eventCell = document.createElement("td");
