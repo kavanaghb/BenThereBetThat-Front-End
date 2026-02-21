@@ -2747,125 +2747,96 @@ function resetAllMarkets() {
   );
   selectedMarkets = [];
 }
-// ===================================================
-// STRICT sportsbook-only no-vig computation
-// NEVER uses PrizePicks / Underdog / Betr
-// ===================================================
+// Selected books from UI (falls back to all)
+function getSelectedBooksArray() {
+  const fromUI = Array.from(
+    document.querySelectorAll('#bookmaker-filters input[type="checkbox"]:checked')
+  ).map(cb => cb.value);
+  if (fromUI.length) return fromUI;
+  const saved = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
+  if (saved.length) return saved;
+  return window.BOOKMAKERS || ["Fanduel", "DraftKings", "BetMGM", "Fanatics"];
+}
+
+/** Compute true No-Vig for BOTH sides (per-book + averages) */
 function computeNoVigBothSides(data, row) {
+  const sideTxt = (row.Outcome || row.OverUnder || "").toLowerCase();
+  const isOverRow = sideTxt.includes("over");
+  const isUnderRow = sideTxt.includes("under");
+  const oppSide = isOverRow ? "under" : isUnderRow ? "over" : null;
 
-  const SPORTSBOOKS = [
-    "Fanduel",
-    "DraftKings",
-    "BetMGM",
-    "Fanatics"
-  ];
+  // Find the opposite row (same event/market/player)
+  const opposite = oppSide
+    ? data.find(r =>
+        (r.Event || "").toLowerCase().trim()       === (row.Event || "").toLowerCase().trim() &&
+        (r.Market || "").toLowerCase().trim()      === (row.Market || "").toLowerCase().trim() &&
+        (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
+        (r.Outcome || r.OverUnder || "").toLowerCase().includes(oppSide)
+      )
+    : null;
 
-  const outcome =
-    (row.Outcome || "").toLowerCase();
-
-  const isOver =
-    outcome.includes("over");
-
-  const oppSide =
-    isOver
-      ? "under"
-      : outcome.includes("under")
-      ? "over"
-      : null;
-
-  if (!oppSide)
-    return {
-      avgOver: null,
-      avgUnder: null
-    };
-
-  const opposite =
-    data.find(r =>
-      (r.Event || "").toLowerCase().trim() ===
-      (row.Event || "").toLowerCase().trim() &&
-
-      (r.Market || "").toLowerCase().trim() ===
-      (row.Market || "").toLowerCase().trim() &&
-
-      (r.Description || "").toLowerCase().trim() ===
-      (row.Description || "").toLowerCase().trim() &&
-
-      (r.Outcome || "").toLowerCase().includes(oppSide)
-    );
-
-  if (!opposite)
-    return {
-      avgOver: null,
-      avgUnder: null
-    };
-
+  const perBook = [];
   const overVals = [];
   const underVals = [];
 
-  for (const book of SPORTSBOOKS) {
+  const books = getSelectedBooksArray();
+  for (const book of books) {
+    const oOdds = opposite ? getSafePrice(opposite, book) : NaN;
+    const thisOdds = getSafePrice(row, book)
+;
 
-    const overOdds =
-      Number(
-        isOver
-          ? row[`${book}Price`]
-          : opposite[`${book}Price`]
-      );
+    // We need BOTH sides' prices for the **same book** to de-vig correctly
+    const overOdds  = isOverRow  ? thisOdds : oOdds;
+    const underOdds = isUnderRow ? thisOdds : oOdds;
 
-    const underOdds =
-      Number(
-        isOver
-          ? opposite[`${book}Price`]
-          : row[`${book}Price`]
-      );
+    if (!Number.isFinite(overOdds) || !Number.isFinite(underOdds)) continue;
 
-    if (
-      !Number.isFinite(overOdds) ||
-      !Number.isFinite(underOdds)
-    )
-      continue;
+    const pOver  = americanToProb(overOdds);
+    const pUnder = americanToProb(underOdds);
+    if (pOver == null || pUnder == null) continue;
 
-    const pOver =
-      americanToProb(overOdds);
+    const total = pOver + pUnder;
+    // Skip broken pairs
+    if (total <= 0.01 || total > 2.0) continue;
 
-    const pUnder =
-      americanToProb(underOdds);
+    const fairOver  = (pOver  / total) * 100;
+    const fairUnder = (pUnder / total) * 100;
 
-    if (
-      !Number.isFinite(pOver) ||
-      !Number.isFinite(pUnder)
-    )
-      continue;
+    // bound
+    const o = Math.min(Math.max(fairOver, 0), 100);
+    const u = Math.min(Math.max(fairUnder, 0), 100);
 
-    const total =
-      pOver + pUnder;
-
-    if (total <= 0)
-      continue;
-
-    overVals.push((pOver / total) * 100);
-    underVals.push((pUnder / total) * 100);
-
+    perBook.push({ book, over: o, under: u });
+    overVals.push(o);
+    underVals.push(u);
   }
 
-  if (!overVals.length)
-    return {
-      avgOver: null,
-      avgUnder: null
-    };
+  const avgOver  = overVals.length  ? overVals.reduce((a,b)=>a+b,0)   / overVals.length  : null;
+  const avgUnder = underVals.length ? underVals.reduce((a,b)=>a+b,0)  / underVals.length : null;
+
+  // Fallback: if we couldn’t pair, use simple implied avg for this row’s side only
+  let fallbackSide = null;
+  if (avgOver == null && avgUnder == null) {
+    const implied = [];
+    for (const book of getSelectedBooksArray()) {
+      const price = getSafePrice(row, book)
+;
+      const p = americanToProb(price);
+      if (p != null) implied.push(p * 100);
+    }
+    if (implied.length) fallbackSide = implied.reduce((a,b)=>a+b,0) / implied.length;
+  }
 
   return {
-
-    avgOver:
-      overVals.reduce((a,b)=>a+b,0) /
-      overVals.length,
-
-    avgUnder:
-      underVals.reduce((a,b)=>a+b,0) /
-      underVals.length
-
+    perBook,                // [{book, over, under}]
+    avgOver,                // number | null
+    avgUnder,               // number | null
+    fallbackSide,           // number | null (used when no pairing)
+    sideIsOver: isOverRow,  // which side the row is
+    sideIsUnder: isUnderRow
   };
-
 }
+
 // ===================================================
 // ✅ Market Select/Deselect Setup Function (NEW)
 // ===================================================
@@ -3214,6 +3185,34 @@ function getConsensusDisplay(row) {
 
   return display;
 }
+// ===================================================
+// Compatibility wrapper — fixes legacy filter calls
+// ===================================================
+function rerenderConsensusTable(data) {
+
+  if (!Array.isArray(data) || data.length === 0) {
+
+    console.warn("⚠️ rerenderConsensusTable called with empty data");
+
+    document.body.classList.remove("blur");
+
+    const overlay =
+      document.getElementById("loadingOverlay");
+
+    if (overlay)
+      overlay.style.display = "none";
+
+    return;
+  }
+
+  window.lastRenderedData = data;
+
+  renderTableInBatches(data, 50, true);
+
+}
+
+
+
 
 async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
 
@@ -3913,7 +3912,7 @@ activeColumns.forEach((col) => {
       Number.isFinite(pct)
         ? { pct, side, text }
         : { pct: null, side: null, text: "—" };
-        }
+      }
 
     // Optional “Mismatch” badge (market vs model)
     // NOTE: this is a lightweight heuristic since we only have one price per book here.
