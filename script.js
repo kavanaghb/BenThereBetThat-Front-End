@@ -703,6 +703,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
+const openGameLinesBtn = document.getElementById("openGameLinesBtn");
+
+if (openGameLinesBtn) {
+  openGameLinesBtn.addEventListener("click", () => {
+    window.location.href = "game-lines.html";
+  });
+}
+
 
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
@@ -1876,78 +1884,111 @@ console.log(message);
 console.log("🔎 Fact Check Row:", row);
 }
 
-
+// ===================================================
+// STRICT sportsbook-only list (never include DFS books)
+// ===================================================
+const SPORTSBOOKS = [
+  "Fanduel",
+  "DraftKings",
+  "BetMGM",
+  "Fanatics"
+];
 
 /** ===================================================
- * 🧮 STEP 1: Compute true No-Vig fair probability (Over/Under normalization)
- * — Compares both sides (Over vs Under) per bookmaker, removes vig
+ * 🧮 STEP 1: Compute true No-Vig fair probability (STRICT sportsbook-only)
+ * — Requires BOTH Over and Under prices from same sportsbook
+ * — NO FALLBACKS (prevents fake 100%)
  * =================================================== */
 function computeNoVig(data, row) {
-  const outcome = (row.Outcome || row.OverUnder || "").toLowerCase();
-  const isOver = outcome.includes("over");
-  const isUnder = outcome.includes("under");
-  const oppSide = isOver ? "under" : isUnder ? "over" : null;
 
-  // 🔍 1️⃣ Find the matching opposite-side line (same event, market, player)
-  const opposite = oppSide
-    ? data.find(
-        (r) =>
-          (r.Event || "").toLowerCase().trim() === (row.Event || "").toLowerCase().trim() &&
-          (r.Market || "").toLowerCase().trim() === (row.Market || "").toLowerCase().trim() &&
-          (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
-          (r.Outcome || "").toLowerCase().includes(oppSide)
-      )
-    : null;
+  const outcome =
+    (row.Outcome || "").toLowerCase();
 
-  const fairProbs = [];
+  const isOver =
+    outcome.includes("over");
 
-  // 🧾 2️⃣ Loop each bookmaker and pair Over/Under prices
-  for (const book of CONSENSUS_BOOKS) {
-    const overOdds = isOver
-      ? getSafePrice(row, book)
-      : opposite
-      ? getSafePrice(opposite, book)
-      : null;
+  const oppSide =
+    isOver ? "under" :
+    outcome.includes("under") ? "over" :
+    null;
 
-    const underOdds = isUnder
-      ? getSafePrice(row, book)
-      : opposite
-      ? getSafePrice(opposite, book)
-      : null;
+  if (!oppSide)
+    return null;
 
+  // find opposite row
+  const opposite =
+    data.find(r =>
+      (r.Event || "").toLowerCase().trim() ===
+      (row.Event || "").toLowerCase().trim() &&
 
-    if (!Number.isFinite(overOdds) || !Number.isFinite(underOdds)) continue;
+      (r.Market || "").toLowerCase().trim() ===
+      (row.Market || "").toLowerCase().trim() &&
 
-    const pOver = americanToProb(overOdds);
-    const pUnder = americanToProb(underOdds);
-    if (!pOver || !pUnder) continue;
+      (r.Description || "").toLowerCase().trim() ===
+      (row.Description || "").toLowerCase().trim() &&
 
-    // 🎯 3️⃣ Normalize to remove vig only if both sides valid
-    const total = pOver + pUnder;
-    if (total <= 0.01 || total > 2) continue; // skip unrealistic sums
+      (r.Outcome || "").toLowerCase().includes(oppSide)
+    );
 
-    const fairOver = (pOver / total) * 100;
-    const fairUnder = (pUnder / total) * 100;
+  if (!opposite)
+    return null;
 
-    // 🧱 keep in realistic [0–100] range
-    const boundedOver = Math.min(Math.max(fairOver, 0), 100);
-    const boundedUnder = Math.min(Math.max(fairUnder, 0), 100);
+  const fairValues = [];
 
-    fairProbs.push(isOver ? boundedOver : boundedUnder);
+  for (const book of SPORTSBOOKS) {
+
+    const overOdds =
+      Number(
+        isOver
+          ? row[`${book}Price`]
+          : opposite[`${book}Price`]
+      );
+
+    const underOdds =
+      Number(
+        isOver
+          ? opposite[`${book}Price`]
+          : row[`${book}Price`]
+      );
+
+    if (
+      !Number.isFinite(overOdds) ||
+      !Number.isFinite(underOdds)
+    )
+      continue;
+
+    const pOver =
+      americanToProb(overOdds);
+
+    const pUnder =
+      americanToProb(underOdds);
+
+    if (
+      !Number.isFinite(pOver) ||
+      !Number.isFinite(pUnder)
+    )
+      continue;
+
+    const total =
+      pOver + pUnder;
+
+    if (total <= 0)
+      continue;
+
+    const fair =
+      isOver
+        ? (pOver / total) * 100
+        : (pUnder / total) * 100;
+
+    fairValues.push(fair);
+
   }
 
-  // 🩹 4️⃣ Fallback — if we never found a valid pair, just average implied %
-  if (!fairProbs.length) {
-    const implied = window.BOOKMAKERS
-      .map((b) => americanToProb(row[`${b}Price`]))
-      .filter(Boolean);
-    if (!implied.length) return null;
-    return (implied.reduce((a, b) => a + b, 0) / implied.length) * 100;
-  }
+  if (!fairValues.length)
+    return null;
 
-  // 🧮 5️⃣ Average normalized fair probabilities across books
-  const avg = fairProbs.reduce((a, b) => a + b, 0) / fairProbs.length;
-  return Math.min(Math.max(avg, 0), 100);
+  return fairValues.reduce((a,b)=>a+b,0) / fairValues.length;
+
 }
 
 /** ===================================================
@@ -2226,88 +2267,148 @@ ${rowSideFairTxt}
 
 }
 
-
-
-
-
-
 // ===================================================
 // 🧮 Average No-Vig Probability (SPORTSBOOKS ONLY)
 //   - Uses only FanDuel / DraftKings / BetMGM / Fanatics
-//   - Respects window.selectedBooks filter for those books
+//   - Requires BOTH sides from at least ONE sportsbook
 // ===================================================
 function getAverageNoVigProb(row, data) {
+
   const CONSENSUS_BOOKS = ["fanduel", "draftkings", "betmgm", "fanatics"];
-  const selectedBooks = window.selectedBooks instanceof Set ? window.selectedBooks : new Set(CONSENSUS_BOOKS);
+
+  const selectedBooks =
+    window.selectedBooks instanceof Set
+      ? window.selectedBooks
+      : new Set(CONSENSUS_BOOKS);
 
   const baseKey =
     `${(row.Event || "").toLowerCase().trim()}|${(row.Market || "").toLowerCase().trim()}|${(row.Description || "").toLowerCase().trim()}`;
 
-  const side = (row.Outcome || row.OverUnder || "").toLowerCase();
-  const isOver = side.includes("over");
-  const oppSide = isOver ? "under" : side.includes("under") ? "over" : null;
+  const side =
+    (row.Outcome || row.OverUnder || "").toLowerCase();
 
-  const opposite = oppSide
-    ? data.find(
-        (r) =>
-          `${(r.Event || "").toLowerCase().trim()}|${(r.Market || "").toLowerCase().trim()}|${(r.Description || "").toLowerCase().trim()}` === baseKey &&
-          (r.Outcome || "").toLowerCase().includes(oppSide)
-      )
-    : null;
+  const isOver =
+    side.includes("over");
 
-  const results = [];
+  const oppSide =
+    isOver
+      ? "under"
+      : side.includes("under")
+      ? "over"
+      : null;
 
-  // helper: convert American odds to implied prob (0..1)
+  const opposite =
+    oppSide
+      ? data.find(
+          (r) =>
+            `${(r.Event || "").toLowerCase().trim()}|${(r.Market || "").toLowerCase().trim()}|${(r.Description || "").toLowerCase().trim()}` === baseKey &&
+            (r.Outcome || "").toLowerCase().includes(oppSide)
+        )
+      : null;
+
+  // convert American odds to implied prob (0..1)
   const americanToProb = (odds) => {
     const o = Number(odds);
     if (!Number.isFinite(o) || o === 0) return null;
-    return o > 0 ? 100 / (o + 100) : -o / (-o + 100);
+    return o > 0
+      ? 100 / (o + 100)
+      : (-o) / ((-o) + 100);
   };
 
-  // IMPORTANT: only use sportsbook books + respect selectedBooks
+  const overProbs = [];
+  const underProbs = [];
+
+  // ===================================================
+  // 🚨 STRICT sportsbook-only calculation
+  // ===================================================
   for (const book of CONSENSUS_BOOKS) {
-    if (selectedBooks.size && !selectedBooks.has(book)) continue;
 
-    // You already have getSafePrice(row, book) elsewhere in your file — use it.
-    const overOdds = americanToProb(isOver ? getSafePrice(row, book) : getSafePrice(opposite, book));
-    const underOdds = americanToProb(isOver ? getSafePrice(opposite, book) : getSafePrice(row, book));
+    if (selectedBooks.size && !selectedBooks.has(book))
+      continue;
 
-    if (overOdds == null && underOdds == null) continue;
+    const overOdds =
+      americanToProb(
+        isOver
+          ? getSafePrice(row, book)
+          : getSafePrice(opposite, book)
+      );
 
-    // if only one side exists, store it (still useful)
-    if (overOdds != null && underOdds == null) {
-      results.push({ book, noVigOver: overOdds * 100, noVigUnder: null });
+    const underOdds =
+      americanToProb(
+        isOver
+          ? getSafePrice(opposite, book)
+          : getSafePrice(row, book)
+      );
+
+    // 🚨 REQUIRE BOTH SIDES
+    if (
+      overOdds == null ||
+      underOdds == null
+    ) {
       continue;
     }
-    if (underOdds != null && overOdds == null) {
-      results.push({ book, noVigOver: null, noVigUnder: underOdds * 100 });
-      continue;
-    }
 
-    const total = overOdds + underOdds;
-    if (total > 0.0001) {
-      results.push({
-        book,
-        noVigOver: (overOdds / total) * 100,
-        noVigUnder: (underOdds / total) * 100,
-      });
-    }
+    const total =
+      overOdds + underOdds;
+
+    if (total <= 0)
+      continue;
+
+    overProbs.push(
+      (overOdds / total) * 100
+    );
+
+    underProbs.push(
+      (underOdds / total) * 100
+    );
+
   }
 
-  if (results.length === 0) return { avgOver: null, avgUnder: null, details: [] };
+  // 🚨 CRITICAL: require at least ONE valid sportsbook pair
+  if (
+    overProbs.length === 0 ||
+    underProbs.length === 0
+  ) {
 
-  const overVals = results.map((r) => r.noVigOver).filter((v) => v != null);
-  const underVals = results.map((r) => r.noVigUnder).filter((v) => v != null);
+    return {
+      avgOver: null,
+      avgUnder: null,
+      details: []
+    };
 
-  const avgOver = overVals.length ? overVals.reduce((a, b) => a + b, 0) / overVals.length : null;
-  const avgUnder = underVals.length ? underVals.reduce((a, b) => a + b, 0) / underVals.length : null;
+  }
+
+  const avgOver =
+    overProbs.reduce((a, b) => a + b, 0) /
+    overProbs.length;
+
+  const avgUnder =
+    underProbs.reduce((a, b) => a + b, 0) /
+    underProbs.length;
 
   return {
-    avgOver: avgOver != null ? avgOver.toFixed(2) : null,
-    avgUnder: avgUnder != null ? avgUnder.toFixed(2) : null,
-    details: results,
+
+    avgOver: Number.isFinite(avgOver)
+      ? avgOver
+      : null,
+
+    avgUnder: Number.isFinite(avgUnder)
+      ? avgUnder
+      : null,
+
+    details: overProbs.map((v, i) => ({
+      book: CONSENSUS_BOOKS[i],
+      noVigOver: overProbs[i],
+      noVigUnder: underProbs[i]
+    }))
+
   };
+
 }
+
+
+
+
 
 
 
@@ -2646,96 +2747,125 @@ function resetAllMarkets() {
   );
   selectedMarkets = [];
 }
-// Selected books from UI (falls back to all)
-function getSelectedBooksArray() {
-  const fromUI = Array.from(
-    document.querySelectorAll('#bookmaker-filters input[type="checkbox"]:checked')
-  ).map(cb => cb.value);
-  if (fromUI.length) return fromUI;
-  const saved = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
-  if (saved.length) return saved;
-  return window.BOOKMAKERS || ["Fanduel", "DraftKings", "BetMGM", "Fanatics"];
-}
-
-/** Compute true No-Vig for BOTH sides (per-book + averages) */
+// ===================================================
+// STRICT sportsbook-only no-vig computation
+// NEVER uses PrizePicks / Underdog / Betr
+// ===================================================
 function computeNoVigBothSides(data, row) {
-  const sideTxt = (row.Outcome || row.OverUnder || "").toLowerCase();
-  const isOverRow = sideTxt.includes("over");
-  const isUnderRow = sideTxt.includes("under");
-  const oppSide = isOverRow ? "under" : isUnderRow ? "over" : null;
 
-  // Find the opposite row (same event/market/player)
-  const opposite = oppSide
-    ? data.find(r =>
-        (r.Event || "").toLowerCase().trim()       === (row.Event || "").toLowerCase().trim() &&
-        (r.Market || "").toLowerCase().trim()      === (row.Market || "").toLowerCase().trim() &&
-        (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
-        (r.Outcome || r.OverUnder || "").toLowerCase().includes(oppSide)
-      )
-    : null;
+  const SPORTSBOOKS = [
+    "Fanduel",
+    "DraftKings",
+    "BetMGM",
+    "Fanatics"
+  ];
 
-  const perBook = [];
+  const outcome =
+    (row.Outcome || "").toLowerCase();
+
+  const isOver =
+    outcome.includes("over");
+
+  const oppSide =
+    isOver
+      ? "under"
+      : outcome.includes("under")
+      ? "over"
+      : null;
+
+  if (!oppSide)
+    return {
+      avgOver: null,
+      avgUnder: null
+    };
+
+  const opposite =
+    data.find(r =>
+      (r.Event || "").toLowerCase().trim() ===
+      (row.Event || "").toLowerCase().trim() &&
+
+      (r.Market || "").toLowerCase().trim() ===
+      (row.Market || "").toLowerCase().trim() &&
+
+      (r.Description || "").toLowerCase().trim() ===
+      (row.Description || "").toLowerCase().trim() &&
+
+      (r.Outcome || "").toLowerCase().includes(oppSide)
+    );
+
+  if (!opposite)
+    return {
+      avgOver: null,
+      avgUnder: null
+    };
+
   const overVals = [];
   const underVals = [];
 
-  const books = getSelectedBooksArray();
-  for (const book of books) {
-    const oOdds = opposite ? getSafePrice(opposite, book) : NaN;
-    const thisOdds = getSafePrice(row, book)
-;
+  for (const book of SPORTSBOOKS) {
 
-    // We need BOTH sides' prices for the **same book** to de-vig correctly
-    const overOdds  = isOverRow  ? thisOdds : oOdds;
-    const underOdds = isUnderRow ? thisOdds : oOdds;
+    const overOdds =
+      Number(
+        isOver
+          ? row[`${book}Price`]
+          : opposite[`${book}Price`]
+      );
 
-    if (!Number.isFinite(overOdds) || !Number.isFinite(underOdds)) continue;
+    const underOdds =
+      Number(
+        isOver
+          ? opposite[`${book}Price`]
+          : row[`${book}Price`]
+      );
 
-    const pOver  = americanToProb(overOdds);
-    const pUnder = americanToProb(underOdds);
-    if (pOver == null || pUnder == null) continue;
+    if (
+      !Number.isFinite(overOdds) ||
+      !Number.isFinite(underOdds)
+    )
+      continue;
 
-    const total = pOver + pUnder;
-    // Skip broken pairs
-    if (total <= 0.01 || total > 2.0) continue;
+    const pOver =
+      americanToProb(overOdds);
 
-    const fairOver  = (pOver  / total) * 100;
-    const fairUnder = (pUnder / total) * 100;
+    const pUnder =
+      americanToProb(underOdds);
 
-    // bound
-    const o = Math.min(Math.max(fairOver, 0), 100);
-    const u = Math.min(Math.max(fairUnder, 0), 100);
+    if (
+      !Number.isFinite(pOver) ||
+      !Number.isFinite(pUnder)
+    )
+      continue;
 
-    perBook.push({ book, over: o, under: u });
-    overVals.push(o);
-    underVals.push(u);
+    const total =
+      pOver + pUnder;
+
+    if (total <= 0)
+      continue;
+
+    overVals.push((pOver / total) * 100);
+    underVals.push((pUnder / total) * 100);
+
   }
 
-  const avgOver  = overVals.length  ? overVals.reduce((a,b)=>a+b,0)   / overVals.length  : null;
-  const avgUnder = underVals.length ? underVals.reduce((a,b)=>a+b,0)  / underVals.length : null;
-
-  // Fallback: if we couldn’t pair, use simple implied avg for this row’s side only
-  let fallbackSide = null;
-  if (avgOver == null && avgUnder == null) {
-    const implied = [];
-    for (const book of getSelectedBooksArray()) {
-      const price = getSafePrice(row, book)
-;
-      const p = americanToProb(price);
-      if (p != null) implied.push(p * 100);
-    }
-    if (implied.length) fallbackSide = implied.reduce((a,b)=>a+b,0) / implied.length;
-  }
+  if (!overVals.length)
+    return {
+      avgOver: null,
+      avgUnder: null
+    };
 
   return {
-    perBook,                // [{book, over, under}]
-    avgOver,                // number | null
-    avgUnder,               // number | null
-    fallbackSide,           // number | null (used when no pairing)
-    sideIsOver: isOverRow,  // which side the row is
-    sideIsUnder: isUnderRow
-  };
-}
 
+    avgOver:
+      overVals.reduce((a,b)=>a+b,0) /
+      overVals.length,
+
+    avgUnder:
+      underVals.reduce((a,b)=>a+b,0) /
+      underVals.length
+
+  };
+
+}
 // ===================================================
 // ✅ Market Select/Deselect Setup Function (NEW)
 // ===================================================
@@ -3085,101 +3215,119 @@ function getConsensusDisplay(row) {
   return display;
 }
 
-
-
-
-
-
-// ===================================================
-// 🧮 Table Renderer + Local Consensus Summary + No Fetch (Final Cleaned + Safe Dedup Version)
-// ===================================================
-
-// ===================================================
-// 🧮 Table Renderer + Platform Filter Support
-// ===================================================
-function rerenderConsensusTable(data) {
-
-  resultsDiv.innerHTML = "<p>Updating consensus...</p>";
-
-  // ===================================================
-  // 🎯 Apply Platform Filter
-  // ===================================================
-  const platform = window.activePlatformFilter || "all";
-
-  let filteredData = data;
-
-  if (platform !== "all") {
-
-    filteredData = data.filter(row => {
-
-      if (platform === "prizepicks")
-        return row.PrizePickPoint != null;
-
-      if (platform === "underdog")
-        return row.UnderdogPoint != null;
-
-      if (platform === "betr")
-        return row.BetrPoint != null;
-
-      return true;
-
-    });
-
-  }
-
-  // 🧠 Mark this as filtered reload so cache reused
-  setTimeout(() => renderTableInBatches(filteredData, 50, true), 50);
-
-}
-
-
 async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
+
   // 🧹 Clear previous results and cache dataset pointer
   resultsDiv.innerHTML = "";
+
+  // ===================================================
+  // ✅ CRITICAL: Always store raw dataset
+  // ===================================================
   window.lastRenderedData = data;
 
-  // 💾 Keep a stable dataset for resets (only set once)
+  // ===================================================
+  // 🔥 FIX #1: recompute No-Vig and BestNoVigSide safely
+  // SPORTSBOOK ONLY — ignores PrizePicks / Underdog / Betr
+  // ===================================================
+  window.lastRenderedData.forEach(row => {
+
+    const fair =
+      computeNoVig(window.lastRenderedData, row);
+
+    // overwrite backend values completely
+    row.NoVigProb =
+      Number.isFinite(fair)
+        ? fair
+        : null;
+
+    // determine side safely
+    if (!Number.isFinite(fair)) {
+
+      row.BestNoVigSide = null;
+
+    } else {
+
+      const outcome =
+        (row.Outcome || "").toLowerCase();
+
+      if (outcome.includes("over")) {
+
+        row.BestNoVigSide = "Over";
+
+      } else if (outcome.includes("under")) {
+
+        row.BestNoVigSide = "Under";
+
+      } else {
+
+        row.BestNoVigSide = null;
+
+      }
+
+    }
+
+  });
+
+  // ===================================================
+  // 💾 Keep stable dataset reference
+  // ===================================================
   if (!window.fullDataset || !window.fullDataset.length) {
     window.fullDataset = data;
   }
 
-  // ⚙️ Only initialize cache once — never wipe during filtered renders
+  // ===================================================
+  // ⚙️ Cache initialization
+  // ===================================================
   if (!window.baseNoVigCache) {
     window.baseNoVigCache = {};
   }
+
   if (isFiltered) {
     console.log("♻️ Reusing existing baseNoVigCache for filtered render.");
   } else {
     console.log("🧮 Fresh full render — baseNoVigCache intact or newly created.");
   }
 
-// 🧩 Restore selected books safely from localStorage
-let savedBooks = [];
+  // ===================================================
+  // 🧩 Restore selected books safely
+  // (UI can still include DFS books — computeNoVig ignores them)
+  // ===================================================
+  let savedBooks = [];
 
-try {
-  savedBooks = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
-} catch (e) {
-  console.warn("⚠️ Failed to parse selectedBooks from localStorage");
-  savedBooks = [];
-}
+  try {
+    savedBooks =
+      JSON.parse(
+        localStorage.getItem("selectedBooks") || "[]"
+      );
+  } catch (e) {
+    console.warn("⚠️ Failed to parse selectedBooks");
+    savedBooks = [];
+  }
 
-const selectedBooks = new Set(
-  savedBooks.length > 0
-    ? savedBooks
-    : [
-        "Fanduel",
-        "DraftKings",
-        "BetMGM",
-        "Fanatics",
-        "PrizePicks",
-        "Underdog",
-        "Betr"
-      ]
-);
+  const selectedBooks =
+    new Set(
+      savedBooks.length > 0
+        ? savedBooks
+        : [
+            "Fanduel",
+            "DraftKings",
+            "BetMGM",
+            "Fanatics",
+            "PrizePicks",
+            "Underdog",
+            "Betr"
+          ]
+    );
 
-console.log("📚 Active books in render:", [...selectedBooks]);
+  console.log("📚 Active books in render:", [...selectedBooks]);
 
-  const summaryDiv = document.getElementById("consensus-summary");
+  const summaryDiv =
+    document.getElementById("consensus-summary");
+
+
+
+
+
 
  
 
@@ -3215,24 +3363,45 @@ data.forEach((row) => {
   // ===================================================
   // 🧮 Compute fair "no-vig" probability for this outcome
   // ===================================================
-  let prob = 50; // default fallback if no prices available
+  // ===================================================
+// 🧮 Compute fair "no-vig" probability (SPORTBOOK ONLY)
+// ===================================================
 
-  if (thisP != null && oppP != null) {
-    const pRaw = americanToProb(thisP);
-    const qRaw = americanToProb(oppP);
-    if (pRaw != null && qRaw != null) {
-      const total = pRaw + qRaw;
-      if (total > 0) {
-        const noVigOver = (pRaw / total) * 100;
-        const noVigUnder = (qRaw / total) * 100;
-        prob = outcomeText.includes("over") ? noVigOver : noVigUnder;
-      }
-    }
-  } else if (thisP != null) {
-    // fallback when only one side exists — use its implied probability
-    const pRaw = americanToProb(thisP);
-    prob = pRaw ? pRaw * 100 : 50;
+let prob = null;
+
+// ===================================================
+// 🧮 Use ONLY sportsbook prices
+// ===================================================
+
+const sportsbookPrices = [
+  row.FanduelPrice,
+  row.DraftKingsPrice,
+  row.BetMGMPrice,
+  row.FanaticsPrice
+].filter(p => p != null && Number.isFinite(Number(p)));
+
+if (sportsbookPrices.length >= 2) {
+
+  // convert all sportsbook odds to probabilities
+  const probs = sportsbookPrices
+    .map(p => americanToProb(Number(p)))
+    .filter(p => p != null);
+
+  if (probs.length >= 2) {
+
+    const avgProb = probs.reduce((a, b) => a + b, 0) / probs.length;
+
+    prob = avgProb * 100;
+
   }
+
+}
+
+// prob remains NULL if no sportsbook data exists
+
+
+
+
 
   if (!groupedBySide[key]) groupedBySide[key] = [];
   groupedBySide[key].push({ row, prob });
@@ -3285,8 +3454,11 @@ Object.entries(groupedFinal).forEach(([key, sides]) => {
 
   if (Over && Under) {
     // keep whichever side has the stronger no-vig edge (further from 50%)
-    const overEdge = Math.abs((Over.prob ?? 50) - 50);
-    const underEdge = Math.abs((Under.prob ?? 50) - 50);
+    const overEdge =
+    Over.prob != null ? Math.abs(Over.prob - 50) : -1;
+
+    const underEdge =
+    Under.prob != null ? Math.abs(Under.prob - 50) : -1;
     deduped.push(overEdge >= underEdge ? Over.row : Under.row);
   } else if (Over) deduped.push(Over.row);
   else if (Under) deduped.push(Under.row);
@@ -3463,7 +3635,7 @@ const getNoVigProbForRow = (row) => {
     console.log(`✅ No-Vig probability for ${row.Description} (${side}): ${prob.toFixed(2)}%`);
   }
 
-  return prob;
+  return Number.isFinite(prob) ? prob : null;
 };
 
 const columns = [
@@ -3697,18 +3869,26 @@ activeColumns.forEach((col) => {
     let pct = null;
     let side = null;
 
-    if (nv && nv.avgOver != null && nv.avgUnder != null) {
+    // STRICT sportsbook-only requirement
+    if (
+      nv &&
+      Number.isFinite(nv.avgOver) &&
+      Number.isFinite(nv.avgUnder)
+    ) {
+
       const over = nv.avgOver;
       const under = nv.avgUnder;
+
       const isOverBetter = over >= under;
+
       pct = isOverBetter ? over : under;
       side = isOverBetter ? "Over" : "Under";
+
       text = `${isOverBetter ? "▲" : "▼"} 🧮 ${side} ${pct.toFixed(2)}%`;
-    } else if (nv && nv.fallbackSide != null) {
-      pct = nv.fallbackSide;
-      side = nv.sideIsOver ? "Over" : "Under";
-      text = `🧮 ${side} ${pct.toFixed(2)}%`;
+
     }
+
+// 🚨 REMOVE fallbackSide completely — DO NOT allow single-sided values
 
     // Color tiering
     if (Number.isFinite(pct)) {
@@ -3716,15 +3896,24 @@ activeColumns.forEach((col) => {
       else if (pct >= 52) td.style.color = "#29a329";
     }
 
-    // Store for filters
-    row.NoVigWinProb = Number.isFinite(pct) ? pct : null;
-    row.BestNoVigSide = side;
+    row.NoVigWinProb =
+      Number.isFinite(pct)
+        ? pct
+        : null;
+
+    row.BestNoVigSide =
+      Number.isFinite(pct)
+        ? side
+        : null;
 
     // Cache for later filter re-renders
     if (row.Event && row.Market && row.Description) {
       const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
-      window.baseNoVigCache[cacheKey] = { pct, side, text };
-    }
+      window.baseNoVigCache[cacheKey] =
+      Number.isFinite(pct)
+        ? { pct, side, text }
+        : { pct: null, side: null, text: "—" };
+        }
 
     // Optional “Mismatch” badge (market vs model)
     // NOTE: this is a lightweight heuristic since we only have one price per book here.

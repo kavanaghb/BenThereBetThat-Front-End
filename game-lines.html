@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Lines EV</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- 🌐 API BASE (REQUIRED for backend connection) -->
+  <script>
+    const isLocalhost =
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1";
+
+    window.API_BASE = isLocalhost
+      ? "http://127.0.0.1:5000"
+      : "https://bentherebetthat-api.onrender.com";
+
+    console.log("🌐 Game Lines API_BASE:", window.API_BASE);
+  </script>
+
+</head>
+
+<body>
+
+<h1>📈 Game Lines EV</h1>
+
+<div class="tracker-button-row">
+
+  <button onclick="window.location.href='index.html'">
+    🏠 Back to Dashboard
+  </button>
+
+  <button onclick="window.location.href='pick-tracker.html'">
+    📊 Pick Tracker
+  </button>
+
+</div>
+
+<!-- Sportsbook Filters -->
+<div id="sportsbookFilters"
+     style="margin: 15px 0; display:flex; gap:15px; flex-wrap:wrap;">
+</div>
+
+<!-- Date Picker -->
+<div style="margin:15px 0; display:flex; gap:10px; align-items:center;">
+
+  <label>Select Date:</label>
+
+  <input type="date" id="gameLinesDate">
+
+  <button id="loadGameLinesBtn" class="tracker-btn primary">
+    Load Games
+  </button>
+
+</div>
+
+<!-- SINGLE Results Container -->
+<div id="gameLinesResults">
+  Loading game line edges...
+</div>
+
+<script src="script.js"></script>
+<script src="game-lines.js"></script>
+
+</body>
+</html>
