@@ -3186,7 +3186,7 @@ function getConsensusDisplay(row) {
   return display;
 }
 // ===================================================
-// Compatibility wrapper — fixes legacy filter calls
+// Compatibility wrapper — fixes legacy filter calls and update 
 // ===================================================
 function rerenderConsensusTable(data) {
 
@@ -3220,7 +3220,7 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
   resultsDiv.innerHTML = "";
 
   // ===================================================
-  // ✅ CRITICAL: Always store raw dataset
+  // ✅ CRITICAL: Always store raw dataset added a fix 
   // ===================================================
   window.lastRenderedData = data;
 
