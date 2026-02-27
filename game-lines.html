@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Game Lines EV</title>
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- 🌐 API BASE (REQUIRED for backend connection) -->
+  <!-- 🌐 API BASE -->
   <script>
     const isLocalhost =
       location.hostname === "localhost" ||
@@ -21,47 +22,122 @@
 
 </head>
 
+
 <body>
 
+
+<!-- ===================================================== -->
+<!-- 🧠 Ben's Model Breakdown Modal (ONLY ONE COPY) -->
+<!-- ===================================================== -->
+<div id="modelBreakdownModal" class="analytics-modal hidden">
+
+  <div class="analytics-modal-content">
+
+    <div class="analytics-header">
+      <h2>🧠 Ben's Model Breakdown</h2>
+      <button id="closeModelBreakdownBtn" class="analytics-close-btn">✖</button>
+    </div>
+
+    <div id="modelBreakdownContent" style="padding:20px;"></div>
+
+  </div>
+
+</div>
+
+
+
+<!-- ===================================================== -->
+<!-- PAGE CONTENT -->
+<!-- ===================================================== -->
+
 <h1>📈 Game Lines EV</h1>
+
 
 <div class="tracker-button-row">
 
   <button onclick="window.location.href='index.html'">
-    🏠 Back to Dashboard
+    🏠 Back to Home
   </button>
 
   <button onclick="window.location.href='pick-tracker.html'">
     📊 Pick Tracker
   </button>
+  
+  <button id="exportGameLinesCsv">Export CSV</button>
 
 </div>
+
+
 
 <!-- Sportsbook Filters -->
 <div id="sportsbookFilters"
-     style="margin: 15px 0; display:flex; gap:15px; flex-wrap:wrap;">
+     style="margin:15px 0; display:flex; gap:15px; flex-wrap:wrap;">
 </div>
 
-<!-- Date Picker -->
-<div style="margin:15px 0; display:flex; gap:10px; align-items:center;">
+
+
+<!-- Controls -->
+<div style="margin:15px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
 
   <label>Select Date:</label>
 
   <input type="date" id="gameLinesDate">
 
+
   <button id="loadGameLinesBtn" class="tracker-btn primary">
     Load Games
   </button>
 
+
+  <button id="refreshGameLinesBtn" class="tracker-btn">
+    🔄 Refresh
+  </button>
+
+
+  <input
+    type="text"
+    id="gameSearchInput"
+    placeholder="Search team (ex: Duke, Kansas, Lakers...)"
+    style="padding:6px; width:250px;"
+  >
+
+
+  <button
+    id="toggleModelDebug"
+    class="debug-toggle"
+    style="padding:6px 10px;"
+  >
+    🧠 Ben's Model Detail
+  </button>
+
+
+  <div id="gameLinesTimestamp"
+       style="font-size:13px; color:#666; font-style:italic;">
+  </div>
+
 </div>
 
-<!-- SINGLE Results Container -->
+<!-- 📱 Mobile View Toggle -->
+<div class="view-toggle">
+  <button id="tableViewBtn" class="toggle-btn active">📊 Table</button>
+  <button id="cardViewBtn" class="toggle-btn">📱 Card</button>
+</div>
+
+<!-- Results -->
 <div id="gameLinesResults">
   Loading game line edges...
 </div>
 
+<!-- 📱 Mobile Card View -->
+<div id="gameLinesCardView" class="card-view"></div>
+
+
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
 <script src="game-lines.js"></script>
+
 
 </body>
 </html>

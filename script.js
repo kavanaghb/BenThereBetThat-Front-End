@@ -2421,10 +2421,6 @@ function dedupeMarkets(data) {
   const grouped = {};
 
   for (const row of data) {
-    const rounded = row.ConsensusPoint
-      ? Math.round(parseFloat(row.ConsensusPoint) * 2) / 2
-      : null;
-
     const key = `${row.Event}|${row.Market}|${row.Description}|${(row.Outcome || "").toLowerCase()}`;
 
     if (!grouped[key]) grouped[key] = [];
@@ -2439,24 +2435,24 @@ function dedupeMarkets(data) {
       continue;
     }
 
-    // Sort by strongest edge (NoVigProb), fallback to lowest ConsensusPoint difference
+    // Sort by strongest edge (NoVigProb), fallback to consensus value
     rows.sort((a, b) => {
       const pA = parseFloat(a.NoVigProb ?? 0);
       const pB = parseFloat(b.NoVigProb ?? 0);
+
       if (Math.abs(pB - pA) > 0.01) return pB - pA;
 
       const cA = parseFloat(a.ConsensusPoint ?? 0);
       const cB = parseFloat(b.ConsensusPoint ?? 0);
-      return Math.abs(cA - rounded) - Math.abs(cB - rounded);
+
+      return cB - cA; // simple fallback sort
     });
 
-    // Keep best single row
     results.push(rows[0]);
   }
 
   return results;
 }
-
 
 
 // ===================================================

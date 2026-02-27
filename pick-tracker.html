@@ -220,6 +220,10 @@ window.addEventListener("error", (e) => {
     🏠 Back to Home
   </button>
 
+  <button id="goGameLinesBtn" class="tracker-btn">
+  📈 Game Lines EV
+  </button>
+
   <button id="openAnalyticsBtn" class="tracker-btn primary">
     📊 View Analytics
   </button>
@@ -3301,7 +3305,12 @@ async function loadSlipSearchIndex(slips) {
 /* =====================================================
    INIT
 ===================================================== */
-
+// =====================================================
+// 📈 Navigate to Game Lines page
+// =====================================================
+document.getElementById("goGameLinesBtn")?.addEventListener("click", () => {
+  window.location.href = "game-lines.html";
+});
 
 (async () => {
   await initAuthToken();
