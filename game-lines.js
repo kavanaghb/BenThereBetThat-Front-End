@@ -5,6 +5,7 @@ const NEWS_WARNING_THRESHOLD = 6;
 let sortField = "edge";   // default sort
 let sortDirection = "desc";
 let searchFilter = "";
+let currentViewMode = "table"; // preserves table vs card state
 
 // =====================================================
 // MODEL DEBUG MODE STATE
@@ -988,29 +989,31 @@ if (dateInput && !dateInput.value) {
   // Search filter
   // =====================================================
 
-  if (searchInput) {
-
-    searchInput.addEventListener("input", (e) => {
-
-      searchFilter = e.target.value.toLowerCase().trim();
-
-      console.log("🔎 Search filter:", searchFilter);
-
-      renderGameLines();
-
-    });
-
-  }
+ 
 
   if (searchInput) {
 
   searchInput.addEventListener("input", (e) => {
 
     searchFilter = e.target.value.toLowerCase().trim();
-
     console.log("🔎 Search filter:", searchFilter);
 
     renderGameLines();
+
+    // ✅ REAPPLY ACTIVE VIEW AFTER RENDER
+    if (currentViewMode === "card") {
+
+      renderGameCards();
+
+      document.querySelector(".table-scroll-wrapper").style.display = "none";
+      document.getElementById("gameLinesCardView").style.display = "block";
+
+    } else {
+
+      document.querySelector(".table-scroll-wrapper").style.display = "block";
+      document.getElementById("gameLinesCardView").style.display = "none";
+
+    }
 
   });
 
@@ -1027,6 +1030,8 @@ const cardView = document.getElementById("gameLinesCardView");
 
 tableBtn?.addEventListener("click", () => {
 
+  currentViewMode = "table"; // ✅ ADD THIS
+
   document.querySelector(".table-scroll-wrapper").style.display = "block";
   cardView.style.display = "none";
 
@@ -1036,6 +1041,8 @@ tableBtn?.addEventListener("click", () => {
 });
 
 cardBtn?.addEventListener("click", () => {
+
+  currentViewMode = "card"; // ✅ ADD THIS
 
   renderGameCards();
 
@@ -1091,6 +1098,8 @@ window.showModelBreakdown = function(game)
 
 
   // MODEL INTERPRETATION
+
+ 
   const modelMargin = game.model_spread ?? null;
 
   const modelHomeLine =
@@ -1499,7 +1508,30 @@ function renderGameCards() {
 
   container.innerHTML = "";
 
-  currentGameLines.forEach(game => {
+  // =====================================================
+  // 🔎 Apply Search Filter (same logic as table view)
+  // =====================================================
+
+  const filteredGames = currentGameLines.filter(game => {
+
+    if (!searchFilter)
+      return true;
+
+    const searchText = (
+      (game.event_title || "") + " " +
+      (game.home_team || "") + " " +
+      (game.away_team || "")
+    ).toLowerCase();
+
+    return searchText.includes(searchFilter);
+
+  });
+
+  // =====================================================
+  // Render filtered cards
+  // =====================================================
+
+  filteredGames.forEach(game => {
 
     const recommendation =
       game.recommended_team
