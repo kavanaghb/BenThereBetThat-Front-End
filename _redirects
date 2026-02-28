@@ -1,13 +1,1009 @@
-# ✅ API proxy to backend (Render)
-# Forwards all /api/* calls from Netlify to your FastAPI backend on Render
-/api/*   https://bentherebetthat-api.onrender.com/api/:splat   200
+CONSENSUS HOME: -5.7
+CONSENSUS AWAY: 5.7
+EDGE HOME: -7.99
+EDGE AWAY: 7.99
+RECOMMENDED TEAM: Virginia Cavaliers
+RECOMMENDED SPREAD: -5.5
+RECOMMENDED EDGE: 7.99
+HOME SPREADS: [-5.5, -6.0, -5.5, -6.0, -6.0, -5.5, -5.5, -5.5, -5.5, -5.5, -6.0, -5.5, -5.5, -6.0, -6.0]
+AWAY SPREADS: [5.5, 6.0, 5.5, 6.0, 6.0, 5.5, 5.5, 5.5, 5.5, 5.5, 6.0, 5.5, 5.5, 6.0, 6.0]
+===========================================
 
-# ✅ Direct page routes
-/reset-password     /reset-password.html   200
-/success            /success.html          200
-/cancel             /cancel.html           200
+MODEL DEBUG | Coastal Carolina Chanticleers @ Georgia St Panthers | eff_margin=1.80 scale=0.4000 home_court=0 spread=0.72
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
 
-# ✅ Fallback for all other SPA routes
-/*                  /index.html            200
+================ DEBUG GAME ================
+Game: Coastal Carolina Chanticleers @ Georgia St Panthers
+MODEL HOME: -0.72
+MODEL AWAY: 0.72
+CONSENSUS HOME: 0.5
+CONSENSUS AWAY: -0.5
+EDGE HOME: 1.22
+EDGE AWAY: -1.22
+RECOMMENDED TEAM: Georgia St Panthers
+RECOMMENDED SPREAD: 1.5
+RECOMMENDED EDGE: 1.22
+HOME SPREADS: [0.0, 0.0, 1.5, -1.0, 1.5, -1.5, 1.5, -1.0, 1.5, 1.5, 1.5, 1.5, 0.0, 1.5, -1.0]
+AWAY SPREADS: [0.0, 0.0, -1.5, 1.0, -1.5, 1.5, -1.5, 1.0, -1.5, -1.5, -1.5, -1.5, 0.0, -1.5, 1.0]
+===========================================
+
+MODEL DEBUG | Southern Indiana Screaming Eagles @ Morehead St Eagles | eff_margin=16.80 scale=0.4000 home_court=0 spread=6.72
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Southern Indiana Screaming Eagles @ Morehead St Eagles
+MODEL HOME: -6.67
+MODEL AWAY: 6.67
+CONSENSUS HOME: -8.5
+CONSENSUS AWAY: 8.5
+EDGE HOME: -1.83
+EDGE AWAY: 1.83
+RECOMMENDED TEAM: Morehead St Eagles
+RECOMMENDED SPREAD: -8.5
+RECOMMENDED EDGE: 1.83
+HOME SPREADS: [-8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5]
+AWAY SPREADS: [8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5]
+===========================================
+
+MODEL DEBUG | Xavier Musketeers @ Providence Friars | eff_margin=11.20 scale=0.4000 home_court=0 spread=4.48
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Xavier Musketeers @ Providence Friars
+MODEL HOME: -4.74
+MODEL AWAY: 4.74
+CONSENSUS HOME: -5.72
+CONSENSUS AWAY: 5.72
+EDGE HOME: -0.98
+EDGE AWAY: 0.98
+RECOMMENDED TEAM: Providence Friars
+RECOMMENDED SPREAD: -5.5
+RECOMMENDED EDGE: 0.98
+HOME SPREADS: [-5.5, -5.5, -5.5, -6.5, -6.5, -5.5, -5.5, -5.5, -5.5]
+AWAY SPREADS: [5.5, 5.5, 5.5, 6.5, 6.5, 5.5, 5.5, 5.5, 5.5]
+===========================================
+
+MODEL DEBUG | Bradley Braves @ UIC Flames | eff_margin=-6.50 scale=0.4000 home_court=0 spread=-2.60
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Bradley Braves @ UIC Flames
+MODEL HOME: 2.59
+MODEL AWAY: -2.59
+CONSENSUS HOME: -2.86
+CONSENSUS AWAY: 2.86
+EDGE HOME: -5.45
+EDGE AWAY: 5.45
+RECOMMENDED TEAM: UIC Flames
+RECOMMENDED SPREAD: -2.5
+RECOMMENDED EDGE: 5.45
+HOME SPREADS: [-3.5, -3.5, -2.5, -3.0, -2.5, -2.5, -3.5, -2.5, -2.5, -2.5, -2.5, -3.5, -3.0, -2.5]
+AWAY SPREADS: [3.5, 3.5, 2.5, 3.0, 2.5, 2.5, 3.5, 2.5, 2.5, 2.5, 2.5, 3.5, 3.0, 2.5]
+===========================================
+
+MODEL DEBUG | Southern Miss Golden Eagles @ Arkansas St Red Wolves | eff_margin=9.10 scale=0.4000 home_court=0 spread=3.64
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Southern Miss Golden Eagles @ Arkansas St Red Wolves
+MODEL HOME: -3.8
+MODEL AWAY: 3.8
+CONSENSUS HOME: -9.37
+CONSENSUS AWAY: 9.37
+EDGE HOME: -5.57
+EDGE AWAY: 5.57
+RECOMMENDED TEAM: Arkansas St Red Wolves
+RECOMMENDED SPREAD: -8.5
+RECOMMENDED EDGE: 5.57
+HOME SPREADS: [-9.5, -9.5, -9.5, -9.0, -9.5, -9.5, -9.5, -9.5, -8.5, -9.5, -9.5, -9.5, -9.5, -9.0, -9.5]
+AWAY SPREADS: [9.5, 9.5, 9.5, 9.0, 9.5, 9.5, 9.5, 9.5, 8.5, 9.5, 9.5, 9.5, 9.5, 9.0, 9.5]
+===========================================
+
+MODEL DEBUG | Minnesota Golden Gophers @ Michigan Wolverines | eff_margin=4.00 scale=0.4000 home_court=0 spread=1.60
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Minnesota Golden Gophers @ Michigan Wolverines
+MODEL HOME: -1.61
+MODEL AWAY: 1.61
+CONSENSUS HOME: -22.17
+CONSENSUS AWAY: 22.17
+EDGE HOME: -20.56
+EDGE AWAY: 20.56
+RECOMMENDED TEAM: Michigan Wolverines
+RECOMMENDED SPREAD: -21.5
+RECOMMENDED EDGE: 20.56
+HOME SPREADS: [-22.5, -22.5, -22.5, -22.5, -22.5, -21.5, -21.5, -22.5, -22.5, -22.5, -22.0, -22.5, -21.5, -21.5, -22.0]
+AWAY SPREADS: [22.5, 22.5, 22.5, 22.5, 22.5, 21.5, 21.5, 22.5, 22.5, 22.5, 22.0, 22.5, 21.5, 21.5, 22.0]
+===========================================
+
+MODEL DEBUG | San José St Spartans @ Air Force Falcons | eff_margin=-14.90 scale=0.4000 home_court=0 spread=-5.96
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: San José St Spartans @ Air Force Falcons
+MODEL HOME: 5.79
+MODEL AWAY: -5.79
+CONSENSUS HOME: 6.57
+CONSENSUS AWAY: -6.57
+EDGE HOME: 0.78
+EDGE AWAY: -0.78
+RECOMMENDED TEAM: Air Force Falcons
+RECOMMENDED SPREAD: 7.0
+RECOMMENDED EDGE: 0.78
+HOME SPREADS: [6.5, 6.5, 6.5, 6.5, 7.0, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 7.0, 6.5]
+AWAY SPREADS: [-6.5, -6.5, -6.5, -6.5, -7.0, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -7.0, -6.5]
+===========================================
+
+MODEL DEBUG | Arizona St Sun Devils @ TCU Horned Frogs | eff_margin=-8.90 scale=0.4000 home_court=0 spread=-3.56
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Arizona St Sun Devils @ TCU Horned Frogs
+MODEL HOME: 3.62
+MODEL AWAY: -3.62
+CONSENSUS HOME: -6.5
+CONSENSUS AWAY: 6.5
+EDGE HOME: -10.12
+EDGE AWAY: 10.12
+RECOMMENDED TEAM: TCU Horned Frogs
+RECOMMENDED SPREAD: -6.5
+RECOMMENDED EDGE: 10.12
+HOME SPREADS: [-6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5]
+AWAY SPREADS: [6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5]
+===========================================
+
+MODEL DEBUG | Arizona Wildcats @ Baylor Bears | eff_margin=9.50 scale=0.4000 home_court=0 spread=3.80
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Arizona Wildcats @ Baylor Bears
+MODEL HOME: -3.93
+MODEL AWAY: 3.93
+CONSENSUS HOME: 8.53
+CONSENSUS AWAY: -8.53
+EDGE HOME: 12.46
+EDGE AWAY: -12.46
+RECOMMENDED TEAM: Baylor Bears
+RECOMMENDED SPREAD: 9.0
+RECOMMENDED EDGE: 12.46
+HOME SPREADS: [8.5, 9.0, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5]
+AWAY SPREADS: [-8.5, -9.0, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5]
+===========================================
+
+MODEL DEBUG | Auburn Tigers @ Oklahoma Sooners | eff_margin=0.80 scale=0.4000 home_court=0 spread=0.32
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Auburn Tigers @ Oklahoma Sooners
+MODEL HOME: -0.32
+MODEL AWAY: 0.32
+CONSENSUS HOME: 1.6
+CONSENSUS AWAY: -1.6
+EDGE HOME: 1.92
+EDGE AWAY: -1.92
+RECOMMENDED TEAM: Oklahoma Sooners
+RECOMMENDED SPREAD: 2.0
+RECOMMENDED EDGE: 1.92
+HOME SPREADS: [1.5, 1.5, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0, 1.5]
+AWAY SPREADS: [-1.5, -1.5, -2.0, -2.0, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -2.0, -1.5]
+===========================================
+
+MODEL DEBUG | Wyoming Cowboys @ Boise State Broncos | eff_margin=-0.20 scale=0.4000 home_court=0 spread=-0.08
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Wyoming Cowboys @ Boise State Broncos
+MODEL HOME: 0.08
+MODEL AWAY: -0.08
+CONSENSUS HOME: -8.03
+CONSENSUS AWAY: 8.03
+EDGE HOME: -8.11
+EDGE AWAY: 8.11
+RECOMMENDED TEAM: Boise State Broncos
+RECOMMENDED SPREAD: -7.5
+RECOMMENDED EDGE: 8.11
+HOME SPREADS: [-8.5, -8.5, -7.5, -8.0, -8.5, -8.5, -8.5, -8.5, -7.5, -7.5, -7.5, -7.5, -7.5, -8.5, -8.0]
+AWAY SPREADS: [8.5, 8.5, 7.5, 8.0, 8.5, 8.5, 8.5, 8.5, 7.5, 7.5, 7.5, 7.5, 7.5, 8.5, 8.0]
+===========================================
+
+MODEL DEBUG | Fresno St Bulldogs @ Colorado St Rams | eff_margin=17.60 scale=0.4000 home_court=0 spread=7.04
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Fresno St Bulldogs @ Colorado St Rams
+MODEL HOME: -6.85
+MODEL AWAY: 6.85
+CONSENSUS HOME: -8.6
+CONSENSUS AWAY: 8.6
+EDGE HOME: -1.75
+EDGE AWAY: 1.75
+RECOMMENDED TEAM: Colorado St Rams
+RECOMMENDED SPREAD: -8.5
+RECOMMENDED EDGE: 1.75
+HOME SPREADS: [-9.0, -9.0, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -9.0, -8.5, -8.5]
+AWAY SPREADS: [9.0, 9.0, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 9.0, 8.5, 8.5]
+===========================================
+
+MODEL DEBUG | Miami Hurricanes @ Florida St Seminoles | eff_margin=-1.70 scale=0.4000 home_court=0 spread=-0.68
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Miami Hurricanes @ Florida St Seminoles
+MODEL HOME: 0.71
+MODEL AWAY: -0.71
+CONSENSUS HOME: 2.63
+CONSENSUS AWAY: -2.63
+EDGE HOME: 1.92
+EDGE AWAY: -1.92
+RECOMMENDED TEAM: Florida St Seminoles
+RECOMMENDED SPREAD: 3.0
+RECOMMENDED EDGE: 1.92
+HOME SPREADS: [2.5, 2.5, 3.0, 3.0, 2.5, 2.5, 2.5, 3.0, 2.5, 2.5, 2.5, 2.5, 2.5, 3.0, 2.5]
+AWAY SPREADS: [-2.5, -2.5, -3.0, -3.0, -2.5, -2.5, -2.5, -3.0, -2.5, -2.5, -2.5, -2.5, -2.5, -3.0, -2.5]
+===========================================
+
+MODEL DEBUG | Iowa State Cyclones @ Utah Utes | eff_margin=3.40 scale=0.4000 home_court=0 spread=1.36
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Iowa State Cyclones @ Utah Utes
+MODEL HOME: -1.36
+MODEL AWAY: 1.36
+CONSENSUS HOME: 12.6
+CONSENSUS AWAY: -12.6
+EDGE HOME: 13.96
+EDGE AWAY: -13.96
+RECOMMENDED TEAM: Utah Utes
+RECOMMENDED SPREAD: 13.5
+RECOMMENDED EDGE: 13.96
+HOME SPREADS: [12.5, 13.0, 12.5, 12.5, 13.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5]
+AWAY SPREADS: [-12.5, -13.0, -12.5, -12.5, -13.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5]
+===========================================
+
+MODEL DEBUG | Tennessee Volunteers @ Missouri Tigers | eff_margin=6.70 scale=0.4000 home_court=0 spread=2.68
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Tennessee Volunteers @ Missouri Tigers
+MODEL HOME: -2.64
+MODEL AWAY: 2.64
+CONSENSUS HOME: 3.57
+CONSENSUS AWAY: -3.57
+EDGE HOME: 6.21
+EDGE AWAY: -6.21
+RECOMMENDED TEAM: Missouri Tigers
+RECOMMENDED SPREAD: 4.5
+RECOMMENDED EDGE: 6.21
+HOME SPREADS: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 4.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
+AWAY SPREADS: [-3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -4.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5]
+===========================================
+
+MODEL DEBUG | UCF Knights @ BYU Cougars | eff_margin=1.30 scale=0.4000 home_court=0 spread=0.52
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: UCF Knights @ BYU Cougars
+MODEL HOME: -0.54
+MODEL AWAY: 0.54
+CONSENSUS HOME: -11.43
+CONSENSUS AWAY: 11.43
+EDGE HOME: -10.89
+EDGE AWAY: 10.89
+RECOMMENDED TEAM: BYU Cougars
+RECOMMENDED SPREAD: -10.5
+RECOMMENDED EDGE: 10.89
+HOME SPREADS: [-11.5, -11.5, -11.5, -11.5, -10.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5]
+AWAY SPREADS: [11.5, 11.5, 11.5, 11.5, 10.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5]
+===========================================
+
+MODEL DEBUG | New Mexico Lobos @ Nevada Wolf Pack | eff_margin=4.30 scale=0.4000 home_court=0 spread=1.72
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: New Mexico Lobos @ Nevada Wolf Pack
+MODEL HOME: -1.73
+MODEL AWAY: 1.73
+CONSENSUS HOME: 0.57
+CONSENSUS AWAY: -0.57
+EDGE HOME: 2.3
+EDGE AWAY: -2.3
+RECOMMENDED TEAM: Nevada Wolf Pack
+RECOMMENDED SPREAD: 1.5
+RECOMMENDED EDGE: 2.3
+HOME SPREADS: [1.5, 1.0, 0.0, 0.0, 1.5, -1.5, -1.5, 1.0, -1.5, 1.5, 1.5, 1.5, 1.5, 1.0, 1.0]
+AWAY SPREADS: [-1.5, -1.0, 0.0, 0.0, -1.5, 1.5, 1.5, -1.0, 1.5, -1.5, -1.5, -1.5, -1.5, -1.0, -1.0]
+===========================================
+
+MODEL DEBUG | USC Trojans @ UCLA Bruins | eff_margin=9.60 scale=0.4000 home_court=0 spread=3.84
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: USC Trojans @ UCLA Bruins
+MODEL HOME: -3.89
+MODEL AWAY: 3.89
+CONSENSUS HOME: -6.5
+CONSENSUS AWAY: 6.5
+EDGE HOME: -2.61
+EDGE AWAY: 2.61
+RECOMMENDED TEAM: UCLA Bruins
+RECOMMENDED SPREAD: -6.5
+RECOMMENDED EDGE: 2.61
+HOME SPREADS: [-6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5]
+AWAY SPREADS: [6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5]
+===========================================
+
+📈 Returning 37 games (cached for 60s)
+INFO:     127.0.0.1:49382 - "GET /api/game-lines?date=2026-02-24 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET https://api.the-odds-api.com/v4/sports/basketball_ncaab/odds?apiKey=d9d5b18ddaf76d30b381888b48283382&regions=us%2Cus2&markets=spreads&oddsFormat=american&dateFormat=iso "HTTP/1.1 200 OK"
+🧠 Using SCALING_FACTOR: 0.4
+MODEL DEBUG | St. Francis (PA) Red Flash @ New Haven Chargers | eff_margin=-12.60 scale=0.4000 home_court=0 spread=-5.04
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: St. Francis (PA) Red Flash @ New Haven Chargers
+MODEL HOME: 5.0
+MODEL AWAY: -5.0
+CONSENSUS HOME: -6.71
+CONSENSUS AWAY: 6.71
+EDGE HOME: -11.71
+EDGE AWAY: 11.71
+RECOMMENDED TEAM: New Haven Chargers
+RECOMMENDED SPREAD: -6.5
+RECOMMENDED EDGE: 11.71
+HOME SPREADS: [-6.5, -7.0, -6.5, -6.5, -6.5, -6.5, -7.5]
+AWAY SPREADS: [6.5, 7.0, 6.5, 6.5, 6.5, 6.5, 7.5]
+===========================================
+
+MODEL DEBUG | Miami (OH) RedHawks @ Eastern Michigan Eagles | eff_margin=-15.00 scale=0.4000 home_court=0 spread=-6.00
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Miami (OH) RedHawks @ Eastern Michigan Eagles
+MODEL HOME: 6.09
+MODEL AWAY: -6.09
+CONSENSUS HOME: 9.89
+CONSENSUS AWAY: -9.89
+EDGE HOME: 3.8
+EDGE AWAY: -3.8
+RECOMMENDED TEAM: Eastern Michigan Eagles
+RECOMMENDED SPREAD: 10.5
+RECOMMENDED EDGE: 3.8
+HOME SPREADS: [9.5, 10.0, 10.0, 10.0, 10.5, 9.5, 10.5, 10.5, 9.5, 9.5, 9.5, 10.0, 9.5, 10.0]
+AWAY SPREADS: [-9.5, -10.0, -10.0, -10.0, -10.5, -9.5, -10.5, -10.5, -9.5, -9.5, -9.5, -10.0, -9.5, -10.0]
+===========================================
+
+MODEL DEBUG | Washington Huskies @ Rutgers Scarlet Knights | eff_margin=2.30 scale=0.4000 home_court=0 spread=0.92
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Washington Huskies @ Rutgers Scarlet Knights
+MODEL HOME: -0.9
+MODEL AWAY: 0.9
+CONSENSUS HOME: 4.97
+CONSENSUS AWAY: -4.97
+EDGE HOME: 5.87
+EDGE AWAY: -5.87
+RECOMMENDED TEAM: Rutgers Scarlet Knights
+RECOMMENDED SPREAD: 5.5
+RECOMMENDED EDGE: 5.87
+HOME SPREADS: [4.5, 5.0, 5.0, 5.0, 5.5, 4.5, 4.5, 5.0, 4.5, 5.5, 5.5, 5.5, 5.0, 4.5, 5.0]
+AWAY SPREADS: [-4.5, -5.0, -5.0, -5.0, -5.5, -4.5, -4.5, -5.0, -4.5, -5.5, -5.5, -5.5, -5.0, -4.5, -5.0]
+===========================================
+
+MODEL DEBUG | Buffalo Bulls @ Akron Zips | eff_margin=-2.10 scale=0.4000 home_court=0 spread=-0.84
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Buffalo Bulls @ Akron Zips
+MODEL HOME: 0.86
+MODEL AWAY: -0.86
+CONSENSUS HOME: -15.75
+CONSENSUS AWAY: 15.75
+EDGE HOME: -16.61
+EDGE AWAY: 16.61
+RECOMMENDED TEAM: Akron Zips
+RECOMMENDED SPREAD: -15.5
+RECOMMENDED EDGE: 16.61
+HOME SPREADS: [-16.0, -16.0, -15.5, -16.5, -15.5, -16.5, -15.5, -15.5, -15.5, -16.0, -15.5, -15.5, -15.5, -15.5]
+AWAY SPREADS: [16.0, 16.0, 15.5, 16.5, 15.5, 16.5, 15.5, 15.5, 15.5, 16.0, 15.5, 15.5, 15.5, 15.5]
+===========================================
+
+MODEL DEBUG | Massachusetts Minutemen @ Ball State Cardinals | eff_margin=-11.80 scale=0.4000 home_court=0 spread=-4.72
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Massachusetts Minutemen @ Ball State Cardinals
+MODEL HOME: 4.71
+MODEL AWAY: -4.71
+CONSENSUS HOME: 5.17
+CONSENSUS AWAY: -5.17
+EDGE HOME: 0.46
+EDGE AWAY: -0.46
+RECOMMENDED TEAM: Ball State Cardinals
+RECOMMENDED SPREAD: 5.5
+RECOMMENDED EDGE: 0.46
+HOME SPREADS: [5.0, 5.0, 5.5, 5.0, 5.5, 5.5, 5.0, 4.5, 5.5, 5.0, 4.5, 5.5, 5.5, 5.5, 5.0]
+AWAY SPREADS: [-5.0, -5.0, -5.5, -5.0, -5.5, -5.5, -5.0, -4.5, -5.5, -5.0, -4.5, -5.5, -5.5, -5.5, -5.0]
+===========================================
+
+MODEL DEBUG | Wake Forest Demon Deacons @ Boston College Eagles | eff_margin=-15.50 scale=0.4000 home_court=0 spread=-6.20
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Wake Forest Demon Deacons @ Boston College Eagles
+MODEL HOME: 6.19
+MODEL AWAY: -6.19
+CONSENSUS HOME: 4.67
+CONSENSUS AWAY: -4.67
+EDGE HOME: -1.52
+EDGE AWAY: 1.52
+RECOMMENDED TEAM: Boston College Eagles
+RECOMMENDED SPREAD: 5.0
+RECOMMENDED EDGE: 1.52
+HOME SPREADS: [4.5, 5.0, 5.0, 4.5, 4.5, 4.5, 4.5, 4.5, 5.0]
+AWAY SPREADS: [-4.5, -5.0, -5.0, -4.5, -4.5, -4.5, -4.5, -4.5, -5.0]
+===========================================
+
+MODEL DEBUG | Western Michigan Broncos @ Bowling Green Falcons | eff_margin=-15.70 scale=0.4000 home_court=0 spread=-6.28
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Western Michigan Broncos @ Bowling Green Falcons
+MODEL HOME: 6.35
+MODEL AWAY: -6.35
+CONSENSUS HOME: -12.6
+CONSENSUS AWAY: 12.6
+EDGE HOME: -18.95
+EDGE AWAY: 18.95
+RECOMMENDED TEAM: Bowling Green Falcons
+RECOMMENDED SPREAD: -12.5
+RECOMMENDED EDGE: 18.95
+HOME SPREADS: [-13.0, -13.0, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -13.0, -12.5, -12.5, -12.5, -12.5, -12.5]
+AWAY SPREADS: [13.0, 13.0, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 13.0, 12.5, 12.5, 12.5, 12.5, 12.5]
+===========================================
+
+MODEL DEBUG | Central Michigan Chippewas @ Kent State Golden Flashes | eff_margin=0.50 scale=0.4000 home_court=0 spread=0.20
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Central Michigan Chippewas @ Kent State Golden Flashes
+MODEL HOME: -0.21
+MODEL AWAY: 0.21
+CONSENSUS HOME: -11.2
+CONSENSUS AWAY: 11.2
+EDGE HOME: -10.99
+EDGE AWAY: 10.99
+RECOMMENDED TEAM: Kent State Golden Flashes
+RECOMMENDED SPREAD: -10.5
+RECOMMENDED EDGE: 10.99
+HOME SPREADS: [-11.0, -11.0, -10.5, -11.0, -11.5, -11.5, -11.5, -11.0, -10.5, -11.5, -11.5, -11.5, -11.0, -11.5, -11.5]
+AWAY SPREADS: [11.0, 11.0, 10.5, 11.0, 11.5, 11.5, 11.5, 11.0, 10.5, 11.5, 11.5, 11.5, 11.0, 11.5, 11.5]
+===========================================
+
+MODEL DEBUG | Cincinnati Bearcats @ Texas Tech Red Raiders | eff_margin=18.10 scale=0.4000 home_court=0 spread=7.24
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Cincinnati Bearcats @ Texas Tech Red Raiders
+MODEL HOME: -7.29
+MODEL AWAY: 7.29
+CONSENSUS HOME: -6.03
+CONSENSUS AWAY: 6.03
+EDGE HOME: 1.26
+EDGE AWAY: -1.26
+RECOMMENDED TEAM: Texas Tech Red Raiders
+RECOMMENDED SPREAD: -5.5
+RECOMMENDED EDGE: 1.26
+HOME SPREADS: [-5.5, -6.5, -6.0, -6.0, -5.5, -5.5, -5.5, -6.5, -6.5, -6.5, -6.0, -5.5, -6.5, -6.0, -6.5]
+AWAY SPREADS: [5.5, 6.5, 6.0, 6.0, 5.5, 5.5, 5.5, 6.5, 6.5, 6.5, 6.0, 5.5, 6.5, 6.0, 6.5]
+===========================================
+
+MODEL DEBUG | Saint Louis Billikens @ Dayton Flyers | eff_margin=-7.60 scale=0.4000 home_court=0 spread=-3.04
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Saint Louis Billikens @ Dayton Flyers
+MODEL HOME: 3.16
+MODEL AWAY: -3.16
+CONSENSUS HOME: 5.2
+CONSENSUS AWAY: -5.2
+EDGE HOME: 2.04
+EDGE AWAY: -2.04
+RECOMMENDED TEAM: Dayton Flyers
+RECOMMENDED SPREAD: 5.5
+RECOMMENDED EDGE: 2.04
+HOME SPREADS: [4.5, 5.5, 5.0, 5.0, 5.5, 5.5, 5.5, 5.0, 4.5, 5.5, 5.5, 5.5, 5.5, 5.0, 5.0]
+AWAY SPREADS: [-4.5, -5.5, -5.0, -5.0, -5.5, -5.5, -5.5, -5.0, -4.5, -5.5, -5.5, -5.5, -5.5, -5.0, -5.0]
+===========================================
+
+MODEL DEBUG | Duke Blue Devils @ Notre Dame Fighting Irish | eff_margin=2.20 scale=0.4000 home_court=0 spread=0.88
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Duke Blue Devils @ Notre Dame Fighting Irish
+MODEL HOME: -0.86
+MODEL AWAY: 0.86
+CONSENSUS HOME: 17.47
+CONSENSUS AWAY: -17.47
+EDGE HOME: 18.33
+EDGE AWAY: -18.33
+RECOMMENDED TEAM: Notre Dame Fighting Irish
+RECOMMENDED SPREAD: 18.5
+RECOMMENDED EDGE: 18.33
+HOME SPREADS: [17.5, 18.5, 17.5, 17.5, 17.5, 17.5, 17.5, 17.0, 17.0, 17.5, 17.5, 17.5, 17.5, 17.0, 17.5]
+AWAY SPREADS: [-17.5, -18.5, -17.5, -17.5, -17.5, -17.5, -17.5, -17.0, -17.0, -17.5, -17.5, -17.5, -17.5, -17.0, -17.5]
+===========================================
+
+MODEL DEBUG | Marquette Golden Eagles @ Georgetown Hoyas | eff_margin=2.10 scale=0.4000 home_court=0 spread=0.84
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Marquette Golden Eagles @ Georgetown Hoyas
+MODEL HOME: -0.85
+MODEL AWAY: 0.85
+CONSENSUS HOME: -3.5
+CONSENSUS AWAY: 3.5
+EDGE HOME: -2.65
+EDGE AWAY: 2.65
+RECOMMENDED TEAM: Georgetown Hoyas
+RECOMMENDED SPREAD: -3.5
+RECOMMENDED EDGE: 2.65
+HOME SPREADS: [-3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5]
+AWAY SPREADS: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
+===========================================
+
+MODEL DEBUG | Northwestern Wildcats @ Indiana Hoosiers | eff_margin=4.90 scale=0.4000 home_court=0 spread=1.96
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Northwestern Wildcats @ Indiana Hoosiers
+MODEL HOME: -1.93
+MODEL AWAY: 1.93
+CONSENSUS HOME: -8.71
+CONSENSUS AWAY: 8.71
+EDGE HOME: -6.78
+EDGE AWAY: 6.78
+RECOMMENDED TEAM: Indiana Hoosiers
+RECOMMENDED SPREAD: -8.5
+RECOMMENDED EDGE: 6.78
+HOME SPREADS: [-8.5, -9.0, -8.5, -8.5, -8.5, -8.5, -8.5, -9.5, -9.5, -8.5, -8.5, -8.5, -8.5, -9.0]
+AWAY SPREADS: [8.5, 9.0, 8.5, 8.5, 8.5, 8.5, 8.5, 9.5, 9.5, 8.5, 8.5, 8.5, 8.5, 9.0]
+===========================================
+
+MODEL DEBUG | Louisiana Ragin' Cajuns @ Troy Trojans | eff_margin=7.40 scale=0.4000 home_court=0 spread=2.96
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Louisiana Ragin' Cajuns @ Troy Trojans
+MODEL HOME: -2.82
+MODEL AWAY: 2.82
+CONSENSUS HOME: -12.25
+CONSENSUS AWAY: 12.25
+EDGE HOME: -9.43
+EDGE AWAY: 9.43
+RECOMMENDED TEAM: Troy Trojans
+RECOMMENDED SPREAD: -11.5
+RECOMMENDED EDGE: 9.43
+HOME SPREADS: [-12.0, -12.0, -12.5, -12.5, -12.5, -12.0, -11.5, -12.5, -12.0, -12.5, -12.5, -12.5, -12.5, -12.0]
+AWAY SPREADS: [12.0, 12.0, 12.5, 12.5, 12.5, 12.0, 11.5, 12.5, 12.0, 12.5, 12.5, 12.5, 12.5, 12.0]
+===========================================
+
+MODEL DEBUG | Old Dominion Monarchs @ Marshall Thundering Herd | eff_margin=10.40 scale=0.4000 home_court=0 spread=4.16
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Old Dominion Monarchs @ Marshall Thundering Herd
+MODEL HOME: -4.28
+MODEL AWAY: 4.28
+CONSENSUS HOME: -6.7
+CONSENSUS AWAY: 6.7
+EDGE HOME: -2.42
+EDGE AWAY: 2.42
+RECOMMENDED TEAM: Marshall Thundering Herd
+RECOMMENDED SPREAD: -6.5
+RECOMMENDED EDGE: 2.42
+HOME SPREADS: [-7.0, -7.0, -6.5, -7.0, -6.5, -6.5, -7.0, -6.5, -6.5, -6.5, -7.0, -6.5, -6.5, -6.5, -7.0]
+AWAY SPREADS: [7.0, 7.0, 6.5, 7.0, 6.5, 6.5, 7.0, 6.5, 6.5, 6.5, 7.0, 6.5, 6.5, 6.5, 7.0]
+===========================================
+
+MODEL DEBUG | Northern Illinois Huskies @ Toledo Rockets | eff_margin=18.30 scale=0.4000 home_court=0 spread=7.32
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Northern Illinois Huskies @ Toledo Rockets
+MODEL HOME: -7.41
+MODEL AWAY: 7.41
+CONSENSUS HOME: -12.08
+CONSENSUS AWAY: 12.08
+EDGE HOME: -4.67
+EDGE AWAY: 4.67
+RECOMMENDED TEAM: Toledo Rockets
+RECOMMENDED SPREAD: -11.5
+RECOMMENDED EDGE: 4.67
+HOME SPREADS: [-12.0, -12.0, -11.5, -12.0, -12.5, -11.5, -11.5, -12.0, -12.5, -12.5, -12.5, -12.5, -12.0]
+AWAY SPREADS: [12.0, 12.0, 11.5, 12.0, 12.5, 11.5, 11.5, 12.0, 12.5, 12.5, 12.5, 12.5, 12.0]
+===========================================
+
+MODEL DEBUG | West Virginia Mountaineers @ Oklahoma St Cowboys | eff_margin=13.90 scale=0.4000 home_court=0 spread=5.56
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: West Virginia Mountaineers @ Oklahoma St Cowboys
+MODEL HOME: -5.58
+MODEL AWAY: 5.58
+CONSENSUS HOME: -1.57
+CONSENSUS AWAY: 1.57
+EDGE HOME: 4.01
+EDGE AWAY: -4.01
+RECOMMENDED TEAM: Oklahoma St Cowboys
+RECOMMENDED SPREAD: -1.5
+RECOMMENDED EDGE: 4.01
+HOME SPREADS: [-1.5, -2.0, -1.5, -1.5, -1.5, -1.5, -1.5, -2.0, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5]
+AWAY SPREADS: [1.5, 2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
+===========================================
+
+MODEL DEBUG | Kentucky Wildcats @ South Carolina Gamecocks | eff_margin=-2.70 scale=0.4000 home_court=0 spread=-1.08
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Kentucky Wildcats @ South Carolina Gamecocks
+MODEL HOME: 1.08
+MODEL AWAY: -1.08
+CONSENSUS HOME: 6.63
+CONSENSUS AWAY: -6.63
+EDGE HOME: 5.55
+EDGE AWAY: -5.55
+RECOMMENDED TEAM: South Carolina Gamecocks
+RECOMMENDED SPREAD: 7.0
+RECOMMENDED EDGE: 5.55
+HOME SPREADS: [6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 7.0, 7.0, 6.5, 7.0, 6.5, 6.5, 7.0, 6.5]
+AWAY SPREADS: [-6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -7.0, -7.0, -6.5, -7.0, -6.5, -6.5, -7.0, -6.5]
+===========================================
+
+MODEL DEBUG | NC State Wolfpack @ Virginia Cavaliers | eff_margin=-5.70 scale=0.4000 home_court=0 spread=-2.28
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: NC State Wolfpack @ Virginia Cavaliers
+MODEL HOME: 2.29
+MODEL AWAY: -2.29
+CONSENSUS HOME: -5.7
+CONSENSUS AWAY: 5.7
+EDGE HOME: -7.99
+EDGE AWAY: 7.99
+RECOMMENDED TEAM: Virginia Cavaliers
+RECOMMENDED SPREAD: -5.5
+RECOMMENDED EDGE: 7.99
+HOME SPREADS: [-5.5, -6.0, -5.5, -6.0, -6.0, -5.5, -5.5, -5.5, -5.5, -5.5, -6.0, -5.5, -5.5, -6.0, -6.0]
+AWAY SPREADS: [5.5, 6.0, 5.5, 6.0, 6.0, 5.5, 5.5, 5.5, 5.5, 5.5, 6.0, 5.5, 5.5, 6.0, 6.0]
+===========================================
+
+MODEL DEBUG | Coastal Carolina Chanticleers @ Georgia St Panthers | eff_margin=1.80 scale=0.4000 home_court=0 spread=0.72
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Coastal Carolina Chanticleers @ Georgia St Panthers
+MODEL HOME: -0.72
+MODEL AWAY: 0.72
+CONSENSUS HOME: 0.5
+CONSENSUS AWAY: -0.5
+EDGE HOME: 1.22
+EDGE AWAY: -1.22
+RECOMMENDED TEAM: Georgia St Panthers
+RECOMMENDED SPREAD: 1.5
+RECOMMENDED EDGE: 1.22
+HOME SPREADS: [0.0, 0.0, 1.5, -1.0, 1.5, -1.5, 1.5, -1.0, 1.5, 1.5, 1.5, 1.5, 0.0, 1.5, -1.0]
+AWAY SPREADS: [0.0, 0.0, -1.5, 1.0, -1.5, 1.5, -1.5, 1.0, -1.5, -1.5, -1.5, -1.5, 0.0, -1.5, 1.0]
+===========================================
+
+MODEL DEBUG | Southern Indiana Screaming Eagles @ Morehead St Eagles | eff_margin=16.80 scale=0.4000 home_court=0 spread=6.72
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Southern Indiana Screaming Eagles @ Morehead St Eagles
+MODEL HOME: -6.67
+MODEL AWAY: 6.67
+CONSENSUS HOME: -8.5
+CONSENSUS AWAY: 8.5
+EDGE HOME: -1.83
+EDGE AWAY: 1.83
+RECOMMENDED TEAM: Morehead St Eagles
+RECOMMENDED SPREAD: -8.5
+RECOMMENDED EDGE: 1.83
+HOME SPREADS: [-8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5]
+AWAY SPREADS: [8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5]
+===========================================
+
+MODEL DEBUG | Xavier Musketeers @ Providence Friars | eff_margin=11.20 scale=0.4000 home_court=0 spread=4.48
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Xavier Musketeers @ Providence Friars
+MODEL HOME: -4.74
+MODEL AWAY: 4.74
+CONSENSUS HOME: -5.72
+CONSENSUS AWAY: 5.72
+EDGE HOME: -0.98
+EDGE AWAY: 0.98
+RECOMMENDED TEAM: Providence Friars
+RECOMMENDED SPREAD: -5.5
+RECOMMENDED EDGE: 0.98
+HOME SPREADS: [-5.5, -5.5, -5.5, -6.5, -6.5, -5.5, -5.5, -5.5, -5.5]
+AWAY SPREADS: [5.5, 5.5, 5.5, 6.5, 6.5, 5.5, 5.5, 5.5, 5.5]
+===========================================
+
+MODEL DEBUG | Bradley Braves @ UIC Flames | eff_margin=-6.50 scale=0.4000 home_court=0 spread=-2.60
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Bradley Braves @ UIC Flames
+MODEL HOME: 2.59
+MODEL AWAY: -2.59
+CONSENSUS HOME: -2.86
+CONSENSUS AWAY: 2.86
+EDGE HOME: -5.45
+EDGE AWAY: 5.45
+RECOMMENDED TEAM: UIC Flames
+RECOMMENDED SPREAD: -2.5
+RECOMMENDED EDGE: 5.45
+HOME SPREADS: [-3.5, -3.5, -2.5, -3.0, -2.5, -2.5, -3.5, -2.5, -2.5, -2.5, -2.5, -3.5, -3.0, -2.5]
+AWAY SPREADS: [3.5, 3.5, 2.5, 3.0, 2.5, 2.5, 3.5, 2.5, 2.5, 2.5, 2.5, 3.5, 3.0, 2.5]
+===========================================
+
+MODEL DEBUG | Southern Miss Golden Eagles @ Arkansas St Red Wolves | eff_margin=9.10 scale=0.4000 home_court=0 spread=3.64
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Southern Miss Golden Eagles @ Arkansas St Red Wolves
+MODEL HOME: -3.8
+MODEL AWAY: 3.8
+CONSENSUS HOME: -9.37
+CONSENSUS AWAY: 9.37
+EDGE HOME: -5.57
+EDGE AWAY: 5.57
+RECOMMENDED TEAM: Arkansas St Red Wolves
+RECOMMENDED SPREAD: -8.5
+RECOMMENDED EDGE: 5.57
+HOME SPREADS: [-9.5, -9.5, -9.5, -9.0, -9.5, -9.5, -9.5, -9.5, -8.5, -9.5, -9.5, -9.5, -9.5, -9.0, -9.5]
+AWAY SPREADS: [9.5, 9.5, 9.5, 9.0, 9.5, 9.5, 9.5, 9.5, 8.5, 9.5, 9.5, 9.5, 9.5, 9.0, 9.5]
+===========================================
+
+MODEL DEBUG | Minnesota Golden Gophers @ Michigan Wolverines | eff_margin=4.00 scale=0.4000 home_court=0 spread=1.60
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Minnesota Golden Gophers @ Michigan Wolverines
+MODEL HOME: -1.61
+MODEL AWAY: 1.61
+CONSENSUS HOME: -22.17
+CONSENSUS AWAY: 22.17
+EDGE HOME: -20.56
+EDGE AWAY: 20.56
+RECOMMENDED TEAM: Michigan Wolverines
+RECOMMENDED SPREAD: -21.5
+RECOMMENDED EDGE: 20.56
+HOME SPREADS: [-22.5, -22.5, -22.5, -22.5, -22.5, -21.5, -21.5, -22.5, -22.5, -22.5, -22.0, -22.5, -21.5, -21.5, -22.0]
+AWAY SPREADS: [22.5, 22.5, 22.5, 22.5, 22.5, 21.5, 21.5, 22.5, 22.5, 22.5, 22.0, 22.5, 21.5, 21.5, 22.0]
+===========================================
+
+MODEL DEBUG | San José St Spartans @ Air Force Falcons | eff_margin=-14.90 scale=0.4000 home_court=0 spread=-5.96
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: San José St Spartans @ Air Force Falcons
+MODEL HOME: 5.79
+MODEL AWAY: -5.79
+CONSENSUS HOME: 6.57
+CONSENSUS AWAY: -6.57
+EDGE HOME: 0.78
+EDGE AWAY: -0.78
+RECOMMENDED TEAM: Air Force Falcons
+RECOMMENDED SPREAD: 7.0
+RECOMMENDED EDGE: 0.78
+HOME SPREADS: [6.5, 6.5, 6.5, 6.5, 7.0, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 7.0, 6.5]
+AWAY SPREADS: [-6.5, -6.5, -6.5, -6.5, -7.0, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -7.0, -6.5]
+===========================================
+
+MODEL DEBUG | Arizona St Sun Devils @ TCU Horned Frogs | eff_margin=-8.90 scale=0.4000 home_court=0 spread=-3.56
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Arizona St Sun Devils @ TCU Horned Frogs
+MODEL HOME: 3.62
+MODEL AWAY: -3.62
+CONSENSUS HOME: -6.5
+CONSENSUS AWAY: 6.5
+EDGE HOME: -10.12
+EDGE AWAY: 10.12
+RECOMMENDED TEAM: TCU Horned Frogs
+RECOMMENDED SPREAD: -6.5
+RECOMMENDED EDGE: 10.12
+HOME SPREADS: [-6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5]
+AWAY SPREADS: [6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5]
+===========================================
+
+MODEL DEBUG | Arizona Wildcats @ Baylor Bears | eff_margin=9.50 scale=0.4000 home_court=0 spread=3.80
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Arizona Wildcats @ Baylor Bears
+MODEL HOME: -3.93
+MODEL AWAY: 3.93
+CONSENSUS HOME: 8.53
+CONSENSUS AWAY: -8.53
+EDGE HOME: 12.46
+EDGE AWAY: -12.46
+RECOMMENDED TEAM: Baylor Bears
+RECOMMENDED SPREAD: 9.0
+RECOMMENDED EDGE: 12.46
+HOME SPREADS: [8.5, 9.0, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5]
+AWAY SPREADS: [-8.5, -9.0, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5]
+===========================================
+
+MODEL DEBUG | Auburn Tigers @ Oklahoma Sooners | eff_margin=0.80 scale=0.4000 home_court=0 spread=0.32
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Auburn Tigers @ Oklahoma Sooners
+MODEL HOME: -0.32
+MODEL AWAY: 0.32
+CONSENSUS HOME: 1.6
+CONSENSUS AWAY: -1.6
+EDGE HOME: 1.92
+EDGE AWAY: -1.92
+RECOMMENDED TEAM: Oklahoma Sooners
+RECOMMENDED SPREAD: 2.0
+RECOMMENDED EDGE: 1.92
+HOME SPREADS: [1.5, 1.5, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0, 1.5]
+AWAY SPREADS: [-1.5, -1.5, -2.0, -2.0, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, -2.0, -1.5]
+===========================================
+
+MODEL DEBUG | Wyoming Cowboys @ Boise State Broncos | eff_margin=-0.20 scale=0.4000 home_court=0 spread=-0.08
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Wyoming Cowboys @ Boise State Broncos
+MODEL HOME: 0.08
+MODEL AWAY: -0.08
+CONSENSUS HOME: -8.03
+CONSENSUS AWAY: 8.03
+EDGE HOME: -8.11
+EDGE AWAY: 8.11
+RECOMMENDED TEAM: Boise State Broncos
+RECOMMENDED SPREAD: -7.5
+RECOMMENDED EDGE: 8.11
+HOME SPREADS: [-8.5, -8.5, -7.5, -8.0, -8.5, -8.5, -8.5, -8.5, -7.5, -7.5, -7.5, -7.5, -7.5, -8.5, -8.0]
+AWAY SPREADS: [8.5, 8.5, 7.5, 8.0, 8.5, 8.5, 8.5, 8.5, 7.5, 7.5, 7.5, 7.5, 7.5, 8.5, 8.0]
+===========================================
+
+MODEL DEBUG | Fresno St Bulldogs @ Colorado St Rams | eff_margin=17.60 scale=0.4000 home_court=0 spread=7.04
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Fresno St Bulldogs @ Colorado St Rams
+MODEL HOME: -6.85
+MODEL AWAY: 6.85
+CONSENSUS HOME: -8.6
+CONSENSUS AWAY: 8.6
+EDGE HOME: -1.75
+EDGE AWAY: 1.75
+RECOMMENDED TEAM: Colorado St Rams
+RECOMMENDED SPREAD: -8.5
+RECOMMENDED EDGE: 1.75
+HOME SPREADS: [-9.0, -9.0, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -8.5, -9.0, -8.5, -8.5]
+AWAY SPREADS: [9.0, 9.0, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 8.5, 9.0, 8.5, 8.5]
+===========================================
+
+MODEL DEBUG | Miami Hurricanes @ Florida St Seminoles | eff_margin=-1.70 scale=0.4000 home_court=0 spread=-0.68
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Miami Hurricanes @ Florida St Seminoles
+MODEL HOME: 0.71
+MODEL AWAY: -0.71
+CONSENSUS HOME: 2.63
+CONSENSUS AWAY: -2.63
+EDGE HOME: 1.92
+EDGE AWAY: -1.92
+RECOMMENDED TEAM: Florida St Seminoles
+RECOMMENDED SPREAD: 3.0
+RECOMMENDED EDGE: 1.92
+HOME SPREADS: [2.5, 2.5, 3.0, 3.0, 2.5, 2.5, 2.5, 3.0, 2.5, 2.5, 2.5, 2.5, 2.5, 3.0, 2.5]
+AWAY SPREADS: [-2.5, -2.5, -3.0, -3.0, -2.5, -2.5, -2.5, -3.0, -2.5, -2.5, -2.5, -2.5, -2.5, -3.0, -2.5]
+===========================================
+
+MODEL DEBUG | Iowa State Cyclones @ Utah Utes | eff_margin=3.40 scale=0.4000 home_court=0 spread=1.36
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Iowa State Cyclones @ Utah Utes
+MODEL HOME: -1.36
+MODEL AWAY: 1.36
+CONSENSUS HOME: 12.6
+CONSENSUS AWAY: -12.6
+EDGE HOME: 13.96
+EDGE AWAY: -13.96
+RECOMMENDED TEAM: Utah Utes
+RECOMMENDED SPREAD: 13.5
+RECOMMENDED EDGE: 13.96
+HOME SPREADS: [12.5, 13.0, 12.5, 12.5, 13.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5]
+AWAY SPREADS: [-12.5, -13.0, -12.5, -12.5, -13.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5]
+===========================================
+
+MODEL DEBUG | Tennessee Volunteers @ Missouri Tigers | eff_margin=6.70 scale=0.4000 home_court=0 spread=2.68
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: Tennessee Volunteers @ Missouri Tigers
+MODEL HOME: -2.64
+MODEL AWAY: 2.64
+CONSENSUS HOME: 3.57
+CONSENSUS AWAY: -3.57
+EDGE HOME: 6.21
+EDGE AWAY: -6.21
+RECOMMENDED TEAM: Missouri Tigers
+RECOMMENDED SPREAD: 4.5
+RECOMMENDED EDGE: 6.21
+HOME SPREADS: [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 4.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5]
+AWAY SPREADS: [-3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -4.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5, -3.5]
+===========================================
+
+MODEL DEBUG | UCF Knights @ BYU Cougars | eff_margin=1.30 scale=0.4000 home_court=0 spread=0.52
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: UCF Knights @ BYU Cougars
+MODEL HOME: -0.54
+MODEL AWAY: 0.54
+CONSENSUS HOME: -11.43
+CONSENSUS AWAY: 11.43
+EDGE HOME: -10.89
+EDGE AWAY: 10.89
+RECOMMENDED TEAM: BYU Cougars
+RECOMMENDED SPREAD: -10.5
+RECOMMENDED EDGE: 10.89
+HOME SPREADS: [-11.5, -11.5, -11.5, -11.5, -10.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5, -11.5]
+AWAY SPREADS: [11.5, 11.5, 11.5, 11.5, 10.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5, 11.5]
+===========================================
+
+MODEL DEBUG | New Mexico Lobos @ Nevada Wolf Pack | eff_margin=4.30 scale=0.4000 home_court=0 spread=1.72
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: New Mexico Lobos @ Nevada Wolf Pack
+MODEL HOME: -1.73
+MODEL AWAY: 1.73
+CONSENSUS HOME: 0.57
+CONSENSUS AWAY: -0.57
+EDGE HOME: 2.3
+EDGE AWAY: -2.3
+RECOMMENDED TEAM: Nevada Wolf Pack
+RECOMMENDED SPREAD: 1.5
+RECOMMENDED EDGE: 2.3
+HOME SPREADS: [1.5, 1.0, 0.0, 0.0, 1.5, -1.5, -1.5, 1.0, -1.5, 1.5, 1.5, 1.5, 1.5, 1.0, 1.0]
+AWAY SPREADS: [-1.5, -1.0, 0.0, 0.0, -1.5, 1.5, 1.5, -1.0, 1.5, -1.5, -1.5, -1.5, -1.5, -1.0, -1.0]
+===========================================
+
+MODEL DEBUG | USC Trojans @ UCLA Bruins | eff_margin=9.60 scale=0.4000 home_court=0 spread=3.84
+INFO:httpx:HTTP Request: POST https://pkvkezbakcvrhygowogx.supabase.co/rest/v1/historical_game_lines?on_conflict=sport%2Chome_team%2Caway_team%2Cgame_date "HTTP/2 200 OK"
+
+================ DEBUG GAME ================
+Game: USC Trojans @ UCLA Bruins
+MODEL HOME: -3.89
+MODEL AWAY: 3.89
+CONSENSUS HOME: -6.5
+CONSENSUS AWAY: 6.5
+EDGE HOME: -2.61
+EDGE AWAY: 2.61
+RECOMMENDED TEAM: UCLA Bruins
+RECOMMENDED SPREAD: -6.5
+RECOMMENDED EDGE: 2.61
+HOME SPREADS: [-6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5, -6.5]
+AWAY SPREADS: [6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5, 6.5]
+===========================================
+
+📈 Returning 37 games (cached for 60s)
+INFO:     127.0.0.1:58491 - "GET /api/game-lines HTTP/1.1" 200 OK
 
 

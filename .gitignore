@@ -1,0 +1,70 @@
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9524]
+PS C:\Users\kavan\OneDrive\Desktop\WebSiteDEV\api-dashboard\backend> python -m uvicorn server:app --host 127.0.0.1 --port 5000
+>>
+WARNING:root:🔑 Stripe key loaded in FastAPI: sk_live_51SI...
+INFO:     Started server process [31288]
+INFO:     Waiting for application startup.
+📍 REGISTERED ROUTES:
+{'GET'} /api/analytics/summary
+{'POST'} /api/slips/manual
+{'GET'} /api/slips/search-index
+{'POST'} /api/slips/{slip_id}/money
+{'GET'} /api/analytics/dollars-trend
+{'GET'} /api/analytics/dollars-by-sport
+{'GET'} /api/analytics/trends
+{'GET'} /api/analytics/by-sport
+{'GET'} /api/slip_picks/{slip_id}
+{'GET'} /api/slips
+{'POST'} /api/slips
+{'DELETE'} /api/slips/{slip_id}
+{'POST'} /api/slips/import
+{'POST'} /api/slips/{slip_id}/grade
+{'GET'} /api/analytics/wins_breakdown
+{'GET'} /api/slips/{slip_id}/status
+{'POST'} /api/games/refresh
+{'POST'} /api/slips/{slip_id}/manual_results
+{'GET'} /api/slips/import/template
+{'POST'} /api/slips/import/preview
+{'GET'} /api/data
+{'GET'} /api/events
+{'GET'} /api/markets
+{'GET'} /api/game-lines
+{'POST'} /api/create-user
+{'POST'} /api/create-checkout-session
+{'POST'} /api/stripe/webhook
+{'POST'} /api/create-billing-portal-session
+{'GET'} /api/get-customer-id
+{'POST'} /api/cancel-subscription
+{'POST'} /api/resume-subscription
+{'GET'} /api/subscription-details
+{'GET'} /health
+{'GET'} /
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:5000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:62501 - "GET /api/subscription-details?user_id=7e7ba76a-8720-4e4b-8e3a-f8c80bfb2876 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59252 - "GET /api/events?sport=basketball_nba&date=2026-01-22 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63601 - "GET /api/subscription-details?user_id=7e7ba76a-8720-4e4b-8e3a-f8c80bfb2876 HTTP/1.1" 200 OK
+WARNING:app:🧪 DEBUG EVENT d6dd40aee50c08c81569e3e0395faf1f sportsbook: ['fanduel', 'draftkings', 'fanatics']
+WARNING:app:🧪 DEBUG EVENT d6dd40aee50c08c81569e3e0395faf1f dfs: ['underdog', 'betr_us_dfs']
+WARNING:app:🧪 DEBUG EVENT 8b117d6a4ca702734c4a2745c137f9a8 sportsbook: ['fanduel', 'fanatics', 'draftkings']
+WARNING:app:🧪 DEBUG EVENT 8b117d6a4ca702734c4a2745c137f9a8 dfs: ['underdog', 'betr_us_dfs']
+WARNING:app:🧪 DEBUG EVENT aea90af9346ed0988c2145ac95b064c4 sportsbook: ['fanduel', 'draftkings', 'fanatics']
+WARNING:app:🧪 DEBUG EVENT aea90af9346ed0988c2145ac95b064c4 dfs: ['underdog', 'betr_us_dfs']
+WARNING:app:🧪 DEBUG EVENT bcde79b389208a240652cc4011c9bb6f sportsbook: ['fanduel', 'draftkings', 'fanatics']
+WARNING:app:🧪 DEBUG EVENT bcde79b389208a240652cc4011c9bb6f dfs: ['underdog', 'betr_us_dfs']
+WARNING:app:🧪 DEBUG EVENT 7c93412ca4df59960aadd8698288a7ea sportsbook: ['fanduel', 'draftkings', 'fanatics']
+WARNING:app:🧪 DEBUG EVENT 7c93412ca4df59960aadd8698288a7ea dfs: ['underdog', 'betr_us_dfs']
+WARNING:app:🧪 DEBUG EVENT eeddd344aee7d3c28687b5ba20be599c sportsbook: ['fanduel', 'draftkings', 'fanatics']
+WARNING:app:🧪 DEBUG EVENT eeddd344aee7d3c28687b5ba20be599c dfs: ['underdog', 'betr_us_dfs']
+WARNING:app:🧪 DEBUG EVENT ac1cdfbe70ce805cb7412c6e40a83ee6 sportsbook: ['fanduel', 'draftkings', 'fanatics']
+WARNING:app:🧪 DEBUG EVENT ac1cdfbe70ce805cb7412c6e40a83ee6 dfs: ['underdog', 'betr_us_dfs']
+WARNING:app:🧪 DEBUG EVENT ae3656e6579e28d274af1430f1027841 sportsbook: ['fanduel', 'draftkings', 'fanatics']
+WARNING:app:🧪 DEBUG EVENT ae3656e6579e28d274af1430f1027841 dfs: ['underdog', 'betr_us_dfs']
+INFO:     127.0.0.1:63601 - "GET /api/data?sport=basketball_nba&date=2026-01-22&user_id=7e7ba76a-8720-4e4b-8e3a-f8c80bfb2876&markets=player_points&markets=player_assists&markets=player_rebounds&markets=player_threes&markets=player_points_rebounds_assists&markets=player_points_rebounds&markets=player_points_assists&markets=player_rebounds_assists&event_ids=8b117d6a4ca702734c4a2745c137f9a8&event_ids=d6dd40aee50c08c81569e3e0395faf1f&event_ids=aea90af9346ed0988c2145ac95b064c4&event_ids=bcde79b389208a240652cc4011c9bb6f&event_ids=7c93412ca4df59960aadd8698288a7ea&event_ids=eeddd344aee7d3c28687b5ba20be599c&event_ids=ac1cdfbe70ce805cb7412c6e40a83ee6&event_ids=ae3656e6579e28d274af1430f1027841 HTTP/1.1" 200 OK    
+INFO:     127.0.0.1:53716 - "GET /api/subscription-details?user_id=7e7ba76a-8720-4e4b-8e3a-f8c80bfb2876 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53716 - "GET /api/data?sport=basketball_nba&date=2026-01-22&user_id=7e7ba76a-8720-4e4b-8e3a-f8c80bfb2876&markets=player_points&markets=player_assists&markets=player_rebounds&markets=player_threes&markets=player_points_rebounds_assists&markets=player_points_rebounds&markets=player_points_assists&markets=player_rebounds_assists&event_ids=8b117d6a4ca702734c4a2745c137f9a8&event_ids=d6dd40aee50c08c81569e3e0395faf1f&event_ids=aea90af9346ed0988c2145ac95b064c4&event_ids=bcde79b389208a240652cc4011c9bb6f&event_ids=7c93412ca4df59960aadd8698288a7ea&event_ids=eeddd344aee7d3c28687b5ba20be599c&event_ids=ac1cdfbe70ce805cb7412c6e40a83ee6&event_ids=ae3656e6579e28d274af1430f1027841 HTTP/1.1" 200 OK    
+INFO:     127.0.0.1:53716 - "GET /api/subscription-details?user_id=7e7ba76a-8720-4e4b-8e3a-f8c80bfb2876 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53716 - "GET /api/data?sport=basketball_nba&date=2026-01-22&user_id=7e7ba76a-8720-4e4b-8e3a-f8c80bfb2876&markets=player_points&markets=player_assists&markets=player_rebounds&markets=player_threes&markets=player_points_rebounds_assists&markets=player_points_rebounds&markets=player_points_assists&markets=player_rebounds_assists&event_ids=8b117d6a4ca702734c4a2745c137f9a8&event_ids=d6dd40aee50c08c81569e3e0395faf1f&event_ids=aea90af9346ed0988c2145ac95b064c4&event_ids=bcde79b389208a240652cc4011c9bb6f&event_ids=7c93412ca4df59960aadd8698288a7ea&event_ids=eeddd344aee7d3c28687b5ba20be599c&event_ids=ac1cdfbe70ce805cb7412c6e40a83ee6&event_ids=ae3656e6579e28d274af1430f1027841 HTTP/1.1" 200 OK

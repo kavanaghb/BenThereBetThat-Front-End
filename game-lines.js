@@ -1654,6 +1654,7 @@ function renderGameCards() {
         })
       });
 
+  
       if (res.ok) {
         addBtn.innerText = "✅ Added";
         addBtn.disabled = true;
