@@ -1097,7 +1097,7 @@ window.showModelBreakdown = function(game)
       : `<span class="no">NO</span>`;
 
 
-  // MODEL INTERPRETATION
+  // MODEL INTERPRETATION updated
 
  
   const modelMargin = game.model_spread ?? null;
