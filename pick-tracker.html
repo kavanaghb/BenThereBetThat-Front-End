@@ -3026,8 +3026,18 @@ function renderPickTracker(slips) {
         slip.payout !== undefined;
 
       const searchText = buildSlipSearchText(slip).replace(/"/g, "");
+
       const isCompleted =
         slip.slip_result && slip.slip_result !== "pending";
+
+      const isPending =
+        !slip.slip_result || slip.slip_result === "pending";
+
+      const showManualFlag =
+        isPending && slip.manual_required === true;
+
+      const showGradeButton =
+        isPending && !slip.manual_required;
 
       return `
         <div
@@ -3055,7 +3065,6 @@ function renderPickTracker(slips) {
                 ${(slip.slip_result || "pending").toUpperCase()}
               </span>
 
-
               ${
                 hasMoney
                   ? `<span class="money-badge success">💵 $ Added</span>`
@@ -3063,25 +3072,21 @@ function renderPickTracker(slips) {
               }
 
               ${
-                slip.slip_result === "pending"
+                isPending
                   ? `<span class="game-status" id="status-${slip.slip_id}">⏳</span>`
                   : ``
               }
 
               ${
-                
-                    slip.manual_required &&
-                      slip.slip_result === "pending" &&
-                    slip.completed === true
-                      ? `<span class="manual-required">Needs Manual Entry</span>`
-  :                   slip.slip_result === "pending"
-                      ? `<button class="grade-btn" data-slip-id="${slip.slip_id}">
-                          Grade
-                        </button>`
-                        : ""
-                  }
+                showManualFlag
+                  ? `<span class="manual-required">Needs Manual Entry</span>`
+                  : showGradeButton
+                  ? `<button class="grade-btn" data-slip-id="${slip.slip_id}">
+                      Grade
+                    </button>`
+                  : ``
+              }
 
-              <!-- 🗑 Delete Slip -->
               <button
                 class="delete-slip-btn"
                 data-slip-id="${slip.slip_id}"
@@ -3092,7 +3097,6 @@ function renderPickTracker(slips) {
             </div>
           </div>
 
-          <!-- ⬇️ EMPTY BODY — populated by loadSlipPicks() -->
           <div class="slip-body" style="display:none;"></div>
         </div>
       `;
@@ -3102,7 +3106,6 @@ function renderPickTracker(slips) {
   loadSlipSearchIndex(slips);
   applySlipSearchFilter();
 }
-
 
 function applySlipSearchFilter() {
   const term =
