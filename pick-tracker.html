@@ -3068,13 +3068,16 @@ function renderPickTracker(slips) {
               }
 
               ${
-                slip.manual_required && slip.slip_result === "pending"
-                  ? `<span class="manual-required">Needs Manual Entry</span>`
-                    : slip.slip_result === "pending"
+                
+                    slip.manual_required &&
+                      slip.slip_result === "pending" &&
+                    slip.completed === true
+                      ? `<span class="manual-required">Needs Manual Entry</span>`
+  :                   slip.slip_result === "pending"
                       ? `<button class="grade-btn" data-slip-id="${slip.slip_id}">
-                        Grade
-                      </button>`
-                      : ""
+                          Grade
+                        </button>`
+                        : ""
                   }
 
               <!-- 🗑 Delete Slip -->
