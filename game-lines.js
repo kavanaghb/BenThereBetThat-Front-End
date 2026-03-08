@@ -256,15 +256,16 @@ function getRecommendation(game) {
 
   if (game.edge == null) return "-";
 
+  // positive edge = home value
   if (game.edge >= 2)
-    return game.away_team;
-
-  if (game.edge <= -2)
     return game.home_team;
+
+  // negative edge = away value
+  if (game.edge <= -2)
+    return game.away_team;
 
   return "-";
 }
-
 
 
 // =====================================================
@@ -546,17 +547,24 @@ let bookEdge = null;
 
 if (primarySpread != null && game.model_spread != null) {
 
-  // model_spread is HOME margin (home − away)
-  const modelLineForTeam =
+  // model_spread = HOME margin (home − away)
+  const modelHomeMargin = Number(game.model_spread);
+
+  // convert vegas spread → HOME margin
+  const vegasHomeMargin =
     (team === game.home_team)
-      ? (-game.model_spread)   // home line
-      : (game.model_spread);   // away line
+      ? -Number(primarySpread)
+      : Number(primarySpread);
 
-  // edge = (market line) − (model line)
-  // positive means value on this team at this price
-  bookEdge = Number(primarySpread) - Number(modelLineForTeam);
+  // edge = model − vegas
+  const homeEdge = modelHomeMargin - vegasHomeMargin;
+
+  // convert back to team perspective
+  bookEdge =
+    (team === game.home_team)
+      ? homeEdge
+      : -homeEdge;
 }
-
 // Edge badge formatter
 function edgeBadge(edgeValue) {
 
@@ -580,7 +588,7 @@ function edgeBadge(edgeValue) {
 }
 
 // Build cell: consensus on top, book edge below (if available)
-if (consensusEdge != null) {
+if (consensusEdge != null || bookEdge != null) {
 
   edgeCell = `
     <div class="edge-stack">
