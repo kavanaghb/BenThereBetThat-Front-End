@@ -257,7 +257,7 @@ function getRecommendation(game) {
   if (game.edge == null) return "-";
 
   // positive edge = home value
-  if (game.edge >= 2)
+  if (game.edge >= 1)
     return game.home_team;
 
   // negative edge = away value
@@ -578,10 +578,9 @@ function edgeBadge(edgeValue) {
     "edge-minimal";
 
   const label =
-    absEdge >= 5 ? "Strong" :
-    absEdge >= 3 ? "Moderate" :
-    absEdge >= 2 ? "Lean" :
-    absEdge >= 1 ? "Small" :
+    absEdge >= 3 ? "🔥 Strong" :
+    absEdge >= 2 ? "Bet" :
+    absEdge >= 1 ? "Lean" :
     "Minimal";
 
   return `<span class="${cls}">${absEdge.toFixed(2)} <div class="edge-label">${label}</div></span>`;
