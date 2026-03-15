@@ -1217,7 +1217,7 @@ window.showModelBreakdown = function(game)
           ${
             modelMargin > 0
               ? signed(-modelMargin)
-              : modelMargin > 0
+              : modelMargin < 0
               ? signed(modelMargin)
               : "0.00"
           }
