@@ -1223,6 +1223,7 @@ window.showModelBreakdown = function(game)
           }
         </div>
         `
+
         : `
         <div class="model-spread na">
           No model data available
