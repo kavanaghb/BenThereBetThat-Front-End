@@ -638,9 +638,6 @@ disableDataButtonsTemporarily();
 setRefreshEnabled(false); // ⛔ Grey out refresh until first successful load
 
 // ===================================================
-// 📦 Pick Tracker — Banner Button Wiring (FIX #2)
-// ===================================================
-// ===================================================
 // 📦 Pick Tracker — Banner + Platform Button Wiring
 // ===================================================
 document.addEventListener("DOMContentLoaded", () => {
@@ -651,6 +648,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const prizeBtn = document.getElementById("pickTrackerPrizePicksBtn");
   const dogBtn = document.getElementById("pickTrackerUnderdogBtn");
   const betrBtn = document.getElementById("pickTrackerBetrBtn");
+
+  // Initialize default platform UI
+  updatePickTrackerBarUI();
+
+  // --------------------------------------------------
+  // 🏀 March Madness Model Button
+  // --------------------------------------------------
+  const openMarchMadnessBtn = document.getElementById("openMarchMadnessBtn");
+
+  if (openMarchMadnessBtn) {
+    openMarchMadnessBtn.addEventListener("click", () => {
+      console.log("🏀 Opening March Madness page");
+      window.location.href = "march-madness.html";
+    });
+  }
+
+
 
 
   // -----------------------------
@@ -710,6 +724,8 @@ if (openGameLinesBtn) {
     window.location.href = "game-lines.html";
   });
 }
+
+
 
 
 // Market Containers

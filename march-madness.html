@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>March Madness – Ben's Model Bracket</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script>
+
+const isLocalhost =
+  location.hostname === "localhost" ||
+  location.hostname === "127.0.0.1";
+
+window.API_BASE = isLocalhost
+  ? "http://127.0.0.1:5000"
+  : "https://bentherebetthat-api.onrender.com";
+
+console.log("🌐 March Madness API_BASE:", window.API_BASE);
+
+</script>
+
+<style>
+
+body{
+  background:#0b0f14;
+  color:white;
+  font-family:Arial, Helvetica, sans-serif;
+  margin:0;
+}
+
+/* =============================
+   CONTAINER
+============================= */
+
+.bracket-container{
+  max-width:1200px;
+  margin:auto;
+  padding:24px 14px 50px;
+}
+
+h1{
+  margin-bottom:24px;
+  font-size:2rem;
+  font-weight:800;
+  letter-spacing:0.3px;
+}
+
+/* =============================
+   STATES
+============================= */
+
+.loading{
+  opacity:.7;
+}
+
+.error{
+  color:#ff6b6b;
+  font-weight:600;
+}
+
+
+/* =============================
+   BRACKET LAYOUT (DESKTOP)
+============================= */
+
+.bracket-grid{
+  display:flex;
+  gap:28px;
+  align-items:flex-start;
+  overflow-x:auto;
+  padding-top:12px;
+  padding-bottom:10px;
+}
+
+/* smooth horizontal scroll */
+.bracket-grid::-webkit-scrollbar {
+  height:6px;
+}
+.bracket-grid::-webkit-scrollbar-thumb {
+  background:#1f2937;
+  border-radius:10px;
+}
+
+.round-column{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  min-width:260px;
+}
+
+/* round headers */
+
+.round-title{
+  font-weight:700;
+  text-align:center;
+  color:#9ca3af;
+  font-size:0.95rem;
+  margin-bottom:4px;
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+}
+
+
+/* =============================
+   LIGHT STAGGER (SUBTLE)
+============================= */
+
+.round-column:nth-child(2) .game{
+  margin-top:14px;
+}
+
+.round-column:nth-child(3) .game{
+  margin-top:36px;
+}
+
+.round-column:nth-child(4) .game{
+  margin-top:64px;
+}
+
+
+/* =============================
+   GAME CARD
+============================= */
+
+.game{
+  background:linear-gradient(145deg,#0b1623,#0d1b2a);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:14px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.35);
+  transition:all 0.2s ease;
+}
+
+.game:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 28px rgba(0,0,0,0.45);
+}
+
+
+/* =============================
+   TEAM ROW
+============================= */
+
+.team{
+  display:flex;
+  justify-content:space-between;
+  font-size:14px;
+  padding:4px 0;
+}
+
+.seed{
+display:inline-block;
+min-width:22px;
+font-weight:800;
+color:#fbbf24; /* gold seed color */
+margin-right:6px;
+text-shadow:0 0 6px rgba(251,191,36,0.4);
+}
+
+
+/* =============================
+   MODEL PICK HIGHLIGHT
+============================= */
+
+.winner{
+  color:#00ff9c;
+  font-weight:700;
+  text-shadow:0 0 6px rgba(0,255,156,0.6);
+}
+
+.predicted{
+  color:#00ff9c;
+  font-weight:700;
+}
+
+
+/* =============================
+   MODEL DATA TEXT
+============================= */
+
+.model{
+  margin-top:8px;
+  font-size:12.5px;
+  color:#c7d2de;
+  line-height:1.45;
+}
+
+/* 🔥 EDGE POP (IMPORTANT FOR YOU) */
+.model strong{
+  color:#ffffff;
+}
+
+.model .edge{
+  color:#00ff9c;
+  font-weight:700;
+}
+
+
+/* =============================
+   MOBILE (CRITICAL)
+============================= */
+
+@media (max-width: 768px){
+
+  .bracket-grid{
+    flex-direction:column;
+    gap:26px;
+    overflow-x:hidden;
+  }
+
+  .round-column{
+    width:100%;
+    min-width:unset;
+  }
+
+  .round-title{
+    text-align:left;
+    font-size:0.9rem;
+    padding-left:4px;
+  }
+
+  /* remove stagger on mobile */
+  .round-column .game{
+    margin-top:0 !important;
+  }
+
+  .game{
+    padding:12px;
+  }
+
+  h1{
+    font-size:1.6rem;
+  }
+
+}
+/* =============================
+   NAV BUTTONS
+============================= */
+
+.bracket-nav{
+  display:flex;
+  gap:14px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.nav-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:12px;
+  background:#1f2937;
+  color:white;
+  text-decoration:none;
+  font-weight:600;
+  font-size:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  transition:all 0.2s ease;
+}
+
+.nav-btn:hover{
+  background:#374151;
+  transform:translateY(-1px);
+}
+
+/* 🔥 ONLY EV BUTTON SHOULD USE THIS */
+.nav-btn.ev{
+  background:linear-gradient(135deg,#00ff9c,#00e68a);
+  color:#02120c;
+  font-weight:800;
+  box-shadow:0 0 12px rgba(0,255,156,0.4);
+}
+
+.nav-btn.ev:hover{
+  background:linear-gradient(135deg,#00e68a,#00cc7a);
+  transform:translateY(-2px) scale(1.02);
+}
+@media (max-width: 768px){
+
+  .bracket-nav{
+    justify-content:space-between;
+  }
+
+  .nav-btn{
+    flex:1;
+    justify-content:center;
+  }
+
+}
+.score{
+  font-weight:800;
+  font-size:15px;
+  color:#ffffff;
+}
+.record-header{
+  margin-bottom:16px;
+  font-size:18px;
+  font-weight:700;
+}
+.loser{
+  color:#ff6b6b;
+  font-weight:700;
+  text-shadow:0 0 6px rgba(255,107,107,0.5);
+}
+.pending{
+  color:#60a5fa; /* clean blue */
+  font-weight:700;
+  text-shadow:0 0 6px rgba(96,165,250,0.6);
+}
+
+/* =============================
+   HEADER ROW (TITLE + RECORD)
+============================= */
+
+.header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.record-header{
+  font-size:16px;
+  font-weight:700;
+  color:#e5e7eb;
+  background:rgba(255,255,255,0.04);
+  padding:8px 14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+/* =============================
+   LEGEND (BADGE KEY)
+============================= */
+
+.legend{
+  margin-top:10px;
+  margin-bottom:14px;
+  display:flex;
+  gap:16px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.legend span{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.wins{
+  color:#00ff9c;
+}
+
+.losses{
+  color:#ff6b6b;
+}
+
+.pct{
+  color:#ffffff;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="bracket-container">
+<div class="bracket-nav">
+
+  <a href="index.html" class="nav-btn">
+    🏠 Home
+  </a>
+
+  <a href="pick-tracker.html" class="nav-btn">
+    📊 Pick Tracker
+  </a>
+
+  <a href="game-lines.html" class="nav-btn ev">
+    📈 Game Lines EV+
+  </a>
+
+</div>
+<div class="header-row">
+
+  <h1>🏀 Ben's March Madness Bracket</h1>
+
+  <div id="record-header" class="record-header">
+    Record: 0-0 | Win %: 0.0%
+  </div>
+
+</div>
+
+<div class="legend">
+  <span class="pending">● Pick</span>
+  <span class="winner">● Win</span>
+  <span class="loser">● Loss</span>
+</div>
+
+<div id="bracket" class="loading">
+Loading bracket...
+</div>
+
+</div>
+<script src="march-madness.js"></script>
+
+</body>
+</html>
