@@ -66,12 +66,29 @@ const container = document.getElementById("bracket");
 container.innerHTML = "";
 
 const rounds = {};
+const roundStats = {};
 
 games.forEach(g => {
+
+  // group games
   if(!rounds[g.round_number]){
     rounds[g.round_number] = [];
   }
   rounds[g.round_number].push(g);
+
+  // 🔥 NEW: round stats tracking
+  if(!roundStats[g.round_number]){
+    roundStats[g.round_number] = { wins: 0, losses: 0 };
+  }
+
+  if (g.completed && g.projected_winner && g.winner){
+    if (g.projected_winner === g.winner){
+      roundStats[g.round_number].wins++;
+    } else {
+      roundStats[g.round_number].losses++;
+    }
+  }
+
 });
 
 const grid = document.createElement("div");
@@ -87,14 +104,30 @@ column.className = "round-column";
 const title = document.createElement("div");
 title.className = "round-title";
 
-if(round == 0) title.innerText = "First Four";
-else if(round == 1) title.innerText = "Round of 64";
-else if(round == 2) title.innerText = "Round of 32";
-else if(round == 3) title.innerText = "Sweet 16";
-else if(round == 4) title.innerText = "Elite 8";
-else if(round == 5) title.innerText = "Final Four";
-else if(round == 6) title.innerText = "Championship";
+let roundName = "";
 
+if(round == 0) roundName = "First Four";
+else if(round == 1) roundName = "Round of 64";
+else if(round == 2) roundName = "Round of 32";
+else if(round == 3) roundName = "Sweet 16";
+else if(round == 4) roundName = "Elite 8";
+else if(round == 5) roundName = "Final Four";
+else if(round == 6) roundName = "Championship";
+
+// 🔥 ADD RECORD
+const stats = roundStats[round] || { wins: 0, losses: 0 };
+const roundTotal = stats.wins + stats.losses;
+
+let recordText = "";
+
+if (roundTotal > 0){
+  const pct = ((stats.wins / roundTotal) * 100).toFixed(1);
+  recordText = ` (${stats.wins}-${stats.losses} | ${pct}%)`;
+}
+
+title.innerText = roundName + recordText;
+
+// 🔥 ADD THIS LINE (YOU ARE MISSING THIS)
 column.appendChild(title);
 
 
