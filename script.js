@@ -2735,16 +2735,16 @@ const SPORT_MARKETS = {
     "player_kicking_points": "Kicking Points",
 
   },
-  "baseball_mlb": {
-    "player_home_runs": "Player Home Runs",
-    "player_total_bases": "Player Total Bases",
-    "batter_total_bases": "Batter Total Bases",
-    "batter_home_runs": "Batter Home Runs",
-    "pitcher_strikeouts": "Pitcher Strikeouts",
-    "pitcher_walks": "Pitcher Walks",
-    "pitcher_earned_runs": "Pitcher Earned Runs",
-    "pitcher_outs": "Pitcher Outs",
-  },
+"baseball_mlb": {
+  "batter_total_bases": "Total Bases",
+  "batter_hits": "Hits",
+  "batter_hits_runs_rbis": "Hits + Runs + RBIs",
+  "batter_home_runs": "Home Runs",
+  "pitcher_strikeouts": "Pitcher Strikeouts",
+  "pitcher_outs": "Pitcher Outs",
+  "pitcher_earned_runs": "Pitcher Earned Runs",
+  "pitcher_walks": "Pitcher Walks",
+},
   "icehockey_nhl": {
     "player_shots_on_goal": "Shots on Goal",
     "player_total_saves": "Total Saves",
