@@ -6353,3 +6353,112 @@ tr.debug-enabled:hover {
 .legend-item:hover::after {
   opacity: 1;
 }
+
+@media (max-width: 768px) {
+
+  /* ❌ Hide ALL columns */
+  .odds-table th,
+  .odds-table td {
+    display: none;
+  }
+
+/* ============================================================
+   📱 MOBILE TABLE — CLEAN + STICKY + FILTERED
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* 🔧 Fix header position (CRITICAL FIX) */
+  #results .odds-table thead th {
+    position: sticky;
+    top: 0; /* fixes header-in-middle bug */
+    z-index: 20;
+    background: #1f2937;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+
+  /* 📦 Enable smooth horizontal scroll */
+  #results {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 🧱 Table base */
+  .odds-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+    background-color: #fff;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  /* ❌ Hide ALL columns first */
+  .odds-table th,
+  .odds-table td {
+    display: none;
+  }
+
+  /* ✅ Show ONLY desired columns: 1,2,3,8,9,10,11 */
+  .odds-table th:nth-child(1),
+  .odds-table td:nth-child(1),
+
+  .odds-table th:nth-child(2),
+  .odds-table td:nth-child(2),
+
+  .odds-table th:nth-child(3),
+  .odds-table td:nth-child(3),
+
+  .odds-table th:nth-child(8),
+  .odds-table td:nth-child(8),
+
+  .odds-table th:nth-child(9),
+  .odds-table td:nth-child(9),
+
+  .odds-table th:nth-child(10),
+  .odds-table td:nth-child(10),
+
+  .odds-table th:nth-child(11),
+  .odds-table td:nth-child(11) {
+    display: table-cell;
+  }
+
+  /* 📌 Sticky player/description column */
+  .odds-table th:nth-child(3),
+  .odds-table td:nth-child(3) {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: linear-gradient(90deg, #f8f9fa, #e9ecef);
+    font-weight: 600;
+    min-width: 140px;
+  }
+
+  /* 📋 Event column spacing */
+  .odds-table th:nth-child(1),
+  .odds-table td:nth-child(1) {
+    min-width: 130px;
+    white-space: nowrap;
+  }
+
+  /* 📊 Key data columns sizing */
+  .odds-table th:nth-child(8),
+  .odds-table td:nth-child(8),
+  .odds-table th:nth-child(9),
+  .odds-table td:nth-child(9),
+  .odds-table th:nth-child(10),
+  .odds-table td:nth-child(10),
+  .odds-table th:nth-child(11),
+  .odds-table td:nth-child(11) {
+    min-width: 90px;
+  }
+
+  /* ✨ Compact spacing */
+  .odds-table th,
+  .odds-table td {
+    padding: 4px 5px;
+    font-size: 11.5px;
+  }
+
+}
