@@ -1258,19 +1258,20 @@ button:disabled {
     z-index: 1;
   }
 
-  /* Compact, zoomable table */
-  .odds-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    background-color: #fff;
-    font-size: 12.5px;
-    transform: scale(0.9);
-    transform-origin: top left;
-    transition: transform 0.3s ease-in-out;
-    position: relative;
-    z-index: 1;
-  }
+/* Compact, mobile-safe table (FIXED) */
+.odds-table {
+  width: 100%;
+  border-collapse: separate; /* better for sticky behavior */
+  border-spacing: 0;
+  table-layout: auto; /* prevents weird column squeezing */
+  background-color: #fff;
+
+  font-size: 12px; /* slightly smaller instead of scaling */
+  line-height: 1.25;
+
+  position: relative;
+  z-index: 1;
+}
 
   /* Sticky headers */
   .odds-table thead th {
