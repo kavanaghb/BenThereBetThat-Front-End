@@ -377,8 +377,8 @@
   </button>
 
   <button id="filterDfsDifferenceBtn" class="filter-btn"
-          title="Show props where PrizePicks and Underdog lines differ by 2+ points">
-    ⚔️ DFS Line Difference (≥ 2)
+          title="Show props where PrizePicks,  Underdog and Betr lines differ">
+    ⚔️ DFS Line Difference
   </button>
 
   <button id="clearOptimalFiltersBtn" class="filter-btn secondary-btn"
@@ -491,58 +491,114 @@ Fair Under % = (P_under / (P_over + P_under)) × 100
     </section>
 
     <!-- 4️⃣ DFS Lines -->
-    <section class="tutorial-step">
-      <h3>🎮 4. DFS Lines (PrizePicks / Underdog)</h3>
-      <p>Compare DFS lines to Consensus to spot +EV (expected value) edges.</p>
-      <ul>
-        <li><span class="color-box green"></span> DFS line <em>below</em> Consensus → potential <strong>Over</strong>.</li>
-        <li><span class="color-box red"></span> DFS line <em>above</em> Consensus → potential <strong>Under</strong>.</li>
-      </ul>
-    </section>
+<section class="tutorial-step">
+  <h3>🎮 4. DFS Lines (PrizePicks / Underdog / Betr)</h3>
+
+  <p>
+    DFS lines are compared against the <strong>Consensus</strong> line and the
+    <strong>Best No-Vig side</strong>. The Best No-Vig cell tells you whether the
+    sharper side is <strong>Over</strong> or <strong>Under</strong>.
+  </p>
+
+  <ul>
+    <li>
+      <span class="color-box green"></span>
+      Green cells mean the DFS line is favorable for the Best No-Vig side.
+      This could be an <strong>Over</strong> or an <strong>Under</strong> depending
+      on what the Best No-Vig cell says.
+    </li>
+
+    <li>
+      <span class="color-box red"></span>
+      Red cells mean the DFS line is unfavorable or on the wrong side compared
+      to the Best No-Vig side.
+    </li>
+
+    <li>
+      <span class="color-box yellow"></span>
+      Yellow cells mean neutral or little-to-no useful edge.
+    </li>
+
+    <li>
+      🧠 <strong>High Win %</strong> — triggered when the play has a
+      <strong>54%+ no-vig probability</strong> and is close to consensus.
+    </li>
+
+    <li>
+      🔥 <strong>Strong Edge</strong> — triggered when the DFS line gives a
+      stronger advantage versus consensus. More flames means stronger value.
+    </li>
+
+    <li>
+      ⚡ <strong>Line Mismatch</strong> — triggered when a DFS platform disagrees
+      with the sharp market direction, which may signal a pricing inefficiency.
+    </li>
+  </ul>
+
+  <p class="signal-tip">
+    💡 <strong>Tip:</strong> First check the <strong>Best No-Vig</strong> side,
+    then look for green, 🧠, 🔥, or ⚡ signals on the DFS platforms.
+  </p>
+</section>
 <!-- 5️⃣ Filter Buttons -->
 <section class="tutorial-step">
   <h3>⚙️ 5. Filter Buttons Explained</h3>
+
+  <p class="filter-intro">
+    Filters use a <strong>dynamic model</strong> that evaluates both
+    <em>line value and win probability</em>. Not every difference is a true edge —
+    these tools are designed to surface only meaningful opportunities.
+  </p>
+
   <ul class="filter-guide">
+
     <li>
-      📈 <strong>PrizePicks +EV</strong> — highlights player props where the
-      <em>PrizePicks line offers value</em> versus consensus. Uses no-vig odds to
-      find when the projected outcome (Over/Under) is truly favorable and the line
-      differs by at least <code>0.25</code> points. Perfect for spotting soft lines
-      on PrizePicks before they move.
+      📈 <strong>PrizePicks +EV</strong> — shows player props where the
+      <em>PrizePicks line is better than the market</em>. Uses a combination of
+      line difference, consensus comparison, and win probability to identify
+      <strong>true value plays</strong>. Adjusts automatically across sports
+      (NBA, NFL, MLB, etc.).
     </li>
+
     <li>
-      🧩 <strong>Underdog +EV</strong> — highlights player props where the
-      <em>UnderDogs line offers value</em> versus consensus. Uses no-vig odds to
-      find when the projected outcome (Over/Under) is truly favorable and the line
-      differs by at least <code>0.25</code> points. Perfect for spotting soft lines
-      on UnderDogs before they move.
+      🧩 <strong>Underdog +EV</strong> — highlights props where
+      <em>Underdog’s line offers a measurable edge</em> versus consensus.
+      Applies the same dynamic model as PrizePicks, filtering out low-quality
+      or misleading differences.
     </li>
+
     <li>
-      🎮 <strong>Point Value Plays</strong> — shows all significant player prop
-      discrepancies between <em>DFS platforms (PrizePicks & Underdog)</em> and
-      major sportsbooks. Great for building multi-card plays or cross-site line
-      shopping. Uses an internal difference threshold of <code>≥ 0.25</code> to
-      focus only on meaningful gaps.
+      🎯 <strong>Betr +EV</strong> — identifies props where
+      <em>Betr is mispriced relative to the broader market</em>.
+      Particularly useful for spotting softer or slower-moving lines
+      before they adjust.
     </li>
+
     <li>
-      🎯 <strong>High Confidence (54%+)</strong> — displays only the props where
-      the calculated <em>no-vig fair win probability</em> is at least
-      <strong>54%</strong>. In other words, these are lines where your model or the
-      market implies a strong statistical edge. Excellent for value bettors looking
-      for consistent advantage plays.
+      🎮 <strong>Point Value Plays</strong> — shows raw differences between
+      <em>DFS platforms and sportsbooks</em>. These are not all +EV plays,
+      but help uncover potential opportunities and line shopping advantages.
     </li>
+
     <li>
-      ⚔️ <strong>DFS Line Diff (≥ 2)</strong> — isolates props where
-      <em>PrizePicks and Underdog differ by 2+ points</em> on the same player and
-      stat. These represent large discrepancies between the DFS operators themselves
-      — often signaling uncertain or fast-moving player projections.
+      🧠 <strong>High Confidence (54%+)</strong> — filters to props where
+      the model estimates at least a <strong>54% win probability</strong>.
+      These tend to be safer, higher hit-rate plays, though they may not
+      always offer the largest pricing edge.
     </li>
+
     <li>
-      ♻️ <strong>Reset Filters</strong> — clears all active filters and restores the
-      full dataset. Use this to return to the master odds table after exploring a
-      specific edge type or view. Also appears automatically when a filter returns
-      no results.
+      ⚔️ <strong>DFS Line Diff</strong> — highlights props where
+      <em>PrizePicks and Underdog disagree</em> on the same player/stat.
+      These discrepancies often indicate uncertainty, projection changes,
+      or early opportunities before markets settle.
     </li>
+
+    <li>
+      ♻️ <strong>Reset Filters</strong> — clears all active filters and restores
+      the full dataset so you can explore all available props again.
+    </li>
+
   </ul>
 </section>
 
@@ -620,7 +676,7 @@ Example: 2-Pick paying 3× ⇒ (1/3)^(1/2) ≈ 0.577 → 57.7 %.
             <tbody>
               <tr><td colspan="5"><strong>Standard</strong></td></tr>
               <tr><td>2-Pick</td><td>2/2</td><td>3×</td><td>-136</td><td>57.7%</td></tr>
-              <tr><td>3-Pick</td><td>3/3</td><td>6×</td><td>-122</td><td>55.0%</td></tr>
+              <tr><td>3-Pick</td><td>3/3</td><td>6.5×</td><td>-122</td><td>53.4%</td></tr>
               <tr><td>4-Pick</td><td>4/4</td><td>10×</td><td>-128</td><td>56.2%</td></tr>
               <tr><td>5-Pick</td><td>5/5</td><td>20×</td><td>-122</td><td>54.9%</td></tr>
               <tr><td colspan="5"><strong>Insured</strong></td></tr>

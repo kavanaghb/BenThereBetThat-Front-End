@@ -1271,6 +1271,47 @@ function getSelectedBooksArray() {
 // Expose helper (if other parts of script.js call it)
 window.getSelectedBooksArray = getSelectedBooksArray;
 
+
+function getEdgeClass(dfsLine, consensus, bestSide, noVigProb) {
+  if (!dfsLine || !consensus || !bestSide) return "";
+
+  const diff = dfsLine - consensus;
+  const absDiff = Math.abs(diff);
+
+  const HIGH_CONF = 0.56;
+
+  // ❌ WRONG SIDE
+  if (bestSide === "over" && dfsLine > consensus) return "edge-red";
+  if (bestSide === "under" && dfsLine < consensus) return "edge-red";
+
+  // 🔥 STRONG EDGE
+  if (absDiff >= 0.5) return "edge-green-strong";
+
+  // 👍 SMALL EDGE
+  if (absDiff >= 0.25) return "edge-green";
+
+  // 🧠 HIGH PROBABILITY SAVE
+  if (noVigProb >= HIGH_CONF) return "edge-yellow-strong";
+
+  return "edge-yellow";
+}
+
+function extractLine(value) {
+  if (!value) return null;
+  const match = value.toString().match(/[\d.]+/);
+  return match ? parseFloat(match[0]) : null;
+}
+
+function parseBestSide(bestNoVigText) {
+  if (!bestNoVigText) return null;
+  return bestNoVigText.toLowerCase().includes("over") ? "over" : "under";
+}
+
+function parseNoVig(bestNoVigText) {
+  if (!bestNoVigText) return 0;
+  const match = bestNoVigText.match(/(\d+(\.\d+)?)%/);
+  return match ? parseFloat(match[1]) / 100 : 0;
+}
 // ---------------------------------------------------
 // Init state ONCE
 // ---------------------------------------------------
@@ -1591,9 +1632,7 @@ function americanToProb(odds) {
   if (!Number.isFinite(v)) return null;
   return v > 0 ? 100 / (v + 100) : (-v) / ((-v) + 100);
 }
-// ===================================================
-// 🛡️ SAFE HELPER — prevents crashes when price missing
-// ===================================================
+
 // ===================================================
 // 🛡️ SAFE HELPER — correct casing lookup
 // ===================================================
@@ -1632,7 +1671,7 @@ function getSafePrice(row, book) {
 // ===================================================
 // 🧮 SAFE Consensus Point (sportsbooks only, timing-safe)
 // ===================================================
-function getFilteredConsensusPoint(row) {
+function getFilteredConsensusPoint(row, baseData) {
 
   if (!row) return null;
 
@@ -1683,6 +1722,35 @@ function getFilteredConsensusPoint(row) {
 }
 
 
+// ===================================================
+// 🧠 TRUE CONSENSUS (IGNORES FILTERS — ALWAYS FULL MARKET)
+// ===================================================
+function getTrueConsensusPoint(row) {
+
+  const books = ["fanduel", "draftkings", "betmgm", "fanatics"];
+
+  const keyMap = {
+    fanduel: "Fanduel",
+    draftkings: "DraftKings",
+    betmgm: "BetMGM",
+    fanatics: "Fanatics"
+  };
+
+  const points = [];
+
+  for (const book of books) {
+    const proper = keyMap[book];
+    const value = Number(row?.[`${proper}Point`]);
+
+    if (Number.isFinite(value)) {
+      points.push(value);
+    }
+  }
+
+  if (points.length === 0) return null;
+
+  return points.reduce((a, b) => a + b, 0) / points.length;
+}
 
 // ===================================================
 // 🧠 FACT CHECK MODE — GLOBAL SAFE INIT
@@ -2791,7 +2859,7 @@ function computeNoVigBothSides(data, row) {
   const overVals = [];
   const underVals = [];
 
-  const books = getSelectedBooksArray();
+  const books = CONSENSUS_BOOKS;
   for (const book of books) {
     const oOdds = opposite ? getSafePrice(opposite, book) : NaN;
     const thisOdds = getSafePrice(row, book)
@@ -2830,7 +2898,7 @@ function computeNoVigBothSides(data, row) {
   let fallbackSide = null;
   if (avgOver == null && avgUnder == null) {
     const implied = [];
-    for (const book of getSelectedBooksArray()) {
+    for (const book of CONSENSUS_BOOKS) {
       const price = getSafePrice(row, book)
 ;
       const p = americanToProb(price);
@@ -3119,13 +3187,16 @@ async function loadData() {
       return;
     }
 
-    // ✅ Deduplicate + Render
+    // ✅ Deduplicate + Render??????????????????????????????????????????????????
     const cleanedData = dedupeMarkets(allData);
     console.log(`🧹 Deduped from ${allData.length} → ${cleanedData.length} rows`);
     console.log("📦 Sample row:", cleanedData[0]);
 
+    window.fullDataset = JSON.parse(JSON.stringify(cleanedData));
+    window.lastRenderedData = cleanedData;
+
     progressText.textContent = "Rendering table...";
-    await renderTableInBatches(cleanedData);
+    await renderTableInBatches(cleanedData, 50, false);
 
     window.fullDataset = JSON.parse(JSON.stringify(cleanedData));
     window.lastRenderedData = cleanedData;
@@ -3746,7 +3817,47 @@ thead.querySelectorAll("th").forEach((th, i) => {
 
   const tbody = document.createElement("tbody");
   table.appendChild(tbody);
-  resultsDiv.appendChild(table);
+  // ============================
+  // ============================
+// 📊 Legend (Explains icons)
+// ============================
+const legend = document.createElement("div");
+legend.className = "picks-legend";
+
+legend.innerHTML = `
+  <div class="legend-item" data-tooltip="
+High win probability (54%+).
+These are safer plays where the model expects consistent outcomes.
+Usually close to consensus with less edge but higher hit rate.
+  ">
+    🧠 High win %
+  </div>
+
+  <div class="legend-item" data-tooltip="
+Strong edge vs the betting market.
+Triggered when your line is better than consensus AND probability supports it.
+More fire = bigger edge (🔥🔥🔥 = elite value).
+  ">
+    🔥 Strong edge
+  </div>
+
+  <div class="legend-item" data-tooltip="
+Mismatch between platform line and sharp market direction.
+Indicates a potential pricing error or soft line.
+Often one of the best value opportunities.
+  ">
+    ⚡ Line mismatch
+  </div>
+`;
+
+// ✅ CLEAR OLD CONTENT (prevents duplicates)
+resultsDiv.innerHTML = "";
+
+// ✅ ADD LEGEND FIRST
+resultsDiv.appendChild(legend);
+
+// ✅ THEN ADD TABLE
+resultsDiv.appendChild(table);
 
 // ===================================================
 // 🧱 Render rows in batches for smoother performance
@@ -3848,117 +3959,135 @@ activeColumns.forEach((col) => {
   // ===================================================
   // 🌟 Best No-Vig Win % (Over vs Under) — MUST RUN FIRST
   // ===================================================
-  if (col === "BestNoVig") {
-    // Ensure cache exists
-    if (!window.baseNoVigCache) window.baseNoVigCache = {};
+  // ===================================================
+// 🌟 Best No-Vig Win % (Over vs Under) — MUST RUN FIRST
+// ===================================================
+if (col === "BestNoVig") {
+  // Ensure cache exists
+  if (!window.baseNoVigCache) window.baseNoVigCache = {};
 
-    // Reuse cached values during filtered re-renders
-    if (isFiltered) {
-      const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
-      const cached = window.baseNoVigCache[cacheKey];
-      if (cached) {
-        td.textContent = cached.text || "—";
-        td.dataset.sort = cached.pct ?? 0;
-        row.NoVigWinProb = cached.pct ?? null;
-        row.BestNoVigSide = cached.side ?? null;
-        tr.appendChild(td);
-        return;
+  // Reuse cached values during filtered re-renders
+  if (isFiltered) {
+    const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
+    const cached = window.baseNoVigCache[cacheKey];
+    if (cached) {
+      td.textContent = cached.text || "—";
+      td.dataset.sort = cached.pct ?? 0;
+      row.NoVigWinProb = cached.pct ?? null;
+      row.BestNoVigSide = cached.side ?? null;
+
+      // 🎨 Re-apply color on cached render
+      if (Number.isFinite(cached.pct)) {
+        if (cached.pct >= 60) {
+          td.style.background = "#0b3d0b";
+          td.style.color = "#ffffff";
+          td.style.fontWeight = "800";
+        } else if (cached.pct >= 54) {
+          td.style.background = "#d8f8df";
+          td.style.color = "#0b5f22";
+          td.style.fontWeight = "700";
+        } else {
+          td.style.background = "#fff3cd";
+          td.style.color = "#856404";
+        }
       }
+
+      tr.appendChild(td);
+      return;
     }
+  }
 
-    // Fresh compute (first render / unfiltered)
-    const baseForCompute =
-      Array.isArray(window.lastRenderedData) && window.lastRenderedData.length
-        ? window.lastRenderedData
-        : Array.isArray(data)
-        ? data
-        : [];
+  // Fresh compute (first render / unfiltered)
+  const baseForCompute =
+    Array.isArray(window.fullDataset) && window.fullDataset.length
+      ? window.fullDataset
+      : Array.isArray(data)
+      ? data
+      : [];
 
-    const nv = computeNoVigBothSides(baseForCompute, row);
+  const nv = computeNoVigBothSides(baseForCompute, row);
 
-    let text = "—";
-    let pct = null;
-    let side = null;
+  let text = "—";
+  let pct = null;
+  let side = null;
 
-    // STRICT sportsbook-only requirement
-    if (
-      nv &&
-      Number.isFinite(nv.avgOver) &&
-      Number.isFinite(nv.avgUnder)
-    ) {
+  // STRICT sportsbook-only requirement
+  if (
+    nv &&
+    Number.isFinite(nv.avgOver) &&
+    Number.isFinite(nv.avgUnder)
+  ) {
+    const over = nv.avgOver;
+    const under = nv.avgUnder;
 
-      const over = nv.avgOver;
-      const under = nv.avgUnder;
+    const isOverBetter = over >= under;
 
-      const isOverBetter = over >= under;
+    pct = isOverBetter ? over : under;
+    side = isOverBetter ? "Over" : "Under";
 
-      pct = isOverBetter ? over : under;
-      side = isOverBetter ? "Over" : "Under";
+    text = `${isOverBetter ? "▲" : "▼"} 🧮 ${side} ${pct.toFixed(2)}%`;
+  }
 
-      text = `${isOverBetter ? "▲" : "▼"} 🧮 ${side} ${pct.toFixed(2)}%`;
-
+  // 🎨 COLOR TIERING (UPDATED — adds background)
+  if (Number.isFinite(pct)) {
+    if (pct >= 60) {
+      td.style.background = "#0b3d0b";
+      td.style.color = "#ffffff";
+      td.style.fontWeight = "800";
+    } else if (pct >= 54) {
+      td.style.background = "#d8f8df";
+      td.style.color = "#0b5f22";
+      td.style.fontWeight = "700";
+    } else {
+      td.style.background = "#fff3cd";
+      td.style.color = "#856404";
     }
+  }
 
-// 🚨 REMOVE fallbackSide completely — DO NOT allow single-sided values
+  row.NoVigWinProb = Number.isFinite(pct) ? pct : null;
+  row.BestNoVigSide = Number.isFinite(pct) ? side : null;
 
-    // Color tiering
-    if (Number.isFinite(pct)) {
-      if (pct >= 54) td.style.color = "#007b1a";
-      else if (pct >= 52) td.style.color = "#29a329";
-    }
-
-    row.NoVigWinProb =
-      Number.isFinite(pct)
-        ? pct
-        : null;
-
-    row.BestNoVigSide =
-      Number.isFinite(pct)
-        ? side
-        : null;
-
-    // Cache for later filter re-renders
-    if (row.Event && row.Market && row.Description) {
-      const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
-      window.baseNoVigCache[cacheKey] =
+  // Cache for later filter re-renders
+  if (row.Event && row.Market && row.Description) {
+    const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
+    window.baseNoVigCache[cacheKey] =
       Number.isFinite(pct)
         ? { pct, side, text }
         : { pct: null, side: null, text: "—" };
-      }
-
-    // Optional “Mismatch” badge (market vs model)
-    // NOTE: this is a lightweight heuristic since we only have one price per book here.
-    const marketFavoredOver =
-      ["FanduelPrice", "DraftKingsPrice", "BetMGMPrice", "FanaticsPrice"].some(
-        (k) => Number(row[k]) < 0
-      );
-    const marketFavored = marketFavoredOver ? "Over" : "Under";
-    const modelFavored = side || "—";
-
-    td.textContent = text;
-    td.dataset.sort = Number.isFinite(pct) ? pct.toFixed(2) : 0;
-
-    if (
-      modelFavored !== "—" &&
-      marketFavored !== "—" &&
-      modelFavored !== marketFavored &&
-      Number.isFinite(pct) &&
-      Math.abs(pct - 50) >= 2
-    ) {
-      const badge = document.createElement("span");
-      badge.textContent = "⚡ Mismatch";
-      badge.classList.add("mismatch-badge");
-      badge.title = `Market favors ${marketFavored}, model favors ${modelFavored}`;
-      badge.style.marginLeft = "4px";
-      badge.style.fontSize = "11px";
-      badge.style.color = "#d94f4f";
-      badge.style.fontWeight = "bold";
-      td.appendChild(badge);
-    }
-
-    tr.appendChild(td);
-    return;
   }
+
+  // ⚡ Mismatch badge (unchanged)
+  const marketFavoredOver =
+    ["FanduelPrice", "DraftKingsPrice", "BetMGMPrice", "FanaticsPrice"].some(
+      (k) => Number(row[k]) < 0
+    );
+  const marketFavored = marketFavoredOver ? "Over" : "Under";
+  const modelFavored = side || "—";
+
+  td.textContent = text;
+  td.dataset.sort = Number.isFinite(pct) ? pct.toFixed(2) : 0;
+
+  if (
+    modelFavored !== "—" &&
+    marketFavored !== "—" &&
+    modelFavored !== marketFavored &&
+    Number.isFinite(pct) &&
+    Math.abs(pct - 50) >= 2
+  ) {
+    const badge = document.createElement("span");
+    badge.textContent = "⚡ Mismatch";
+    badge.classList.add("mismatch-badge");
+    badge.title = `Market favors ${marketFavored}, model favors ${modelFavored}`;
+    badge.style.marginLeft = "4px";
+    badge.style.fontSize = "11px";
+    badge.style.color = "#d94f4f";
+    badge.style.fontWeight = "bold";
+    td.appendChild(badge);
+  }
+
+  tr.appendChild(td);
+  return;
+}
 
   // ===================================================
   // 🛡️ SAFE DFS PLATFORM HANDLING
@@ -3971,12 +4100,196 @@ activeColumns.forEach((col) => {
   // 🧮 Format DFS numeric columns
   // ===================================================
   if (col === "PrizePickPoint" || col === "UnderdogPoint" || col === "BetrPoint") {
+
     const num = Number(value);
-    td.textContent = Number.isFinite(num) ? num.toFixed(2) : "—";
+
+    // ✅ FIXED CONSENSUS (NOT affected by filters)
+    let consensus = Number(getTrueConsensusPoint(row));
+
+    // 🔒 fallback safety (prevents yellow cells)
+    if (!Number.isFinite(consensus)) {
+      const fallback = Number(row.ConsensusPoint);
+      consensus = Number.isFinite(fallback) ? fallback : null;
+    }
+
+    if (!Number.isFinite(num) || num <= 0 || !Number.isFinite(consensus)) {
+      td.textContent = "—";
+      tr.appendChild(td);
+      return;
+    }
+
+  // ================================
+// 🎯 Compute Best Side LIVE
+// ================================
+const baseForCompute =
+  Array.isArray(window.fullDataset) && window.fullDataset.length
+    ? window.fullDataset
+    : Array.isArray(data)
+    ? data
+    : [];
+
+const nv = computeNoVigBothSides(baseForCompute, row);
+
+let bestSide = null;
+let noVig = 0;
+
+if (nv && Number.isFinite(nv.avgOver) && Number.isFinite(nv.avgUnder)) {
+  if (nv.avgOver >= nv.avgUnder) {
+    bestSide = "over";
+    noVig = nv.avgOver / 100;
+  } else {
+    bestSide = "under";
+    noVig = nv.avgUnder / 100;
+  }
+}
+
+// fallback parsing only if live calc fails
+if (!bestSide && typeof row.BestNoVig === "string") {
+  const clean = row.BestNoVig.replace(/[^\w\s.%]/g, "").toLowerCase();
+
+  if (clean.includes("over")) bestSide = "over";
+  else if (clean.includes("under")) bestSide = "under";
+
+  const match = clean.match(/(\d+(\.\d+)?)\s*%/);
+  if (match) noVig = parseFloat(match[1]) / 100;
+}
+
+// store for reuse
+row._bestSide = bestSide;
+row._bestProb = noVig;
+
+if (!bestSide) {
+  td.style.background = "#fff3cd";
+  td.style.color = "#856404";
+  td.textContent = num.toFixed(2);
+  tr.appendChild(td);
+  return;
+}
+  // ================================
+  // 📏 EDGE CALCULATIONS
+  // ================================
+  let edge = 0;
+
+if (bestSide === "over") {
+  edge = consensus - num;
+} else if (bestSide === "under") {
+  edge = num - consensus;
+}
+  const normalizedEdge = consensus > 0 ? Math.abs(edge) / consensus : 0;
+
+  const isGoodPlay = edge > 0;
+  const isBadPlay = edge < 0;
+
+  // ================================
+  // 🧠 SIMPLE RULE (SOFT STYLE)
+  // ================================
+ if (noVig >= 0.54 && Math.abs(edge) <= 0.5) {
+    td.style.background = "#e8f5e9";   // ✅ light green
+    td.style.color = "#1e8449";        // dark text
+    td.style.fontWeight = "600";       // lighter weight than 🔥
+    td.textContent = `🧠 ${num.toFixed(2)}`;
     tr.appendChild(td);
     return;
   }
 
+  // ================================
+// 🔥 GOOD PLAY (CROSS-SPORT EDGE)
+// ================================
+if (isGoodPlay) {
+
+  // 📏 Core math
+  const edge = Math.abs(num - consensus);
+  const normalizedEdge =
+    consensus > 0 ? edge / consensus : 0;
+
+  // 🧠 Dynamic minimum edge (prevents noise across sports)
+  const minEdge =
+    consensus >= 30 ? 0.5 :
+    consensus >= 15 ? 0.3 :
+    consensus >= 5  ? 0.2 :
+                      0.1;
+
+  let fire = "";
+
+  // ================================
+  // 🔥 ELITE (real value + decent probability)
+  // ================================
+  if (
+    normalizedEdge >= 0.04 &&
+    edge >= minEdge &&
+    noVig >= 0.52
+  ) {
+
+    fire = "🔥🔥🔥";
+    td.style.background = "#0b3d0b";
+    td.style.color = "#ffffff";
+    td.style.fontWeight = "800";
+
+  // ================================
+  // 🔥 STRONG
+  // ================================
+  } else if (
+    normalizedEdge >= 0.025 &&
+    edge >= minEdge * 0.75
+  ) {
+
+    fire = "🔥🔥";
+    td.style.background = "#145a32";
+    td.style.color = "#d4efdf";
+    td.style.fontWeight = "700";
+
+  // ================================
+  // 🔥 LIGHT EDGE
+  // ================================
+  } else if (
+    normalizedEdge >= 0.015 &&
+    edge >= minEdge * 0.5
+  ) {
+
+    fire = "🔥";
+    td.style.background = "#d8f8df";
+    td.style.color = "#0b5f22";
+    td.style.fontWeight = "700";
+
+  // ================================
+  // 🟢 SMALL EDGE (NO FIRE)
+  // ================================
+  } else {
+
+    td.style.background = "#eef9f1";
+    td.style.color = "#145a32";
+    td.style.fontWeight = "600";
+  }
+
+  td.textContent = fire
+    ? `${fire} ${num.toFixed(2)}`
+    : num.toFixed(2);
+
+  tr.appendChild(td);
+  return;
+}
+
+// ================================
+// ❌ BAD PLAY
+// ================================
+if (isBadPlay) {
+  td.style.background = "#f8dada";
+  td.style.color = "#c0392b";
+  td.style.fontWeight = "700";
+  td.textContent = num.toFixed(2);
+  tr.appendChild(td);
+  return;
+}
+
+// ================================
+// 🟡 NEUTRAL
+// ================================
+td.style.background = "#fff3cd";
+td.style.color = "#856404";
+td.textContent = num.toFixed(2);
+tr.appendChild(td);
+return;
+}
   // ===================================================
   // 🎲 Sportsbook columns (line + price + favored arrow)
   // ===================================================
@@ -4058,59 +4371,34 @@ if (col === "ConsensusPoint") {
   // 🎯 Difference columns (PrizePicks / Underdog / Betr)
   //   - Adds side markers for filters: _PrizePicksSide, _UnderdogSide, _BetrSide
   // ===================================================
-  if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "BetrDifference") {
-    const diff = Number(row[col]);
+  // ===================================================
+// 🎯 Difference columns (PrizePicks / Underdog / Betr)
+// ===================================================
+if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "BetrDifference") {
 
-    const pointKey =
-      col === "PrizePicksDifference"
-        ? "PrizePickPoint"
-        : col === "UnderdogDifference"
-        ? "UnderdogPoint"
-        : "BetrPoint";
+  let diff = Number(row[col]);
 
-    const sideKey =
-      col === "PrizePicksDifference"
-        ? "_PrizePicksSide"
-        : col === "UnderdogDifference"
-        ? "_UnderdogSide"
-        : "_BetrSide";
-
-    const pointVal = Number(row[pointKey]);
-    const consVal = Number(row.ConsensusPoint);
-
-    // reset marker by default
-    row[sideKey] = null;
-
-    if (Number.isFinite(diff)) {
-      // color tiering
-      if (Math.abs(diff) >= 2) td.style.color = "#007b1a";
-      else if (Math.abs(diff) >= 1) td.style.color = "#29a329";
-
-      // optional badge + side marker (based on point vs consensus)
-      if (Number.isFinite(pointVal) && Number.isFinite(consVal)) {
-        const isOver = pointVal < consVal;
-        const isUnder = pointVal > consVal;
-
-        if (isOver) row[sideKey] = "over";
-        else if (isUnder) row[sideKey] = "under";
-
-        if (isOver || isUnder) {
-          td.innerHTML = `<span class="bet-badge ${isOver ? "over-badge" : "under-badge"}">${
-            isOver ? "O↑ Over" : "U↓ Under"
-          }</span> <span class="diff-val">${diff.toFixed(2)}</span>`;
-          tr.appendChild(td);
-          return;
-        }
-      }
-
-      td.textContent = diff.toFixed(2);
-    } else {
-      td.textContent = "—";
-    }
-
+  if (!Number.isFinite(diff)) {
+    td.textContent = "—";
     tr.appendChild(td);
     return;
   }
+
+  // 🔥 FIX FLOATING DECIMALS
+  diff = Math.round(diff * 100) / 100;
+
+  // 🎨 Color only (clean UI)
+  if (diff > 0) td.style.color = "#1e8449";   // green
+  else if (diff < 0) td.style.color = "#c0392b"; // red
+  else td.style.color = "#6c757d"; // neutral
+
+  // ✅ FORCE 2 DECIMALS
+  td.textContent = diff.toFixed(2);
+
+  tr.appendChild(td);
+  return;
+}
+
 
   // ===================================================
   // 🧾 Default fallback
@@ -4300,104 +4588,58 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
   // ===========================================
-  // ✅ PrizePicks Optimal — uses true best side + Δ guard
-  // ===========================================
-  function filterPrizePicksOptimal(data) {
-    if (!Array.isArray(data)) return [];
-    const seen = new Set();
-
-    const result = data.filter((row) => {
-      const key = `${(row.Event || "")}|${(row.Market || "")}|${(row.Description || "")}`;
-      if (seen.has(key)) return false;
-
-      const bestSide = (row.BestNoVigSide || "").toLowerCase();
-      const ppPoint = Number(row.PrizePickPoint);
-      const cons = Number(row.ConsensusPoint);
-      const delta = Number(row.PrizePicksDifference);
-
-      if (!bestSide || !Number.isFinite(ppPoint) || !Number.isFinite(cons)) return false;
-      if (!Number.isFinite(delta) || Math.abs(delta) < 0.25) return false;
-
-      const favorable =
-        (bestSide === "over" && ppPoint < cons) ||
-        (bestSide === "under" && ppPoint > cons);
-
-      if (favorable) {
-        seen.add(key);
-        return true;
-      }
-      return false;
-    });
-
-    console.log(`🎯 PrizePicks Optimal: ${result.length}/${data.length} rows`);
-    return result;
-  }
-
-  // ===========================================
-  // ✅ Underdog Optimal — uses stored BestNoVigSide + Δ guard
-  // ===========================================
-  function filterUnderdogOptimal(data) {
-    if (!Array.isArray(data)) return [];
-    const seen = new Set();
-
-    const result = data.filter((row) => {
-      const key = `${(row.Event || "")}|${(row.Market || "")}|${(row.Description || "")}`;
-      if (seen.has(key)) return false;
-
-      const bestSide = (row.BestNoVigSide || "").toLowerCase();
-      const udPoint = Number(row.UnderdogPoint);
-      const cons = Number(row.ConsensusPoint);
-      const delta = Number(row.UnderdogDifference);
-
-      if (!bestSide || !Number.isFinite(udPoint) || !Number.isFinite(cons)) return false;
-      if (!Number.isFinite(delta) || Math.abs(delta) < 0.25) return false;
-
-      const favorable =
-        (bestSide === "over" && udPoint < cons) ||
-        (bestSide === "under" && udPoint > cons);
-
-      if (favorable) {
-        seen.add(key);
-        return true;
-      }
-      return false;
-    });
-
-    console.log(`🎯 Underdog Optimal: ${result.length}/${data.length} rows`);
-    return result;
-  }
-
-  // ===========================================
-// ✅ Betr Optimal — uses stored BestNoVigSide + Δ guard
+// ✅ PrizePicks +EV (DYNAMIC — CROSS-SPORT SAFE)
 // ===========================================
-function filterBetrOptimal(data) {
+function filterPrizePicksOptimal(data) {
   if (!Array.isArray(data)) return [];
 
   const seen = new Set();
 
   const result = data.filter((row) => {
-    const key = `${(row.Event || "")}|${(row.Market || "")}|${(row.Description || "")}`;
+    const key = `${row.Event}|${row.Market}|${row.Description}`;
     if (seen.has(key)) return false;
 
     const bestSide = (row.BestNoVigSide || "").toLowerCase();
+    const noVig = Number(row.NoVigWinProb) || 0;
 
-    const betrPoint = Number(row.BetrPoint);
+    const line = Number(row.PrizePickPoint);
     const cons = Number(row.ConsensusPoint);
-    const delta = Number(row.BetrDifference);
 
     // Must have valid data
-    if (!bestSide || !Number.isFinite(betrPoint) || !Number.isFinite(cons))
+    if (!bestSide || !Number.isFinite(line) || !Number.isFinite(cons)) {
       return false;
+    }
 
-    // Require meaningful edge
-    if (!Number.isFinite(delta) || Math.abs(delta) < 0.25)
-      return false;
+    // ================================
+    // 📏 EDGE CALCULATION
+    // ================================
+    const edge = Math.abs(line - cons);
+    const normalizedEdge = cons > 0 ? edge / cons : 0;
 
-    const favorable =
-      (bestSide === "over" && betrPoint < cons) ||
-      (bestSide === "under" && betrPoint > cons);
+    // ================================
+    // 🎯 FAVORABLE DIRECTION
+    // ================================
+    const isFavorable =
+      (bestSide === "over" && line < cons) ||
+      (bestSide === "under" && line > cons);
 
-    if (favorable) {
+    if (!isFavorable) return false;
+
+    // ================================
+    // 🧠 EDGE SCORE (TUNED FOR NBA + ALL SPORTS)
+    // ================================
+    const edgeScore =
+      normalizedEdge +
+      (noVig - 0.5) * 0.6;
+
+    // 🔑 KEY FIX: lowered threshold (NBA-friendly)
+    const passesEdge = edgeScore >= 0.02;
+
+    // Quality gate (prevents junk)
+    const passesQuality =
+      noVig >= 0.51 || row._isMismatch;
+
+    if (passesEdge && passesQuality) {
       seen.add(key);
       return true;
     }
@@ -4405,7 +4647,134 @@ function filterBetrOptimal(data) {
     return false;
   });
 
-  console.log(`🎯 Betr Optimal: ${result.length}/${data.length} rows`);
+  console.log(`🎯 PrizePicks +EV (dynamic): ${result.length}/${data.length} rows`);
+  return result;
+}
+  // ===========================================
+// ✅ Underdog +EV (DYNAMIC — CROSS-SPORT SAFE)
+// ===========================================
+function filterUnderdogOptimal(data) {
+  if (!Array.isArray(data)) return [];
+
+  const seen = new Set();
+
+  const result = data.filter((row) => {
+    const key = `${row.Event}|${row.Market}|${row.Description}`;
+    if (seen.has(key)) return false;
+
+    const bestSide = (row.BestNoVigSide || "").toLowerCase();
+    const noVig = Number(row.NoVigWinProb) || 0;
+
+    const line = Number(row.UnderdogPoint);
+    const cons = Number(row.ConsensusPoint);
+
+    // Must have valid data
+    if (!bestSide || !Number.isFinite(line) || !Number.isFinite(cons)) {
+      return false;
+    }
+
+    // ================================
+    // 📏 EDGE CALCULATION
+    // ================================
+    const edge = Math.abs(line - cons);
+    const normalizedEdge = cons > 0 ? edge / cons : 0;
+
+    // ================================
+    // 🎯 FAVORABLE DIRECTION
+    // ================================
+    const isFavorable =
+      (bestSide === "over" && line < cons) ||
+      (bestSide === "under" && line > cons);
+
+    if (!isFavorable) return false;
+
+    // ================================
+    // 🧠 EDGE SCORE (NBA + ALL SPORTS SAFE)
+    // ================================
+    const edgeScore =
+      normalizedEdge +
+      (noVig - 0.5) * 0.6;
+
+    // 🔑 tuned threshold (NBA-friendly)
+    const passesEdge = edgeScore >= 0.02;
+
+    // Quality gate (prevents junk)
+    const passesQuality =
+      noVig >= 0.51 || row._isMismatch;
+
+    if (passesEdge && passesQuality) {
+      seen.add(key);
+      return true;
+    }
+
+    return false;
+  });
+
+  console.log(`🎯 Underdog +EV (dynamic): ${result.length}/${data.length} rows`);
+  return result;
+}
+
+ // ===========================================
+// ✅ Betr +EV (DYNAMIC — CROSS-SPORT SAFE)
+// ===========================================
+function filterBetrOptimal(data) {
+  if (!Array.isArray(data)) return [];
+
+  const seen = new Set();
+
+  const result = data.filter((row) => {
+    const key = `${row.Event}|${row.Market}|${row.Description}`;
+    if (seen.has(key)) return false;
+
+    const bestSide = (row.BestNoVigSide || "").toLowerCase();
+    const noVig = Number(row.NoVigWinProb) || 0;
+
+    const line = Number(row.BetrPoint);
+    const cons = Number(row.ConsensusPoint);
+
+    // Must have valid data
+    if (!bestSide || !Number.isFinite(line) || !Number.isFinite(cons)) {
+      return false;
+    }
+
+    // ================================
+    // 📏 EDGE CALCULATION
+    // ================================
+    const edge = Math.abs(line - cons);
+    const normalizedEdge = cons > 0 ? edge / cons : 0;
+
+    // ================================
+    // 🎯 FAVORABLE DIRECTION
+    // ================================
+    const isFavorable =
+      (bestSide === "over" && line < cons) ||
+      (bestSide === "under" && line > cons);
+
+    if (!isFavorable) return false;
+
+    // ================================
+    // 🧠 EDGE SCORE (NBA + ALL SPORTS SAFE)
+    // ================================
+    const edgeScore =
+      normalizedEdge +
+      (noVig - 0.5) * 0.6;
+
+    // 🔑 tuned threshold (NBA-friendly)
+    const passesEdge = edgeScore >= 0.02;
+
+    // Quality gate (prevents junk)
+    const passesQuality =
+      noVig >= 0.51 || row._isMismatch;
+
+    if (passesEdge && passesQuality) {
+      seen.add(key);
+      return true;
+    }
+
+    return false;
+  });
+
+  console.log(`🎯 Betr +EV (dynamic): ${result.length}/${data.length} rows`);
   return result;
 }
 
@@ -4446,27 +4815,37 @@ function filterBetrOptimal(data) {
     console.log(`💪 High No-Vig ≥ ${threshold}% → showing ${visibleCount} rows`);
   }
 
+  
   // ===========================================
-  // ⚔️ DFS Line Difference (≥ 2.0 points difference)
-  // ===========================================
-  function filterDfsDifference(data) {
-    if (!Array.isArray(data)) return [];
+// ⚔️ DFS Line Difference (DYNAMIC EDGE)
+// ===========================================
+// ===========================================
+// ⚔️ DFS Line Difference (SHOW ALL DIFFERENCES)
+// ===========================================
+function filterDfsDifference(data) {
+  if (!Array.isArray(data)) return [];
 
-    const filtered = data.filter((row) => {
-      const ppRaw = String(row.PrizePickPoint || row.PrizePicksPoint || "").trim();
-      const udRaw = String(row.UnderdogPoint || "").trim();
-      if (!ppRaw || !udRaw || ppRaw === "—" || udRaw === "—") return false;
+  const filtered = data.filter((row) => {
+    const ppVal = Number(row.PrizePickPoint || row.PrizePicksPoint);
+    const udVal = Number(row.UnderdogPoint);
+    const betrVal = Number(row.BetrPoint);
 
-      const ppVal = parseFloat(ppRaw);
-      const udVal = parseFloat(udRaw);
-      if (!Number.isFinite(ppVal) || !Number.isFinite(udVal)) return false;
+    // Collect valid values
+    const values = [ppVal, udVal, betrVal].filter(Number.isFinite);
 
-      return Math.abs(ppVal - udVal) >= 2;
-    });
+    // Need at least 2 platforms to compare
+    if (values.length < 2) return false;
 
-    console.log(`⚔️ DFS Difference (≥2): ${filtered.length}/${data.length} rows`);
-    return filtered;
-  }
+    // Check if NOT all equal
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    return min !== max; // ANY difference
+  });
+
+  console.log(`⚔️ DFS Difference (ALL): ${filtered.length}/${data.length} rows`);
+  return filtered;
+}
 // ===================================================
 // 🧮 Filter Button Wiring (Toggle + Reset)
 // ===================================================
@@ -4494,9 +4873,12 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
 
   btn.addEventListener("click", () => {
       // 🔑 Base must reflect what is currently shown in the table
-    const base = Array.isArray(window.lastRenderedData)
-  ? window.lastRenderedData
-  : [];
+    const base =
+  Array.isArray(window.fullDataset) && window.fullDataset.length
+    ? window.fullDataset
+    : Array.isArray(window.lastRenderedData)
+    ? window.lastRenderedData
+    : [];
 
 
     let filtered = [];
@@ -4577,7 +4959,6 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
     setTimeout(() => {
       if (filtered.length > 0) {
         rerenderConsensusTable(filtered);
-        window.lastRenderedData = filtered;
         console.log(
           `✅ Applied filter "${key}" → ${filtered.length}/${base.length} rows`
         );
@@ -4631,7 +5012,10 @@ function sortTableByColumn(table, columnIndex, ascending) {
       ? aText.localeCompare(bText)
       : bText.localeCompare(aText);
   });
-  rows.forEach((r) => tbody.appendChild(r));
+  rows.forEach((r) => {
+  const newRow = r.cloneNode(true);
+  tbody.appendChild(newRow);
+});
 }
 
 
