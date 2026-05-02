@@ -6354,13 +6354,6 @@ tr.debug-enabled:hover {
   opacity: 1;
 }
 
-@media (max-width: 768px) {
-
-  /* ❌ Hide ALL columns */
-  .odds-table th,
-  .odds-table td {
-    display: none;
-  }
 
 /* ============================================================
    📱 MOBILE TABLE — CLEAN + STICKY + FILTERED
