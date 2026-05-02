@@ -6271,13 +6271,21 @@ tr.debug-enabled:hover {
 
 /* Your page already has a sticky header-container at top,
    so table headers need to stick BELOW it */
+/* 🖥️ DESKTOP — account for your sticky site header */
 #results .odds-table thead th {
-  position: sticky !important;
-  top: 110px !important;  /* adjust to 90px or 120px if needed */
-  z-index: 20 !important;
-  background: #1f2937 !important;
-  color: #ffffff !important;
+  position: sticky;
+  top: 110px; /* your actual header height */
+  z-index: 20;
+  background: #1f2937;
+  color: #ffffff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* 📱 MOBILE — header is smaller or not sticky */
+@media (max-width: 768px) {
+  #results .odds-table thead th {
+    top: 0;
+  }
 }
 
 .picks-legend {
