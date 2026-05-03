@@ -4166,72 +4166,83 @@ if (!bestSide) {
   return;
 }
   // ================================
-  // 📏 EDGE CALCULATIONS
-  // ================================
-  let edge = 0;
+// 📏 EDGE CALCULATIONS
+// ================================
+let edge = 0;
 
 if (bestSide === "over") {
   edge = consensus - num;
 } else if (bestSide === "under") {
   edge = num - consensus;
 }
-  const normalizedEdge = consensus > 0 ? Math.abs(edge) / consensus : 0;
+// 🔥 NEW: sqrt scaling (cross-sport safe)
+const normalizedEdge =
+  consensus > 0 ? Math.abs(edge) / Math.sqrt(consensus) : 0;
 
-  const isGoodPlay = edge > 0;
-  const isBadPlay = edge < 0;
+const isGoodPlay = edge > 0;
+const isBadPlay = edge < 0;
 
-  // ================================
-  // 🧠 SIMPLE RULE (SOFT STYLE)
-  // ================================
- if (noVig >= 0.54 && Math.abs(edge) <= 0.5) {
-    td.style.background = "#e8f5e9";   // ✅ light green
-    td.style.color = "#1e8449";        // dark text
-    td.style.fontWeight = "600";       // lighter weight than 🔥
-    td.textContent = `🧠 ${num.toFixed(2)}`;
-    tr.appendChild(td);
-    return;
-  }
+// ================================
+// 🧠 HIGH PROBABILITY (SAFE PLAYS)
+// ================================
+if (noVig >= 0.54 && normalizedEdge < 0.05) {
+  td.style.background = "#e8f5e9";
+  td.style.color = "#1e8449";
+  td.style.fontWeight = "600";
+  td.textContent = `🧠 ${num.toFixed(2)}`;
+  tr.appendChild(td);
+  return;
+}
 
-  // ================================
-// 🔥 GOOD PLAY (CROSS-SPORT EDGE)
+// ================================
+// 🔥 GOOD PLAY (CROSS-SPORT, STABLE)
 // ================================
 if (isGoodPlay) {
 
-  // 📏 Core math
-  const edge = Math.abs(num - consensus);
-  const normalizedEdge =
-    consensus > 0 ? edge / consensus : 0;
+  // ✅ Probability boost (your idea, tuned)
+  const probBoost = Math.max(0, (noVig - 0.51) * 1.3);
 
-  // 🧠 Dynamic minimum edge (prevents noise across sports)
-  const minEdge =
-    consensus >= 30 ? 0.5 :
-    consensus >= 15 ? 0.3 :
-    consensus >= 5  ? 0.2 :
-                      0.1;
+  // ✅ Core scoring (edge dominates, prob confirms)
+  const edgeScore =
+    normalizedEdge * 0.8 +
+    probBoost * 0.45;
+
+  // ✅ Weak edge penalty (NO hard cutoff → works for all sports)
+  const weakEdgePenalty =
+    normalizedEdge < 0.045 ? 0.025 : 0;
+
+  // ✅ Extra penalty for low probability
+  const lowProbPenalty =
+    noVig < 0.515 ? 0.02 : 0;
+
+  const finalScore = edgeScore - weakEdgePenalty - lowProbPenalty;
 
   let fire = "";
 
+  // 🚨 BLOCK: weak probability cannot produce fire (even with high normalized edge)
+if (noVig < 0.505 && normalizedEdge < 0.14) {
+  td.style.background = "#eef9f1";
+  td.style.color = "#145a32";
+  td.style.fontWeight = "600";
+  td.textContent = num.toFixed(2);
+  tr.appendChild(td);
+  return;
+}
+
   // ================================
-  // 🔥 ELITE (real value + decent probability)
+  // 🔥 ELITE
   // ================================
-  if (
-    normalizedEdge >= 0.04 &&
-    edge >= minEdge &&
-    noVig >= 0.52
-  ) {
+  if (finalScore >= 0.12) {
 
     fire = "🔥🔥🔥";
     td.style.background = "#0b3d0b";
     td.style.color = "#ffffff";
     td.style.fontWeight = "800";
 
-  // ================================
+  // ==================================
   // 🔥 STRONG
-  // ================================
-  } else if (
-    normalizedEdge >= 0.025 &&
-    edge >= minEdge * 0.75
-  ) {
+  // ==================================
+  } else if (finalScore >= 0.095) {
 
     fire = "🔥🔥";
     td.style.background = "#145a32";
@@ -4241,10 +4252,7 @@ if (isGoodPlay) {
   // ================================
   // 🔥 LIGHT EDGE
   // ================================
-  } else if (
-    normalizedEdge >= 0.015 &&
-    edge >= minEdge * 0.5
-  ) {
+  } else if (finalScore >= 0.07) {
 
     fire = "🔥";
     td.style.background = "#d8f8df";
@@ -4252,10 +4260,9 @@ if (isGoodPlay) {
     td.style.fontWeight = "700";
 
   // ================================
-  // 🟢 SMALL EDGE (NO FIRE)
+  // 🟢 SMALL EDGE
   // ================================
   } else {
-
     td.style.background = "#eef9f1";
     td.style.color = "#145a32";
     td.style.fontWeight = "600";
@@ -4289,6 +4296,7 @@ td.style.color = "#856404";
 td.textContent = num.toFixed(2);
 tr.appendChild(td);
 return;
+
 }
   // ===================================================
   // 🎲 Sportsbook columns (line + price + favored arrow)
