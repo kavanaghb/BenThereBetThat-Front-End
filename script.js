@@ -4179,6 +4179,9 @@ if (bestSide === "over") {
 const normalizedEdge =
   consensus > 0 ? Math.abs(edge) / Math.sqrt(consensus) : 0;
 
+// ✅ reset render flags
+row._brainPlay = false;
+row._fireLevel = 0;
 const isGoodPlay = edge > 0;
 const isBadPlay = edge < 0;
 
@@ -4186,6 +4189,10 @@ const isBadPlay = edge < 0;
 // 🧠 HIGH PROBABILITY (SAFE PLAYS)
 // ================================
 if (noVig >= 0.54 && normalizedEdge < 0.05) {
+
+  // ✅ STORE BRAIN PICK FOR FILTERS
+  row._brainPlay = true;
+
   td.style.background = "#e8f5e9";
   td.style.color = "#1e8449";
   td.style.fontWeight = "600";
@@ -4193,7 +4200,6 @@ if (noVig >= 0.54 && normalizedEdge < 0.05) {
   tr.appendChild(td);
   return;
 }
-
 // ================================
 // 🔥 GOOD PLAY (CROSS-SPORT, STABLE)
 // ================================
@@ -4204,8 +4210,8 @@ if (isGoodPlay) {
 
   // ✅ Core scoring (edge dominates, prob confirms)
   const edgeScore =
-    normalizedEdge * 0.8 +
-    probBoost * 0.45;
+    normalizedEdge * 0.72 +
+    probBoost * 0.62;
 
   // ✅ Weak edge penalty (NO hard cutoff → works for all sports)
   const weakEdgePenalty =
@@ -4232,7 +4238,9 @@ if (noVig < 0.505 && normalizedEdge < 0.14) {
   // ================================
   // 🔥 ELITE
   // ================================
-  if (finalScore >= 0.12) {
+    if (finalScore >= 0.12) {
+
+    row._fireLevel = 3;
 
     fire = "🔥🔥🔥";
     td.style.background = "#0b3d0b";
@@ -4242,7 +4250,9 @@ if (noVig < 0.505 && normalizedEdge < 0.14) {
   // ==================================
   // 🔥 STRONG
   // ==================================
-  } else if (finalScore >= 0.095) {
+    } else if (finalScore >= 0.095) {
+
+    row._fireLevel = 2;
 
     fire = "🔥🔥";
     td.style.background = "#145a32";
@@ -4252,7 +4262,9 @@ if (noVig < 0.505 && normalizedEdge < 0.14) {
   // ================================
   // 🔥 LIGHT EDGE
   // ================================
-  } else if (finalScore >= 0.07) {
+    } else if (finalScore >= 0.07) {
+
+    row._fireLevel = 1;
 
     fire = "🔥";
     td.style.background = "#d8f8df";
@@ -4267,6 +4279,13 @@ if (noVig < 0.505 && normalizedEdge < 0.14) {
     td.style.color = "#145a32";
     td.style.fontWeight = "600";
   }
+
+  // ✅ STORE FIRE LEVEL FOR FILTERS
+  row._fireLevel =
+    fire === "🔥🔥🔥" ? 3 :
+    fire === "🔥🔥" ? 2 :
+    fire === "🔥" ? 1 :
+    0;
 
   td.textContent = fire
     ? `${fire} ${num.toFixed(2)}`
@@ -4786,20 +4805,36 @@ function filterBetrOptimal(data) {
   return result;
 }
 
-  // ===========================================
-  // ✅ Fantasy Edge — PrizePicks or Underdog Δ ≥ 0.25
-  // ===========================================
-  function filterFantasyEdge(data) {
-    if (!Array.isArray(data)) return [];
-    const out = data.filter((row) => {
-      const pp = Number(row.PrizePicksDifference);
-      const ud = Number(row.UnderdogDifference);
-      return (Number.isFinite(pp) && Math.abs(pp) >= 0.25) ||
-             (Number.isFinite(ud) && Math.abs(ud) >= 0.25);
-    });
-    console.log(`🎯 Fantasy Edge: ${out.length}/${data.length} match`);
-    return out;
-  }
+// ===========================================
+// 🔥 Ben's Picks — brain, fire, or mismatch
+// ===========================================
+function filterBensPicks(data) {
+
+  if (!Array.isArray(data)) return [];
+
+  const out = data.filter((row) => {
+
+    // 🧠 Brain plays
+    const hasBrain =
+      row._brainPlay === true;
+
+    // 🔥 Fire plays
+    const hasFire =
+      Number(row._fireLevel || 0) >= 1;
+
+    // ⚡ Mismatch
+    const hasMismatch =
+      String(row.BestNoVig || "")
+        .toLowerCase()
+        .includes("mismatch");
+
+    return hasBrain || hasFire || hasMismatch;
+  });
+
+  console.log(`🔥 Ben's Picks: ${out.length}/${data.length} match`);
+
+  return out;
+}
 
   // ===========================================
   // ✅ High No-Vig (DOM-only)
@@ -4824,9 +4859,7 @@ function filterBetrOptimal(data) {
   }
 
   
-  // ===========================================
-// ⚔️ DFS Line Difference (DYNAMIC EDGE)
-// ===========================================
+
 // ===========================================
 // ⚔️ DFS Line Difference (SHOW ALL DIFFERENCES)
 // ===========================================
@@ -4861,7 +4894,7 @@ const filterBtns = {
   prize: document.getElementById("filterPrizePicksOptimalBtn"),
   underdog: document.getElementById("filterUnderdogOptimalBtn"),
   betr: document.getElementById("filterBetrOptimalBtn"),   // ✅ ADD THIS
-  fantasy: document.getElementById("filterFantasyEdgeBtn"),
+  benspicks: document.getElementById("filterBensPicksBtn"),
   dfs: document.getElementById("filterDfsDifferenceBtn"),
   high: document.getElementById("filterHighNoVigBtn"),
   clear: document.getElementById("clearOptimalFiltersBtn"),
@@ -4922,9 +4955,9 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
         break;
 
 
-      case "fantasy":
-        filtered = filterFantasyEdge(base);
-        window.activeOptimalFilter = "pointvalue"; // ← NEW
+      case "benspicks":
+        filtered = filterBensPicks(base);
+        window.activeOptimalFilter = "benspicks";
         break;
 
       case "dfs":
@@ -5612,6 +5645,32 @@ function buildPickCardHtml(row) {
   const desc = row.Description || "Player Prop";
   const market = row.Market || "";
 
+  // ======================================
+// 🔥🧠 Build Badge Icons
+// ======================================
+let badges = "";
+
+if (row._brainPlay) {
+  badges += " 🧠";
+}
+
+if (row._fireLevel === 1) {
+  badges += " 🔥";
+} else if (row._fireLevel === 2) {
+  badges += " 🔥🔥";
+} else if (row._fireLevel === 3) {
+  badges += " 🔥🔥🔥";
+}
+
+const hasMismatch =
+  String(row.BestNoVig || "")
+    .toLowerCase()
+    .includes("mismatch");
+
+if (hasMismatch) {
+  badges += " ⚡";
+}
+
   // ==============================
   // 🏈 Extract teams for logo display
   // ==============================
@@ -5743,6 +5802,7 @@ else if (mismatchPlatforms.length > 1) {
 // ====================================
 // 🧩 FINAL HTML
 // ====================================
+
 return `
   <article class="pro-pick-card">
 
