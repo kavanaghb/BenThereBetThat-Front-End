@@ -5799,6 +5799,31 @@ else if (mismatchPlatforms.length > 1) {
   const evLabelText = bestSideLabel
     ? `Model leans ${bestSideLabel}${Number.isFinite(noVig) ? ` · ${noVig.toFixed(1)}%` : ""}`
     : (Number.isFinite(noVig) ? `Model edge · ${noVig.toFixed(1)}%` : "Model edge");
+
+    // ====================================
+  // 🧠🔥 Platform Badges
+  // ====================================
+
+  const ppBadge =
+    row._brainPlay && Math.abs(ppDiff) <= 0.5
+     ? " 🧠"
+      : row._fireLevel >= 1 && Math.abs(ppDiff) >= 0.33
+      ? " 🔥"
+      : "";
+
+  const udBadge =
+    row._brainPlay && Math.abs(udDiff) <= 0.5
+      ? " 🧠"
+      : row._fireLevel >= 1 && Math.abs(udDiff) >= 0.33
+      ? " 🔥"
+      : "";
+
+  const betrBadge =
+    row._brainPlay && Math.abs(betrDiff) <= 0.5
+      ? " 🧠"
+      : row._fireLevel >= 1 && Math.abs(betrDiff) >= 0.33
+      ? " 🔥"
+      : "";
 // ====================================
 // 🧩 FINAL HTML
 // ====================================
@@ -5867,7 +5892,9 @@ return `
         class="pro-card-metric-row platform-row prizepicks active-platform"
         data-platform="prizepicks"
       >
-        <span class="pro-metric-label">PrizePicks</span>
+        <span class="pro-metric-label">
+          PrizePicks${ppBadge}
+        </span>
         <span class="pro-metric-value">${ppLineStr}</span>
         <span class="pro-metric-delta ${ppDeltaClass}">${ppDiffStr}</span>
       </div>
@@ -5877,7 +5904,9 @@ return `
         class="pro-card-metric-row platform-row underdog"
         data-platform="underdog"
       >
-        <span class="pro-metric-label">Underdog</span>
+        <span class="pro-metric-label">
+          Underdog${udBadge}
+        </span>
         <span class="pro-metric-value">${udLineStr}</span>
         <span class="pro-metric-delta ${udDeltaClass}">${udDiffStr}</span>
       </div>
@@ -5887,7 +5916,9 @@ return `
         class="pro-card-metric-row platform-row betr"
         data-platform="betr"
       >     
-        <span class="pro-metric-label">Betr</span>
+        <span class="pro-metric-label">
+          Betr${betrBadge}
+        </span>
         <span class="pro-metric-value">${betrLineStr}</span>
         <span class="pro-metric-delta ${betrDeltaClass}">${betrDiffStr}</span>
       </div>
