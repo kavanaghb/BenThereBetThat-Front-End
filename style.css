@@ -6395,29 +6395,37 @@ tr.debug-enabled:hover {
     display: none;
   }
 
-  /* ✅ Show ONLY desired columns: 1,2,3,8,9,10,11 */
-  .odds-table th:nth-child(1),
-  .odds-table td:nth-child(1),
+/* ✅ Show mobile columns INCLUDING No Vig */
+.odds-table th:nth-child(1),
+.odds-table td:nth-child(1),
 
-  .odds-table th:nth-child(2),
-  .odds-table td:nth-child(2),
+.odds-table th:nth-child(2),
+.odds-table td:nth-child(2),
 
-  .odds-table th:nth-child(3),
-  .odds-table td:nth-child(3),
+.odds-table th:nth-child(3),
+.odds-table td:nth-child(3),
 
-  .odds-table th:nth-child(8),
-  .odds-table td:nth-child(8),
+/* Consensus */
+.odds-table th:nth-child(8),
+.odds-table td:nth-child(8),
 
-  .odds-table th:nth-child(9),
-  .odds-table td:nth-child(9),
+/* No Vig / BestNoVig */
+.odds-table th:nth-child(9),
+.odds-table td:nth-child(9),
 
-  .odds-table th:nth-child(10),
-  .odds-table td:nth-child(10),
+/* PrizePicks diff */
+.odds-table th:nth-child(10),
+.odds-table td:nth-child(10),
 
-  .odds-table th:nth-child(11),
-  .odds-table td:nth-child(11) {
-    display: table-cell;
-  }
+/* Underdog diff */
+.odds-table th:nth-child(11),
+.odds-table td:nth-child(11),
+
+/* Betr diff */
+.odds-table th:nth-child(12),
+.odds-table td:nth-child(12) {
+  display: table-cell;
+}
 
   /* 📌 Sticky player/description column */
   .odds-table th:nth-child(3),
@@ -6438,16 +6446,18 @@ tr.debug-enabled:hover {
   }
 
   /* 📊 Key data columns sizing */
-  .odds-table th:nth-child(8),
-  .odds-table td:nth-child(8),
-  .odds-table th:nth-child(9),
-  .odds-table td:nth-child(9),
-  .odds-table th:nth-child(10),
-  .odds-table td:nth-child(10),
-  .odds-table th:nth-child(11),
-  .odds-table td:nth-child(11) {
-    min-width: 90px;
-  }
+.odds-table th:nth-child(8),
+.odds-table td:nth-child(8),
+.odds-table th:nth-child(9),
+.odds-table td:nth-child(9),
+.odds-table th:nth-child(10),
+.odds-table td:nth-child(10),
+.odds-table th:nth-child(11),
+.odds-table td:nth-child(11),
+.odds-table th:nth-child(12),
+.odds-table td:nth-child(12) {
+  min-width: 90px;
+}
 
   /* ✨ Compact spacing */
   .odds-table th,
