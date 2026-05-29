@@ -6479,3 +6479,22 @@ tr.debug-enabled:hover {
   margin-bottom: 6px;
   letter-spacing: 1px;
 }
+
+/* ================================
+   ₿ Crypto Scanner Button
+   ================================ */
+
+#openCryptoScannerBtn {
+  background: linear-gradient(
+    135deg,
+    #f7931a,
+    #ffb347
+  );
+  color: #111;
+  font-weight: 800;
+}
+
+#openCryptoScannerBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 12px rgba(247,147,26,.6);
+}

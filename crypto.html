@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>
+    Crypto Scanner | Ben There Bet That
+  </title>
+
+  <!-- Main Site CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Crypto Scanner CSS -->
+  <link rel="stylesheet" href="crypto.css" />
+
+  <!-- Lightweight Charts -->
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+  <!-- API Base -->
+  <script>
+
+    window.API_BASE =
+      (
+        location.hostname === "localhost"
+        ||
+        location.hostname === "127.0.0.1"
+      )
+        ? "http://127.0.0.1:5000"
+        : "https://bentherebetthat-api.onrender.com";
+
+  </script>
+
+</head>
+
+<body>
+
+  <main class="crypto-page">
+
+    <!-- =====================================================
+         Header
+    ====================================================== -->
+
+    <header class="scanner-header">
+
+    <button
+      id="backToMainBtn"
+      class="back-btn"
+    >
+  ← Back to Sports Dashboard
+</button>
+
+  <!-- Brand -->
+  <div class="scanner-brand">
+
+    <div class="scanner-brand-title">
+
+      <span class="scanner-brand-ben">
+        Ben There
+      </span>
+
+      <span class="scanner-brand-highlight">
+        Bet That
+      </span>
+
+    </div>
+
+    <div class="scanner-brand-subtitle">
+
+  <span class="ai-highlight">
+    AI
+  </span>
+
+  -ASSISTED CRYPTO TRADING PLATFORM
+
+</div>
+
+
+  </div>
+
+  <!-- Main Title -->
+  <h1 class="app-title">
+
+    <span class="app-highlight">
+      Crypto
+    </span>
+
+    Scanner
+
+  </h1>
+
+  <!-- Sub Header -->
+  <p class="app-subtitle">
+
+    Momentum • Relative Strength • Volume • Market Signals
+
+  </p>
+
+  <!-- Description -->
+  <p class="scanner-description">
+
+    Identify high-momentum crypto setups with AI-assisted
+    trend analysis, breakout detection, and beginner-friendly
+    trading guidance.
+
+  </p>
+
+</header>
+
+    <!-- =====================================================
+         Toolbar
+    ====================================================== -->
+
+    <section class="scanner-toolbar">
+
+        <!-- Analytics -->
+        <div
+            id="analyticsCards"
+            class="analytics-cards"
+        ></div>
+
+        <!-- Timeframes -->
+        <div class="scanner-center-controls">
+
+            <div class="scanner-timeframes">
+
+            <button
+                class="scanner-tf"
+                data-scanner-tf="5m"
+            >
+                5M
+            </button>
+
+            <button
+                class="scanner-tf"
+                data-scanner-tf="15m"
+            >
+                15M
+            </button>
+
+            <button
+                class="scanner-tf active"
+                data-scanner-tf="1h"
+            >
+                1H
+            </button>
+
+            <button
+                class="scanner-tf"
+                data-scanner-tf="4h"
+            >
+                4H
+            </button>
+
+            <button
+                id="openAnalyticsBtn"
+                class="trade-filter"
+            >
+              📊 Performance
+            </button>
+            
+
+         </div>
+
+         <div class="trade-filter-wrap">
+
+        <button
+            class="trade-filter active"
+            data-filter="ALL"
+        >
+          🌎 All
+        </button>
+
+        <button
+          class="trade-filter"
+          data-filter="LONG"
+        > 
+          🟢 Longs
+          </button>
+
+          <button
+          class="trade-filter"
+            data-filter="SHORT"
+          >
+          🔴 Shorts
+          </button>
+
+        </div>
+
+        </div>
+
+                <!-- Legend -->
+        <div class="scanner-right">
+
+            <div class="scanner-legend">
+
+                <span class="legend-item">
+                    🔥 Strong Momentum
+                </span>
+
+                <span class="legend-item">
+                    🧠 Smart Money
+                </span>
+
+                <span class="legend-item">
+                    ❄️ Weakness
+                </span>
+
+                <span class="legend-item">
+                    ⚠️ Elevated Risk
+                </span>
+
+            </div>
+
+            <div class="scanner-status">
+
+            Live Crypto Scanner
+
+            </div>
+
+           <div class="score-guide">
+
+            <span class="score-guide-item">
+             🟢 4.0+ = High conviction
+            </span>
+
+            <span class="score-guide-item">
+            🟡 2.0–4.0 = Moderate edge
+          </span>
+
+          <span class="score-guide-item">
+              🟠 1.0–2.0 = Weak edge
+          </span>
+
+          <span class="score-guide-item">
+              🔴 < 1.0 = Avoid
+          </span>
+
+      </div>
+
+        </div>
+
+        </div>
+
+        </section>
+
+        
+
+    <!-- =====================================================
+         Scanner Table
+    ====================================================== -->
+
+ <div class="table-filter-bar">
+
+  <div class="coin-filter-box">
+
+    <input
+      id="coinSearchInput"
+      type="text"
+      placeholder="Type coin abbreviation + Enter"
+    />
+
+    <div
+      id="selectedCoins"
+      class="selected-coins"
+    ></div>
+
+  </div>
+
+</div>
+
+<div class="crypto-table-wrap">
+  <section id="cryptoTable"></section>
+</div>
+
+  </main>
+
+<!-- =====================================================
+     Performance Modal
+====================================================== -->
+
+<div
+  id="analyticsModal"
+  class="chart-modal hidden"
+>
+
+  <div class="chart-content analytics-content">
+
+    <button id="closeAnalytics">
+      ✕
+    </button>
+
+    <h2>
+      📊 AI Performance Center
+    </h2>
+
+    <div class="analytics-timeframe-wrap">
+
+    <button
+      class="analytics-tf active"
+      data-analytics-window="1h"
+    >
+      1H
+    </button>
+
+    <button
+      class="analytics-tf"
+      data-analytics-window="4h"
+    >
+      4H
+    </button>
+
+    <button
+      class="analytics-tf"
+      data-analytics-window="24h"
+    >
+      24H
+    </button>
+
+  </div>
+
+  <div
+    id="analyticsContainer"
+    class="analytics-grid"
+  ></div>
+
+  </div>
+
+</div>
+
+  <!-- =====================================================
+       Chart Modal
+  ====================================================== -->
+
+  <div
+    id="chartModal"
+    class="chart-modal hidden"
+  >
+
+    <div class="chart-content">
+
+      <div class="chart-header">
+
+        <div class="chart-stats" id="chartStats"></div>
+
+        <div class="chart-controls">
+
+            <div class="timeframe-controls">
+
+  <button
+    class="tf-btn"
+    data-timeframe="5m"
+  >
+    5M
+  </button>
+
+  <button
+    class="tf-btn"
+    data-timeframe="15m"
+  >
+    15M
+  </button>
+
+  <button
+    class="tf-btn active-tf"
+    data-timeframe="1h"
+  >
+    1H
+  </button>
+
+  <button
+    class="tf-btn"
+    data-timeframe="4h"
+  >
+    4H
+  </button>
+
+  <button
+    class="tf-btn"
+    data-timeframe="1d"
+  >
+    24H
+  </button>
+
+</div>
+
+        <button class="chart-btn" id="zoomIn">
+        +
+        </button>
+
+        <button class="chart-btn" id="zoomOut">
+        −
+        </button>
+
+        <button class="chart-btn" id="resetZoom">
+            Reset
+        </button>
+
+        </div>
+
+        <div class="chart-title-wrap">
+
+          <h2 id="chartTitle">
+            BTC
+          </h2>
+
+          <span id="chartSubtitle">
+            Crypto Scanner
+          </span>
+
+        </div>
+
+        <button id="closeChart">
+          ✕
+        </button>
+
+      </div>
+
+     <div
+        id="chartTooltip"
+        class="chart-tooltip"
+     ></div>
+
+     <div class="chart-guide">
+
+  <div class="guide-item">
+    🟢 Green Candles = Bullish price movement
+  </div>
+
+  <div class="guide-item">
+    🔴 Red Candles = Bearish price movement
+  </div>
+
+  <div class="guide-item">
+    🔵 Blue Line = EMA trend direction
+  </div>
+
+  <div class="guide-item">
+    📊 Transparent Bars = Trading volume
+  </div>
+
+  <div class="guide-item">
+    🟡 Yellow Line = Partial profit zone
+  </div>
+
+  <div class="guide-item">
+   🟢 Green Line = Entry / safe sell zone
+  </div>
+
+  <div class="guide-item">
+    🔴 Red Line = Stop loss level
+  </div>
+
+  <div class="guide-item">
+    🔥 Momentum = Buyers becoming aggressive
+  </div>
+    <div class="chart-disclaimer">
+
+  Educational signals only — always manage risk and avoid chasing pumps.
+
+</div>
+
+</div>
+
+<div
+  id="chartContainer"
+  class="chart-container"
+></div>
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       Crypto Scanner JS
+  ====================================================== -->
+
+  <script src="crypto.js"></script>
+
+</body>
+
+</html>

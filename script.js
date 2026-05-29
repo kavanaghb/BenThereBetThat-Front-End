@@ -664,7 +664,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // --------------------------------------------------
+// ₿ Crypto Scanner Button
+// --------------------------------------------------
+const openCryptoScannerBtn = document.getElementById("openCryptoScannerBtn");
 
+if (openCryptoScannerBtn) {
+  openCryptoScannerBtn.addEventListener("click", () => {
+    console.log("₿ Opening Crypto Scanner");
+    window.location.href = "crypto.html";
+  });
+}
 
 
   // -----------------------------
@@ -730,6 +740,7 @@ if (openGameLinesBtn) {
 
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
+const ufcMarkets = document.getElementById("mma_mixed_martial_artsMarkets");
 const ncaabMarkets = document.getElementById("basketball_ncaabMarkets");
 const wnbaMarkets = document.getElementById("basketball_wnbaMarkets"); // ✅ FIXED
 const footballMarkets = document.getElementById("footballMarkets");
@@ -1328,6 +1339,19 @@ function initializeBookmakerState() {
   if (!Array.isArray(saved) || saved.length === 0) {
     saved = [...ALL_BOOKS];
   }
+  // ===================================================
+// 🥊 UFC uses sportsbook books only
+// ===================================================
+if (window.selectedSport === "mma_mixed_martial_arts") {
+
+  saved = [
+    "fanduel",
+    "draftkings",
+    "betmgm",
+    "fanatics"
+  ];
+
+}
 
   // ✅ sanitize
   saved = sanitizeSavedBooks(saved);
@@ -2818,6 +2842,11 @@ const SPORT_MARKETS = {
     "player_total_saves": "Total Saves",
     "player_assists": "Assists",
   },
+
+    "mma_mixed_martial_arts": {
+    "h2h": "Fight Winner",
+    "totals": "Fight Total"
+  },
 };
 
 // 🧹 Reset & update helpers
@@ -2965,6 +2994,26 @@ sportButtons.forEach((btn) => {
     sportButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     selectedSport = btn.getAttribute("data-sport");
+    // ===================================================
+// 🥊 UFC sportsbook-only mode
+// ===================================================
+if (selectedSport === "mma_mixed_martial_arts") {
+
+  window.selectedBooks = new Set([
+    "fanduel",
+    "draftkings",
+    "betmgm",
+    "fanatics"
+  ]);
+
+} else {
+
+  window.selectedBooks = new Set(ALL_BOOKS);
+
+}
+
+persistSelectedBooks();
+syncBookmakerCheckboxes();
 
     resultsDiv.innerHTML = "";
     progressText.textContent = "";
@@ -3720,38 +3769,83 @@ const getNoVigProbForRow = (row) => {
   return Number.isFinite(prob) ? prob : null;
 };
 
-const columns = [
-  "Event", "Market", "Description", "OverUnder",
+// ===================================================
+// 🥊 UFC / MMA Detection
+// ===================================================
 
+const isUFC =
+  selectedSport === "mma_mixed_martial_arts";
+
+// ===================================================
+// 🧩 Dynamic Table Columns
+// ===================================================
+
+const columns = [
+  "Event",
+  "Market",
+  "Description",
+  "OverUnder",
+
+  // Sportsbooks
   "FanduelPoint",
   "DraftKingsPoint",
   "BetMGMPoint",
   "FanaticsPoint",
 
-  // ✅ DFS platforms added
-  "PrizePickPoint",
-  "UnderdogPoint",
-  "BetrPoint",
+  // DFS books ONLY for non-UFC
+  ...(!isUFC ? [
+    "PrizePickPoint",
+    "UnderdogPoint",
+    "BetrPoint"
+  ] : []),
 
   "ConsensusPoint",
   "BestNoVig",
 
-  "PrizePicksDifference",
-  "UnderdogDifference",
-  "BetrDifference"
+  // Difference columns ONLY for non-UFC
+  ...(!isUFC ? [
+    "PrizePicksDifference",
+    "UnderdogDifference",
+    "BetrDifference"
+  ] : [])
 ];
 
+// ===================================================
+// 📌 Always Visible Columns
+// ===================================================
 
- 
-  const alwaysShow = [
-  "PrizePicksDifference",
-  "UnderdogDifference",
-  "BetrDifference",
-  "BestNoVig"
+const alwaysShow = [
+  "Event",
+  "Market",
+  "Description",
+
+  "DraftKingsPoint",
+  "ConsensusPoint",
+  "BestNoVig",
+
+  // UFC sportsbook books
+  ...(isUFC ? [
+    "FanduelPoint",
+    "BetMGMPoint",
+    "FanaticsPoint"
+  ] : []),
+
+  // DFS difference columns ONLY for non-UFC
+  ...(!isUFC ? [
+    "PrizePicksDifference",
+    "UnderdogDifference",
+    "BetrDifference"
+  ] : [])
 ];
+
+// ===================================================
+// ✅ Active Columns
+// ===================================================
 
 const activeColumns = columns.filter(
-  col => alwaysShow.includes(col) || data.some(r => r[col] != null && r[col] !== "")
+  col =>
+    alwaysShow.includes(col) ||
+    data.some(r => r[col] != null && r[col] !== "")
 );
 
 
@@ -3963,6 +4057,81 @@ activeColumns.forEach((col) => {
 // 🌟 Best No-Vig Win % (Over vs Under) — MUST RUN FIRST
 // ===================================================
 if (col === "BestNoVig") {
+
+    // ===================================================
+  // 🥊 UFC H2H No-Vig
+  // ===================================================
+  if (
+    selectedSport === "mma_mixed_martial_arts" &&
+    (row.Market || "").toLowerCase() === "h2h"
+  ) {
+    const baseForCompute =
+  Array.isArray(window.fullDataset) && window.fullDataset.length
+    ? window.fullDataset
+    : data;
+
+const opponent = baseForCompute.find(r =>
+  (r.Event || "") === (row.Event || "") &&
+  (r.Market || "").toLowerCase() === "h2h" &&
+  (r.Description || "") !== (row.Description || "")
+);
+
+if (!opponent) {
+  td.textContent = "—";
+  tr.appendChild(td);
+  return;
+}
+
+const fairVals = [];
+
+for (const book of CONSENSUS_BOOKS) {
+  const thisOdds = getSafePrice(row, book);
+  const oppOdds = getSafePrice(opponent, book);
+
+  const pThis = americanToProb(thisOdds);
+  const pOpp = americanToProb(oppOdds);
+
+  if (pThis == null || pOpp == null) continue;
+
+  const total = pThis + pOpp;
+  if (total <= 0) continue;
+
+  fairVals.push((pThis / total) * 100);
+}
+
+const pct =
+  fairVals.length
+    ? fairVals.reduce((a, b) => a + b, 0) / fairVals.length
+    : null;
+
+if (!Number.isFinite(pct)) {
+  td.textContent = "—";
+  tr.appendChild(td);
+  return;
+}
+
+row.NoVigWinProb = pct;
+row.BestNoVigSide = row.Description;
+
+td.textContent = `${pct >= 50 ? "▲" : "▼"} 🧮 ${row.Description} ${pct.toFixed(2)}%`;
+td.dataset.sort = pct.toFixed(2);
+
+if (pct >= 60) {
+  td.style.background = "#0b3d0b";
+  td.style.color = "#ffffff";
+  td.style.fontWeight = "800";
+} else if (pct >= 54) {
+  td.style.background = "#d8f8df";
+  td.style.color = "#0b5f22";
+  td.style.fontWeight = "700";
+} else {
+  td.style.background = "#fff3cd";
+  td.style.color = "#856404";
+}
+
+tr.appendChild(td);
+return;
+  }
   // Ensure cache exists
   if (!window.baseNoVigCache) window.baseNoVigCache = {};
 
@@ -4366,30 +4535,42 @@ return;
 // ===================================================
 if (col === "ConsensusPoint") {
 
-  // 🔥 USE FILTERED sportsbooks only
-  const consensusPoint = getFilteredConsensusPoint(row);
+  const isUFC =
+    selectedSport === "mma_mixed_martial_arts";
 
+  const market =
+    (row.Market || "").toLowerCase();
+
+  const consensusPoint = getFilteredConsensusPoint(row);
   const consensusPrice = getConsensusPrice(row);
 
-  const parts = [];
+  if (isUFC && market === "h2h") {
+    td.textContent = Number.isFinite(consensusPrice)
+      ? `${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice}`
+      : "—";
+  } else {
+    const parts = [];
 
-  if (Number.isFinite(consensusPoint))
-    parts.push(consensusPoint.toFixed(2));
+    if (Number.isFinite(consensusPoint)) {
+      parts.push(consensusPoint.toFixed(2));
+    }
 
-  if (Number.isFinite(consensusPrice))
-    parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
+    if (!(isUFC && market === "totals") && Number.isFinite(consensusPrice)) {
+      parts.push(`(${consensusPrice > 0 ? `+${consensusPrice}` : consensusPrice})`);
+    }
 
-  td.textContent = parts.join(" ") || "—";
+    td.textContent = parts.join(" ") || "—";
+  }
 
-  td.dataset.sort =
-    Number.isFinite(consensusPoint)
-      ? consensusPoint
-      : -9999;
+  td.dataset.sort = Number.isFinite(consensusPoint)
+    ? consensusPoint
+    : Number.isFinite(consensusPrice)
+    ? consensusPrice
+    : -9999;
 
   tr.appendChild(td);
   return;
 }
-
 
 
 
