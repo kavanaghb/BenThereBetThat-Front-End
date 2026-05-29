@@ -1186,8 +1186,35 @@ async function openChart(symbol) {
     `${window.API_BASE}/api/crypto/candles/${symbol}?timeframe=${currentTimeframe}`
   );
 
-  const candles =
-    await res.json();
+  let candles =
+  await res.json();
+
+candles = candles.filter(c => {
+  const volume =
+    Number(c.volume || 0);
+
+  const open =
+    Number(c.open);
+
+  const high =
+    Number(c.high);
+
+  const low =
+    Number(c.low);
+
+  const close =
+    Number(c.close);
+
+  const isFlat =
+    open === high &&
+    high === low &&
+    low === close;
+
+  return !(
+    isFlat &&
+    volume === 0
+  );
+});
 
   // Prevent crashes on empty data
   if (!candles || !candles.length) {
