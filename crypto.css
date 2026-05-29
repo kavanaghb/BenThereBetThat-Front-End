@@ -2609,3 +2609,41 @@
   transform: translateY(-2px);
 
 }
+
+/* ====================================
+   Inactivity Refresh Banner
+==================================== */
+
+.inactive-refresh-banner {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+
+  background: #7f1d1d;
+  color: white;
+
+  padding: 12px 16px;
+  text-align: center;
+
+  font-weight: 700;
+  border-bottom: 1px solid #ef4444;
+}
+
+.inactive-refresh-banner button {
+  margin-left: 12px;
+
+  background: white;
+  color: #7f1d1d;
+
+  border: none;
+  border-radius: 8px;
+
+  padding: 8px 12px;
+
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}

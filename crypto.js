@@ -2748,6 +2748,115 @@ document
     };
 
 });
+
+// ====================================
+// Auto Refresh With Inactivity Pause
+// ====================================
+
+let autoRefreshTimer = null;
+let inactivityTimer = null;
+let autoRefreshPaused = false;
+
+const AUTO_REFRESH_MS = 3 * 60 * 1000;
+const INACTIVITY_MS = 15 * 60 * 1000;
+
+function refreshCryptoScanner() {
+
+  if (autoRefreshPaused) return;
+
+  loadTopCoins();
+  loadAnalytics();
+
+  if (currentChartSymbol) {
+    openChart(currentChartSymbol);
+  }
+
+}
+
+function startAutoRefresh() {
+
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+  }
+
+  autoRefreshTimer = setInterval(
+    refreshCryptoScanner,
+    AUTO_REFRESH_MS
+  );
+
+}
+
+function pauseAutoRefreshForInactivity() {
+
+  autoRefreshPaused = true;
+
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+
+  const banner =
+    document.getElementById("inactiveRefreshBanner");
+
+  if (banner) {
+    banner.classList.remove("hidden");
+  }
+
+}
+
+function resetInactivityTimer() {
+
+  autoRefreshPaused = false;
+
+  const banner =
+    document.getElementById("inactiveRefreshBanner");
+
+  if (banner) {
+    banner.classList.add("hidden");
+  }
+
+  if (inactivityTimer) {
+    clearTimeout(inactivityTimer);
+  }
+
+  inactivityTimer = setTimeout(
+    pauseAutoRefreshForInactivity,
+    INACTIVITY_MS
+  );
+
+  if (!autoRefreshTimer) {
+    startAutoRefresh();
+  }
+
+}
+
+[
+  "mousemove",
+  "keydown",
+  "click",
+  "scroll",
+  "touchstart"
+].forEach(eventName => {
+
+  window.addEventListener(
+    eventName,
+    resetInactivityTimer,
+    { passive: true }
+  );
+
+});
+
+document
+  .getElementById("manualRefreshAfterIdle")
+  ?.addEventListener("click", () => {
+
+    resetInactivityTimer();
+    refreshCryptoScanner();
+
+  });
+
+startAutoRefresh();
+resetInactivityTimer();
 document.addEventListener(
   "keydown",
   e => {
