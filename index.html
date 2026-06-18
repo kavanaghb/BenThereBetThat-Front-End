@@ -203,6 +203,7 @@
   <button id="support-btn" class="secondary-btn">Contact Support</button>
 </div>
 
+</div> <!-- closes subscription-container -->
 
 
     <!-- Title -->
@@ -438,15 +439,148 @@
 </div>
 
 
+<!-- =========================================
+     EDGE PROFILE MODAL
+========================================= -->
+<!-- =========================================
+     EDGE PROFILE MODAL — MLB EDGE REPORT
+========================================= -->
+<div id="edgeProfileModal" class="edge-modal hidden">
 
+  <div class="edge-modal-card">
 
+    <button id="closeEdgeProfile" class="edge-close">×</button>
 
+    <div class="edge-header">
+      <img
+        id="edgeTeamLogo"
+        class="edge-logo"
+        src=""
+        alt=""
+      />
 
+      <div>
+        <h2 id="edgePlayerName">Player Name</h2>
+        <p id="edgeMarketLine">Market / Line</p>
+      </div>
+    </div>
 
-    <!-- 🧾 Results -->
-    <div id="results"></div>
-    <div id="loading">Loading data...</div>
-    <div id="progressText"></div>
+    <div id="edgeFlag" class="edge-flag">
+      Loading...
+    </div>
+
+    <!-- Tabs -->
+    <div class="edge-tabs">
+      <button
+        class="edge-tab active"
+        data-edge-tab="summary"
+      >
+        Summary
+      </button>
+
+      <button
+        class="edge-tab"
+        data-edge-tab="log"
+      >
+        Game Log
+      </button>
+
+      <button
+        class="edge-tab"
+        data-edge-tab="matchup"
+      >
+        Matchup
+      </button>
+
+      <button
+        class="edge-tab"
+        data-edge-tab="model"
+      >
+        Model
+      </button>
+    </div>
+
+    <!-- SUMMARY TAB -->
+    <div
+      class="edge-tab-panel active"
+      id="edgeTab-summary"
+    >
+
+      <div class="edge-section">
+        <h3>Key Takeaways</h3>
+
+        <ul
+          id="edgeKeyPoints"
+          class="edge-key-points"
+        >
+          <li>Loading player edge summary...</li>
+        </ul>
+      </div>
+
+      
+    </div>
+
+    <!-- GAME LOG TAB -->
+    <div
+      class="edge-tab-panel"
+      id="edgeTab-log"
+    >
+
+      <div class="edge-section">
+        <h3>Last 10 Games</h3>
+        <div id="edgeGameLogChart"></div>
+      </div>
+
+      <table class="edge-table">
+        <tbody id="edgeGameLogTable"></tbody>
+      </table>
+
+    </div>
+
+    <!-- MATCHUP TAB -->
+    <div
+      class="edge-tab-panel"
+      id="edgeTab-matchup"
+    >
+
+      <div class="edge-section">
+        <h3>Matchup Snapshot</h3>
+
+        <table class="edge-table">
+          <tbody id="edgeMatchupTable"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- MODEL TAB -->
+    <div
+      class="edge-tab-panel"
+      id="edgeTab-model"
+    >
+
+      <div class="edge-section">
+        <h3>Model Breakdown</h3>
+
+        <table class="edge-table">
+          <tbody id="edgeDetailsTable"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 🧾 Results -->
+<div id="results"></div>
+
+<div id="loading">
+  Loading data...
+</div>
+
+<div id="progressText"></div>
     
 <!-- 🔁 View Mode Toggle (temporarily hidden to prevent API usage) -->
 <!--

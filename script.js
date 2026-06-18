@@ -3236,8 +3236,26 @@ async function loadData() {
       return;
     }
 
-    // ✅ Deduplicate + Render??????????????????????????????????????????????????
-    const cleanedData = dedupeMarkets(allData);
+        // ✅ Deduplicate + Render
+    let cleanedData = dedupeMarkets(allData);
+
+    // ⚾ MLB: Only show player props
+    if (selectedSport === "baseball_mlb") {
+
+      cleanedData = cleanedData.filter(row => {
+
+        const market =
+          String(row.Market || "").toLowerCase();
+
+        return (
+          market.startsWith("pitcher_") ||
+          market.startsWith("batter_")
+        );
+
+      });
+
+    }
+
     console.log(`🧹 Deduped from ${allData.length} → ${cleanedData.length} rows`);
     console.log("📦 Sample row:", cleanedData[0]);
 
@@ -3254,18 +3272,31 @@ async function loadData() {
     if (typeof setRefreshEnabled === "function") {
       setRefreshEnabled(cleanedData.length > 0);
     }
+
   } catch (err) {
+
     if (err.name === "AbortError") {
+
       progressText.textContent = "⚠️ Loading stopped.";
+
     } else {
+
       console.error("❌ loadData error:", err);
       alert("Frontend error: " + err.message);
-      progressText.textContent = "❌ Error fetching data (see console).";
+      progressText.textContent =
+        "❌ Error fetching data (see console).";
+
     }
-    if (typeof setRefreshEnabled === "function") setRefreshEnabled(false);
+
+    if (typeof setRefreshEnabled === "function")
+      setRefreshEnabled(false);
+
   } finally {
+
     loadingDiv.style.display = "none";
+
   }
+
 }
 
 
@@ -4611,8 +4642,51 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "B
   // ===================================================
   // 🧾 Default fallback
   // ===================================================
-  td.textContent = value === null || value === undefined || value === "" ? "—" : String(value);
+
+if (col === "Description") {
+
+  const isMLBPlayerProp =
+    value &&
+    value !== "None" &&
+    (
+      row.Market?.startsWith("pitcher_") ||
+      row.Market?.startsWith("batter_")
+    );
+
+  td.innerHTML = `
+    <div class="player-cell-with-edge">
+      <span>${value === null || value === undefined || value === "" ? "—" : String(value)}</span>
+
+      ${
+        isMLBPlayerProp
+          ? `<button class="edge-profile-btn" type="button">📊</button>`
+          : ""
+      }
+    </div>
+  `;
+
+  const edgeBtn = td.querySelector(".edge-profile-btn");
+
+  if (edgeBtn) {
+    edgeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openEdgeProfile(row);
+    });
+  }
+
   tr.appendChild(td);
+  return;
+}
+
+
+td.textContent =
+  value === null ||
+  value === undefined ||
+  value === ""
+    ? "—"
+    : String(value);
+
+tr.appendChild(td);
 });
 
 
@@ -6522,3 +6596,767 @@ if (trackerBtn) {
     window.location.href = "pick-tracker.html";
   });
 }
+
+function getPlayFlag(projectedWinRate) {
+
+  if (projectedWinRate >= 58)
+    return "🔥 Strong Play";
+
+  if (projectedWinRate >= 54)
+    return "✅ Good Play";
+
+  if (projectedWinRate >= 51)
+    return "⚠️ Lean";
+
+  return "❌ No Edge";
+}
+
+async function openEdgeProfile(rowData) {
+
+  const modal = document.getElementById("edgeProfileModal");
+
+const eventName = rowData.Event || "";
+const [teamA, teamB] = extractTeams(eventName);
+const homeTeam = rowData.home_team || rowData.HomeTeam || "";
+const awayTeam = rowData.away_team || rowData.AwayTeam || "";
+const playerTeam =
+  rowData.Team ||
+  rowData.team ||
+  rowData.HomeTeam ||
+  rowData.AwayTeam ||
+  "";
+
+const matchupOpponent =
+  playerTeam && teamA && teamB
+    ? playerTeam === teamA
+      ? teamB
+      : playerTeam === teamB
+      ? teamA
+      : ""
+    : "";
+const teamALogo = teamA ? getTeamLogoUrl(teamA) : null;
+const teamBLogo = teamB ? getTeamLogoUrl(teamB) : null;
+
+let logoWrap = modal.querySelector(".edge-team-logos");
+
+// create once
+if (!logoWrap) {
+  const oldImg = modal.querySelector("img");
+
+  logoWrap = document.createElement("div");
+  logoWrap.className = "edge-team-logos";
+
+  if (oldImg) {
+    oldImg.replaceWith(logoWrap);
+  }
+}
+
+// clear old logos every click
+logoWrap.innerHTML = `
+  ${
+    teamALogo
+      ? `<img src="${teamALogo}" alt="${teamA} logo" class="edge-team-logo">`
+      : ""
+  }
+  ${
+    teamBLogo
+      ? `<img src="${teamBLogo}" alt="${teamB} logo" class="edge-team-logo">`
+      : ""
+  }
+`;
+
+  const player = rowData.Description || "";
+  const market = rowData.Market || "";
+
+  const prettyMarket = market
+  .replace("pitcher_", "")
+  .replace("batter_", "")
+  .replaceAll("_", " ")
+  .replace(/\b\w/g, c => c.toUpperCase());
+
+  const line =
+    rowData.PrizePickPoint ||
+    rowData.UnderdogPoint ||
+    rowData.BetrPoint ||
+    rowData.ConsensusPoint ||
+    "";
+
+  const outcome = rowData.Outcome || "";
+
+  document.getElementById("edgePlayerName").textContent = player;
+
+  document.getElementById("edgeMarketLine").textContent =
+  `${prettyMarket} • ${outcome} ${line}`;
+
+  document.getElementById("edgeFlag").textContent =
+    "Loading MLB profile...";
+
+  document.getElementById("edgeKeyPoints").innerHTML = `
+    <li>Loading edge report...</li>
+  `;
+
+  document.getElementById("edgeBarGraph")?.replaceChildren();
+  document.getElementById("edgeGameLogChart").innerHTML = "";
+
+  document.getElementById("edgeGameLogTable").innerHTML = `
+    <tr>
+      <td>Loading...</td>
+      <td>Please wait</td>
+    </tr>
+  `;
+
+  document.getElementById("edgeMatchupTable").innerHTML = `
+    <tr>
+      <td>Loading...</td>
+      <td>Please wait</td>
+    </tr>
+  `;
+
+  document.getElementById("edgeDetailsTable").innerHTML = `
+    <tr>
+      <td>Loading...</td>
+      <td>Please wait</td>
+    </tr>
+  `;
+
+  modal.classList.remove("hidden");
+
+  try {
+
+    const params = new URLSearchParams();
+
+    params.append("player", player);
+    params.append("market", market);
+
+    if (line !== "") params.append("line", line);
+    if (outcome !== "") params.append("outcome", outcome);
+    if (teamA) params.append("team_a", teamA);
+    if (teamB) params.append("team_b", teamB);
+    if (homeTeam) params.append("home_team", homeTeam);
+    if (awayTeam) params.append("away_team", awayTeam);
+
+    const res = await fetch(
+      `${window.API_BASE}/api/mlb/player-profile?${params.toString()}`
+    );
+
+    if (!res.ok) {
+      throw new Error(`MLB profile failed: ${res.status}`);
+    }
+
+    const profile = await res.json();
+
+
+
+    const modelWin =
+      Number(profile.projected_win_rate || 0);
+
+    const noVig =
+      Number(rowData.NoVigWinProb ?? rowData.NoVigProb ?? 0);
+
+    const vegasWin = noVig;
+
+    console.log(
+      "MODAL DEBUG",
+      rowData.Description,
+      rowData.Market,
+      "Clicked:", rowData.Outcome,
+      "Best:", rowData.BestNoVigSide,
+      "NoVigWinProb:", rowData.NoVigWinProb,
+      "NoVigProb:", rowData.NoVigProb,
+      "Used:", noVig
+    );
+
+    const edgeBoost =
+      modelWin && vegasWin
+        ? modelWin - vegasWin
+        : 0;
+
+    const numericLine =
+      Number(line || 0);
+
+    const realGameLog =
+      Array.isArray(profile.game_log)
+        ? profile.game_log
+        : [];
+
+    const latestGame =
+      realGameLog.length ? realGameLog[0] : null;
+
+
+
+
+// ===================================================
+// 📝 Summary Tab — Line Shopping + AI Read
+// ===================================================
+const ppLine = rowData.PrizePickPoint ?? rowData.PrizePicksPoint ?? null;
+const udLine = rowData.UnderdogPoint ?? null;
+const betrLine = rowData.BetrPoint ?? null;
+const vegasLine = rowData.ConsensusPoint ?? null;
+
+const matchup = profile.matchup || {};
+
+const bestSide =
+  rowData.BestNoVigSide ||
+  rowData.bestNoVigSide ||
+  "N/A";
+
+
+
+
+const sideText =
+  bestSide !== "N/A"
+    ? `${bestSide} favored by Vegas`
+    : "Best side unavailable";
+
+const getPlatformBadge = (diff) => {
+  const n = Number(diff);
+
+  if (rowData._brainPlay) {
+    return "🧠";
+  }
+
+  if (Number(rowData._fireLevel || 0) >= 1 && Number.isFinite(n) && Math.abs(n) >= 0.25) {
+    return "🔥";
+  }
+
+  return "";
+};
+
+const ppBadge = getPlatformBadge(rowData.PrizePicksDifference);
+const udBadge = getPlatformBadge(rowData.UnderdogDifference);
+const betrBadge = getPlatformBadge(rowData.BetrDifference);
+
+const lineRows = [
+  { label: `${ppBadge} PrizePicks`, value: ppLine },
+  { label: `${udBadge} Underdog`, value: udLine },
+  { label: `${betrBadge} Betr`, value: betrLine },
+  { label: "Vegas Consensus", value: vegasLine }
+];
+
+const availableLines = lineRows
+  .filter(x => x.value !== null && x.value !== undefined && x.value !== "")
+  .map(x => `
+    <div class="edge-line-row">
+      <span>${x.label}</span>
+      <strong>${x.value}</strong>
+    </div>
+  `)
+  .join("");
+
+
+
+const dfsLines = [ppLine, udLine, betrLine]
+  .filter(v => v !== null && v !== undefined && v !== "")
+  .map(Number)
+  .filter(Number.isFinite);
+
+const bestDfsLine =
+  dfsLines.length
+    ? Math.min(...dfsLines)
+    : null;
+
+const vegasNum = Number(vegasLine);
+
+const bestSideLower =
+  String(bestSide || "").toLowerCase();
+
+const lineEdge =
+  bestDfsLine !== null &&
+  Number.isFinite(vegasNum)
+    ? bestSideLower === "over"
+      ? vegasNum - bestDfsLine
+      : bestSideLower === "under"
+      ? bestDfsLine - vegasNum
+      : null
+    : null;
+
+// ===================================================
+// 🧠 AI Verdict / Outlook
+// ===================================================
+const aiNotes = [];
+
+const marketLower =
+  String(market || "").toLowerCase();
+
+const last10Rate =
+  Number(profile.last10_hit_rate || 0);
+
+const seasonRate =
+  Number(profile.season_hit_rate || 0);
+
+const sampleSize =
+  Array.isArray(profile.game_log)
+    ? profile.game_log.length
+    : 0;
+
+// Line edge
+if (lineEdge !== null && lineEdge > 0) {
+  aiNotes.push(
+    `DFS line is ${lineEdge.toFixed(1)} pts better than Vegas for the ${bestSide}.`
+  );
+} else if (lineEdge !== null && lineEdge < 0) {
+  aiNotes.push(
+    `DFS line is ${Math.abs(lineEdge).toFixed(1)} pts worse than Vegas for the ${bestSide}.`
+  );
+}
+
+// Recent form
+if (last10Rate >= 70) {
+  aiNotes.push("Recent form strongly supports this side.");
+} else if (last10Rate >= 60) {
+  aiNotes.push("Recent form leans positive.");
+} else if (last10Rate <= 40 && sampleSize >= 5) {
+  aiNotes.push("Recent form is weak for this side.");
+}
+
+// Season form
+if (seasonRate >= 60) {
+  aiNotes.push("Season-long results support the play.");
+} else if (seasonRate <= 45 && sampleSize >= 8) {
+  aiNotes.push("Season-long results are weak for this side.");
+}
+
+// Sample size
+if (sampleSize > 0 && sampleSize < 5) {
+  aiNotes.push("Small sample size — use caution.");
+}
+
+// Prop-specific matchup notes
+if (marketLower.includes("strikeouts")) {
+
+  if (matchup.k_rate_rank && matchup.k_rate_rank <= 10) {
+    aiNotes.push("Opponent strikes out at a high rate.");
+  } else if (matchup.k_rate_rank && matchup.k_rate_rank >= 24) {
+    aiNotes.push("Opponent is difficult to strike out.");
+  }
+
+} else if (marketLower.includes("outs")) {
+
+  if (matchup.runs_rank && matchup.runs_rank <= 10) {
+    aiNotes.push("Opponent offense creates risk for pitcher outs.");
+  } else if (matchup.runs_rank && matchup.runs_rank >= 20) {
+    aiNotes.push("Opponent profile is favorable for pitching deeper into the game.");
+  }
+
+} else if (marketLower.includes("earned_runs")) {
+
+  if (matchup.ops_rank && matchup.ops_rank >= 25) {
+    aiNotes.push("Strong offense increases earned-run risk.");
+  } else if (matchup.ops_rank && matchup.ops_rank <= 10) {
+    aiNotes.push("Weak offense supports run prevention.");
+  }
+
+} else if (marketLower.includes("walks")) {
+
+  const walkRate =
+    Number(matchup.walk_rate || 0);
+
+  if (walkRate >= 10) {
+    aiNotes.push("Opponent walk rate increases walk risk.");
+  } else if (walkRate > 0 && walkRate <= 7) {
+    aiNotes.push("Opponent rarely walks, which supports the under.");
+  }
+
+}
+
+const aiRead =
+  aiNotes.length
+    ? aiNotes.slice(0, 3).join(" ")
+    : "Neutral supporting evidence.";
+  
+
+ // ===================================================
+// 🏷 Banner / Edge Label
+// ===================================================
+let edgeSymbol = "⚪";
+let edgeLabel = "No Clear Edge";
+
+if (
+  noVig >= 60 &&
+  lineEdge !== null &&
+  lineEdge > 0
+) {
+  edgeSymbol = "🔥";
+  edgeLabel = "Strong Line Edge";
+
+} else if (
+  noVig >= 54 &&
+  lineEdge !== null &&
+  lineEdge > 0
+) {
+  edgeSymbol = "🧠";
+  edgeLabel = "Value Lean";
+
+} else if (noVig >= 54) {
+  edgeSymbol = "📊";
+  edgeLabel = "Vegas Lean";
+}
+
+document.getElementById("edgeFlag").textContent =
+  `${edgeSymbol} ${edgeLabel}`;
+
+   
+document.getElementById("edgeKeyPoints").innerHTML = `
+  <div class="edge-hero-read">
+
+    <div class="edge-hero-main">
+      <span class="edge-small-label">Best Side</span>
+      <strong>${bestSide}</strong>
+    </div>
+
+    <div class="edge-side-pill ${bestSideLower}">
+      ${bestSide} ${line}
+    </div>
+
+    <div class="edge-confidence">
+      <div class="edge-confidence-top">
+        <span>Fair Win Rate</span>
+        <strong>${noVig.toFixed(1)}%</strong>
+      </div>
+
+      <div class="edge-confidence-track">
+        <div
+          class="edge-confidence-fill"
+          style="width:${Math.min(noVig, 100)}%;"
+        ></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="edge-summary-card">
+
+    <h4>📈 Line Shopping</h4>
+
+    ${availableLines}
+
+    <div class="edge-line-row edge-line-edge">
+      <span>Line Edge</span>
+      <strong>
+        ${lineEdge !== null
+          ? `${lineEdge > 0 ? "+" : ""}${lineEdge.toFixed(2)} pts`
+          : "N/A"}
+      </strong>
+    </div>
+
+  </div>
+
+  <div class="edge-summary-grid">
+
+    <div class="edge-mini-card">
+      <span>Last 10</span>
+      <strong>${profile.last10_record || "N/A"}</strong>
+      <small>Avg ${profile.last10_avg ?? "N/A"}</small>
+    </div>
+
+    <div class="edge-mini-card">
+      <span>Season</span>
+      <strong>${profile.season_record || "N/A"}</strong>
+      <small>Avg ${profile.season_avg ?? "N/A"}</small>
+    </div>
+
+  </div>
+
+  <div class="edge-summary-card">
+
+    <h4>⚔️ Matchup</h4>
+
+    <div class="edge-line-row">
+      <span>Opponent</span>
+      <strong>${matchup.opponent || "N/A"}</strong>
+    </div>
+
+    <div class="edge-line-row">
+  <span>
+    ${
+      marketLower.includes("outs")
+        ? "Run Environment"
+        : marketLower.includes("earned_runs")
+        ? "Offensive Profile"
+        : marketLower.includes("walks")
+        ? "Walk Profile"
+        : "Strikeout Profile"
+    }
+  </span>
+
+  <strong>
+    ${
+      marketLower.includes("outs")
+        ? matchup.runs_rank
+          ? matchup.runs_rank <= 10
+            ? `#${matchup.runs_rank} High-Scoring`
+            : matchup.runs_rank >= 24
+            ? `#${matchup.runs_rank} Low-Scoring`
+            : `#${matchup.runs_rank} Average`
+          : "N/A"
+
+        : marketLower.includes("earned_runs")
+        ? matchup.ops_rank
+          ? matchup.ops_rank >= 24
+            ? `#${matchup.ops_rank} Strong Offense`
+            : matchup.ops_rank <= 10
+            ? `#${matchup.ops_rank} Weak Offense`
+            : `#${matchup.ops_rank} Average`
+          : "N/A"
+
+        : marketLower.includes("walks")
+        ? matchup.walk_rate
+          ? `${matchup.walk_rate}%`
+          : "N/A"
+
+        : matchup.k_rate_rank
+        ? matchup.k_rate_rank <= 10
+          ? `#${matchup.k_rate_rank} High-K`
+          : matchup.k_rate_rank >= 24
+          ? `#${matchup.k_rate_rank} Low-K`
+          : `#${matchup.k_rate_rank} Average`
+        : "N/A"
+    }
+  </strong>
+</div>
+
+  <div class="edge-ai-read edge-ai-large">
+    🤖 <strong>AI Analysis:</strong><br>
+    ${aiRead}
+  </div>
+`;
+
+// ===================================================
+// 📊 Game Log Tab
+// ===================================================
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return "";
+
+  const d =
+    new Date(dateStr + "T00:00:00");
+
+  return d.toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric"
+    }
+  );
+};
+
+const gameLogValues =
+  realGameLog.map((g, index) => ({
+    game: g.date
+      ? formatShortDate(g.date)
+      : `G${index + 1}`,
+
+    opponent: g.opponent || "",
+
+    homeAway: g.home_away || "",
+
+    value: Number(g.value || 0)
+  }));
+
+document.getElementById("edgeGameLogChart").innerHTML =
+  gameLogValues.length
+    ? gameLogValues.map(g => {
+
+        const barWidth =
+          Math.min(g.value * 10, 100);
+
+        const isUnder =
+          String(outcome).toLowerCase() === "under";
+
+        const isHit =
+          isUnder
+            ? g.value < numericLine
+            : g.value > numericLine;
+
+        const hitClass =
+          isHit ? "hit" : "miss";
+
+        return `
+          <div class="edge-log-row">
+            <span>${g.game}</span>
+
+            <div class="edge-log-bar-track">
+              <div
+                class="edge-log-bar ${hitClass}"
+                style="width:${barWidth}%"
+              ></div>
+            </div>
+
+            <strong>${g.value}</strong>
+          </div>
+        `;
+      }).join("")
+    : `<p>No game log found yet.</p>`;
+
+document.getElementById("edgeGameLogTable").innerHTML = `
+  <tr>
+    <td>Line</td>
+    <td>${numericLine || "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Last 10 Hit Rate</td>
+    <td>${profile.last10_record || "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Last 10 Average</td>
+    <td>${profile.last10_avg ?? "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Season Hit Rate</td>
+    <td>${profile.season_record || "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Season Average</td>
+    <td>${profile.season_avg ?? "N/A"}</td>
+  </tr>
+`;
+
+// ===================================================
+// ⚾ Matchup Tab
+// ===================================================
+const matchupType =
+  market.includes("strikeouts")
+    ? `(${matchup.k_rate_rank}th Most K's)`
+    : market.includes("walks")
+    ? `(${matchup.walk_rate}% Walk Rate)`
+    : market.includes("earned_runs")
+    ? `(${matchup.ops_rank}th Lowest OPS)`
+    : market.includes("outs")
+    ? `(${matchup.runs_rank}th Lowest Scoring)`
+    : "";
+
+document.getElementById("edgeMatchupTable").innerHTML = `
+
+  <tr>
+    <td>Opponent</td>
+    <td>${matchup.opponent || "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Matchup Grade</td>
+    <td>${matchup.verdict || "Neutral Matchup"}</td>
+  </tr>
+
+  <tr>
+  <td>K Profile</td>
+  <td>
+    ${matchup.strikeout_rate || "N/A"}%
+    ${
+      matchup.k_rate_rank
+        ? matchup.k_rate_rank <= 10
+          ? `(#${matchup.k_rate_rank} high-K team)`
+          : matchup.k_rate_rank >= 24
+          ? `(#${matchup.k_rate_rank} low-K team)`
+          : `(#${matchup.k_rate_rank} average K team)`
+        : ""
+    }
+  </td>
+  </tr>
+
+  <tr>
+    <td>OPS</td>
+    <td>
+      ${matchup.ops || "N/A"}
+      ${matchup.ops_rank ? `(${matchup.ops_rank}th Lowest OPS)` : ""}
+    </td>
+  </tr>
+
+  <tr>
+    <td>Runs/Game</td>
+    <td>
+      ${matchup.runs_per_game || "N/A"}
+      ${matchup.runs_rank ? `(${matchup.runs_rank}th Lowest Scoring)` : ""}
+    </td>
+  </tr>
+
+`;
+
+// ===================================================
+// 🧠 Model Tab — Evidence Only
+// ===================================================
+document.getElementById("edgeDetailsTable").innerHTML = `
+  <tr>
+    <td>Last 10 Average</td>
+    <td>${profile.last10_avg ?? "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Last 10 Hit Rate</td>
+    <td>${profile.last10_record || "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Season Average</td>
+    <td>${profile.season_avg ?? "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Season Hit Rate</td>
+    <td>${profile.season_record || "N/A"}</td>
+  </tr>
+
+  <tr>
+    <td>Sample Size</td>
+    <td>${profile.game_log?.length || "N/A"}</td>
+  </tr>
+`;
+
+  } catch (err) {
+
+    console.error("❌ Edge profile error:", err);
+
+    document.getElementById("edgeFlag").textContent =
+      "❌ Could not load MLB profile";
+
+    document.getElementById("edgeKeyPoints").innerHTML = `
+      <li>Could not load profile data.</li>
+    `;
+
+    document.getElementById("edgeDetailsTable").innerHTML = `
+      <tr>
+        <td>Error</td>
+        <td>${err.message}</td>
+      </tr>
+    `;
+
+}
+
+}
+// ===================================================
+// ❌ Close Edge Profile Modal
+// ===================================================
+document
+  .getElementById("closeEdgeProfile")
+  ?.addEventListener("click", () => {
+
+    document
+      .getElementById("edgeProfileModal")
+      .classList.add("hidden");
+
+  });
+
+  // ===================================================
+// 🧭 Edge Profile Tab Switching
+// ===================================================
+document.querySelectorAll(".edge-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    const target = tab.dataset.edgeTab;
+
+    document.querySelectorAll(".edge-tab").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    document.querySelectorAll(".edge-tab-panel").forEach(panel => {
+      panel.classList.remove("active");
+    });
+
+    tab.classList.add("active");
+
+    document
+      .getElementById(`edgeTab-${target}`)
+      ?.classList.add("active");
+  });
+});

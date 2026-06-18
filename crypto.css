@@ -2647,3 +2647,18 @@
 .hidden {
   display: none !important;
 }
+
+.player-cell-with-edge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.edge-profile-btn {
+  padding: 3px 6px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+}
