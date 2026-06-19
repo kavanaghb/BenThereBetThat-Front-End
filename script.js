@@ -6932,19 +6932,26 @@ if (marketLower.includes("strikeouts")) {
 
 } else if (marketLower.includes("outs")) {
 
-  if (matchup.runs_rank && matchup.runs_rank <= 10) {
+  if (matchup.runs_rank && matchup.runs_rank >= 24) {
     aiNotes.push("Opponent offense creates risk for pitcher outs.");
-  } else if (matchup.runs_rank && matchup.runs_rank >= 20) {
+  } else if (matchup.runs_rank && matchup.runs_rank <= 10) {
     aiNotes.push("Opponent profile is favorable for pitching deeper into the game.");
   }
 
 } else if (marketLower.includes("earned_runs")) {
 
-  if (matchup.ops_rank && matchup.ops_rank >= 25) {
+  if (
+    (matchup.ops_rank && matchup.ops_rank >= 24) ||
+    (matchup.runs_rank && matchup.runs_rank >= 24)
+  ) {
     aiNotes.push("Strong offense increases earned-run risk.");
-  } else if (matchup.ops_rank && matchup.ops_rank <= 10) {
+  } else if (
+    (matchup.ops_rank && matchup.ops_rank <= 10) ||
+    (matchup.runs_rank && matchup.runs_rank <= 10)
+  ) {
     aiNotes.push("Weak offense supports run prevention.");
   }
+
 
 } else if (marketLower.includes("walks")) {
 
@@ -7082,22 +7089,22 @@ document.getElementById("edgeKeyPoints").innerHTML = `
   <strong>
     ${
       marketLower.includes("outs")
-        ? matchup.runs_rank
-          ? matchup.runs_rank <= 10
-            ? `#${matchup.runs_rank} High-Scoring`
-            : matchup.runs_rank >= 24
-            ? `#${matchup.runs_rank} Low-Scoring`
-            : `#${matchup.runs_rank} Average`
-          : "N/A"
+  ? matchup.runs_rank
+    ? matchup.runs_rank >= 24
+      ? `#${matchup.runs_rank} High-Scoring`
+      : matchup.runs_rank <= 10
+      ? `#${matchup.runs_rank} Low-Scoring`
+      : `#${matchup.runs_rank} Average`
+    : "N/A"
 
-        : marketLower.includes("earned_runs")
-        ? matchup.ops_rank
-          ? matchup.ops_rank >= 24
-            ? `#${matchup.ops_rank} Strong Offense`
-            : matchup.ops_rank <= 10
-            ? `#${matchup.ops_rank} Weak Offense`
-            : `#${matchup.ops_rank} Average`
-          : "N/A"
+  : marketLower.includes("earned_runs")
+  ? matchup.ops_rank
+    ? matchup.ops_rank >= 24
+      ? `#${matchup.ops_rank} Strong Offense`
+      : matchup.ops_rank <= 10
+      ? `#${matchup.ops_rank} Weak Offense`
+      : `#${matchup.ops_rank} Average`
+    : "N/A"
 
         : marketLower.includes("walks")
         ? matchup.walk_rate
@@ -7217,19 +7224,99 @@ document.getElementById("edgeGameLogTable").innerHTML = `
 // ===================================================
 // ⚾ Matchup Tab
 // ===================================================
-const matchupType =
-  market.includes("strikeouts")
-    ? `(${matchup.k_rate_rank}th Most K's)`
-    : market.includes("walks")
-    ? `(${matchup.walk_rate}% Walk Rate)`
-    : market.includes("earned_runs")
-    ? `(${matchup.ops_rank}th Lowest OPS)`
-    : market.includes("outs")
-    ? `(${matchup.runs_rank}th Lowest Scoring)`
-    : "";
+// ===================================================
+// ⚾ Matchup Tab
+
+const rankTierText = (rank, highLabel, lowLabel) => {
+  const r = Number(rank);
+
+  if (!Number.isFinite(r)) return "N/A";
+
+  const fromTop =
+    31 - r;
+
+  if (r >= 26) {
+    return `Top ${fromTop} ${highLabel}`;
+  }
+
+  if (r <= 5) {
+    return `Bottom ${r} ${lowLabel}`;
+  }
+
+  if (r >= 21) {
+    return `Above Avg ${highLabel}`;
+  }
+
+  if (r <= 10) {
+    return `Below Avg ${lowLabel}`;
+  }
+
+  return "League Avg";
+};
+const kProfileText =
+  matchup.k_rate_rank
+    ? matchup.k_rate_rank <= 10
+      ? `#${matchup.k_rate_rank} high-K team`
+      : matchup.k_rate_rank >= 24
+      ? `#${matchup.k_rate_rank} low-K team`
+      : `#${matchup.k_rate_rank} average K team`
+    : "N/A";
+
+const opsProfileText =
+  matchup.ops_rank
+    ? rankTierText(
+        matchup.ops_rank,
+        "OPS Offense",
+        "OPS Offense"
+      )
+    : "N/A";
+
+
+
+const runsProfileText =
+  matchup.runs_rank
+    ? rankTierText(
+        matchup.runs_rank,
+        "Scoring Offense",
+        "Scoring Offense"
+      )
+    : "N/A";
+
+let matchupGrade = "Neutral Matchup";
+
+if (marketLower.includes("strikeouts")) {
+  matchupGrade =
+    matchup.k_rate_rank <= 10
+      ? "🔥 Favorable Strikeout Matchup"
+      : matchup.k_rate_rank >= 24
+      ? "⚠️ Tough Strikeout Matchup"
+      : "➖ Neutral Strikeout Matchup";
+} else if (marketLower.includes("outs")) {
+  matchupGrade =
+    matchup.runs_rank >= 24
+      ? "⚠️ Tough Pitching Environment"
+      : matchup.runs_rank <= 10
+      ? "🔥 Favorable To Pitch Deep"
+      : "➖ Neutral Pitching Environment";
+} else if (marketLower.includes("earned_runs")) {
+  matchupGrade =
+    matchup.ops_rank >= 24 || matchup.runs_rank >= 24
+      ? "⚠️ Run Risk Matchup"
+      : matchup.ops_rank <= 10 || matchup.runs_rank <= 10
+      ? "🔥 Run Prevention Matchup"
+      : "➖ Neutral Run Matchup";
+
+} else if (marketLower.includes("walks")) {
+  matchupGrade =
+    Number(matchup.walk_rate || 0) >= 10
+      ? "⚠️ High Walk Opponent"
+      : Number(matchup.walk_rate || 0) > 0 &&
+        Number(matchup.walk_rate || 0) <= 7
+      ? "🔥 Low Walk Opponent"
+      : "➖ Neutral Walk Matchup";
+}
 
 document.getElementById("edgeMatchupTable").innerHTML = `
-
   <tr>
     <td>Opponent</td>
     <td>${matchup.opponent || "N/A"}</td>
@@ -7237,43 +7324,24 @@ document.getElementById("edgeMatchupTable").innerHTML = `
 
   <tr>
     <td>Matchup Grade</td>
-    <td>${matchup.verdict || "Neutral Matchup"}</td>
+    <td>${matchupGrade}</td>
   </tr>
 
   <tr>
-  <td>K Profile</td>
-  <td>
-    ${matchup.strikeout_rate || "N/A"}%
-    ${
-      matchup.k_rate_rank
-        ? matchup.k_rate_rank <= 10
-          ? `(#${matchup.k_rate_rank} high-K team)`
-          : matchup.k_rate_rank >= 24
-          ? `(#${matchup.k_rate_rank} low-K team)`
-          : `(#${matchup.k_rate_rank} average K team)`
-        : ""
-    }
-  </td>
+    <td>K Profile</td>
+    <td>${matchup.strikeout_rate || "N/A"}% (${kProfileText})</td>
   </tr>
 
   <tr>
     <td>OPS</td>
-    <td>
-      ${matchup.ops || "N/A"}
-      ${matchup.ops_rank ? `(${matchup.ops_rank}th Lowest OPS)` : ""}
-    </td>
+    <td>${matchup.ops || "N/A"} (${opsProfileText})</td>
   </tr>
 
   <tr>
     <td>Runs/Game</td>
-    <td>
-      ${matchup.runs_per_game || "N/A"}
-      ${matchup.runs_rank ? `(${matchup.runs_rank}th Lowest Scoring)` : ""}
-    </td>
+    <td>${matchup.runs_per_game || "N/A"} (${runsProfileText})</td>
   </tr>
-
 `;
-
 // ===================================================
 // 🧠 Model Tab — Evidence Only
 // ===================================================
