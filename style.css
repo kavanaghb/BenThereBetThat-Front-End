@@ -6998,3 +6998,21 @@ body:not(.auth-mode) .site-footer {
   padding: 14px 16px;
   border-radius: 14px;
 }
+
+.dfs-line-equal {
+  background-color: #fff4c2 !important;
+  color: #7a5a00;
+  font-weight: 700;
+}
+
+.dfs-line-better {
+  background-color: #d9f2dd !important;
+  color: #236b35;
+  font-weight: 700;
+}
+
+.dfs-line-worse {
+  background-color: #f7d6d6 !important;
+  color: #a12626;
+  font-weight: 700;
+}

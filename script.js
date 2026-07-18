@@ -1727,9 +1727,12 @@ function getFilteredConsensusPoint(row, baseData) {
     const proper = keyMap[book];
     if (!proper) continue;
 
-    const value = Number(row?.[`${proper}Point`]);
+    const rawValue = row?.[`${proper}Point`];
+    if (rawValue === null || rawValue === undefined || rawValue === "") continue;
 
-    if (Number.isFinite(value)) {
+    const value = Number(rawValue);
+
+    if (Number.isFinite(value) && value > 0) {
       points.push(value);
     }
 
@@ -1809,7 +1812,7 @@ if (factCheckBtn && !window.factCheckEnabled) {
 // ===================================================
 // 🔎 OPEN FACT CHECK MODAL (SAFE GLOBAL HANDLER)
 // ===================================================
-function openFactCheckModal(pick) {
+function openFactCheckModalLegacy(pick) {
 
   if (!pick) {
     console.warn("Fact Check called with invalid pick");
@@ -1903,93 +1906,125 @@ function setRefreshEnabled(enabled) {
 
 
 // ===================================================
-// 🔎 FACT CHECK MODAL FUNCTION (REQUIRED)
-// ===================================================
-// ===================================================
-// 🔎 FACT CHECK MODAL FUNCTION (FINAL CORRECT VERSION)
+// 🔎 FACT CHECK MODAL — FAIR PROBABILITY AUDIT
 // ===================================================
 function openFactCheckModal(row) {
-
   if (!row) {
     alert("Fact Check Error: No row data available.");
     return;
   }
 
-  const event =
-    row.Event ||
-    row.event ||
-    "Unknown Event";
+  const modal = document.getElementById("factCheckModal");
+  const detailsEl = document.getElementById("factCheckDetails");
+  if (!modal || !detailsEl) {
+    console.error("Fact Check modal elements are missing.");
+    return;
+  }
 
-  const player =
-    row.Description ||
-    row.player ||
-    "Unknown Player";
+  const sourceData =
+    Array.isArray(window.fullDataset) && window.fullDataset.length
+      ? window.fullDataset
+      : Array.isArray(window.lastRenderedData) && window.lastRenderedData.length
+      ? window.lastRenderedData
+      : [];
 
-  const market =
-    row.Market ||
-    row.market ||
-    "";
+  const curve = buildNoVigCurve(sourceData, row);
+  const dfsEstimates = getDfsFairEstimates(sourceData, row);
 
-  const outcome =
-    row.Outcome ||
-    row.outcome ||
-    "";
+  const fmtLine = value =>
+    Number.isFinite(Number(value)) ? Number(value).toFixed(2) : "—";
 
-// ✅ FIX — SAFE LIVE sportsbook-filtered consensus (NO ERRORS)
+  const fmtOdds = value => {
+    const odds = Number(value);
+    if (!Number.isFinite(odds)) return "—";
+    return odds > 0 ? `+${odds}` : `${odds}`;
+  };
 
-// ===================================================
-// ✅ USE BACKEND CONSENSUS + DIRECT SPORTSBOOK PRICES
-// ===================================================
+  const books = [
+    ["FanDuel", "Fanduel"],
+    ["DraftKings", "DraftKings"],
+    ["BetMGM", "BetMGM"],
+    ["Fanatics", "Fanatics"]
+  ];
 
-let consensusPoint = "N/A";
-let consensusPrice = "N/A";
+  const sportsbookLines = books.map(([label, prefix]) =>
+    `${label.padEnd(12)} Line ${fmtLine(row[`${prefix}Point`])} | Odds ${fmtOdds(row[`${prefix}Price`])}`
+  );
 
-// Use backend consensus point directly (already correct)
-if (Number.isFinite(Number(row.ConsensusPoint))) {
-  consensusPoint = Number(row.ConsensusPoint).toFixed(2);
-}
+  const curveLines = curve.length
+    ? curve.map(point =>
+        `${point.line.toFixed(2)}  Over ${point.over.toFixed(2)}% | Under ${point.under.toFixed(2)}%  (${point.booksUsed} book${point.booksUsed === 1 ? "" : "s"})`
+      )
+    : ["No valid same-line Over/Under sportsbook pairs were found."];
 
-// Compute average sportsbook price directly from row data
-const sportsbookPrices = [
-  row.FanduelPrice,
-  row.DraftKingsPrice,
-  row.BetMGMPrice,
-  row.FanaticsPrice
-].map(Number).filter(Number.isFinite);
+  const pairAuditLines = curve.length
+    ? curve.flatMap(point =>
+        (point.details || []).map(detail =>
+          `${detail.book.padEnd(12)} ${point.line.toFixed(2)} | ` +
+          `O ${fmtOdds(detail.overOdds)} / U ${fmtOdds(detail.underOdds)} → ` +
+          `O ${detail.fairOver.toFixed(2)}% / U ${detail.fairUnder.toFixed(2)}%`
+        )
+      )
+    : ["No paired sportsbook prices were available."];
 
-if (sportsbookPrices.length > 0) {
+  const estimateLines = dfsEstimates.length
+    ? dfsEstimates.map(({ platform, line, estimate }) => {
+        if (!estimate) {
+          return `${platform.padEnd(12)} ${line.toFixed(2)} → unavailable (outside known fair-line range)`;
+        }
 
-  const avgPrice =
-    sportsbookPrices.reduce((sum, price) => sum + price, 0)
-    / sportsbookPrices.length;
+        const method = estimate.method === "exact"
+          ? "EXACT"
+          : `INTERPOLATED ${estimate.lowerLine.toFixed(2)}–${estimate.upperLine.toFixed(2)}`;
 
-  const roundedPrice = Math.round(avgPrice);
+        return (
+          `${platform.padEnd(12)} ${line.toFixed(2)} → ` +
+          `Over ${estimate.over.toFixed(2)}% | Under ${estimate.under.toFixed(2)}% ` +
+          `[${method}; ${estimate.confidence.toUpperCase()} confidence]`
+        );
+      })
+    : ["No DFS lines are available for this prop."];
 
-  consensusPrice =
-    roundedPrice > 0
-      ? `+${roundedPrice}`
-      : `${roundedPrice}`;
-}
+  const medianPoint = getMarketMedianPoint(row);
+  const clickedSide = getOutcomeSide(row);
 
+  detailsEl.textContent =
+`🧠 FACT CHECK DETAILS
 
+Event: ${row.Event || "Unknown Event"}
+Player: ${row.Description || "Unknown Player"}
+Market: ${row.Market || "—"}
+Outcome: ${row.Outcome || "—"}
 
-// ✅ Always safe message
-const message =
-`Fact Check
+Market Median: ${fmtLine(medianPoint)}
+Book Average: ${fmtLine(row.ConsensusPoint)}
 
-Event: ${event || "Unknown Event"}
+SPORTSBOOK DATA — CLICKED SIDE (${(clickedSide || "unknown").toUpperCase()})
+${sportsbookLines.join("\n")}
 
-Player: ${player || "Unknown Player"}
+FAIR PROBABILITY CURVE
+${curveLines.join("\n")}
 
-Market: ${(market || "").trim()} ${(outcome || "").trim()}
+PAIRED ODDS USED FOR NO-VIG
+${pairAuditLines.join("\n")}
 
-Consensus Point: ${consensusPoint}
+DFS FAIR ESTIMATES
+${estimateLines.join("\n")}
 
-Consensus Price: ${consensusPrice}`;
+METHOD NOTES
+• Exact = same sportsbook, same point, both Over and Under prices.
+• Interpolated = log-odds estimate between two surrounding exact fair lines.
+• One-sided raw implied prices are not labeled as no-vig.
+• No extrapolation is performed outside the known line range.`;
 
-console.log(message);
+  modal.style.display = "flex";
 
-console.log("🔎 Fact Check Row:", row);
+  const closeBtn = modal.querySelector(".close-btn");
+  if (closeBtn) closeBtn.onclick = () => { modal.style.display = "none"; };
+
+  modal.onclick = event => {
+    if (event.target === modal) modal.style.display = "none";
+  };
 }
 
 // ===================================================
@@ -2867,83 +2902,303 @@ function getSelectedBooksArray() {
   return window.BOOKMAKERS || ["Fanduel", "DraftKings", "BetMGM", "Fanatics"];
 }
 
-/** Compute true No-Vig for BOTH sides (per-book + averages) */
-function computeNoVigBothSides(data, row) {
-  const sideTxt = (row.Outcome || row.OverUnder || "").toLowerCase();
-  const isOverRow = sideTxt.includes("over");
-  const isUnderRow = sideTxt.includes("under");
-  const oppSide = isOverRow ? "under" : isUnderRow ? "over" : null;
+/** ===================================================
+ * 🎯 FAIR-PROBABILITY ENGINE
+ * Exact two-sided sportsbook pairs first; logit interpolation second.
+ * Never treats a one-sided raw implied probability as true no-vig.
+ * =================================================== */
 
-  // Find the opposite row (same event/market/player)
-  const opposite = oppSide
-    ? data.find(r =>
-        (r.Event || "").toLowerCase().trim()       === (row.Event || "").toLowerCase().trim() &&
-        (r.Market || "").toLowerCase().trim()      === (row.Market || "").toLowerCase().trim() &&
-        (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
-        (r.Outcome || r.OverUnder || "").toLowerCase().includes(oppSide)
-      )
+const SPORTSBOOK_FIELD_PREFIX = {
+  fanduel: "Fanduel",
+  draftkings: "DraftKings",
+  betmgm: "BetMGM",
+  fanatics: "Fanatics"
+};
+
+function normalizeMarketValue(value) {
+  return String(value || "").toLowerCase().trim();
+}
+
+function samePlayerMarket(a, b) {
+  return (
+    normalizeMarketValue(a?.Event) === normalizeMarketValue(b?.Event) &&
+    normalizeMarketValue(a?.Market) === normalizeMarketValue(b?.Market) &&
+    normalizeMarketValue(a?.Description) === normalizeMarketValue(b?.Description)
+  );
+}
+
+function getMarketRows(data, row) {
+  if (!Array.isArray(data) || !row) return [];
+  return data.filter(candidate => samePlayerMarket(candidate, row));
+}
+
+function getBookPoint(row, book) {
+  const prefix = SPORTSBOOK_FIELD_PREFIX[book];
+  if (!prefix || !row) return null;
+
+  const raw = row[`${prefix}Point`];
+  if (raw === null || raw === undefined || raw === "") return null;
+
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function getBookPrice(row, book) {
+  const prefix = SPORTSBOOK_FIELD_PREFIX[book];
+  if (!prefix || !row) return null;
+
+  const raw = row[`${prefix}Price`];
+  if (raw === null || raw === undefined || raw === "") return null;
+
+  const value = Number(raw);
+  return Number.isFinite(value) && value !== 0 ? value : null;
+}
+
+function getOutcomeSide(row) {
+  const side = normalizeMarketValue(row?.Outcome || row?.OverUnder);
+  if (side.includes("over")) return "over";
+  if (side.includes("under")) return "under";
+  return null;
+}
+
+function median(values) {
+  // Missing sportsbook lines must stay missing. Number(null) === 0,
+  // which previously pulled the market median toward zero and broke
+  // equal/better/worse DFS cell coloring.
+  const nums = values
+    .filter(value => value !== null && value !== undefined && value !== "")
+    .map(Number)
+    .filter(value => Number.isFinite(value) && value > 0)
+    .sort((a, b) => a - b);
+
+  if (!nums.length) return null;
+
+  const mid = Math.floor(nums.length / 2);
+  return nums.length % 2
+    ? nums[mid]
+    : (nums[mid - 1] + nums[mid]) / 2;
+}
+
+function getMarketMedianPoint(row) {
+  const values = CONSENSUS_BOOKS.map(book => getBookPoint(row, book));
+  return median(values);
+}
+
+function buildNoVigCurve(data, row) {
+  const marketRows = getMarketRows(data, row);
+  const selectedBooks =
+    window.selectedBooks instanceof Set && window.selectedBooks.size
+      ? CONSENSUS_BOOKS.filter(book => window.selectedBooks.has(book))
+      : [...CONSENSUS_BOOKS];
+
+  const byLine = new Map();
+
+  for (const book of selectedBooks) {
+    const overs = [];
+    const unders = [];
+
+    for (const candidate of marketRows) {
+      const side = getOutcomeSide(candidate);
+      const line = getBookPoint(candidate, book);
+      const odds = getBookPrice(candidate, book);
+      if (!side || !Number.isFinite(line) || !Number.isFinite(odds)) continue;
+
+      const entry = { row: candidate, line, odds };
+      if (side === "over") overs.push(entry);
+      if (side === "under") unders.push(entry);
+    }
+
+    for (const over of overs) {
+      const under = unders.find(item => Math.abs(item.line - over.line) < 0.0001);
+      if (!under) continue;
+
+      const pOver = americanToProb(over.odds);
+      const pUnder = americanToProb(under.odds);
+      if (!Number.isFinite(pOver) || !Number.isFinite(pUnder)) continue;
+
+      const total = pOver + pUnder;
+      if (!(total > 0)) continue;
+
+      const fairOver = (pOver / total) * 100;
+      const fairUnder = (pUnder / total) * 100;
+      const lineKey = over.line.toFixed(4);
+
+      if (!byLine.has(lineKey)) {
+        byLine.set(lineKey, {
+          line: over.line,
+          overValues: [],
+          underValues: [],
+          books: [],
+          details: []
+        });
+      }
+
+      const bucket = byLine.get(lineKey);
+      bucket.overValues.push(fairOver);
+      bucket.underValues.push(fairUnder);
+      bucket.books.push(book);
+      bucket.details.push({
+        book,
+        line: over.line,
+        overOdds: over.odds,
+        underOdds: under.odds,
+        fairOver,
+        fairUnder
+      });
+    }
+  }
+
+  return [...byLine.values()]
+    .map(bucket => ({
+      line: bucket.line,
+      over: bucket.overValues.reduce((a, b) => a + b, 0) / bucket.overValues.length,
+      under: bucket.underValues.reduce((a, b) => a + b, 0) / bucket.underValues.length,
+      booksUsed: bucket.books.length,
+      books: [...bucket.books],
+      details: bucket.details
+    }))
+    .filter(point => Number.isFinite(point.over) && Number.isFinite(point.under))
+    .sort((a, b) => a.line - b.line);
+}
+
+function probabilityToLogit(probabilityPct) {
+  const p = Math.min(Math.max(Number(probabilityPct) / 100, 0.000001), 0.999999);
+  return Math.log(p / (1 - p));
+}
+
+function logitToProbability(logit) {
+  return (1 / (1 + Math.exp(-logit))) * 100;
+}
+
+function interpolateFairProbability(targetLine, lower, upper) {
+  if (!lower || !upper || upper.line === lower.line) return null;
+  const weight = (targetLine - lower.line) / (upper.line - lower.line);
+  if (weight < 0 || weight > 1) return null;
+
+  const overLogit =
+    probabilityToLogit(lower.over) +
+    weight * (probabilityToLogit(upper.over) - probabilityToLogit(lower.over));
+
+  const over = logitToProbability(overLogit);
+  return {
+    line: targetLine,
+    over,
+    under: 100 - over,
+    method: "interpolated",
+    lowerLine: lower.line,
+    upperLine: upper.line,
+    booksUsed: Math.min(lower.booksUsed, upper.booksUsed),
+    confidence: (() => {
+      const gap = Math.abs(upper.line - lower.line);
+      const totalBooks = Number(lower.booksUsed || 0) + Number(upper.booksUsed || 0);
+
+      // Interpolation confidence reflects the total market evidence on both
+      // surrounding lines, while penalizing unusually wide gaps.
+      if (gap <= 1.0 && totalBooks >= 5) return "high";
+      if (gap <= 1.0 && totalBooks >= 3) return "medium";
+      if (gap <= 0.5 && totalBooks >= 2) return "medium";
+      return "low";
+    })()
+  };
+}
+
+function estimateFairAtLine(curve, targetLine) {
+  const target = Number(targetLine);
+  if (!Array.isArray(curve) || !curve.length || !Number.isFinite(target)) return null;
+
+  const exact = curve.find(point => Math.abs(point.line - target) < 0.0001);
+  if (exact) {
+    return {
+      ...exact,
+      method: "exact",
+      confidence:
+        exact.booksUsed >= 3 ? "high" : exact.booksUsed >= 2 ? "medium" : "low"
+    };
+  }
+
+  const lower = [...curve].reverse().find(point => point.line < target);
+  const upper = curve.find(point => point.line > target);
+  if (!lower || !upper) return null;
+
+  return interpolateFairProbability(target, lower, upper);
+}
+
+function toValidLine(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+}
+
+function getPrimaryDfsTarget(row) {
+  const candidates = [
+    { platform: "PrizePicks", line: toValidLine(row?.PrizePickPoint ?? row?.PrizePicksPoint) },
+    { platform: "Underdog", line: toValidLine(row?.UnderdogPoint) },
+    { platform: "Betr", line: toValidLine(row?.BetrPoint) }
+  ].filter(item => Number.isFinite(item.line) && item.line > 0);
+
+  return candidates[0] || null;
+}
+
+/**
+ * Backward-compatible result used by the current table renderer.
+ * avgOver / avgUnder refer to the primary DFS target line.
+ */
+function computeNoVigBothSides(data, row, targetLine = null) {
+  const side = getOutcomeSide(row);
+  const curve = buildNoVigCurve(data, row);
+  // null/undefined/empty must NOT become line 0. Number(null) === 0,
+  // which previously forced BestNoVig to an invalid @ 0.00 target and caused
+  // it to use a different fallback percentage than the DFS platform cells.
+  const requestedLine = toValidLine(targetLine);
+  const primary = Number.isFinite(requestedLine)
+    ? { platform: "Requested", line: requestedLine }
+    : getPrimaryDfsTarget(row);
+
+  const fallbackLine = getMarketMedianPoint(row);
+  const resolvedTarget = primary ||
+    (Number.isFinite(fallbackLine) ? { platform: "Market Median", line: fallbackLine } : null);
+
+  const estimate = resolvedTarget
+    ? estimateFairAtLine(curve, resolvedTarget.line)
     : null;
 
-  const perBook = [];
-  const overVals = [];
-  const underVals = [];
-
-  const books = CONSENSUS_BOOKS;
-  for (const book of books) {
-    const oOdds = opposite ? getSafePrice(opposite, book) : NaN;
-    const thisOdds = getSafePrice(row, book)
-;
-
-    // We need BOTH sides' prices for the **same book** to de-vig correctly
-    const overOdds  = isOverRow  ? thisOdds : oOdds;
-    const underOdds = isUnderRow ? thisOdds : oOdds;
-
-    if (!Number.isFinite(overOdds) || !Number.isFinite(underOdds)) continue;
-
-    const pOver  = americanToProb(overOdds);
-    const pUnder = americanToProb(underOdds);
-    if (pOver == null || pUnder == null) continue;
-
-    const total = pOver + pUnder;
-    // Skip broken pairs
-    if (total <= 0.01 || total > 2.0) continue;
-
-    const fairOver  = (pOver  / total) * 100;
-    const fairUnder = (pUnder / total) * 100;
-
-    // bound
-    const o = Math.min(Math.max(fairOver, 0), 100);
-    const u = Math.min(Math.max(fairUnder, 0), 100);
-
-    perBook.push({ book, over: o, under: u });
-    overVals.push(o);
-    underVals.push(u);
-  }
-
-  const avgOver  = overVals.length  ? overVals.reduce((a,b)=>a+b,0)   / overVals.length  : null;
-  const avgUnder = underVals.length ? underVals.reduce((a,b)=>a+b,0)  / underVals.length : null;
-
-  // Fallback: if we couldn’t pair, use simple implied avg for this row’s side only
-  let fallbackSide = null;
-  if (avgOver == null && avgUnder == null) {
-    const implied = [];
-    for (const book of CONSENSUS_BOOKS) {
-      const price = getSafePrice(row, book)
-;
-      const p = americanToProb(price);
-      if (p != null) implied.push(p * 100);
-    }
-    if (implied.length) fallbackSide = implied.reduce((a,b)=>a+b,0) / implied.length;
-  }
-
   return {
-    perBook,                // [{book, over, under}]
-    avgOver,                // number | null
-    avgUnder,               // number | null
-    fallbackSide,           // number | null (used when no pairing)
-    sideIsOver: isOverRow,  // which side the row is
-    sideIsUnder: isUnderRow
+    perBook: estimate?.details || [],
+    avgOver: Number.isFinite(estimate?.over) ? estimate.over : null,
+    avgUnder: Number.isFinite(estimate?.under) ? estimate.under : null,
+    fallbackSide: null,
+    sideIsOver: side === "over",
+    sideIsUnder: side === "under",
+    curve,
+    targetLine: resolvedTarget?.line ?? null,
+    targetPlatform: resolvedTarget?.platform ?? null,
+    method: estimate?.method ?? "unavailable",
+    confidence: estimate?.confidence ?? "unavailable",
+    booksUsed: estimate?.booksUsed ?? 0,
+    lowerLine: estimate?.lowerLine ?? null,
+    upperLine: estimate?.upperLine ?? null
   };
+}
+
+function getDfsFairEstimates(data, row) {
+  const curve = buildNoVigCurve(data, row);
+  const platforms = [
+    ["PrizePicks", row?.PrizePickPoint ?? row?.PrizePicksPoint],
+    ["Underdog", row?.UnderdogPoint],
+    ["Betr", row?.BetrPoint]
+  ];
+
+  return platforms
+    .map(([platform, line]) => {
+      const numericLine = toValidLine(line);
+      if (!Number.isFinite(numericLine)) return null;
+      return {
+        platform,
+        line: numericLine,
+        estimate: estimateFairAtLine(curve, numericLine)
+      };
+    })
+    .filter(Boolean);
 }
 
 // ===================================================
@@ -3388,59 +3643,78 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
   window.lastRenderedData = data;
 
   // ===================================================
-  // 🔥 FIX #1: recompute No-Vig and BestNoVigSide safely
-  // SPORTSBOOK ONLY — ignores PrizePicks / Underdog / Betr
+  // 🔥 HYDRATE NO-VIG FIELDS BEFORE TABLE / FILTER LOGIC
+  // Uses exact two-sided pairs first, then interpolation.
+  // Keeps the legacy row fields used by Brain / Fire / sorting.
   // ===================================================
   window.lastRenderedData.forEach(row => {
+    // Keep any valid backend no-vig result as a fallback. MLB feeds may expose
+    // only the selected side to this renderer, which prevents reconstruction
+    // of a two-sided pair in the browser.
+    const backendCandidates = [
+      row.NoVigWinProb,
+      row.NoVigProb,
+      row.no_vig_win_prob,
+      row.no_vig_prob
+    ];
 
-    const fair =
-      computeNoVig(window.lastRenderedData, row);
+    let backendPct = backendCandidates.map(Number).find(Number.isFinite);
 
-    // overwrite backend values completely
-    row.NoVigProb =
-      Number.isFinite(fair)
-        ? fair
-        : null;
-
-    // determine side safely
-    if (!Number.isFinite(fair)) {
-
-      row.BestNoVigSide = null;
-
-    } else {
-
-      const outcome =
-        (row.Outcome || "").toLowerCase();
-
-      if (outcome.includes("over")) {
-
-        row.BestNoVigSide = "Over";
-
-      } else if (outcome.includes("under")) {
-
-        row.BestNoVigSide = "Under";
-
-      } else {
-
-        row.BestNoVigSide = null;
-
-      }
-
+    if (!Number.isFinite(backendPct) && typeof row.BestNoVig === "string") {
+      const match = row.BestNoVig.match(/(\d+(?:\.\d+)?)%/);
+      if (match) backendPct = Number(match[1]);
     }
 
+    const backendSideSource =
+      row.BestNoVigSide || row.best_no_vig_side || row.BestNoVig || "";
+    const backendSide = /under/i.test(String(backendSideSource))
+      ? "Under"
+      : /over/i.test(String(backendSideSource))
+      ? "Over"
+      : null;
+
+    const nv = computeNoVigBothSides(window.lastRenderedData, row);
+
+    let pct = null;
+    let side = null;
+    let method = "unavailable";
+    let confidence = "unavailable";
+
+    if (Number.isFinite(nv?.avgOver) && Number.isFinite(nv?.avgUnder)) {
+      const overIsBest = nv.avgOver >= nv.avgUnder;
+      pct = overIsBest ? nv.avgOver : nv.avgUnder;
+      side = overIsBest ? "Over" : "Under";
+      method = nv.method || "exact";
+      confidence = nv.confidence || "low";
+    } else if (Number.isFinite(backendPct) && backendSide) {
+      pct = backendPct;
+      side = backendSide;
+      method = "backend";
+      confidence = row.NoVigConfidence || "backend";
+    }
+
+    row.NoVigProb = Number.isFinite(pct) ? pct : null;
+    row.NoVigWinProb = Number.isFinite(pct) ? pct : null;
+    row.BestNoVigSide = Number.isFinite(pct) ? side : null;
+    row.BestNoVig = Number.isFinite(pct) ? `${side} ${pct.toFixed(2)}%` : "";
+    row.NoVigMethod = method;
+    row.NoVigConfidence = confidence;
+    row.NoVigTargetLine = Number.isFinite(nv?.targetLine) ? nv.targetLine : null;
   });
 
   // ===================================================
   // 💾 Keep stable dataset reference
   // ===================================================
-  if (!window.fullDataset || !window.fullDataset.length) {
+  // Refresh the raw market dataset on every unfiltered load. Filtered renders
+  // keep the original full set so opposite-side rows remain available.
+  if (!isFiltered || !Array.isArray(window.fullDataset) || !window.fullDataset.length) {
     window.fullDataset = data;
   }
 
   // ===================================================
   // ⚙️ Cache initialization
   // ===================================================
-  if (!window.baseNoVigCache) {
+  if (!window.baseNoVigCache || !isFiltered) {
     window.baseNoVigCache = {};
   }
 
@@ -3529,10 +3803,11 @@ data.forEach((row) => {
 // 🧮 Compute fair "no-vig" probability (SPORTBOOK ONLY)
 // ===================================================
 
-let prob = null;
+let prob = Number(row.NoVigWinProb ?? row.NoVigProb);
+if (!Number.isFinite(prob)) prob = null;
 
 // ===================================================
-// 🧮 Use ONLY sportsbook prices
+// 🧮 Legacy fallback only when no fair probability exists
 // ===================================================
 
 const sportsbookPrices = [
@@ -3542,7 +3817,7 @@ const sportsbookPrices = [
   row.FanaticsPrice
 ].filter(p => p != null && Number.isFinite(Number(p)));
 
-if (sportsbookPrices.length >= 2) {
+if (!Number.isFinite(prob) && sportsbookPrices.length >= 2) {
 
   // convert all sportsbook odds to probabilities
   const probs = sportsbookPrices
@@ -4043,7 +4318,7 @@ tr.addEventListener("click", (e) => {
     e.preventDefault();
 
     // Call your existing fact check logic
-    openFactCheckModal(pick);
+    openFactCheckModal(row);
 
     return; // 🔥 prevents pick tracker from firing
   }
@@ -4075,6 +4350,190 @@ const consensusPrice =
   getConsensusPrice(row);
 
 
+
+// Reset row-level signal state ONCE before rendering platform cells.
+// Individual DFS platforms may then promote the row to Brain or Fire without
+// a later platform erasing an earlier valid signal.
+row._brainPlay = false;
+row._fireLevel = 0;
+row._signalPlatforms = [];
+
+
+// ===================================================
+// 🎯 PRECOMPUTE DFS PLATFORM STATUS + SIGNALS ONCE PER ROW
+// ===================================================
+// This runs BEFORE any cell is rendered so BestNoVig, platform colors,
+// Brain, and Fire all use the same source of truth.
+row._platformSignals = {};
+
+{
+  const signalData =
+    Array.isArray(window.fullDataset) && window.fullDataset.length
+      ? window.fullDataset
+      : Array.isArray(data)
+      ? data
+      : [];
+
+  const signalCurve = buildNoVigCurve(signalData, row);
+
+  let signalMarketLine = Number(getMarketMedianPoint(row));
+  if (!Number.isFinite(signalMarketLine)) signalMarketLine = Number(getTrueConsensusPoint(row));
+  if (!Number.isFinite(signalMarketLine)) {
+    const fallbackMarket = Number(row.ConsensusPoint);
+    signalMarketLine = Number.isFinite(fallbackMarket) ? fallbackMarket : null;
+  }
+
+  const platformDefinitions = [
+    ["PrizePickPoint", "PrizePicks", row.PrizePickPoint ?? row.PrizePicksPoint],
+    ["UnderdogPoint", "Underdog", row.UnderdogPoint],
+    ["BetrPoint", "Betr", row.BetrPoint]
+  ];
+
+  // Calculate ONE canonical no-vig recommendation for the row. Every DFS
+  // platform cell and BestNoVig must consume this same side so the table can
+  // never show Over in one column and Under in another for the same row.
+  const canonicalNoVig = computeNoVigBothSides(signalData, row);
+  const rowEstimate =
+    Number.isFinite(canonicalNoVig?.avgOver) && Number.isFinite(canonicalNoVig?.avgUnder)
+      ? {
+          over: canonicalNoVig.avgOver,
+          under: canonicalNoVig.avgUnder,
+          method: canonicalNoVig.method,
+          confidence: canonicalNoVig.confidence,
+          booksUsed: canonicalNoVig.booksUsed,
+          line: canonicalNoVig.targetLine
+        }
+      : Number.isFinite(signalMarketLine)
+      ? estimateFairAtLine(signalCurve, signalMarketLine)
+      : null;
+
+  let sharedBestSide = null;
+  let sharedBestPct = null;
+
+  if (rowEstimate && Number.isFinite(rowEstimate.over) && Number.isFinite(rowEstimate.under)) {
+    sharedBestSide = rowEstimate.over >= rowEstimate.under ? "over" : "under";
+    sharedBestPct = Number(rowEstimate[sharedBestSide]);
+  }
+
+  row._canonicalNoVig = {
+    side: sharedBestSide,
+    probability: sharedBestPct,
+    targetLine: canonicalNoVig?.targetLine ?? rowEstimate?.line ?? null,
+    method: canonicalNoVig?.method ?? rowEstimate?.method ?? "unavailable",
+    confidence: canonicalNoVig?.confidence ?? rowEstimate?.confidence ?? "unavailable",
+    booksUsed: canonicalNoVig?.booksUsed ?? rowEstimate?.booksUsed ?? 0,
+    over: Number.isFinite(rowEstimate?.over) ? rowEstimate.over : null,
+    under: Number.isFinite(rowEstimate?.under) ? rowEstimate.under : null
+  };
+
+  // Hydrated/backend fallback only when the curve cannot produce a side.
+  if (!sharedBestSide) {
+    const existingSide = String(row.BestNoVigSide || row.BestNoVig || row.Outcome || "").toLowerCase();
+    if (existingSide.includes("over")) sharedBestSide = "over";
+    else if (existingSide.includes("under")) sharedBestSide = "under";
+  }
+
+  if (!Number.isFinite(sharedBestPct)) {
+    const backendPct = Number(row.NoVigWinProb ?? row.NoVigProb ?? row.BestNoVigProb ?? row.FairWinProb);
+    if (Number.isFinite(backendPct)) sharedBestPct = backendPct > 1 ? backendPct : backendPct * 100;
+  }
+
+  if (sharedBestSide) row.BestNoVigSide = sharedBestSide === "over" ? "Over" : "Under";
+  if (Number.isFinite(sharedBestPct)) row.NoVigWinProb = sharedBestPct;
+
+  const EPSILON = 0.001;
+
+  for (const [column, platform, rawLine] of platformDefinitions) {
+    const dfsLine = Number(rawLine);
+
+    if (!Number.isFinite(dfsLine) || dfsLine <= 0 || !Number.isFinite(signalMarketLine)) {
+      row._platformSignals[column] = {
+        platform,
+        available: false
+      };
+      continue;
+    }
+
+    const estimate = estimateFairAtLine(signalCurve, dfsLine);
+
+    // IMPORTANT: each DFS cell must use the fair side at ITS OWN line.
+    // Previously the cell inherited one shared row side, which could be stale
+    // or could differ from BestNoVig after interpolation/fallback completed.
+    let platformBestSide = null;
+    let sideProbPct = null;
+    let confidence = "unavailable";
+    let booksUsed = 0;
+
+    if (
+      estimate &&
+      sharedBestSide &&
+      Number.isFinite(Number(estimate.over)) &&
+      Number.isFinite(Number(estimate.under))
+    ) {
+      // The side is canonical for the entire row; only the probability changes
+      // by platform line. This prevents contradictory Over/Under labels.
+      platformBestSide = sharedBestSide;
+      sideProbPct = Number(estimate[sharedBestSide]);
+      confidence = estimate.confidence || "unavailable";
+      booksUsed = Number(estimate.booksUsed || 0);
+    }
+
+    if (!platformBestSide) platformBestSide = sharedBestSide;
+
+    const isEqual = Math.abs(dfsLine - signalMarketLine) <= EPSILON;
+    const isBetter =
+      platformBestSide === "over"
+        ? dfsLine < signalMarketLine - EPSILON
+        : platformBestSide === "under"
+        ? dfsLine > signalMarketLine + EPSILON
+        : false;
+    const isWorse =
+      platformBestSide === "over"
+        ? dfsLine > signalMarketLine + EPSILON
+        : platformBestSide === "under"
+        ? dfsLine < signalMarketLine - EPSILON
+        : false;
+
+    const brain =
+      Number.isFinite(sideProbPct) &&
+      sideProbPct >= 54 &&
+      (isEqual || isBetter);
+
+    let fireLevel = 0;
+    if (isBetter && Number.isFinite(sideProbPct)) {
+      if (sideProbPct >= 62 && confidence === "high" && booksUsed >= 3) fireLevel = 3;
+      else if (sideProbPct >= 59 && confidence === "high" && booksUsed >= 2) fireLevel = 2;
+      else if (sideProbPct >= 56 && confidence !== "low") fireLevel = 1;
+    }
+
+    row._platformSignals[column] = {
+      platform,
+      available: true,
+      dfsLine,
+      marketLine: signalMarketLine,
+      bestSide: platformBestSide,
+      probability: sideProbPct,
+      confidence,
+      booksUsed,
+      isEqual,
+      isBetter,
+      isWorse,
+      brain,
+      fireLevel
+    };
+
+    row[`_${platform}Side`] = platformBestSide;
+
+    if (brain) {
+      row._brainPlay = true;
+      row._signalPlatforms.push(column);
+    }
+    if (fireLevel > 0) {
+      row._fireLevel = Math.max(row._fireLevel, fireLevel);
+      if (!row._signalPlatforms.includes(column)) row._signalPlatforms.push(column);
+    }
+  }
+}
 
 // --- Render each cell ---
 activeColumns.forEach((col) => {
@@ -4167,14 +4626,19 @@ return;
   if (!window.baseNoVigCache) window.baseNoVigCache = {};
 
   // Reuse cached values during filtered re-renders
-  if (isFiltered) {
+  // Always recompute from the current shared engine. Cached values from an
+  // earlier dataset/date can disagree with Fact Check, so they are not used
+  // as the source of truth here.
+  if (false && isFiltered) {
     const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
     const cached = window.baseNoVigCache[cacheKey];
-    if (cached) {
+    // Reuse only a VALID cached probability. Never let an earlier blank result
+    // prevent a fresh calculation after the complete Over/Under dataset loads.
+    if (cached && Number.isFinite(Number(cached.pct)) && cached.side) {
       td.textContent = cached.text || "—";
-      td.dataset.sort = cached.pct ?? 0;
-      row.NoVigWinProb = cached.pct ?? null;
-      row.BestNoVigSide = cached.side ?? null;
+      td.dataset.sort = Number(cached.pct).toFixed(2);
+      row.NoVigWinProb = Number(cached.pct);
+      row.BestNoVigSide = cached.side;
 
       // 🎨 Re-apply color on cached render
       if (Number.isFinite(cached.pct)) {
@@ -4211,21 +4675,67 @@ return;
   let pct = null;
   let side = null;
 
-  // STRICT sportsbook-only requirement
-  if (
+  // Consume the exact same canonical result used by the platform cells.
+  const canonical = row._canonicalNoVig;
+  if (canonical?.side && Number.isFinite(Number(canonical.probability))) {
+    pct = Number(canonical.probability);
+    side = canonical.side === "over" ? "Over" : "Under";
+    const methodMarker = canonical.method === "interpolated" ? "≈" : "";
+    const lineLabel = Number.isFinite(Number(canonical.targetLine))
+      ? ` @ ${Number(canonical.targetLine).toFixed(2)}`
+      : "";
+    text = `${side === "Over" ? "▲" : "▼"} ${methodMarker}🧮 ${side} ${pct.toFixed(2)}%${lineLabel}`;
+  } else if (
     nv &&
     Number.isFinite(nv.avgOver) &&
     Number.isFinite(nv.avgUnder)
   ) {
     const over = nv.avgOver;
     const under = nv.avgUnder;
-
     const isOverBetter = over >= under;
-
     pct = isOverBetter ? over : under;
     side = isOverBetter ? "Over" : "Under";
+    const methodMarker = nv.method === "interpolated" ? "≈" : "";
+    const lineLabel = Number.isFinite(nv.targetLine) ? ` @ ${nv.targetLine.toFixed(2)}` : "";
+    text = `${isOverBetter ? "▲" : "▼"} ${methodMarker}🧮 ${side} ${pct.toFixed(2)}%${lineLabel}`;
+  }
 
-    text = `${isOverBetter ? "▲" : "▼"} 🧮 ${side} ${pct.toFixed(2)}%`;
+  // If the primary DFS target is unavailable, use the exact/interpolated
+  // fair estimate at the displayed consensus/market line. This keeps the
+  // BestNoVig column populated even when a particular DFS platform has no line.
+  if (!Number.isFinite(pct) && Array.isArray(nv?.curve) && nv.curve.length) {
+    const marketTarget = toValidLine(row.ConsensusPoint) ?? getMarketMedianPoint(row);
+    const marketEstimate = estimateFairAtLine(nv.curve, marketTarget);
+
+    if (
+      marketEstimate &&
+      Number.isFinite(marketEstimate.over) &&
+      Number.isFinite(marketEstimate.under)
+    ) {
+      const isOverBetter = marketEstimate.over >= marketEstimate.under;
+      pct = isOverBetter ? marketEstimate.over : marketEstimate.under;
+      side = isOverBetter ? "Over" : "Under";
+      const methodMarker = marketEstimate.method === "interpolated" ? "≈" : "";
+      text = `${isOverBetter ? "▲" : "▼"} ${methodMarker}🧮 ${side} ${pct.toFixed(2)}%`;
+    }
+  }
+
+  // If the browser cannot rebuild the pair, use the value preserved during
+  // hydration instead of blanking the table cell.
+  if (!Number.isFinite(pct)) {
+    const hydratedPct = Number(row.NoVigWinProb ?? row.NoVigProb);
+    const hydratedSideRaw = String(row.BestNoVigSide || "");
+    const hydratedSide = /under/i.test(hydratedSideRaw)
+      ? "Under"
+      : /over/i.test(hydratedSideRaw)
+      ? "Over"
+      : null;
+
+    if (Number.isFinite(hydratedPct) && hydratedSide) {
+      pct = hydratedPct;
+      side = hydratedSide;
+      text = `${side === "Over" ? "▲" : "▼"} 🧮 ${side} ${pct.toFixed(2)}%`;
+    }
   }
 
   // 🎨 COLOR TIERING (UPDATED — adds background)
@@ -4250,10 +4760,21 @@ return;
   // Cache for later filter re-renders
   if (row.Event && row.Market && row.Description) {
     const cacheKey = `${row.Event}|${row.Market}|${row.Description}`;
-    window.baseNoVigCache[cacheKey] =
-      Number.isFinite(pct)
-        ? { pct, side, text }
-        : { pct: null, side: null, text: "—" };
+    if (Number.isFinite(pct) && side) {
+      window.baseNoVigCache[cacheKey] = {
+        pct,
+        side,
+        text,
+        method: nv.method,
+        targetLine: nv.targetLine,
+        confidence: nv.confidence
+      };
+    } else {
+      // Do not cache unavailable results. The initial render can occur before
+      // the opposite-side rows are available, and a blank cache would keep the
+      // BestNoVig column empty on every later rerender.
+      delete window.baseNoVigCache[cacheKey];
+    }
   }
 
   // ⚡ Mismatch badge (unchanged)
@@ -4263,6 +4784,22 @@ return;
     );
   const marketFavored = marketFavoredOver ? "Over" : "Under";
   const modelFavored = side || "—";
+
+  // Add the row-level signal generated from the actual DFS platform lines.
+  // Brain = >=54% fair probability at a matching market line.
+  // Fire = favorable line edge, with level determined by the existing score.
+  const signalPrefix = row._fireLevel >= 3
+    ? "🔥🔥🔥 "
+    : row._fireLevel === 2
+    ? "🔥🔥 "
+    : row._fireLevel === 1
+    ? "🔥 "
+    : row._brainPlay
+    ? "🧠 "
+    : "";
+
+  text = signalPrefix + text;
+  row.BestNoVig = Number.isFinite(pct) && side ? `${side} ${pct.toFixed(2)}%` : "";
 
   td.textContent = text;
   td.dataset.sort = Number.isFinite(pct) ? pct.toFixed(2) : 0;
@@ -4292,231 +4829,75 @@ return;
   // ===================================================
   // 🛡️ SAFE DFS PLATFORM HANDLING
   // ===================================================
-  if (col === "PrizePickPoint") value = row.PrizePickPoint ?? null;
+  if (col === "PrizePickPoint") value = row.PrizePickPoint ?? row.PrizePicksPoint ?? null;
   else if (col === "UnderdogPoint") value = row.UnderdogPoint ?? null;
   else if (col === "BetrPoint") value = row.BetrPoint ?? null;
 
   // ===================================================
-  // 🧮 Format DFS numeric columns
+  // 🎯 DFS PLATFORM CELL — SINGLE SOURCE OF TRUTH
   // ===================================================
   if (col === "PrizePickPoint" || col === "UnderdogPoint" || col === "BetrPoint") {
+    const signal = row._platformSignals?.[col];
 
-    const num = Number(value);
-
-    // ✅ FIXED CONSENSUS (NOT affected by filters)
-    let consensus = Number(getTrueConsensusPoint(row));
-
-    // 🔒 fallback safety (prevents yellow cells)
-    if (!Number.isFinite(consensus)) {
-      const fallback = Number(row.ConsensusPoint);
-      consensus = Number.isFinite(fallback) ? fallback : null;
-    }
-
-    if (!Number.isFinite(num) || num <= 0 || !Number.isFinite(consensus)) {
+    if (!signal || !signal.available) {
       td.textContent = "—";
+      td.style.setProperty("background", "transparent", "important");
+      td.style.setProperty("color", "inherit", "important");
       tr.appendChild(td);
       return;
     }
 
-  // ================================
-// 🎯 Compute Best Side LIVE
-// ================================
-const baseForCompute =
-  Array.isArray(window.fullDataset) && window.fullDataset.length
-    ? window.fullDataset
-    : Array.isArray(data)
-    ? data
-    : [];
+    // Background color represents line quality ONLY.
+    if (signal.isEqual) {
+      td.style.setProperty("background", "#fff3cd", "important");
+      td.style.setProperty("color", "#856404", "important");
+    } else if (signal.isBetter) {
+      td.style.setProperty("background", "#d8f8df", "important");
+      td.style.setProperty("color", "#0b5f22", "important");
+    } else if (signal.isWorse) {
+      td.style.setProperty("background", "#f8dada", "important");
+      td.style.setProperty("color", "#c0392b", "important");
+    } else {
+      td.style.setProperty("background", "transparent", "important");
+      td.style.setProperty("color", "inherit", "important");
+    }
 
-const nv = computeNoVigBothSides(baseForCompute, row);
+    const icons = [];
+    if (signal.brain) icons.push("🧠");
+    if (signal.fireLevel === 1) icons.push("🔥");
+    else if (signal.fireLevel === 2) icons.push("🔥🔥");
+    else if (signal.fireLevel === 3) icons.push("🔥🔥🔥");
 
-let bestSide = null;
-let noVig = 0;
+    td.style.fontWeight = icons.length || signal.isWorse ? "700" : "600";
 
-if (nv && Number.isFinite(nv.avgOver) && Number.isFinite(nv.avgUnder)) {
-  if (nv.avgOver >= nv.avgUnder) {
-    bestSide = "over";
-    noVig = nv.avgOver / 100;
-  } else {
-    bestSide = "under";
-    noVig = nv.avgUnder / 100;
-  }
-}
+    // Compact mobile-friendly display:
+    // line + signal on the first row, fair side/probability on the second.
+    const topLine = icons.length
+      ? `${icons.join(" ")} ${signal.dfsLine.toFixed(2)}`
+      : signal.dfsLine.toFixed(2);
 
-// fallback parsing only if live calc fails
-if (!bestSide && typeof row.BestNoVig === "string") {
-  const clean = row.BestNoVig.replace(/[^\w\s.%]/g, "").toLowerCase();
+    const sideArrow = signal.bestSide === "under" ? "▼" : "▲";
+    const probabilityLine = Number.isFinite(signal.probability)
+      ? `${sideArrow} ${signal.probability.toFixed(1)}%`
+      : "";
 
-  if (clean.includes("over")) bestSide = "over";
-  else if (clean.includes("under")) bestSide = "under";
+    td.innerHTML = probabilityLine
+      ? `<div class="dfs-line-main">${topLine}</div><div class="dfs-fair-prob">${probabilityLine}</div>`
+      : `<div class="dfs-line-main">${topLine}</div>`;
 
-  const match = clean.match(/(\d+(\.\d+)?)\s*%/);
-  if (match) noVig = parseFloat(match[1]) / 100;
-}
+    const probEl = td.querySelector(".dfs-fair-prob");
+    if (probEl) {
+      probEl.style.fontSize = "10px";
+      probEl.style.lineHeight = "1.15";
+      probEl.style.marginTop = "2px";
+      probEl.style.opacity = "0.82";
+      probEl.style.whiteSpace = "nowrap";
+    }
 
-// store for reuse
-row._bestSide = bestSide;
-row._bestProb = noVig;
-
-if (!bestSide) {
-  td.style.background = "#fff3cd";
-  td.style.color = "#856404";
-  td.textContent = num.toFixed(2);
-  tr.appendChild(td);
-  return;
-}
-  // ================================
-// 📏 EDGE CALCULATIONS
-// ================================
-let edge = 0;
-
-if (bestSide === "over") {
-  edge = consensus - num;
-} else if (bestSide === "under") {
-  edge = num - consensus;
-}
-// 🔥 NEW: sqrt scaling (cross-sport safe)
-const normalizedEdge =
-  consensus > 0 ? Math.abs(edge) / Math.sqrt(consensus) : 0;
-
-// ✅ reset render flags
-row._brainPlay = false;
-row._fireLevel = 0;
-const isGoodPlay = edge > 0;
-const isBadPlay = edge < 0;
-
-// ================================
-// 🧠 HIGH PROBABILITY (SAFE PLAYS)
-// ================================
-if (noVig >= 0.54 && normalizedEdge < 0.05) {
-
-  // ✅ STORE BRAIN PICK FOR FILTERS
-  row._brainPlay = true;
-
-  td.style.background = "#e8f5e9";
-  td.style.color = "#1e8449";
-  td.style.fontWeight = "600";
-  td.textContent = `🧠 ${num.toFixed(2)}`;
-  tr.appendChild(td);
-  return;
-}
-// ================================
-// 🔥 GOOD PLAY (CROSS-SPORT, STABLE)
-// ================================
-if (isGoodPlay) {
-
-  // ✅ Probability boost (your idea, tuned)
-  const probBoost = Math.max(0, (noVig - 0.51) * 1.3);
-
-  // ✅ Core scoring (edge dominates, prob confirms)
-  const edgeScore =
-    normalizedEdge * 0.72 +
-    probBoost * 0.62;
-
-  // ✅ Weak edge penalty (NO hard cutoff → works for all sports)
-  const weakEdgePenalty =
-    normalizedEdge < 0.045 ? 0.025 : 0;
-
-  // ✅ Extra penalty for low probability
-  const lowProbPenalty =
-    noVig < 0.515 ? 0.02 : 0;
-
-  const finalScore = edgeScore - weakEdgePenalty - lowProbPenalty;
-
-  let fire = "";
-
-  // 🚨 BLOCK: weak probability cannot produce fire (even with high normalized edge)
-if (noVig < 0.505 && normalizedEdge < 0.14) {
-  td.style.background = "#eef9f1";
-  td.style.color = "#145a32";
-  td.style.fontWeight = "600";
-  td.textContent = num.toFixed(2);
-  tr.appendChild(td);
-  return;
-}
-
-  // ================================
-  // 🔥 ELITE
-  // ================================
-    if (finalScore >= 0.12) {
-
-    row._fireLevel = 3;
-
-    fire = "🔥🔥🔥";
-    td.style.background = "#0b3d0b";
-    td.style.color = "#ffffff";
-    td.style.fontWeight = "800";
-
-  // ==================================
-  // 🔥 STRONG
-  // ==================================
-    } else if (finalScore >= 0.095) {
-
-    row._fireLevel = 2;
-
-    fire = "🔥🔥";
-    td.style.background = "#145a32";
-    td.style.color = "#d4efdf";
-    td.style.fontWeight = "700";
-
-  // ================================
-  // 🔥 LIGHT EDGE
-  // ================================
-    } else if (finalScore >= 0.07) {
-
-    row._fireLevel = 1;
-
-    fire = "🔥";
-    td.style.background = "#d8f8df";
-    td.style.color = "#0b5f22";
-    td.style.fontWeight = "700";
-
-  // ================================
-  // 🟢 SMALL EDGE
-  // ================================
-  } else {
-    td.style.background = "#eef9f1";
-    td.style.color = "#145a32";
-    td.style.fontWeight = "600";
+    tr.appendChild(td);
+    return;
   }
 
-  // ✅ STORE FIRE LEVEL FOR FILTERS
-  row._fireLevel =
-    fire === "🔥🔥🔥" ? 3 :
-    fire === "🔥🔥" ? 2 :
-    fire === "🔥" ? 1 :
-    0;
-
-  td.textContent = fire
-    ? `${fire} ${num.toFixed(2)}`
-    : num.toFixed(2);
-
-  tr.appendChild(td);
-  return;
-}
-
-// ================================
-// ❌ BAD PLAY
-// ================================
-if (isBadPlay) {
-  td.style.background = "#f8dada";
-  td.style.color = "#c0392b";
-  td.style.fontWeight = "700";
-  td.textContent = num.toFixed(2);
-  tr.appendChild(td);
-  return;
-}
-
-// ================================
-// 🟡 NEUTRAL
-// ================================
-td.style.background = "#fff3cd";
-td.style.color = "#856404";
-td.textContent = num.toFixed(2);
-tr.appendChild(td);
-return;
-
-}
   // ===================================================
   // 🎲 Sportsbook columns (line + price + favored arrow)
   // ===================================================
@@ -4615,24 +4996,30 @@ if (col === "ConsensusPoint") {
 // ===================================================
 if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "BetrDifference") {
 
-  let diff = Number(row[col]);
+  const dfsLine = col === "PrizePicksDifference"
+    ? toValidLine(row.PrizePickPoint ?? row.PrizePicksPoint)
+    : col === "UnderdogDifference"
+    ? toValidLine(row.UnderdogPoint)
+    : toValidLine(row.BetrPoint);
 
-  if (!Number.isFinite(diff)) {
+  // Difference columns use the displayed book average/consensus, matching the
+  // table label and the historical meaning of these columns.
+  let marketLine = Number(getTrueConsensusPoint(row));
+  if (!Number.isFinite(marketLine)) marketLine = Number(row.ConsensusPoint);
+
+  if (!Number.isFinite(dfsLine) || !Number.isFinite(marketLine)) {
+    row[col] = null;
     td.textContent = "—";
     tr.appendChild(td);
     return;
   }
 
-  // 🔥 FIX FLOATING DECIMALS
-  diff = Math.round(diff * 100) / 100;
+  const diff = Math.round(Math.abs(marketLine - dfsLine) * 100) / 100;
+  row[col] = diff;
 
-  // 🎨 Color only (clean UI)
-  if (diff > 0) td.style.color = "#1e8449";   // green
-  else if (diff < 0) td.style.color = "#c0392b"; // red
-  else td.style.color = "#6c757d"; // neutral
-
-  // ✅ FORCE 2 DECIMALS
+  td.style.color = diff > 0 ? "#1e8449" : "#6c757d";
   td.textContent = diff.toFixed(2);
+  td.dataset.sort = diff.toFixed(2);
 
   tr.appendChild(td);
   return;
@@ -4702,7 +5089,8 @@ tr.appendChild(td);
 // ===================================================
 // ✅ Attach Fact Check listener after table is rendered
 // ===================================================
-attachFactCheckListener(data);
+// Fact Check is handled by the row click listener above.
+// attachFactCheckListener(data);
 }
 
 
