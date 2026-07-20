@@ -227,6 +227,9 @@ window.addEventListener("error", (e) => {
   <button id="openAnalyticsBtn" class="tracker-btn primary">
     📊 View Analytics
   </button>
+  <button id="openBankrollTrackerBtn" class="tracker-btn primary">
+    💰 Daily Profit Tracker
+  </button>
   <button id="importExcelBtn" class="tracker-btn secondary">
     📥 Import Slips (Excel)
   </button>
@@ -466,6 +469,1102 @@ window.addEventListener("error", (e) => {
 
 
 
+
+
+
+<!-- ===================================== -->
+<!-- 💰 Daily Profit Tracker -->
+<!-- ===================================== -->
+<div id="bankrollTrackerModal" class="bankroll-modal hidden" aria-hidden="true">
+  <div class="bankroll-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="bankrollTrackerTitle">
+    <section class="bankroll-panel">
+      <header class="bankroll-header">
+        <div>
+          <h2 id="bankrollTrackerTitle">💰 Daily Profit Tracker</h2>
+          <p>Track daily betting results, deposits, withdrawals, and bankroll movement.</p>
+        </div>
+
+        <button id="closeBankrollTrackerBtn" class="bankroll-modal-close" type="button" aria-label="Close Daily Profit Tracker">
+          ✖
+        </button>
+      </header>
+
+      <nav class="bankroll-tabs" aria-label="Daily Profit Tracker views">
+        <button class="bankroll-tab active" type="button" data-bankroll-tab="calendar">
+          📅 Calendar
+        </button>
+        <button class="bankroll-tab" type="button" data-bankroll-tab="entry">
+          ➕ Add Entry
+        </button>
+      </nav>
+
+      <div class="bankroll-summary-grid">
+        <div class="bankroll-stat">
+          <span>Monthly Profit</span>
+          <strong id="bankrollMonthlyProfit">—</strong>
+        </div>
+        <div class="bankroll-stat">
+          <span>Amount Wagered</span>
+          <strong id="bankrollTotalWagered">—</strong>
+        </div>
+        <div class="bankroll-stat">
+          <span>Monthly ROI</span>
+          <strong id="bankrollRoi">—</strong>
+        </div>
+        <div class="bankroll-stat">
+          <span>Overall ROI</span>
+          <strong id="bankrollOverallRoi">—</strong>
+          <small id="bankrollOverallRoiSub">All tracked bets</small>
+        </div>
+        <div class="bankroll-stat">
+          <span>Bankroll Movement</span>
+          <strong id="bankrollMovement">—</strong>
+        </div>
+      </div>
+
+      <div class="bankroll-tab-panel active" data-bankroll-panel="calendar">
+        <div class="bankroll-calendar-card">
+          <div class="bankroll-calendar-toolbar">
+            <button id="bankrollPrevMonthBtn" class="bankroll-month-nav" type="button" aria-label="Previous month">‹</button>
+
+            <div class="bankroll-month-title-wrap">
+              <h3 id="bankrollMonthTitle">Month</h3>
+              <input id="bankrollMonthPicker" type="month" aria-label="Choose month" />
+            </div>
+
+            <button id="bankrollNextMonthBtn" class="bankroll-month-nav" type="button" aria-label="Next month">›</button>
+          </div>
+
+          <div class="bankroll-weekdays" aria-hidden="true">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+            <span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+
+          <div id="bankrollCalendarGrid" class="bankroll-calendar-grid">
+            <div class="bankroll-calendar-loading">Loading calendar…</div>
+          </div>
+
+          <div class="bankroll-calendar-legend">
+            <span><i class="legend-dot positive"></i> Profitable day</span>
+            <span><i class="legend-dot negative"></i> Losing day</span>
+            <span><i class="legend-dot neutral"></i> Break-even / no result</span>
+          </div>
+
+          <div id="bankrollSelectedDayCard" class="bankroll-selected-day-card hidden">
+            <div>
+              <strong id="bankrollSelectedDayTitle">Selected day</strong>
+              <div id="bankrollSelectedDaySummary"></div>
+            </div>
+
+            <div class="bankroll-selected-day-actions">
+              <button id="bankrollDeleteSelectedDayBtn" class="bankroll-danger-btn hidden" type="button">
+                🗑️ Delete Day Entries
+              </button>
+              <button id="bankrollAddSelectedDayBtn" class="bankroll-primary-btn" type="button">
+                ➕ Add Entry
+              </button>
+            </div>
+          </div>
+
+          <div id="bankrollDayEntriesList" class="bankroll-day-entries"></div>
+        </div>
+      </div>
+
+      <div class="bankroll-tab-panel" data-bankroll-panel="entry">
+        <form id="bankrollEntryForm" class="bankroll-entry-card">
+          <div class="bankroll-form-heading">
+            <div>
+              <h3>Add Daily Entry</h3>
+              <p id="bankrollFormSubtitle">Record a betting result or bankroll transaction.</p>
+            </div>
+
+            <div class="bankroll-form-heading-actions">
+              <button id="openBetCalculatorBtn" class="bankroll-secondary-btn" type="button">
+                🧮 Bet Calculator
+              </button>
+              <button id="bankrollBackToCalendarBtn" class="bankroll-secondary-btn" type="button">
+                ← Calendar
+              </button>
+            </div>
+          </div>
+
+          <div id="betCalculatorPanel" class="bet-calculator-panel hidden">
+            <div class="bet-calculator-header">
+              <div>
+                <h4>🧮 Bet Tally Calculator</h4>
+                <p>Add each bet below, then apply the combined totals to this daily entry.</p>
+              </div>
+              <button id="closeBetCalculatorBtn" class="bankroll-mini-close" type="button" aria-label="Close calculator">✖</button>
+            </div>
+
+            <div class="bet-calculator-table-wrap">
+              <table class="bet-calculator-table">
+                <thead>
+                  <tr>
+                    <th>Bet</th>
+                    <th>Wagered</th>
+                    <th>Returned</th>
+                    <th>Net</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="betCalculatorRows"></tbody>
+              </table>
+            </div>
+
+            <div class="bet-calculator-actions">
+              <button id="addBetCalculatorRowBtn" class="bankroll-secondary-btn" type="button">
+                ➕ Add Bet
+              </button>
+
+              <div class="bet-calculator-totals">
+                <div>
+                  <span>Total Wagered</span>
+                  <strong id="betCalcTotalWagered">$0.00</strong>
+                </div>
+                <div>
+                  <span>Total Returned</span>
+                  <strong id="betCalcTotalReturned">$0.00</strong>
+                </div>
+                <div>
+                  <span>Net Result</span>
+                  <strong id="betCalcNetResult">$0.00</strong>
+                </div>
+              </div>
+
+              <button id="applyBetCalculatorBtn" class="bankroll-primary-btn" type="button">
+                ✅ Apply Totals
+              </button>
+            </div>
+          </div>
+
+          <div class="bankroll-form-grid">
+            <div class="bankroll-field">
+              <label for="bankrollEntryDate">Date</label>
+              <input id="bankrollEntryDate" type="date" required />
+            </div>
+
+            <div class="bankroll-field">
+              <label for="bankrollEntryType">Entry Type</label>
+              <select id="bankrollEntryType">
+                <option value="betting_result">Betting Result</option>
+                <option value="deposit">Deposit</option>
+                <option value="withdrawal">Withdrawal</option>
+                <option value="bonus">Sportsbook Bonus</option>
+                <option value="adjustment">Adjustment</option>
+              </select>
+            </div>
+
+            <div id="bankrollBetFields" class="bankroll-bet-fields">
+              <div class="bankroll-field">
+                <label for="bankrollAmountWagered">Amount Wagered</label>
+                <input id="bankrollAmountWagered" type="number" min="0" step="0.01" placeholder="20.00" />
+              </div>
+
+              <div class="bankroll-field">
+                <label for="bankrollAmountReturned">Amount Returned</label>
+                <input id="bankrollAmountReturned" type="number" min="0" step="0.01" placeholder="35.00" />
+              </div>
+            </div>
+
+            <div class="bankroll-field">
+              <label for="bankrollNetAmount">Net Amount</label>
+              <div class="bankroll-net-wrap">
+                <span>$</span>
+                <input id="bankrollNetAmount" type="number" step="0.01" placeholder="15.00 or -20.00" />
+              </div>
+              <small id="bankrollNetHelp">Enter wager and return, or enter net profit/loss by itself.</small>
+            </div>
+
+            <div class="bankroll-field">
+              <label for="bankrollPlatform">Platform</label>
+              <select id="bankrollPlatform">
+                <option value="">Optional</option>
+                <option value="prizepicks">PrizePicks</option>
+                <option value="underdog">Underdog</option>
+                <option value="betr">Betr</option>
+                <option value="fanduel">FanDuel</option>
+                <option value="draftkings">DraftKings</option>
+                <option value="betmgm">BetMGM</option>
+                <option value="fanatics">Fanatics</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="bankroll-field bankroll-notes-field">
+              <label for="bankrollNotes">Notes</label>
+              <textarea id="bankrollNotes" rows="3" placeholder="Optional note"></textarea>
+            </div>
+          </div>
+
+          <div class="bankroll-form-actions">
+            <div id="bankrollFormStatus" class="bankroll-status" aria-live="polite"></div>
+            <button id="saveBankrollEntryBtn" class="bankroll-primary-btn" type="submit">
+              💾 Save Entry
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+  .bankroll-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, .72);
+    backdrop-filter: blur(5px);
+  }
+  .bankroll-modal.hidden,
+  .bankroll-selected-day-card.hidden {
+    display: none !important;
+  }
+  .bankroll-modal-dialog {
+    width: min(1120px, 100%);
+    margin: auto;
+  }
+  body.bankroll-modal-open {
+    overflow: hidden;
+  }
+  .bankroll-panel {
+    padding: 24px;
+    border: 1px solid #334155;
+    border-radius: 18px;
+    background: #0f172a;
+    color: #f8fafc;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, .45);
+  }
+  .bankroll-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .bankroll-header h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1.65rem;
+  }
+  .bankroll-header p {
+    margin: 6px 0 0;
+    color: #cbd5e1;
+    font-size: .85rem;
+    font-weight: 600;
+  }
+  .bankroll-modal-close {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border: 1px solid #475569;
+    border-radius: 11px;
+    background: #1e293b;
+    color: #f8fafc;
+    cursor: pointer;
+    font-size: 1.05rem;
+  }
+  .bankroll-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 22px 0 16px;
+    padding: 5px;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    background: #111827;
+  }
+  .bankroll-tab {
+    flex: 1;
+    border: 0;
+    border-radius: 9px;
+    padding: 11px 16px;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .bankroll-tab.active {
+    background: #2563eb;
+    color: #fff;
+  }
+  .bankroll-tab-panel {
+    display: none;
+  }
+  .bankroll-tab-panel.active {
+    display: block;
+  }
+  .bankroll-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .bankroll-stat {
+    padding: 15px;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    background: #1e293b;
+  }
+  .bankroll-stat span {
+    display: block;
+    margin-bottom: 7px;
+    color: #cbd5e1;
+    font-size: .82rem;
+    font-weight: 800;
+  }
+  .bankroll-stat strong {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 900;
+  }
+    .bankroll-stat small {
+      display: block;
+      margin-top: 5px;
+      color: #cbd5e1;
+      font-size: .76rem;
+      font-weight: 700;
+      line-height: 1.3;
+}
+  .bankroll-calendar-card,
+  .bankroll-entry-card {
+    border: 1px solid #334155;
+    border-radius: 14px;
+    background: #111827;
+  }
+  .bankroll-calendar-card {
+    padding: 18px;
+  }
+  .bankroll-calendar-toolbar {
+    display: grid;
+    grid-template-columns: 46px 1fr 46px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .bankroll-month-nav {
+    height: 44px;
+    border: 1px solid #475569;
+    border-radius: 10px;
+    background: #1e293b;
+    color: #f8fafc;
+    cursor: pointer;
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+  .bankroll-month-title-wrap {
+    text-align: center;
+  }
+  .bankroll-month-title-wrap h3 {
+    margin: 0 0 6px;
+    color: #f8fafc;
+    font-size: 1.35rem;
+  }
+  #bankrollMonthPicker {
+    width: auto;
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+    text-align: center;
+    cursor: pointer;
+  }
+  .bankroll-weekdays,
+  .bankroll-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 9px;
+  }
+  .bankroll-weekdays {
+    margin-bottom: 9px;
+  }
+  .bankroll-weekdays span {
+    padding: 6px;
+    color: #94a3b8;
+    text-align: center;
+    font-size: .82rem;
+    font-weight: 700;
+  }
+  .bankroll-calendar-day,
+  .bankroll-calendar-blank {
+    min-height: 92px;
+    border-radius: 11px;
+  }
+  .bankroll-calendar-day {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #f8fafc;
+    cursor: pointer;
+    text-align: left;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .bankroll-calendar-day:hover {
+    transform: translateY(-2px);
+    border-color: #60a5fa;
+  }
+  .bankroll-calendar-day.selected {
+    outline: 2px solid #60a5fa;
+    outline-offset: 1px;
+  }
+  .bankroll-calendar-day.positive {
+    border-color: #4d7c0f;
+    background: #365314;
+  }
+  .bankroll-calendar-day.negative {
+    border-color: #b91c1c;
+    background: #7f1d1d;
+  }
+  .bankroll-calendar-day.neutral {
+    background: #1e293b;
+  }
+  .bankroll-calendar-day .day-number {
+    color: #e2e8f0;
+    font-size: .95rem;
+  }
+  .bankroll-calendar-day .day-amount {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+  .bankroll-calendar-day .day-count {
+    color: rgba(255,255,255,.7);
+    font-size: .72rem;
+  }
+  .bankroll-calendar-loading {
+    grid-column: 1 / -1;
+    padding: 35px;
+    color: #94a3b8;
+    text-align: center;
+  }
+  .bankroll-calendar-legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    color: #94a3b8;
+    font-size: .78rem;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 5px;
+    border-radius: 50%;
+  }
+  .legend-dot.positive { background: #65a30d; }
+  .legend-dot.negative { background: #dc2626; }
+  .legend-dot.neutral { background: #64748b; }
+  .bankroll-selected-day-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 14px;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    background: #1e293b;
+  }
+  .bankroll-selected-day-card strong {
+    color: #f8fafc;
+  }
+  .bankroll-selected-day-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .bankroll-danger-btn {
+    border: 1px solid #b91c1c;
+    border-radius: 10px;
+    padding: 11px 16px;
+    background: #7f1d1d;
+    color: #fee2e2;
+    cursor: pointer;
+    font-weight: 800;
+  }
+  .bankroll-danger-btn:hover {
+    background: #991b1b;
+  }
+  .bankroll-danger-btn.hidden {
+    display: none !important;
+  }
+  #bankrollSelectedDaySummary {
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: .85rem;
+  }
+  .bankroll-day-entries {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .bankroll-entry-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 12px;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    background: #0f172a;
+  }
+  .bankroll-entry-row strong {
+    color: #f8fafc;
+  }
+  .bankroll-entry-row .entry-meta {
+    margin-top: 3px;
+    color: #94a3b8;
+    font-size: .78rem;
+  }
+  .bankroll-entry-row .entry-amount {
+    font-weight: 800;
+  }
+  .bankroll-entry-row .entry-amount.positive { color: #4ade80; }
+  .bankroll-entry-row .entry-amount.negative { color: #f87171; }
+  .bankroll-delete-btn {
+    border: 1px solid #7f1d1d;
+    border-radius: 8px;
+    padding: 8px 11px;
+    background: rgba(239, 68, 68, .17);
+    color: #fecaca;
+    cursor: pointer;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .bankroll-delete-btn:hover {
+    background: rgba(239, 68, 68, .3);
+  }
+  .bankroll-entry-card {
+    padding: 22px;
+  }
+  .bankroll-form-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .bankroll-form-heading h3 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1.35rem;
+  }
+  .bankroll-form-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .bet-calculator-panel {
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    background: #0f172a;
+  }
+  .bet-calculator-panel.hidden {
+    display: none !important;
+  }
+  .bet-calculator-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .bet-calculator-header h4 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1.08rem;
+  }
+  .bet-calculator-header p {
+    margin: 4px 0 0;
+    color: #cbd5e1;
+    font-size: .86rem;
+    font-weight: 600;
+  }
+  .bankroll-mini-close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    background: #1e293b;
+    color: #f8fafc;
+    cursor: pointer;
+  }
+  .bet-calculator-table-wrap {
+    overflow-x: auto;
+  }
+  .bet-calculator-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+  }
+  .bet-calculator-table th {
+    padding: 0 8px 4px;
+    color: #e2e8f0;
+    text-align: left;
+    font-size: .78rem;
+    font-weight: 800;
+  }
+  .bet-calculator-table td {
+    padding: 0 6px;
+  }
+  .bet-calculator-table input {
+    width: 100%;
+    min-width: 95px;
+    box-sizing: border-box;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 9px 10px;
+    background: #111827;
+    color: #f8fafc;
+  }
+  .bet-calculator-table .bet-number {
+    min-width: 52px;
+    color: #cbd5e1;
+    font-weight: 700;
+  }
+  .bet-calculator-table .bet-net {
+    min-width: 90px;
+    color: #e2e8f0;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .bet-calculator-remove {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: rgba(239,68,68,.18);
+    color: #fecaca;
+    cursor: pointer;
+  }
+  .bet-calculator-actions {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: end;
+    margin-top: 12px;
+  }
+  .bet-calculator-totals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
+    gap: 10px;
+  }
+  .bet-calculator-totals div {
+    padding: 10px 12px;
+    border: 1px solid #334155;
+    border-radius: 9px;
+    background: #111827;
+  }
+  .bet-calculator-totals span {
+    display: block;
+    margin-bottom: 4px;
+    color: #94a3b8;
+    font-size: .74rem;
+  }
+  .bet-calculator-totals strong {
+    color: #f8fafc;
+    font-size: .98rem;
+  }
+  #betCalcNetResult.positive {
+    color: #4ade80;
+  }
+  #betCalcNetResult.negative {
+    color: #f87171;
+  }
+  .bankroll-form-heading p {
+    margin: 5px 0 0;
+    color: #94a3b8;
+  }
+  .bankroll-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .bankroll-field {
+    display: grid;
+    gap: 7px;
+  }
+  .bankroll-field label {
+    color: #f8fafc;
+    font-size: .92rem;
+    font-weight: 800;
+    letter-spacing: .01em;
+  }
+  .bankroll-field input,
+  .bankroll-field select,
+  .bankroll-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #475569;
+    border-radius: 10px;
+    padding: 12px;
+    background: #0f172a;
+    color: #f8fafc;
+    font-size: .95rem;
+  }
+  .bankroll-field input::placeholder,
+  .bankroll-field textarea::placeholder {
+    color: #cbd5e1;
+  }
+  .bankroll-field small {
+    color: #cbd5e1;
+    font-size: .78rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .bankroll-bet-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    grid-column: 1 / -1;
+  }
+  .bankroll-net-wrap {
+    display: flex;
+    align-items: center;
+    border: 1px solid #475569;
+    border-radius: 10px;
+    background: #0f172a;
+  }
+  .bankroll-net-wrap span {
+    padding-left: 12px;
+    color: #94a3b8;
+    font-weight: 700;
+  }
+  .bankroll-net-wrap input {
+    border: 0;
+    background: transparent;
+  }
+  .bankroll-notes-field {
+    grid-column: 1 / -1;
+  }
+  .bankroll-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  .bankroll-primary-btn,
+  .bankroll-secondary-btn {
+    border-radius: 10px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-weight: 800;
+  }
+  .bankroll-primary-btn {
+    border: 0;
+    background: #22c55e;
+    color: #052e16;
+  }
+  .bankroll-secondary-btn {
+    border: 1px solid #475569;
+    background: #1e293b;
+    color: #e2e8f0;
+  }
+  .bankroll-status {
+    min-height: 20px;
+    color: #94a3b8;
+    font-size: .9rem;
+  }
+  .bankroll-status.error { color: #fca5a5; }
+  .bankroll-status.success { color: #86efac; }
+
+  @media (max-width: 760px) {
+    .bankroll-modal {
+      padding: 0;
+      align-items: stretch;
+    }
+    .bankroll-modal-dialog {
+      width: 100%;
+      margin: 0;
+    }
+    .bankroll-panel {
+      min-height: 100dvh;
+      border: 0;
+      border-radius: 0;
+    }
+    .bankroll-panel {
+      padding: 15px;
+    }
+    .bankroll-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .bankroll-calendar-day,
+    .bankroll-calendar-blank {
+      min-height: 68px;
+    }
+    .bankroll-calendar-day {
+      padding: 7px;
+    }
+    .bankroll-calendar-day .day-amount {
+      font-size: .78rem;
+    }
+    .bankroll-calendar-day .day-count {
+      display: none;
+    }
+    .bankroll-form-heading-actions {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .bet-calculator-actions {
+      grid-template-columns: 1fr;
+    }
+    .bet-calculator-totals {
+      grid-template-columns: 1fr;
+    }
+    .bankroll-form-grid {
+      grid-template-columns: 1fr;
+    }
+    .bankroll-bet-fields {
+      grid-template-columns: 1fr;
+    }
+    .bankroll-selected-day-card,
+    .bankroll-form-heading,
+    .bankroll-form-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .bankroll-panel {
+      padding: 12px;
+    }
+    .bankroll-header h2 {
+      font-size: 1.25rem;
+    }
+    .bankroll-header p {
+      font-size: .82rem;
+    }
+    .bankroll-tabs {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      margin-top: 14px;
+    }
+    .bankroll-tab {
+      padding: 10px 8px;
+      font-size: .82rem;
+    }
+    .bankroll-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .bankroll-stat {
+      padding: 11px;
+    }
+    .bankroll-stat strong {
+      font-size: 1.05rem;
+    }
+    .bankroll-stat:last-child {
+      grid-column: 1 / -1;
+    }
+    .bankroll-calendar-card,
+    .bankroll-entry-card {
+      padding: 10px;
+    }
+    .bankroll-calendar-toolbar {
+      grid-template-columns: 38px 1fr 38px;
+      gap: 6px;
+    }
+    .bankroll-month-nav {
+      height: 38px;
+    }
+    .bankroll-weekdays,
+    .bankroll-calendar-grid {
+      gap: 4px;
+    }
+    .bankroll-weekdays span {
+      padding: 3px 0;
+      font-size: .66rem;
+    }
+    .bankroll-calendar-day,
+    .bankroll-calendar-blank {
+      min-height: 58px;
+      border-radius: 7px;
+    }
+    .bankroll-calendar-day {
+      padding: 5px;
+    }
+    .bankroll-calendar-day .day-number {
+      font-size: .76rem;
+    }
+    .bankroll-calendar-day .day-amount {
+      font-size: .68rem;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+    .bankroll-calendar-legend {
+      gap: 9px;
+      font-size: .68rem;
+    }
+    .bankroll-selected-day-actions {
+      width: 100%;
+    }
+    .bankroll-selected-day-actions button {
+      flex: 1;
+    }
+    .bankroll-entry-row {
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+    .bankroll-entry-row .entry-amount {
+      font-size: .9rem;
+    }
+    .bankroll-delete-btn {
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+    .bet-calculator-table {
+      min-width: 520px;
+    }
+    .bankroll-form-actions .bankroll-primary-btn {
+      width: 100%;
+    }
+  }
+
+  /* =====================================================
+     HIGH-CONTRAST DAILY PROFIT TRACKER TEXT
+     Final overrides placed last so they win over earlier rules.
+  ===================================================== */
+
+  .bankroll-panel {
+    color: #ffffff !important;
+  }
+
+  .bankroll-header h2,
+  .bankroll-header p,
+  .bankroll-tab,
+  .bankroll-stat span,
+  .bankroll-stat strong,
+  .bankroll-stat small,
+  #bankrollOverallRoiSub,
+  .bankroll-month-title-wrap h3,
+  #bankrollMonthPicker,
+  .bankroll-weekdays span,
+  .bankroll-calendar-legend,
+  .bankroll-calendar-loading,
+  #bankrollSelectedDayTitle,
+  #bankrollSelectedDaySummary,
+  .bankroll-form-heading h3,
+  .bankroll-form-heading p,
+  .bankroll-field label,
+  .bankroll-field small,
+  .bankroll-status,
+  .bet-calculator-header h4,
+  .bet-calculator-header p,
+  .bet-calculator-table th,
+  .bet-calculator-table .bet-number,
+  .bet-calculator-table .bet-net,
+  .bet-calculator-totals span,
+  .bet-calculator-totals strong,
+  .bankroll-entry-row strong,
+  .bankroll-entry-row .entry-meta {
+    opacity: 1 !important;
+  }
+
+  .bankroll-header h2,
+  .bankroll-stat strong,
+  .bankroll-month-title-wrap h3,
+  #bankrollSelectedDayTitle,
+  .bankroll-form-heading h3,
+  .bet-calculator-header h4,
+  .bet-calculator-totals strong,
+  .bankroll-entry-row strong {
+    color: #ffffff !important;
+  }
+
+  .bankroll-header p,
+  .bankroll-tab,
+  .bankroll-stat span,
+  .bankroll-stat small,
+  #bankrollOverallRoiSub,
+  #bankrollMonthPicker,
+  .bankroll-weekdays span,
+  .bankroll-calendar-legend,
+  .bankroll-calendar-loading,
+  #bankrollSelectedDaySummary,
+  .bankroll-form-heading p,
+  .bankroll-field small,
+  .bankroll-status,
+  .bet-calculator-header p,
+  .bet-calculator-table th,
+  .bet-calculator-table .bet-number,
+  .bet-calculator-table .bet-net,
+  .bet-calculator-totals span,
+  .bankroll-entry-row .entry-meta {
+    color: #e2e8f0 !important;
+  }
+
+  .bankroll-field label {
+    color: #f8fafc !important;
+  }
+
+  .bankroll-tab.active {
+    color: #ffffff !important;
+  }
+
+  .bankroll-stat strong,
+  #bankrollOverallRoi {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+  }
+
+  .bankroll-field input,
+  .bankroll-field select,
+  .bankroll-field textarea,
+  .bet-calculator-table input {
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
+  .bankroll-field input::placeholder,
+  .bankroll-field textarea::placeholder,
+  .bet-calculator-table input::placeholder {
+    color: #cbd5e1 !important;
+    opacity: 1 !important;
+  }
+
+  .bankroll-net-wrap span {
+    color: #e2e8f0 !important;
+  }
+
+  .bankroll-calendar-day .day-number,
+  .bankroll-calendar-day .day-amount,
+  .bankroll-calendar-day .day-count {
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
+  .bankroll-secondary-btn {
+    color: #f8fafc !important;
+  }
+
+
+  /* =====================================================
+     OVERALL ROI DETAIL — EXTRA CONTRAST
+  ===================================================== */
+  #bankrollOverallRoiSub {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    font-size: .82rem !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    letter-spacing: .01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .65);
+  }
+
+</style>
 
 
 <div id="slipList" class="slip-list"></div>
@@ -3334,6 +4433,785 @@ document.getElementById("goGameLinesBtn")?.addEventListener("click", () => {
 
 
 </script>
+
+<script>
+(() => {
+  const modal = document.getElementById("bankrollTrackerModal");
+  const openBtn = document.getElementById("openBankrollTrackerBtn");
+  const closeBtn = document.getElementById("closeBankrollTrackerBtn");
+  const monthInput = document.getElementById("bankrollMonthPicker");
+  const monthTitle = document.getElementById("bankrollMonthTitle");
+  const calendarGrid = document.getElementById("bankrollCalendarGrid");
+  const selectedDayCard = document.getElementById("bankrollSelectedDayCard");
+  const selectedDayTitle = document.getElementById("bankrollSelectedDayTitle");
+  const selectedDaySummary = document.getElementById("bankrollSelectedDaySummary");
+  const dayEntriesList = document.getElementById("bankrollDayEntriesList");
+
+  const dateInput = document.getElementById("bankrollEntryDate");
+  const entryType = document.getElementById("bankrollEntryType");
+  const wageredInput = document.getElementById("bankrollAmountWagered");
+  const returnedInput = document.getElementById("bankrollAmountReturned");
+  const netInput = document.getElementById("bankrollNetAmount");
+  const betFields = document.getElementById("bankrollBetFields");
+  const formStatus = document.getElementById("bankrollFormStatus");
+
+  const money = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD"
+  });
+
+  // Use the timezone configured on the user's device.
+  // Fallback to UTC only when the browser does not expose an IANA timezone.
+  const browserTimeZone =
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+  const today = new Date();
+  const localDate = today.toLocaleDateString("en-CA");
+  let calendarData = null;
+  let selectedDate = localDate;
+
+  if (dateInput) dateInput.value = localDate;
+  if (monthInput) monthInput.value = localDate.slice(0, 7);
+  if (wageredInput) wageredInput.value = "0.00";
+  if (returnedInput) returnedInput.value = "0.00";
+  if (netInput) netInput.value = "0.00";
+  const betCalculatorPanel = document.getElementById("betCalculatorPanel");
+  const betCalculatorRows = document.getElementById("betCalculatorRows");
+  let betCalculatorRowCounter = 0;
+
+  function formatCalcMoney(value) {
+    return money.format(Number(value || 0));
+  }
+
+  function createBetCalculatorRow(wagered = "", returned = "") {
+    betCalculatorRowCounter += 1;
+
+    const row = document.createElement("tr");
+    row.dataset.calcRowId = String(betCalculatorRowCounter);
+    row.innerHTML = `
+      <td class="bet-number">#${betCalculatorRowCounter}</td>
+      <td>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          class="bet-calc-wagered"
+          placeholder="20.00"
+          value="${wagered}"
+          aria-label="Bet ${betCalculatorRowCounter} amount wagered"
+        />
+      </td>
+      <td>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          class="bet-calc-returned"
+          placeholder="35.00"
+          value="${returned}"
+          aria-label="Bet ${betCalculatorRowCounter} amount returned"
+        />
+      </td>
+      <td class="bet-net">$0.00</td>
+      <td>
+        <button
+          type="button"
+          class="bet-calculator-remove"
+          aria-label="Remove bet ${betCalculatorRowCounter}"
+          title="Remove this bet"
+        >🗑️</button>
+      </td>
+    `;
+
+    betCalculatorRows.appendChild(row);
+    updateBetCalculatorTotals();
+    return row;
+  }
+
+  function getCalcRows() {
+    return [...betCalculatorRows.querySelectorAll("tr")];
+  }
+
+  function updateBetCalculatorTotals() {
+    let totalWagered = 0;
+    let totalReturned = 0;
+
+    getCalcRows().forEach(row => {
+      const wageredRaw = row.querySelector(".bet-calc-wagered")?.value ?? "";
+      const returnedRaw = row.querySelector(".bet-calc-returned")?.value ?? "";
+
+      const wagered = wageredRaw === "" ? 0 : Number(wageredRaw);
+      const returned = returnedRaw === "" ? 0 : Number(returnedRaw);
+      const safeWagered = Number.isFinite(wagered) ? wagered : 0;
+      const safeReturned = Number.isFinite(returned) ? returned : 0;
+      const net = safeReturned - safeWagered;
+
+      totalWagered += safeWagered;
+      totalReturned += safeReturned;
+
+      const netCell = row.querySelector(".bet-net");
+      if (netCell) {
+        netCell.textContent = `${net > 0 ? "+" : ""}${formatCalcMoney(net)}`;
+        netCell.style.color = net > 0 ? "#4ade80" : net < 0 ? "#f87171" : "#e2e8f0";
+      }
+    });
+
+    const totalNet = totalReturned - totalWagered;
+
+    document.getElementById("betCalcTotalWagered").textContent =
+      formatCalcMoney(totalWagered);
+
+    document.getElementById("betCalcTotalReturned").textContent =
+      formatCalcMoney(totalReturned);
+
+    const netEl = document.getElementById("betCalcNetResult");
+    netEl.textContent = `${totalNet > 0 ? "+" : ""}${formatCalcMoney(totalNet)}`;
+    netEl.classList.toggle("positive", totalNet > 0);
+    netEl.classList.toggle("negative", totalNet < 0);
+
+    return {
+      totalWagered: Number(totalWagered.toFixed(2)),
+      totalReturned: Number(totalReturned.toFixed(2)),
+      totalNet: Number(totalNet.toFixed(2))
+    };
+  }
+
+  function resetBetCalculator() {
+    betCalculatorRows.innerHTML = "";
+    betCalculatorRowCounter = 0;
+
+    createBetCalculatorRow("0.00", "0.00");
+    createBetCalculatorRow("0.00", "0.00");
+    createBetCalculatorRow("0.00", "0.00");
+
+    document.getElementById("betCalcTotalWagered").textContent = "$0.00";
+    document.getElementById("betCalcTotalReturned").textContent = "$0.00";
+
+    const netEl = document.getElementById("betCalcNetResult");
+    netEl.textContent = "$0.00";
+    netEl.classList.remove("positive", "negative");
+  }
+
+  function openBetCalculator() {
+    if (!getCalcRows().length) {
+      resetBetCalculator();
+    }
+
+    betCalculatorPanel.classList.remove("hidden");
+  }
+
+  function closeBetCalculator() {
+    betCalculatorPanel.classList.add("hidden");
+  }
+
+  document.getElementById("openBetCalculatorBtn")
+    ?.addEventListener("click", openBetCalculator);
+
+  document.getElementById("closeBetCalculatorBtn")
+    ?.addEventListener("click", closeBetCalculator);
+
+  document.getElementById("addBetCalculatorRowBtn")
+    ?.addEventListener("click", () => createBetCalculatorRow());
+
+  betCalculatorRows?.addEventListener("input", event => {
+    if (
+      event.target.classList.contains("bet-calc-wagered") ||
+      event.target.classList.contains("bet-calc-returned")
+    ) {
+      updateBetCalculatorTotals();
+    }
+  });
+
+  betCalculatorRows?.addEventListener("click", event => {
+    const removeButton = event.target.closest(".bet-calculator-remove");
+    if (!removeButton) return;
+
+    removeButton.closest("tr")?.remove();
+
+    if (!getCalcRows().length) {
+      createBetCalculatorRow();
+    } else {
+      updateBetCalculatorTotals();
+    }
+  });
+
+  document.getElementById("applyBetCalculatorBtn")
+    ?.addEventListener("click", () => {
+      const totals = updateBetCalculatorTotals();
+      const hasAnyValues = getCalcRows().some(row => {
+        return (
+          String(row.querySelector(".bet-calc-wagered")?.value || "").trim() !== "" ||
+          String(row.querySelector(".bet-calc-returned")?.value || "").trim() !== ""
+        );
+      });
+
+      if (!hasAnyValues) {
+        setStatus("Add at least one bet to the calculator.", "error");
+        return;
+      }
+
+      entryType.value = "betting_result";
+      updateEntryTypeFields();
+
+      wageredInput.value = totals.totalWagered.toFixed(2);
+      returnedInput.value = totals.totalReturned.toFixed(2);
+      netInput.value = totals.totalNet.toFixed(2);
+
+      setStatus(
+        `${getCalcRows().length} bets totaled and applied to this entry.`,
+        "success"
+      );
+
+      closeBetCalculator();
+    });
+
+  function switchTab(tabName) {
+    document.querySelectorAll("[data-bankroll-tab]").forEach(button => {
+      button.classList.toggle("active", button.dataset.bankrollTab === tabName);
+    });
+
+    document.querySelectorAll("[data-bankroll-panel]").forEach(panel => {
+      panel.classList.toggle("active", panel.dataset.bankrollPanel === tabName);
+    });
+  }
+
+  document.querySelectorAll("[data-bankroll-tab]").forEach(button => {
+    button.addEventListener("click", () => {
+      const tabName = button.dataset.bankrollTab;
+
+      if (tabName === "entry") {
+        const dateToUse = selectedDate || localDate;
+        dateInput.value = dateToUse;
+
+        document.getElementById("bankrollFormSubtitle").textContent =
+          `Adding an entry for ${new Date(`${dateToUse}T12:00:00`).toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+          })}.`;
+      }
+
+      switchTab(tabName);
+    });
+  });
+
+  function openModal() {
+    modal?.classList.remove("hidden");
+    modal?.setAttribute("aria-hidden", "false");
+    document.body.classList.add("bankroll-modal-open");
+    switchTab("calendar");
+    loadMonth();
+  }
+
+  function closeModal() {
+    modal?.classList.add("hidden");
+    modal?.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("bankroll-modal-open");
+  }
+
+  openBtn?.addEventListener("click", openModal);
+  closeBtn?.addEventListener("click", closeModal);
+  modal?.addEventListener("click", event => {
+    if (event.target === modal) closeModal();
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !modal?.classList.contains("hidden")) closeModal();
+  });
+
+  function setStatus(message, type = "") {
+    formStatus.textContent = message;
+    formStatus.className = `bankroll-status ${type}`.trim();
+  }
+
+  async function authFetch(url, options = {}) {
+    const token = await getAuthToken();
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${token}`);
+
+    if (options.body && !(options.body instanceof FormData)) {
+      headers.set("Content-Type", "application/json");
+    }
+
+    const response = await fetch(url, { ...options, headers });
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      data = { detail: `HTTP ${response.status}` };
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.detail || data?.message || `Request failed (${response.status})`);
+    }
+
+    return data;
+  }
+
+  function signedMoney(value) {
+    const amount = Number(value || 0);
+    return `${amount > 0 ? "+" : ""}${money.format(amount)}`;
+  }
+
+  function getDayNet(day) {
+    return Number(
+      day?.net_profit ??
+      day?.net_amount ??
+      day?.profit ??
+      day?.betting_profit ??
+      day?.daily_profit ??
+      0
+    );
+  }
+
+  function getEntryCount(day) {
+    if (Array.isArray(day?.entries)) return day.entries.length;
+    return Number(day?.entry_count || day?.count || 0);
+  }
+
+  function updateSummary(data, overallData = null) {
+    document.getElementById("bankrollMonthlyProfit").textContent =
+      signedMoney(data.monthly_profit);
+
+    document.getElementById("bankrollTotalWagered").textContent =
+      money.format(Number(data.total_wagered || 0));
+
+    document.getElementById("bankrollRoi").textContent =
+      data.roi === null || data.roi === undefined ? "—" : `${data.roi}%`;
+
+    document.getElementById("bankrollMovement").textContent =
+      signedMoney(data.bankroll_movement);
+
+    const overallRoiEl = document.getElementById("bankrollOverallRoi");
+    const overallSubEl = document.getElementById("bankrollOverallRoiSub");
+
+    if (overallData) {
+      overallRoiEl.textContent =
+        overallData.overall_roi === null ||
+        overallData.overall_roi === undefined
+          ? "—"
+          : `${overallData.overall_roi}%`;
+
+      overallSubEl.textContent =
+        `${money.format(Number(overallData.overall_profit || 0))} profit · ` +
+        `${money.format(Number(overallData.overall_wagered || 0))} wagered`;
+    } else {
+      overallRoiEl.textContent = "—";
+      overallSubEl.textContent = "All tracked bets";
+    }
+  }
+
+  function getMonthParts() {
+    const [year, month] = (monthInput.value || localDate.slice(0, 7))
+      .split("-")
+      .map(Number);
+    return { year, month };
+  }
+
+  function renderCalendar(data) {
+    const { year, month } = getMonthParts();
+    const firstDay = new Date(year, month - 1, 1);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    monthTitle.textContent = firstDay.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric"
+    });
+
+    const cells = [];
+
+    for (let i = 0; i < firstDay.getDay(); i += 1) {
+      cells.push('<div class="bankroll-calendar-blank"></div>');
+    }
+
+    for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber += 1) {
+      const dateKey =
+        `${year}-${String(month).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+
+      const dayData = data.days?.[dateKey] || {};
+      const net = getDayNet(dayData);
+      const entryCount = getEntryCount(dayData);
+      const state = net > 0 ? "positive" : net < 0 ? "negative" : "neutral";
+      const selected = dateKey === selectedDate ? "selected" : "";
+      const amountText = net === 0 ? "" : signedMoney(net);
+
+      cells.push(`
+        <button
+          type="button"
+          class="bankroll-calendar-day ${state} ${selected}"
+          data-bankroll-date="${dateKey}"
+          aria-label="${dateKey}${amountText ? ` ${amountText}` : ""}"
+        >
+          <span class="day-number">${dayNumber}</span>
+          <span class="day-amount">${amountText}</span>
+          <span class="day-count">${entryCount ? `${entryCount} ${entryCount === 1 ? "entry" : "entries"}` : ""}</span>
+        </button>
+      `);
+    }
+
+    calendarGrid.innerHTML = cells.join("");
+  }
+
+  function renderSelectedDay(dateKey) {
+    selectedDate = dateKey;
+    const day = calendarData?.days?.[dateKey] || {};
+    const net = getDayNet(day);
+    const entries = Array.isArray(day.entries) ? day.entries : [];
+    const deleteDayButton = document.getElementById("bankrollDeleteSelectedDayBtn");
+
+    if (deleteDayButton) {
+      deleteDayButton.classList.toggle("hidden", entries.length === 0);
+      deleteDayButton.dataset.entries = JSON.stringify(
+        entries
+          .map(entry => ({
+            id: entry.id || entry.slip_id,
+            source: entry.source || "manual"
+          }))
+          .filter(entry => entry.id)
+      );
+    }
+
+    selectedDayTitle.textContent = new Date(`${dateKey}T12:00:00`).toLocaleDateString(
+      "en-US",
+      { weekday: "long", month: "long", day: "numeric", year: "numeric" }
+    );
+
+    selectedDaySummary.textContent =
+      `${signedMoney(net)} net · ${entries.length} ${entries.length === 1 ? "manual entry" : "manual entries"}`;
+
+    selectedDayCard.classList.remove("hidden");
+
+    if (!entries.length) {
+      dayEntriesList.innerHTML = "";
+    } else {
+      dayEntriesList.innerHTML = entries.map(entry => {
+        const amount = Number(entry.net_amount || 0);
+        const amountClass = amount > 0 ? "positive" : amount < 0 ? "negative" : "";
+        const isDetailedSlip = entry.source === "detailed_slip";
+        const itemId = entry.id || entry.slip_id;
+
+        const label = isDetailedSlip
+          ? "Detailed Slip"
+          : String(entry.entry_type || "betting_result")
+              .replaceAll("_", " ")
+              .replace(/\b\w/g, char => char.toUpperCase());
+
+        const details = [
+          entry.platform ? String(entry.platform).toUpperCase() : null,
+          isDetailedSlip ? "Saved in detailed tracker" : null,
+          entry.notes || null
+        ].filter(Boolean).join(" · ");
+
+        return `
+          <div class="bankroll-entry-row">
+            <div>
+              <strong>${label}</strong>
+              <div class="entry-meta">${details || "Manual entry"}</div>
+            </div>
+            <div class="entry-amount ${amountClass}">${signedMoney(amount)}</div>
+            <button
+              type="button"
+              class="bankroll-delete-btn"
+              data-bankroll-item-id="${itemId}"
+              data-bankroll-item-source="${entry.source || "manual"}"
+              aria-label="Delete entry"
+              title="Delete this entry"
+            >🗑️ Delete</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    renderCalendar(calendarData);
+  }
+
+  function openEntryForm(dateKey = selectedDate) {
+    selectedDate = dateKey || localDate;
+    dateInput.value = selectedDate;
+    document.getElementById("bankrollFormSubtitle").textContent =
+      `Adding an entry for ${new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      })}.`;
+
+    setStatus("");
+    switchTab("entry");
+  }
+
+  calendarGrid?.addEventListener("click", event => {
+    const dayButton = event.target.closest("[data-bankroll-date]");
+    if (!dayButton) return;
+    renderSelectedDay(dayButton.dataset.bankrollDate);
+  });
+
+  document.getElementById("bankrollAddSelectedDayBtn")
+    ?.addEventListener("click", () => openEntryForm(selectedDate));
+
+  document.getElementById("bankrollBackToCalendarBtn")
+    ?.addEventListener("click", () => switchTab("calendar"));
+
+  function changeMonth(delta) {
+    const { year, month } = getMonthParts();
+    const next = new Date(year, month - 1 + delta, 1);
+    monthInput.value =
+      `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+    selectedDate = `${monthInput.value}-01`;
+    loadMonth();
+  }
+
+  document.getElementById("bankrollPrevMonthBtn")
+    ?.addEventListener("click", () => changeMonth(-1));
+
+  document.getElementById("bankrollNextMonthBtn")
+    ?.addEventListener("click", () => changeMonth(1));
+
+  monthInput?.addEventListener("change", () => {
+    selectedDate = `${monthInput.value}-01`;
+    loadMonth();
+  });
+
+  async function loadMonth() {
+    const { year, month } = getMonthParts();
+    calendarGrid.innerHTML =
+      '<div class="bankroll-calendar-loading">Loading calendar…</div>';
+
+    try {
+      const encodedTimeZone = encodeURIComponent(browserTimeZone);
+
+      const [monthData, overallData] = await Promise.all([
+        authFetch(
+          `${window.API_BASE}/api/bankroll/calendar` +
+          `?year=${year}&month=${month}` +
+          `&timezone=${encodedTimeZone}`
+        ),
+        authFetch(
+          `${window.API_BASE}/api/bankroll/overall` +
+          `?timezone=${encodedTimeZone}`
+        )
+      ]);
+
+      calendarData = monthData;
+      updateSummary(calendarData, overallData);
+      renderCalendar(calendarData);
+
+      if (calendarData.days?.[selectedDate]) {
+        renderSelectedDay(selectedDate);
+      } else {
+        selectedDayCard.classList.add("hidden");
+        dayEntriesList.innerHTML = "";
+      }
+    } catch (error) {
+      console.error("Bankroll calendar load failed:", error);
+      calendarGrid.innerHTML =
+        `<div class="bankroll-calendar-loading">Could not load calendar: ${error.message}</div>`;
+    }
+  }
+
+  function updateEntryTypeFields() {
+    const isBet = entryType.value === "betting_result";
+    betFields.style.display = isBet ? "grid" : "none";
+
+    if (!isBet) {
+      wageredInput.value = "";
+      returnedInput.value = "";
+      document.getElementById("bankrollNetHelp").textContent =
+        "Use a positive number to add money and a negative number to remove money.";
+    } else {
+      document.getElementById("bankrollNetHelp").textContent =
+        "Enter wager and return, or enter net profit/loss by itself.";
+    }
+  }
+
+  function calculateNet() {
+    if (entryType.value !== "betting_result") return;
+
+    const wagered = String(wageredInput.value || "").trim();
+    const returned = String(returnedInput.value || "").trim();
+
+    if (wagered !== "" && returned !== "") {
+      netInput.value = (Number(returned) - Number(wagered)).toFixed(2);
+    }
+  }
+
+  entryType?.addEventListener("change", updateEntryTypeFields);
+  wageredInput?.addEventListener("input", calculateNet);
+  returnedInput?.addEventListener("input", calculateNet);
+  updateEntryTypeFields();
+
+  document.getElementById("bankrollEntryForm")
+    ?.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const saveButton = document.getElementById("saveBankrollEntryBtn");
+      const payload = {
+        entry_date: dateInput.value,
+        entry_type: entryType.value,
+        platform: document.getElementById("bankrollPlatform").value || null,
+        notes: document.getElementById("bankrollNotes").value.trim() || null
+      };
+
+      const wageredRaw = String(wageredInput.value || "").trim();
+      const returnedRaw = String(returnedInput.value || "").trim();
+      const netRaw = String(netInput.value || "").trim();
+
+      if (!payload.entry_date) {
+        setStatus("Choose an entry date.", "error");
+        return;
+      }
+
+      if (entryType.value === "betting_result") {
+        const hasWagered = wageredRaw !== "";
+        const hasReturned = returnedRaw !== "";
+        const hasNet = netRaw !== "";
+
+        if (hasWagered && hasReturned) {
+          payload.amount_wagered = Number(wageredRaw);
+          payload.amount_returned = Number(returnedRaw);
+          payload.net_amount = Number(
+            (payload.amount_returned - payload.amount_wagered).toFixed(2)
+          );
+        } else if (hasNet) {
+          payload.net_amount = Number(netRaw);
+        } else {
+          setStatus(
+            "Enter both Amount Wagered and Amount Returned, or enter Net Amount only.",
+            "error"
+          );
+          return;
+        }
+      } else {
+        if (netRaw === "") {
+          setStatus("Enter a Net Amount.", "error");
+          return;
+        }
+        payload.net_amount = Number(netRaw);
+      }
+
+      if (
+        !Number.isFinite(payload.net_amount) ||
+        (payload.amount_wagered !== undefined && !Number.isFinite(payload.amount_wagered)) ||
+        (payload.amount_returned !== undefined && !Number.isFinite(payload.amount_returned))
+      ) {
+        setStatus("Enter valid dollar amounts.", "error");
+        return;
+      }
+
+      try {
+        saveButton.disabled = true;
+        setStatus("Saving entry…");
+
+        await authFetch(`${window.API_BASE}/api/bankroll/entries`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        selectedDate = payload.entry_date;
+        monthInput.value = payload.entry_date.slice(0, 7);
+
+        wageredInput.value = "0.00";
+        returnedInput.value = "0.00";
+        netInput.value = "0.00";
+        document.getElementById("bankrollPlatform").value = "";
+        document.getElementById("bankrollNotes").value = "";
+
+        resetBetCalculator();
+        closeBetCalculator();
+
+        setStatus("Entry saved successfully.", "success");
+        await loadMonth();
+        renderSelectedDay(selectedDate);
+        switchTab("calendar");
+      } catch (error) {
+        console.error("Bankroll entry save failed:", error);
+        setStatus(error.message || String(error), "error");
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+
+  document.getElementById("bankrollDeleteSelectedDayBtn")
+    ?.addEventListener("click", async event => {
+      const button = event.currentTarget;
+      let entries = [];
+
+      try {
+        entries = JSON.parse(button.dataset.entries || "[]");
+      } catch {
+        entries = [];
+      }
+
+      if (!entries.length) return;
+
+      const detailedCount = entries.filter(entry => entry.source === "detailed_slip").length;
+      const manualCount = entries.length - detailedCount;
+
+      const confirmed = confirm(
+        `Delete all ${entries.length} saved ${entries.length === 1 ? "item" : "items"} for this day?\n\n` +
+        `${manualCount} manual ${manualCount === 1 ? "entry" : "entries"} · ` +
+        `${detailedCount} detailed ${detailedCount === 1 ? "slip" : "slips"}\n\n` +
+        `Deleting a detailed slip also removes its picks and tracker history.`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        button.disabled = true;
+        button.textContent = "Deleting…";
+
+        for (const entry of entries) {
+          const endpoint = entry.source === "detailed_slip"
+            ? `${window.API_BASE}/api/slips/${encodeURIComponent(entry.id)}`
+            : `${window.API_BASE}/api/bankroll/entries/${encodeURIComponent(entry.id)}`;
+
+          await authFetch(endpoint, { method: "DELETE" });
+        }
+
+        await loadMonth();
+        renderSelectedDay(selectedDate);
+      } catch (error) {
+        console.error("Delete day entries failed:", error);
+        alert(error.message || String(error));
+      } finally {
+        button.disabled = false;
+        button.textContent = "🗑️ Delete Day Entries";
+      }
+    });
+
+  dayEntriesList?.addEventListener("click", async event => {
+    const button = event.target.closest("[data-bankroll-item-id]");
+    if (!button) return;
+
+    const itemId = button.dataset.bankrollItemId;
+    const itemSource = button.dataset.bankrollItemSource || "manual";
+    const isDetailedSlip = itemSource === "detailed_slip";
+
+    const message = isDetailedSlip
+      ? "Delete this detailed slip? This also removes its picks and tracker history."
+      : "Delete this entry? This cannot be undone.";
+
+    if (!itemId || !confirm(message)) return;
+
+    try {
+      button.disabled = true;
+
+      const endpoint = isDetailedSlip
+        ? `${window.API_BASE}/api/slips/${encodeURIComponent(itemId)}`
+        : `${window.API_BASE}/api/bankroll/entries/${encodeURIComponent(itemId)}`;
+
+      await authFetch(endpoint, { method: "DELETE" });
+
+      await loadMonth();
+      renderSelectedDay(selectedDate);
+    } catch (error) {
+      console.error("Bankroll entry delete failed:", error);
+      alert(error.message || String(error));
+      button.disabled = false;
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
 
