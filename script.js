@@ -664,17 +664,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --------------------------------------------------
-// ₿ Crypto Scanner Button
-// --------------------------------------------------
-const openCryptoScannerBtn = document.getElementById("openCryptoScannerBtn");
 
-if (openCryptoScannerBtn) {
-  openCryptoScannerBtn.addEventListener("click", () => {
-    console.log("₿ Opening Crypto Scanner");
-    window.location.href = "crypto.html";
-  });
-}
 
 
   // -----------------------------
@@ -4393,19 +4383,29 @@ row._platformSignals = {};
   // platform cell and BestNoVig must consume this same side so the table can
   // never show Over in one column and Under in another for the same row.
   const canonicalNoVig = computeNoVigBothSides(signalData, row);
-  const rowEstimate =
-    Number.isFinite(canonicalNoVig?.avgOver) && Number.isFinite(canonicalNoVig?.avgUnder)
-      ? {
-          over: canonicalNoVig.avgOver,
-          under: canonicalNoVig.avgUnder,
-          method: canonicalNoVig.method,
-          confidence: canonicalNoVig.confidence,
-          booksUsed: canonicalNoVig.booksUsed,
-          line: canonicalNoVig.targetLine
-        }
-      : Number.isFinite(signalMarketLine)
-      ? estimateFairAtLine(signalCurve, signalMarketLine)
-      : null;
+
+// The DFS target may be outside the known fair curve.
+// Only use the DFS-target estimate when it is genuinely available.
+const canonicalHasFairEstimate =
+  Number.isFinite(canonicalNoVig?.avgOver) &&
+  Number.isFinite(canonicalNoVig?.avgUnder);
+
+const marketEstimate =
+  Number.isFinite(signalMarketLine)
+    ? estimateFairAtLine(signalCurve, signalMarketLine)
+    : null;
+
+const rowEstimate =
+  canonicalHasFairEstimate
+    ? {
+        over: canonicalNoVig.avgOver,
+        under: canonicalNoVig.avgUnder,
+        method: canonicalNoVig.method,
+        confidence: canonicalNoVig.confidence,
+        booksUsed: canonicalNoVig.booksUsed,
+        line: canonicalNoVig.targetLine
+      }
+    : marketEstimate;
 
   let sharedBestSide = null;
   let sharedBestPct = null;
@@ -4416,15 +4416,38 @@ row._platformSignals = {};
   }
 
   row._canonicalNoVig = {
-    side: sharedBestSide,
-    probability: sharedBestPct,
-    targetLine: canonicalNoVig?.targetLine ?? rowEstimate?.line ?? null,
-    method: canonicalNoVig?.method ?? rowEstimate?.method ?? "unavailable",
-    confidence: canonicalNoVig?.confidence ?? rowEstimate?.confidence ?? "unavailable",
-    booksUsed: canonicalNoVig?.booksUsed ?? rowEstimate?.booksUsed ?? 0,
-    over: Number.isFinite(rowEstimate?.over) ? rowEstimate.over : null,
-    under: Number.isFinite(rowEstimate?.under) ? rowEstimate.under : null
-  };
+  side: sharedBestSide,
+  probability: sharedBestPct,
+
+  // Show the line where this probability was actually calculated.
+  targetLine: canonicalHasFairEstimate
+    ? canonicalNoVig.targetLine
+    : Number.isFinite(marketEstimate?.line)
+    ? marketEstimate.line
+    : Number.isFinite(signalMarketLine)
+    ? signalMarketLine
+    : null,
+
+  method: canonicalHasFairEstimate
+    ? canonicalNoVig.method
+    : marketEstimate?.method ?? "unavailable",
+
+  confidence: canonicalHasFairEstimate
+    ? canonicalNoVig.confidence
+    : marketEstimate?.confidence ?? "unavailable",
+
+  booksUsed: canonicalHasFairEstimate
+    ? canonicalNoVig.booksUsed
+    : marketEstimate?.booksUsed ?? 0,
+
+  over: Number.isFinite(rowEstimate?.over)
+    ? rowEstimate.over
+    : null,
+
+  under: Number.isFinite(rowEstimate?.under)
+    ? rowEstimate.under
+    : null
+};
 
   // Hydrated/backend fallback only when the curve cannot produce a side.
   if (!sharedBestSide) {
@@ -4494,34 +4517,107 @@ row._platformSignals = {};
         ? dfsLine < signalMarketLine - EPSILON
         : false;
 
-    const brain =
-      Number.isFinite(sideProbPct) &&
-      sideProbPct >= 54 &&
-      (isEqual || isBetter);
+    const availableOutcome =
+  String(row.Outcome || "").trim().toLowerCase();
 
-    let fireLevel = 0;
-    if (isBetter && Number.isFinite(sideProbPct)) {
-      if (sideProbPct >= 62 && confidence === "high" && booksUsed >= 3) fireLevel = 3;
-      else if (sideProbPct >= 59 && confidence === "high" && booksUsed >= 2) fireLevel = 2;
-      else if (sideProbPct >= 56 && confidence !== "low") fireLevel = 1;
-    }
+const recommendedOutcome =
+  String(platformBestSide || "").trim().toLowerCase();
 
-    row._platformSignals[column] = {
-      platform,
-      available: true,
-      dfsLine,
-      marketLine: signalMarketLine,
-      bestSide: platformBestSide,
-      probability: sideProbPct,
-      confidence,
-      booksUsed,
-      isEqual,
-      isBetter,
-      isWorse,
-      brain,
-      fireLevel
-    };
+// Betr frequently exposes only one playable side.
+// Do not award Brain/Fire unless that offered side matches the Vegas best side.
+const playableSideMatches =
+  platform !== "Betr" ||
+  (
+    availableOutcome &&
+    recommendedOutcome &&
+    availableOutcome === recommendedOutcome
+  );
 
+// ===================================================
+// 🎯 Confirm the recommended Betr side is playable
+// ===================================================
+const normalizedBestSide =
+  String(platformBestSide || "")
+    .trim()
+    .toLowerCase();
+
+const betrAvailableSides =
+  Array.isArray(row.BetrAvailableSides)
+    ? row.BetrAvailableSides.map(side =>
+        String(side).trim().toLowerCase()
+      )
+    : [];
+
+// PrizePicks and Underdog continue using existing logic.
+// Betr must explicitly contain the recommended side.
+const platformSideIsAvailable =
+  platform !== "Betr" ||
+  betrAvailableSides.includes(normalizedBestSide);
+
+const brain =
+  platformSideIsAvailable &&
+  Number.isFinite(sideProbPct) &&
+  sideProbPct >= 54 &&
+  (isEqual || isBetter);
+
+let fireLevel = 0;
+
+if (
+  platformSideIsAvailable &&
+  isBetter &&
+  Number.isFinite(sideProbPct)
+) {
+  if (
+    sideProbPct >= 62 &&
+    confidence === "high" &&
+    booksUsed >= 3
+  ) {
+    fireLevel = 3;
+  } else if (
+    sideProbPct >= 59 &&
+    confidence === "high" &&
+    booksUsed >= 2
+  ) {
+    fireLevel = 2;
+  } else if (
+    sideProbPct >= 56 &&
+    confidence !== "low"
+  ) {
+    fireLevel = 1;
+  }
+}
+const sideUnavailable =
+  platform === "Betr" &&
+  !playableSideMatches;
+
+  row._platformSignals[column] = {
+  platform,
+  available: true,
+  dfsLine,
+  marketLine: signalMarketLine,
+  bestSide: platformBestSide,
+  probability: sideProbPct,
+  confidence,
+  booksUsed,
+  isEqual,
+  isBetter,
+  isWorse,
+  brain,
+  fireLevel,
+
+  // Betr availability information
+  platformSideIsAvailable,
+  availableSides:
+    platform === "Betr"
+      ? betrAvailableSides
+      : [],
+  offeredOutcome:
+    platform === "Betr"
+      ? String(row.BetrOutcome || row.Outcome || "")
+          .trim()
+          .toLowerCase()
+      : null
+};
     row[`_${platform}Side`] = platformBestSide;
 
     if (brain) {
@@ -4540,9 +4636,6 @@ activeColumns.forEach((col) => {
   const td = document.createElement("td");
   let value = row[col];
 
-  // ===================================================
-  // 🌟 Best No-Vig Win % (Over vs Under) — MUST RUN FIRST
-  // ===================================================
   // ===================================================
 // 🌟 Best No-Vig Win % (Over vs Under) — MUST RUN FIRST
 // ===================================================
@@ -4838,6 +4931,85 @@ return;
   // ===================================================
   if (col === "PrizePickPoint" || col === "UnderdogPoint" || col === "BetrPoint") {
     const signal = row._platformSignals?.[col];
+
+    if (signal?.sideUnavailable) {
+  td.innerHTML = `
+    <div class="dfs-line-main">${signal.dfsLine.toFixed(2)}</div>
+    <div class="dfs-fair-prob">
+      Betr offers ${signal.availableOutcome || "opposite side"} only
+    </div>
+  `;
+
+  td.style.setProperty("background", "#f8dada", "important");
+  td.style.setProperty("color", "#c0392b", "important");
+  td.style.fontWeight = "700";
+
+  tr.appendChild(td);
+  return;
+}
+
+// ===================================================
+// 🚫 Betr does not offer the recommended Vegas side
+// ===================================================
+if (
+  col === "BetrPoint" &&
+  signal.platformSideIsAvailable === false
+) {
+  const offeredSides =
+    Array.isArray(signal.availableSides)
+      ? signal.availableSides
+      : [];
+
+  const offeredText =
+    offeredSides.length === 1
+      ? `${offeredSides[0].charAt(0).toUpperCase()}${offeredSides[0].slice(1)} only`
+      : offeredSides.length > 1
+      ? offeredSides
+          .map(side =>
+            `${side.charAt(0).toUpperCase()}${side.slice(1)}`
+          )
+          .join(" / ")
+      : "Recommended side unavailable";
+
+  td.innerHTML = `
+    <div class="dfs-line-main">
+      ${signal.dfsLine.toFixed(2)}
+    </div>
+    <div class="dfs-fair-prob">
+      ${offeredText}
+    </div>
+  `;
+
+  td.style.setProperty(
+    "background",
+    "#f8dada",
+    "important"
+  );
+
+  td.style.setProperty(
+    "color",
+    "#c0392b",
+    "important"
+  );
+
+  td.style.fontWeight = "700";
+  td.title =
+    `Vegas prefers ${signal.bestSide || "the opposite side"}, ` +
+    `but Betr offers ${offeredText}.`;
+
+  const unavailableText =
+    td.querySelector(".dfs-fair-prob");
+
+  if (unavailableText) {
+    unavailableText.style.fontSize = "10px";
+    unavailableText.style.lineHeight = "1.15";
+    unavailableText.style.marginTop = "2px";
+    unavailableText.style.whiteSpace = "nowrap";
+  }
+
+  tr.appendChild(td);
+  return;
+}
 
     if (!signal || !signal.available) {
       td.textContent = "—";
@@ -5402,11 +5574,31 @@ function filterBetrOptimal(data) {
     const line = Number(row.BetrPoint);
     const cons = Number(row.ConsensusPoint);
 
-    // Must have valid data
-    if (!bestSide || !Number.isFinite(line) || !Number.isFinite(cons)) {
-      return false;
-    }
+    const betrAvailableSides =
+  Array.isArray(row.BetrAvailableSides)
+    ? row.BetrAvailableSides.map(side =>
+        String(side).trim().toLowerCase()
+      )
+    : [];
 
+const recommendedSideIsAvailable =
+  betrAvailableSides.includes(bestSide);
+
+    // Must have valid data
+    if (
+  !bestSide ||
+  !Number.isFinite(line) ||
+  !Number.isFinite(cons) ||
+  !recommendedSideIsAvailable
+) {
+  return false;
+}
+const availableSide =
+  String(row.Outcome || "").trim().toLowerCase();
+
+if (!availableSide || availableSide !== bestSide) {
+  return false;
+}
     // ================================
     // 📏 EDGE CALCULATION
     // ================================
@@ -6283,7 +6475,7 @@ if (betrTrackerBtn) {
 // ===================================================//
 // 📇 Tap-to-Card View Modal Logic – Pro Analytics
 // ===================================================
-function buildPickCardHtml(row) {
+function buildPickCardHtml(row, cardIndex) {
   const event = row.Event || "Event";
   const desc = row.Description || "Player Prop";
   const market = row.Market || "";
@@ -6571,17 +6763,33 @@ return `
 
     ${mismatchText ? `<footer class="pro-card-footnote">${mismatchText}</footer>` : ""}
 
-    <!-- Pick Tracker Button -->
-    <button
-      class="tap-pick-btn"
-      data-event="${row.Event}"
-      data-player="${row.Description}"
-      data-market="${row.Market}"
-    >
-      ➕ Add to Pick Tracker
-    </button>
+    <div class="tap-card-actions">
 
-  </article>
+  <button
+    type="button"
+    class="tap-pick-btn"
+    data-card-index="${cardIndex}"
+  >
+    ➕ Add to Pick Tracker
+  </button>
+
+  ${
+    selectedSport === "baseball_mlb"
+      ? `
+        <button
+          type="button"
+          class="tap-ai-btn"
+          data-card-index="${cardIndex}"
+        >
+          🧠 AI Details
+        </button>
+      `
+      : ""
+  }
+
+</div>
+
+</article>
 `;
 
 }
@@ -6694,7 +6902,9 @@ const dedupedRows = dedupeCardRowsPreferModel(sortedRows);
 const topN = dedupedRows.slice(0, 40);
 
 
-  content.innerHTML = topN.map(buildPickCardHtml).join("");
+  content.innerHTML = topN
+  .map((row, index) => buildPickCardHtml(row, index))
+  .join("");
 
   bindCardPlatformToggles();
   updateCardPlatformHighlights(); // ⭐ default PrizePicks highlight
@@ -6747,9 +6957,37 @@ content.querySelectorAll(`.platform-row.${activePlatform}`).forEach(row => {
 
 const pickButtons = content.querySelectorAll(".tap-pick-btn");
 
-pickButtons.forEach((btn, index) => {
+// ===================================================
+// 🧠 Wire AI Detail buttons inside Tap-to-Card view
+// ===================================================
+const aiButtons = content.querySelectorAll(".tap-ai-btn");
 
-  const row = topN[index];
+aiButtons.forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const cardIndex = Number(btn.dataset.cardIndex);
+    const row = topN[cardIndex];
+
+    if (!row) {
+      console.warn("⚠️ AI card row not found:", cardIndex);
+      return;
+    }
+
+    closeCardViewModal();
+    openEdgeProfile(row);
+  });
+});
+
+pickButtons.forEach(btn => {
+  const cardIndex = Number(btn.dataset.cardIndex);
+  const row = topN[cardIndex];
+
+  if (!row) {
+    console.warn("⚠️ Pick Tracker card row not found:", cardIndex);
+    return;
+  }
 
   const platform = window.pickTracker.platform;
 
@@ -7010,8 +7248,8 @@ const awayTeam = rowData.away_team || rowData.AwayTeam || "";
 const playerTeam =
   rowData.Team ||
   rowData.team ||
-  rowData.HomeTeam ||
-  rowData.AwayTeam ||
+  rowData.PlayerTeam ||
+  rowData.player_team ||
   "";
 
 const matchupOpponent =
@@ -7069,7 +7307,16 @@ logoWrap.innerHTML = `
     rowData.ConsensusPoint ||
     "";
 
-  const outcome = rowData.Outcome || "";
+  const outcomeRaw =
+    rowData.BestNoVigSide ||
+    rowData.bestNoVigSide ||
+    rowData.Outcome ||
+    "";
+
+  const outcome = outcomeRaw
+    ? outcomeRaw.charAt(0).toUpperCase() +
+      outcomeRaw.slice(1).toLowerCase()
+    : "";
 
   document.getElementById("edgePlayerName").textContent = player;
 
@@ -7118,10 +7365,14 @@ logoWrap.innerHTML = `
 
     if (line !== "") params.append("line", line);
     if (outcome !== "") params.append("outcome", outcome);
+    
     if (teamA) params.append("team_a", teamA);
     if (teamB) params.append("team_b", teamB);
     if (homeTeam) params.append("home_team", homeTeam);
     if (awayTeam) params.append("away_team", awayTeam);
+
+    // Needed so the backend can identify which game team is the opponent.
+    if (playerTeam) params.append("player_team", playerTeam);
 
     const res = await fetch(
       `${window.API_BASE}/api/mlb/player-profile?${params.toString()}`
