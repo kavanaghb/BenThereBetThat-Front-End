@@ -2809,7 +2809,17 @@ function attachMlbAddHandler(rowElement, game, pick) {
         sport: "baseball_mlb",
         event: game.event_title,
         event_id: game.event_id,
+        game_pk:
+          game.model_context?.probable_game_pk
+          ?? game.game_pk
+          ?? null,
         game_date: game.game_date,
+        commence_time:
+          game.game_timestamp
+          ?? game.commence_time
+          ?? null,
+        home_team: game.home_team,
+        away_team: game.away_team,
         player: pick.selection,
         market: pick.market,
         outcome: pick.selection,
