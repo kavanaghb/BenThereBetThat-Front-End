@@ -124,7 +124,7 @@ if (mlbTabs) {
 const modeNote = document.getElementById("gameLinesModeNote");
 if (modeNote) {
   modeNote.innerHTML = games[0]?.mode === "mlb_market"
-    ? "⚾ Market Baseline v1 uses the median no-vig market probability, excludes major book outliers, calculates a fair line and true expected value, and recommends only pregame bets with at least 2% EV."
+    ? "⚾ MLB Model v3 adds rolling team offense plus bullpen quality and recent workload. Market No-Vig remains the anchor; picks require usable starter data and at least 2% estimated EV."
     : "🏀 College basketball spreads use Ben's learned Torvik/market model.";
 }
 
@@ -1762,6 +1762,46 @@ function evCellClass(edge) {
   return "price-edge-strong";
 }
 
+
+function signedNumber(value, digits = 2) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "-";
+  return `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
+}
+
+function mlbModelFactorsHtml(row) {
+  const factors = row?.model_factors || {};
+  const awayStarter = factors.away_pitcher_name || "TBD";
+  const homeStarter = factors.home_pitcher_name || "TBD";
+
+  if (row?.model_status !== "ready") {
+    return `
+      <div class="edge-sub">
+        Market fallback — starter/model data incomplete
+      </div>`;
+  }
+
+  const sideFactor = row.market === "totals"
+    ? `Total signal ${signedNumber(factors.total_run_signal)} runs`
+    : `Home edge ${signedNumber(factors.home_run_edge)} runs`;
+
+  return `
+    <div class="edge-sub" title="
+      Away starter: ${awayStarter}
+      Home starter: ${homeStarter}
+      Away offense: ${signedNumber(factors.away_offense_runs)}
+      Home offense: ${signedNumber(factors.home_offense_runs)}
+      Away pitcher: ${signedNumber(factors.away_pitcher_quality_runs)}
+      Home pitcher: ${signedNumber(factors.home_pitcher_quality_runs)}
+      Away bullpen: ${signedNumber(factors.away_bullpen_quality_runs)}
+      Home bullpen: ${signedNumber(factors.home_bullpen_quality_runs)}
+    ">
+      ${awayStarter} vs ${homeStarter}<br>
+      ${sideFactor}<br>
+      Bullpens ${signedNumber(factors.away_bullpen_quality_runs)} / ${signedNumber(factors.home_bullpen_quality_runs)}
+    </div>`;
+}
+
 function mlbFilteredGames() {
   return currentGameLines.filter(game => {
     if (!searchFilter) return true;
@@ -1816,9 +1856,13 @@ function renderMlbOddsScreen() {
 
   header += `
         <th>Best</th>
-        <th>Model %</th>
+        <th>Market No-Vig %</th>
+        <th>Baseball %</th>
+        <th>Blended %</th>
         <th>Fair Line</th>
         <th>True EV</th>
+        <th>Confidence</th>
+        <th>Model Factors</th>
         <th>Signal</th>
         <th>Add</th>
       </tr>
@@ -1836,7 +1880,7 @@ function renderMlbOddsScreen() {
       tr.innerHTML = `
         <td>${game.event_title}</td>
         <td>${game.game_time_display || "-"}</td>
-        <td colspan="${selectedBooks.length + 7}">
+        <td colspan="${selectedBooks.length + 12}">
           No MLB odds comparison rows were returned by the API.
         </td>`;
       tbody.appendChild(tr);
@@ -1881,13 +1925,21 @@ function renderMlbOddsScreen() {
           <strong>${formatAmericanOdds(row.best_price)}</strong>
           <div class="edge-sub">${row.best_book_name || row.best_book || "-"}</div>
         </td>
-        <td>${row.model_probability != null
-          ? (Number(row.model_probability) * 100).toFixed(1) + "%"
+        <td>${row.market_probability != null
+          ? (Number(row.market_probability) * 100).toFixed(1) + "%"
           : "-"}</td>
+        <td>${row.baseball_probability != null
+          ? (Number(row.baseball_probability) * 100).toFixed(1) + "%"
+          : "-"}</td>
+        <td><strong>${row.blended_probability != null
+          ? (Number(row.blended_probability) * 100).toFixed(1) + "%"
+          : "-"}</strong></td>
         <td>${formatAmericanOdds(row.fair_price)}</td>
         <td class="${evCellClass(row.expected_value_pct)}">
           ${mlbEvBadge(row.expected_value_pct, row.recommendation)}
         </td>
+        <td>${row.model_confidence || "-"}</td>
+        <td>${mlbModelFactorsHtml(row)}</td>
         <td>${recommendationLabel(row.recommendation)}</td>
         <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
 
@@ -1920,9 +1972,13 @@ function renderMlbValuePicks() {
         <th>Pick</th>
         <th>Best Book</th>
         <th>Best Price</th>
-        <th>Model %</th>
+        <th>Market No-Vig %</th>
+        <th>Baseball %</th>
+        <th>Blended %</th>
         <th>Fair Line</th>
         <th>True EV</th>
+        <th>Confidence</th>
+        <th>Model Factors</th>
         <th>Signal</th>
         <th>Add</th>
       </tr>
@@ -1942,7 +1998,7 @@ function renderMlbValuePicks() {
       tr.innerHTML = `
         <td>${game.event_title}</td>
         <td>${game.game_time_display || "-"}</td>
-        <td colspan="7">No Market Baseline picks with at least 2.0% true EV.</td>`;
+        <td colspan="7">No MLB Model v2 picks with at least 2.0% true EV and usable starter data.</td>`;
       tbody.appendChild(tr);
       return;
     }
@@ -1960,13 +2016,21 @@ function renderMlbValuePicks() {
         <td><strong>${pick.pick_label}</strong></td>
         <td>${pick.best_book_name || pick.best_book || "-"}</td>
         <td>${formatAmericanOdds(pick.best_price)}</td>
-        <td>${pick.model_probability != null
-          ? (Number(pick.model_probability) * 100).toFixed(1) + "%"
+        <td>${pick.market_probability != null
+          ? (Number(pick.market_probability) * 100).toFixed(1) + "%"
           : "-"}</td>
+        <td>${pick.baseball_probability != null
+          ? (Number(pick.baseball_probability) * 100).toFixed(1) + "%"
+          : "-"}</td>
+        <td><strong>${pick.blended_probability != null
+          ? (Number(pick.blended_probability) * 100).toFixed(1) + "%"
+          : "-"}</strong></td>
         <td>${formatAmericanOdds(pick.fair_price)}</td>
         <td class="${evCellClass(pick.expected_value_pct)}">
           ${mlbEvBadge(pick.expected_value_pct, pick.recommendation)}
         </td>
+        <td>${pick.model_confidence || "-"}</td>
+        <td>${mlbModelFactorsHtml(pick)}</td>
         <td>${recommendationLabel(pick.recommendation)}</td>
         <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
 
