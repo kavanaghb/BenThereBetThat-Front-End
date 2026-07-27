@@ -6,6 +6,8 @@ let sortField = "edge";   // default sort
 let sortDirection = "desc";
 let searchFilter = "";
 let currentViewMode = "table"; // preserves table vs card state
+let currentMlbView = "odds"; // odds | value | live
+let liveOddsRefreshTimer = null;
 
 // =====================================================
 // MODEL DEBUG MODE STATE
@@ -19,22 +21,60 @@ window.modelDebugMode = false;
 // =====================================================
 
 const PRIMARY_BOOKS = new Set([
-  "fanduel",
   "draftkings",
+  "fanduel",
   "betmgm",
-  "fanatics"
+  "fanatics",
+  "williamhill_us",
+  "betrivers"
 ]);
 
 
-// =====================================================
-// 📈 Game Lines EV — Rendering + Pick Tracker Integration
-// =====================================================
+const BOOK_PREFS_STORAGE_KEY = "bentherebetthat_game_line_books";
+
+function loadSavedBookPreferences(availableBooks) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(BOOK_PREFS_STORAGE_KEY) || "null");
+
+    if (Array.isArray(saved)) {
+      const valid = saved.filter(book => availableBooks.includes(book));
+      if (valid.length) return new Set(valid);
+    }
+  } catch (err) {
+    console.warn("Unable to load sportsbook preferences:", err);
+  }
+
+  return new Set(
+    availableBooks.filter(book => PRIMARY_BOOKS.has(book))
+  );
+}
+
+function saveBookPreferences() {
+  try {
+    localStorage.setItem(
+      BOOK_PREFS_STORAGE_KEY,
+      JSON.stringify([...visibleBooks])
+    );
+  } catch (err) {
+    console.warn("Unable to save sportsbook preferences:", err);
+  }
+}
+
+function setVisibleBooks(bookKeys) {
+  visibleBooks = new Set(bookKeys);
+  saveBookPreferences();
+  renderSportsbookFilters();
+  renderGameLines();
+}
+
 
 // =====================================================
 // 📈 Game Lines EV — Rendering + Pick Tracker Integration
 // =====================================================
 
-document.addEventListener("DOMContentLoaded", initGameLines);
+// =====================================================
+// 📈 Game Lines EV — Rendering + Pick Tracker Integration
+// =====================================================
 
 async function initGameLines() {
 
@@ -53,10 +93,14 @@ async function initGameLines() {
 
     const dateInput = document.getElementById("gameLinesDate");
 
-    let url = `${window.API_BASE}/api/game-lines`;
+    const selectedSport =
+      document.getElementById("sportSelect")?.value ||
+      "basketball_ncaab";
+
+    let url = `${window.API_BASE}/api/game-lines?sport=${encodeURIComponent(selectedSport)}`;
 
     if (dateInput?.value)
-      url += `?date=${dateInput.value}`;
+      url += `&date=${dateInput.value}`;
 
     const res = await fetch(url);
 
@@ -69,6 +113,21 @@ async function initGameLines() {
 
     
 currentGameLines = games;
+
+const mlbTabs = document.getElementById("mlbViewTabs");
+if (mlbTabs) {
+  mlbTabs.style.display = games[0]?.mode === "mlb_market"
+    ? "flex"
+    : "none";
+}
+
+const modeNote = document.getElementById("gameLinesModeNote");
+if (modeNote) {
+  modeNote.innerHTML = games[0]?.mode === "mlb_market"
+    ? "⚾ Market Baseline v1 uses the median no-vig market probability, excludes major book outliers, calculates a fair line and true expected value, and recommends only pregame bets with at least 2% EV."
+    : "🏀 College basketball spreads use Ben's learned Torvik/market model.";
+}
+
 
 // =====================================================
 // ✅ Build bookDisplayNames + visibleBooks safely
@@ -185,10 +244,8 @@ if (tsEl && games?.length) {
 // 📚 Initialize visible books (PRIMARY only by default)
 // =====================================================
 
-visibleBooks = new Set(
-  Object.keys(bookDisplayNames).filter(book =>
-    PRIMARY_BOOKS.has(book)
-  )
+visibleBooks = loadSavedBookPreferences(
+  Object.keys(bookDisplayNames)
 );
 
 
@@ -309,6 +366,11 @@ function formatEdge(edge, teamSpread) {
 function renderGameLines() {
 
   const container = document.getElementById("gameLinesResults");
+
+  if (currentGameLines?.[0]?.mode === "mlb_market") {
+    renderMlbMarketPicks();
+    return;
+  }
 
   container.innerHTML = "";
 
@@ -865,11 +927,11 @@ function renderSportsbookFilters() {
 
     const label = document.createElement("label");
 
-    const isPrimary = PRIMARY_BOOKS.has(key);
+    const isChecked = visibleBooks.has(key);
 
-      label.innerHTML = `
-        <input type="checkbox" value="${key}" ${isPrimary ? "checked" : ""}> ${name}
-      `;
+    label.innerHTML = `
+      <input type="checkbox" value="${key}" ${isChecked ? "checked" : ""}> ${name}
+    `;
 
     label.querySelector("input").addEventListener("change", e => {
 
@@ -878,6 +940,7 @@ function renderSportsbookFilters() {
       else
         visibleBooks.delete(key);
 
+      saveBookPreferences();
       renderGameLines();
 
     });
@@ -885,6 +948,28 @@ function renderSportsbookFilters() {
     container.appendChild(label);
 
   });
+
+  const popularBtn = document.getElementById("popularBooksBtn");
+  const allBtn = document.getElementById("selectAllBooksBtn");
+  const clearBtn = document.getElementById("clearAllBooksBtn");
+
+  const available = Object.keys(bookDisplayNames);
+  const popular = available.filter(book => PRIMARY_BOOKS.has(book));
+
+  popularBtn?.classList.toggle(
+    "active",
+    popular.length > 0 &&
+    popular.every(book => visibleBooks.has(book)) &&
+    visibleBooks.size === popular.length
+  );
+
+  allBtn?.classList.toggle(
+    "active",
+    available.length > 0 &&
+    available.every(book => visibleBooks.has(book))
+  );
+
+  clearBtn?.classList.toggle("active", visibleBooks.size === 0);
 
 }
 
@@ -932,6 +1017,36 @@ if (modelBtn) {
   const loadBtn = document.getElementById("loadGameLinesBtn");
   const refreshBtn = document.getElementById("refreshGameLinesBtn");
   const searchInput = document.getElementById("gameSearchInput");
+  const sportSelect = document.getElementById("sportSelect");
+
+  const popularBooksBtn = document.getElementById("popularBooksBtn");
+  const selectAllBooksBtn = document.getElementById("selectAllBooksBtn");
+  const clearAllBooksBtn = document.getElementById("clearAllBooksBtn");
+
+  popularBooksBtn?.addEventListener("click", () => {
+    const popular = Object.keys(bookDisplayNames)
+      .filter(book => PRIMARY_BOOKS.has(book));
+    setVisibleBooks(popular);
+  });
+
+  selectAllBooksBtn?.addEventListener("click", () => {
+    setVisibleBooks(Object.keys(bookDisplayNames));
+  });
+
+  clearAllBooksBtn?.addEventListener("click", () => {
+    setVisibleBooks([]);
+  });
+
+  sportSelect?.addEventListener("change", () => {
+    window.modelDebugMode = false;
+
+    if (sportSelect.value !== "baseball_mlb") {
+      stopLiveOddsRefresh();
+      currentMlbView = "odds";
+    }
+
+    initGameLines();
+  });
 
   // =====================================================
   // ✅ Set default date using CENTRAL TIME (FIXES SPILLOVER)
@@ -1035,6 +1150,34 @@ const tableBtn = document.getElementById("tableViewBtn");
 const cardBtn = document.getElementById("cardViewBtn");
 const cardView = document.getElementById("gameLinesCardView");
 
+const mlbOddsScreenBtn = document.getElementById("mlbOddsScreenBtn");
+const mlbValuePicksBtn = document.getElementById("mlbValuePicksBtn");
+const mlbLiveOddsBtn = document.getElementById("mlbLiveOddsBtn");
+
+mlbOddsScreenBtn?.addEventListener("click", () => {
+  currentMlbView = "odds";
+  mlbOddsScreenBtn.classList.add("active");
+  mlbValuePicksBtn?.classList.remove("active");
+  mlbLiveOddsBtn?.classList.remove("active");
+  renderGameLines();
+});
+
+mlbValuePicksBtn?.addEventListener("click", () => {
+  currentMlbView = "value";
+  mlbValuePicksBtn.classList.add("active");
+  mlbOddsScreenBtn?.classList.remove("active");
+  mlbLiveOddsBtn?.classList.remove("active");
+  renderGameLines();
+});
+
+mlbLiveOddsBtn?.addEventListener("click", () => {
+  currentMlbView = "live";
+  mlbLiveOddsBtn.classList.add("active");
+  mlbOddsScreenBtn?.classList.remove("active");
+  mlbValuePicksBtn?.classList.remove("active");
+  renderGameLines();
+});
+
 tableBtn?.addEventListener("click", () => {
 
   currentViewMode = "table"; // ✅ ADD THIS
@@ -1063,14 +1206,8 @@ cardBtn?.addEventListener("click", () => {
 
 
 // =====================================================
-// Initial load
+// Initial load after controls are initialized
 // =====================================================
-
-initGameLines();
-
-  // =====================================================
-  // Initial load (after date is guaranteed set)
-  // =====================================================
 
   initGameLines();
 
@@ -1503,6 +1640,522 @@ function exportGameLinesCSV() {
 
   document.body.removeChild(link);
 
+}
+
+
+
+function stopLiveOddsRefresh() {
+  if (liveOddsRefreshTimer) {
+    clearInterval(liveOddsRefreshTimer);
+    liveOddsRefreshTimer = null;
+  }
+}
+
+function startLiveOddsRefresh() {
+  stopLiveOddsRefresh();
+
+  liveOddsRefreshTimer = setInterval(() => {
+    if (
+      currentMlbView === "live" &&
+      document.getElementById("sportSelect")?.value === "baseball_mlb"
+    ) {
+      console.log("🔴 Refreshing live MLB odds...");
+      initGameLines(true);
+    }
+  }, 30000);
+}
+
+// =====================================================
+// ⚾ MLB ODDS SCREEN + VALUE PICKS
+// =====================================================
+function formatAmericanOdds(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  const n = Number(value);
+  if (Number.isNaN(n)) return "-";
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
+function mlbEvBadge(ev, recommendation = "PASS") {
+  if (ev == null || Number.isNaN(Number(ev))) return "-";
+
+  const n = Number(ev);
+
+  if (recommendation === "STRONG_VALUE")
+    return `<span class="edge-strong">🔥 ${n.toFixed(2)}% EV</span>`;
+
+  if (recommendation === "VALUE")
+    return `<span class="edge-moderate">🧠 ${n.toFixed(2)}% EV</span>`;
+
+  if (recommendation === "LEAN")
+    return `<span class="edge-weak">Lean ${n.toFixed(2)}% EV</span>`;
+
+  if (n >= 0)
+    return `<span>${n.toFixed(2)}% EV</span>`;
+
+  return `<span style="color:#9ca3af;">${n.toFixed(2)}% EV</span>`;
+}
+
+function recommendationLabel(value) {
+  if (value === "STRONG_VALUE") return "🔥 Strong";
+  if (value === "VALUE") return "🧠 Value";
+  if (value === "LEAN") return "Lean";
+  return "Pass";
+}
+
+function americanImpliedProbability(value) {
+  const odds = Number(value);
+
+  if (!Number.isFinite(odds) || odds === 0)
+    return null;
+
+  return odds > 0
+    ? 100 / (odds + 100)
+    : Math.abs(odds) / (Math.abs(odds) + 100);
+}
+
+function probabilityDistancePct(price, bestPrice) {
+  const p = americanImpliedProbability(price);
+  const bestP = americanImpliedProbability(bestPrice);
+
+  if (p == null || bestP == null)
+    return null;
+
+  return Math.abs(p - bestP) * 100;
+}
+
+function oddsCellClass(price, bestPrice) {
+  if (price == null)
+    return "odds-cell-missing";
+
+  const distance = probabilityDistancePct(price, bestPrice);
+
+  if (distance == null)
+    return "";
+
+  if (distance < 0.001)
+    return "odds-cell-best";
+
+  if (distance <= 0.5)
+    return "odds-cell-near";
+
+  return "odds-cell-worse";
+}
+
+function evCellClass(edge) {
+  const n = Number(edge);
+
+  if (!Number.isFinite(n))
+    return "";
+
+  if (n < 0)
+    return "price-edge-negative";
+
+  if (n < 0.15)
+    return "price-edge-neutral";
+
+  if (n < 0.5)
+    return "price-edge-shop";
+
+  if (n < 1.0)
+    return "price-edge-value";
+
+  return "price-edge-strong";
+}
+
+function mlbFilteredGames() {
+  return currentGameLines.filter(game => {
+    if (!searchFilter) return true;
+
+    return `${game.event_title || ""} ${game.home_team || ""} ${game.away_team || ""}`
+      .toLowerCase()
+      .includes(searchFilter);
+  });
+}
+
+function renderMlbMarketPicks() {
+  if (currentMlbView === "value") {
+    stopLiveOddsRefresh();
+    renderMlbValuePicks();
+  }
+  else if (currentMlbView === "live") {
+    startLiveOddsRefresh();
+    renderMlbLiveOdds();
+  }
+  else {
+    stopLiveOddsRefresh();
+    renderMlbOddsScreen();
+  }
+}
+
+function renderMlbOddsScreen() {
+  const container = document.getElementById("gameLinesResults");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const selectedBooks = [...visibleBooks];
+  const filteredGames = mlbFilteredGames().filter(game => !game.is_live);
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "table-scroll-wrapper";
+
+  const table = document.createElement("table");
+  table.className = "odds-table";
+
+  let header = `
+    <thead>
+      <tr>
+        <th class="sticky-game">Game</th>
+        <th>Time</th>
+        <th class="sticky-market">Market</th>
+        <th class="sticky-selection">Selection</th>`;
+
+  selectedBooks.forEach(book => {
+    header += `<th>${bookDisplayNames?.[book] || book}</th>`;
+  });
+
+  header += `
+        <th>Best</th>
+        <th>Model %</th>
+        <th>Fair Line</th>
+        <th>True EV</th>
+        <th>Signal</th>
+        <th>Add</th>
+      </tr>
+    </thead>
+    <tbody></tbody>`;
+
+  table.innerHTML = header;
+  const tbody = table.querySelector("tbody");
+
+  filteredGames.forEach(game => {
+    const rows = game.market_board || [];
+
+    if (!rows.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${game.event_title}</td>
+        <td>${game.game_time_display || "-"}</td>
+        <td colspan="${selectedBooks.length + 7}">
+          No MLB odds comparison rows were returned by the API.
+        </td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    rows.forEach((row, index) => {
+      const tr = document.createElement("tr");
+
+      if (index === 0) tr.classList.add("game-start-row");
+      if (index === rows.length - 1) tr.classList.add("game-end-row");
+
+      let rowHtml = `
+        <td class="sticky-game">${index === 0 ? game.event_title : ""}</td>
+        <td>${index === 0 ? (game.game_time_display || "-") : ""}</td>
+        <td class="sticky-market">${row.market_label || row.market}</td>
+        <td class="sticky-selection"><strong>${row.pick_label}</strong></td>`;
+
+      selectedBooks.forEach(book => {
+        const priceInfo = row.prices?.[book];
+        const bookPrice = priceInfo?.price;
+        const isOutlier = priceInfo?.is_outlier === true;
+        const isBest = !isOutlier && bookPrice != null &&
+          Number(bookPrice) === Number(row.best_price);
+        const cellClass = isOutlier
+          ? "odds-cell-worse"
+          : oddsCellClass(bookPrice, row.best_price);
+
+        rowHtml += `
+          <td class="${cellClass}"
+              title="${isOutlier
+                ? `Outlier: ${Number(priceInfo.deviation_pp).toFixed(1)} points from consensus`
+                : ""}">
+            ${bookPrice != null ? formatAmericanOdds(bookPrice) : "-"}
+            ${isBest ? '<div class="badge">Best</div>' : ""}
+            ${isOutlier ? '<div class="badge">Outlier</div>' : ""}
+          </td>`;
+      });
+
+      rowHtml += `
+        <td>
+          <strong>${formatAmericanOdds(row.best_price)}</strong>
+          <div class="edge-sub">${row.best_book_name || row.best_book || "-"}</div>
+        </td>
+        <td>${row.model_probability != null
+          ? (Number(row.model_probability) * 100).toFixed(1) + "%"
+          : "-"}</td>
+        <td>${formatAmericanOdds(row.fair_price)}</td>
+        <td class="${evCellClass(row.expected_value_pct)}">
+          ${mlbEvBadge(row.expected_value_pct, row.recommendation)}
+        </td>
+        <td>${recommendationLabel(row.recommendation)}</td>
+        <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
+
+      tr.innerHTML = rowHtml;
+      attachMlbAddHandler(tr, game, row);
+      tbody.appendChild(tr);
+    });
+  });
+
+  wrapper.appendChild(table);
+  container.appendChild(wrapper);
+}
+
+function renderMlbValuePicks() {
+  const container = document.getElementById("gameLinesResults");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const filteredGames = mlbFilteredGames().filter(game => !game.is_live);
+  const table = document.createElement("table");
+  table.className = "odds-table";
+
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Game</th>
+        <th>Time</th>
+        <th>Market</th>
+        <th>Pick</th>
+        <th>Best Book</th>
+        <th>Best Price</th>
+        <th>Model %</th>
+        <th>Fair Line</th>
+        <th>True EV</th>
+        <th>Signal</th>
+        <th>Add</th>
+      </tr>
+    </thead>
+    <tbody></tbody>`;
+
+  const tbody = table.querySelector("tbody");
+
+  filteredGames.forEach(game => {
+    const picks = (game.market_picks || [])
+      .filter(pick =>
+        ["VALUE", "STRONG_VALUE"].includes(pick.recommendation)
+      );
+
+    if (!picks.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${game.event_title}</td>
+        <td>${game.game_time_display || "-"}</td>
+        <td colspan="7">No Market Baseline picks with at least 2.0% true EV.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    picks.forEach((pick, index) => {
+      const tr = document.createElement("tr");
+
+      if (index === 0) tr.classList.add("game-start-row");
+      if (index === picks.length - 1) tr.classList.add("game-end-row");
+
+      tr.innerHTML = `
+        <td>${index === 0 ? game.event_title : ""}</td>
+        <td>${index === 0 ? (game.game_time_display || "-") : ""}</td>
+        <td>${pick.market_label || pick.market}</td>
+        <td><strong>${pick.pick_label}</strong></td>
+        <td>${pick.best_book_name || pick.best_book || "-"}</td>
+        <td>${formatAmericanOdds(pick.best_price)}</td>
+        <td>${pick.model_probability != null
+          ? (Number(pick.model_probability) * 100).toFixed(1) + "%"
+          : "-"}</td>
+        <td>${formatAmericanOdds(pick.fair_price)}</td>
+        <td class="${evCellClass(pick.expected_value_pct)}">
+          ${mlbEvBadge(pick.expected_value_pct, pick.recommendation)}
+        </td>
+        <td>${recommendationLabel(pick.recommendation)}</td>
+        <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
+
+      attachMlbAddHandler(tr, game, pick);
+      tbody.appendChild(tr);
+    });
+  });
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "table-scroll-wrapper";
+  wrapper.appendChild(table);
+  container.appendChild(wrapper);
+}
+
+
+function renderMlbLiveOdds() {
+  const container = document.getElementById("gameLinesResults");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="live-refresh-note">
+      🔴 Live odds refresh automatically every 30 seconds. Prices can move quickly.
+    </div>
+  `;
+
+  const selectedBooks = [...visibleBooks];
+  const liveGames = mlbFilteredGames().filter(game => game.is_live);
+
+  if (!liveGames.length) {
+    container.innerHTML += `
+      <div style="padding:18px;">
+        No MLB games are currently live for the selected date.
+      </div>`;
+    return;
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "table-scroll-wrapper";
+
+  const table = document.createElement("table");
+  table.className = "odds-table";
+
+  let header = `
+    <thead>
+      <tr>
+        <th class="sticky-game">Game</th>
+        <th>Started</th>
+        <th class="sticky-market">Market</th>
+        <th class="sticky-selection">Selection</th>`;
+
+  selectedBooks.forEach(book => {
+    header += `<th>${bookDisplayNames?.[book] || book}</th>`;
+  });
+
+  header += `
+        <th>Best Live Price</th>
+        <th>Live Market %</th>
+        <th>Live Price Edge</th>
+        <th>Add</th>
+      </tr>
+    </thead>
+    <tbody></tbody>`;
+
+  table.innerHTML = header;
+  const tbody = table.querySelector("tbody");
+
+  liveGames.forEach(game => {
+    const rows = game.market_board || [];
+
+    if (!rows.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="sticky-game">
+          ${game.event_title}
+          <span class="live-game-badge">LIVE</span>
+        </td>
+        <td>${game.game_time_display || "-"}</td>
+        <td colspan="${selectedBooks.length + 7}">
+          No live odds are currently available.
+        </td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    rows.forEach((row, index) => {
+      const tr = document.createElement("tr");
+
+      if (index === 0) tr.classList.add("game-start-row");
+      if (index === rows.length - 1) tr.classList.add("game-end-row");
+
+      let rowHtml = `
+        <td class="sticky-game">
+          ${index === 0 ? game.event_title : ""}
+          ${index === 0 ? '<span class="live-game-badge">LIVE</span>' : ""}
+        </td>
+        <td>${index === 0 ? (game.game_time_display || "-") : ""}</td>
+        <td class="sticky-market">${row.market_label || row.market}</td>
+        <td class="sticky-selection"><strong>${row.pick_label}</strong></td>`;
+
+      selectedBooks.forEach(book => {
+        const bookPrice = row.prices?.[book]?.price;
+        const isBest = bookPrice != null &&
+          Number(bookPrice) === Number(row.best_price);
+        const cellClass = oddsCellClass(bookPrice, row.best_price);
+
+        rowHtml += `
+          <td class="${cellClass}">
+            ${bookPrice != null ? formatAmericanOdds(bookPrice) : "-"}
+            ${isBest ? '<div class="badge">Best</div>' : ""}
+          </td>`;
+      });
+
+      rowHtml += `
+        <td>
+          <strong>${formatAmericanOdds(row.best_price)}</strong>
+          <div class="edge-sub">${row.best_book_name || row.best_book || "-"}</div>
+        </td>
+        <td>${row.fair_probability != null
+          ? (Number(row.fair_probability) * 100).toFixed(1) + "%"
+          : "-"}</td>
+        <td class="${evCellClass(row.price_edge_pct)}">
+          ${row.price_edge_pct != null ? Number(row.price_edge_pct).toFixed(2) + "% price edge" : "-"}
+        </td>
+        <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
+
+      tr.innerHTML = rowHtml;
+      attachMlbAddHandler(tr, game, row);
+      tbody.appendChild(tr);
+    });
+  });
+
+  wrapper.appendChild(table);
+  container.appendChild(wrapper);
+}
+
+function attachMlbAddHandler(rowElement, game, pick) {
+  rowElement
+    .querySelector(".add-mlb-pick-btn")
+    ?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+
+      const btn = e.currentTarget;
+
+      if (!window.supabase)
+        return alert("Supabase not initialized.");
+
+      const sessionResponse = await window.supabase.auth.getSession();
+      const session = sessionResponse?.data?.session;
+
+      if (!session?.access_token)
+        return alert("Please log in first.");
+
+      const trackerPick = {
+        sport: "baseball_mlb",
+        event: game.event_title,
+        event_id: game.event_id,
+        game_date: game.game_date,
+        player: pick.selection,
+        market: pick.market,
+        outcome: pick.selection,
+        line: pick.point ?? null,
+        odds: pick.best_price,
+        sportsbook: pick.best_book_name || pick.best_book
+      };
+
+      const res = await fetch(`${window.API_BASE}/api/slips/manual`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          slip_type: "regular",
+          platform: "sportsbook",
+          sport: "baseball_mlb",
+          title: `${pick.pick_label} — ${game.event_title}`,
+          picks: [trackerPick]
+        })
+      });
+
+      if (res.ok) {
+        btn.innerText = "✅ Added";
+        btn.disabled = true;
+      } else {
+        const body = await res.text();
+        console.error("Failed to add MLB pick:", body);
+        alert("Failed to add pick.");
+      }
+    });
 }
 
 // =====================================================
