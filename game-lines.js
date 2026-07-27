@@ -124,7 +124,7 @@ if (mlbTabs) {
 const modeNote = document.getElementById("gameLinesModeNote");
 if (modeNote) {
   modeNote.innerHTML = games[0]?.mode === "mlb_market"
-    ? "⚾ MLB Model v3 adds rolling team offense plus bullpen quality and recent workload. Market No-Vig remains the anchor; picks require usable starter data and at least 2% estimated EV."
+    ? "⚾ MLB Model v3: Lean = 1.0%–1.99% EV with 3+ books; Value = 2%+ EV with 3+ books; Strong Value = 4%+ EV, High confidence, and 4+ books. Only Value and Strong Value enter the official tracked record."
     : "🏀 College basketball spreads use Ben's learned Torvik/market model.";
 }
 
@@ -978,6 +978,7 @@ function renderSportsbookFilters() {
 // =====================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  initializeOddsConverter();
 
   const modelBtn = document.getElementById("toggleModelDebug");
 
@@ -985,25 +986,21 @@ if (modelBtn) {
 
   modelBtn.addEventListener("click", () => {
 
+    const selectedSport =
+      document.getElementById("sportSelect")?.value;
+
     window.modelDebugMode = !window.modelDebugMode;
 
-    // Highlight button when active
     if (window.modelDebugMode) {
-
       modelBtn.classList.add("active");
-
       modelBtn.style.background = "#4ade80";
       modelBtn.style.color = "#000";
       modelBtn.style.borderColor = "#4ade80";
-
     } else {
-
       modelBtn.classList.remove("active");
-
       modelBtn.style.background = "#f8fafc";
       modelBtn.style.color = "#334155";
       modelBtn.style.borderColor = "rgba(148,163,184,0.4)";
-
     }
 
     console.log("Model debug mode:", window.modelDebugMode);
@@ -1018,6 +1015,9 @@ if (modelBtn) {
   const refreshBtn = document.getElementById("refreshGameLinesBtn");
   const searchInput = document.getElementById("gameSearchInput");
   const sportSelect = document.getElementById("sportSelect");
+
+  updateModelDetailButtonLabel();
+  sportSelect?.addEventListener("change", updateModelDetailButtonLabel);
 
   const popularBooksBtn = document.getElementById("popularBooksBtn");
   const selectAllBooksBtn = document.getElementById("selectAllBooksBtn");
@@ -1215,6 +1215,14 @@ cardBtn?.addEventListener("click", () => {
 
 window.showModelBreakdown = function(game)
 {
+  if (
+    game?.model_version === "MLB Model v3"
+    || game?.model_context
+    || document.getElementById("sportSelect")?.value === "baseball_mlb"
+  ) {
+    window.showMlbModelBreakdown(game);
+    return;
+  }
 
   const modal = document.getElementById("modelBreakdownModal");
   const content = document.getElementById("modelBreakdownContent");
@@ -1763,9 +1771,341 @@ function evCellClass(edge) {
 }
 
 
-function signedNumber(value, digits = 2) {
+
+
+function multiplierToAmerican(multiplier) {
+  const decimalOdds = Number(multiplier);
+  if (!Number.isFinite(decimalOdds) || decimalOdds <= 1) return null;
+  return decimalOdds >= 2
+    ? Math.round((decimalOdds - 1) * 100)
+    : Math.round(-100 / (decimalOdds - 1));
+}
+
+function americanToMultiplier(americanOdds) {
+  const odds = Number(americanOdds);
+  if (!Number.isFinite(odds) || odds === 0) return null;
+  return odds > 0
+    ? 1 + odds / 100
+    : 1 + 100 / Math.abs(odds);
+}
+
+function initializeOddsConverter() {
+  const multiplierInput = document.getElementById("multiplierInput");
+  const americanInput = document.getElementById("americanOddsInput");
+  const probabilityOutput = document.getElementById("oddsConverterProbability");
+  const summaryOutput = document.getElementById("oddsConverterSummary");
+  const resetButton = document.getElementById("oddsConverterReset");
+
+  if (!multiplierInput || !americanInput || !probabilityOutput || !summaryOutput) return;
+
+  let updating = false;
+
+  const showResult = (multiplier, americanOdds) => {
+    if (!Number.isFinite(multiplier) || multiplier <= 1) {
+      probabilityOutput.textContent = "—";
+      summaryOutput.textContent = "Enter either value";
+      return;
+    }
+
+    probabilityOutput.textContent = `${(100 / multiplier).toFixed(1)}%`;
+    summaryOutput.textContent =
+      `${multiplier.toFixed(2)}x payout ≈ ${americanOdds > 0 ? "+" : ""}${americanOdds}`;
+  };
+
+  multiplierInput.addEventListener("input", () => {
+    if (updating) return;
+    const multiplier = Number(multiplierInput.value);
+    const americanOdds = multiplierToAmerican(multiplier);
+
+    if (americanOdds == null) {
+      americanInput.value = "";
+      showResult(NaN, 0);
+      return;
+    }
+
+    updating = true;
+    americanInput.value = americanOdds;
+    updating = false;
+    showResult(multiplier, americanOdds);
+  });
+
+  americanInput.addEventListener("input", () => {
+    if (updating) return;
+    const americanOdds = Number(americanInput.value);
+    const multiplier = americanToMultiplier(americanOdds);
+
+    if (multiplier == null) {
+      multiplierInput.value = "";
+      showResult(NaN, 0);
+      return;
+    }
+
+    updating = true;
+    multiplierInput.value = multiplier.toFixed(2);
+    updating = false;
+    showResult(multiplier, Math.round(americanOdds));
+  });
+
+  resetButton?.addEventListener("click", () => {
+    multiplierInput.value = "";
+    americanInput.value = "";
+    probabilityOutput.textContent = "—";
+    summaryOutput.textContent = "Enter either value";
+    multiplierInput.focus();
+  });
+}
+
+function updateModelDetailButtonLabel() {
+  const button = document.getElementById("toggleModelDebug");
+  const sport = document.getElementById("sportSelect")?.value;
+  if (!button) return;
+
+  const isMlb = sport === "baseball_mlb";
+
+  // MLB detail is always available by clicking a specific market row.
+  // The global button remains only for the college model-debug workflow.
+  button.hidden = isMlb;
+  button.style.display = isMlb ? "none" : "";
+
+  if (!isMlb) {
+    button.innerHTML = "🧠 Ben's Model Detail";
+    button.title = "Toggle college model details.";
+  }
+}
+
+function percentText(value, digits = 1) {
   const n = Number(value);
-  if (!Number.isFinite(n)) return "-";
+  return Number.isFinite(n) ? `${(n * 100).toFixed(digits)}%` : "N/A";
+}
+
+function statText(value, digits = 2) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(digits) : "N/A";
+}
+
+window.showMlbModelBreakdown = function(game, pick = null) {
+  const modal = document.getElementById("modelBreakdownModal");
+  const content = document.getElementById("modelBreakdownContent");
+  const title = modal?.querySelector(".analytics-header h2");
+
+  if (!modal || !content) return;
+
+  if (title) title.textContent = "⚾ MLB Model Breakdown";
+
+  const context = game?.model_context || {};
+  const selectedPick = pick || (game?.market_picks || [])[0] || {};
+  const awayPitcher = context.away_pitcher || {};
+  const homePitcher = context.home_pitcher || {};
+  const factors = selectedPick.model_factors || {};
+  const isTotal = selectedPick.market === "totals";
+  const isUnder = selectedPick.selection === "Under";
+  const isOver = selectedPick.selection === "Over";
+
+  const bullpenText = (available, value) =>
+    available === false || value == null ? "N/A" : signedNumber(value);
+
+  const reasons = [];
+
+  const awayOffense =
+    Number(factors.away_offense_runs ?? context.away_offense_runs);
+  const homeOffense =
+    Number(factors.home_offense_runs ?? context.home_offense_runs);
+  const awayStarter =
+    Number(factors.away_pitcher_quality_runs ?? context.away_pitcher_quality_runs);
+  const homeStarter =
+    Number(factors.home_pitcher_quality_runs ?? context.home_pitcher_quality_runs);
+  const totalSignal =
+    Number(factors.total_run_signal ?? context.total_run_signal);
+  const modelEdge =
+    Number(selectedPick.blended_probability)
+    - Number(selectedPick.market_probability);
+
+  if (isTotal) {
+    if (isUnder && awayOffense < 0 && homeOffense < 0) {
+      reasons.push(
+        "Both offenses rate below league average in the model, reducing the expected scoring environment."
+      );
+    }
+
+    if (isUnder && awayStarter > 0 && homeStarter > 0) {
+      reasons.push(
+        "Both probable starters grade as run suppressors, with recent form supporting the under."
+      );
+    }
+
+    if (isOver && awayOffense > 0 && homeOffense > 0) {
+      reasons.push(
+        "Both offenses rate above league average, increasing the projected scoring environment."
+      );
+    }
+
+    if (isOver && awayStarter < 0 && homeStarter < 0) {
+      reasons.push(
+        "Both starters grade below average, creating additional upside for the over."
+      );
+    }
+
+    if (Number.isFinite(totalSignal)) {
+      reasons.push(
+        `The final total-run signal is ${signedNumber(totalSignal)} runs relative to a neutral matchup.`
+      );
+    }
+  } else {
+    const homeEdge =
+      Number(factors.home_run_edge ?? context.home_run_edge);
+
+    if (Number.isFinite(homeEdge)) {
+      reasons.push(
+        `The model projects a ${signedNumber(homeEdge)}-run home-team edge after offense, starters, bullpen, and home field.`
+      );
+    }
+  }
+
+  if (Number.isFinite(modelEdge) && modelEdge > 0) {
+    reasons.push(
+      `The blended probability is ${(modelEdge * 100).toFixed(1)} percentage points above the market no-vig probability.`
+    );
+  }
+
+  if (selectedPick.expected_value_pct != null) {
+    reasons.push(
+      `At ${formatAmericanOdds(selectedPick.best_price)}, the estimated return is ${signedNumber(selectedPick.expected_value_pct)}% EV.`
+    );
+  }
+
+  if (!reasons.length) {
+    reasons.push(
+      "The selection qualifies because the model probability exceeds the price-implied probability after removing sportsbook vig."
+    );
+  }
+
+  content.innerHTML = `
+    <div class="model-panel mlb-model-panel">
+      <div class="model-header mlb-detail-hero">
+        <div>
+          <div class="teams">${game.away_team} @ ${game.home_team}</div>
+          <div class="mlb-detail-subtitle">
+            ${selectedPick.market_label || selectedPick.market || "Game model"}
+            ${selectedPick.pick_label ? ` · ${selectedPick.pick_label}` : ""}
+          </div>
+        </div>
+        <div class="mlb-confidence-badge">
+          ${selectedPick.model_confidence || context.confidence_label || "N/A"} Confidence
+        </div>
+      </div>
+
+      <div class="mlb-probability-grid">
+        <div class="mlb-probability-card">
+          <span>Market No-Vig</span>
+          <strong>${percentText(selectedPick.market_probability)}</strong>
+        </div>
+        <div class="mlb-probability-card">
+          <span>Baseball Model</span>
+          <strong>${percentText(selectedPick.baseball_probability)}</strong>
+        </div>
+        <div class="mlb-probability-card featured">
+          <span>Blended Model</span>
+          <strong>${percentText(selectedPick.blended_probability)}</strong>
+        </div>
+        <div class="mlb-probability-card">
+          <span>Estimated EV</span>
+          <strong>${selectedPick.expected_value_pct != null
+            ? signedNumber(selectedPick.expected_value_pct) + "%"
+            : "N/A"}</strong>
+        </div>
+      </div>
+
+      <div class="model-section">
+        <div class="section-title">Probable Starters</div>
+        <div class="mlb-matchup-grid">
+          <div class="mlb-team-detail">
+            <h3>${game.away_team}</h3>
+            <strong>${context.away_pitcher_name || "TBD"}</strong>
+            <div>Season ERA: ${statText(awayPitcher.season_era)}</div>
+            <div>Last 5 ERA: ${statText(awayPitcher.last5_era)}</div>
+            <div>K/9: ${statText(awayPitcher.season_k9)}</div>
+            <div>BB/9: ${statText(awayPitcher.season_bb9)}</div>
+            <div>Starts: ${awayPitcher.qualifying_starts ?? 0}</div>
+          </div>
+          <div class="mlb-team-detail">
+            <h3>${game.home_team}</h3>
+            <strong>${context.home_pitcher_name || "TBD"}</strong>
+            <div>Season ERA: ${statText(homePitcher.season_era)}</div>
+            <div>Last 5 ERA: ${statText(homePitcher.last5_era)}</div>
+            <div>K/9: ${statText(homePitcher.season_k9)}</div>
+            <div>BB/9: ${statText(homePitcher.season_bb9)}</div>
+            <div>Starts: ${homePitcher.qualifying_starts ?? 0}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="model-section">
+        <div class="section-title">Model Factors</div>
+        <div class="grid">
+          <div>Away offense</div>
+          <div>${signedNumber(factors.away_offense_runs ?? context.away_offense_runs)} runs</div>
+          <div>Home offense</div>
+          <div>${signedNumber(factors.home_offense_runs ?? context.home_offense_runs)} runs</div>
+          <div>Away starter quality</div>
+          <div>${signedNumber(factors.away_pitcher_quality_runs ?? context.away_pitcher_quality_runs)} runs</div>
+          <div>Home starter quality</div>
+          <div>${signedNumber(factors.home_pitcher_quality_runs ?? context.home_pitcher_quality_runs)} runs</div>
+          <div>Away bullpen</div>
+          <div>${bullpenText(
+            factors.away_bullpen_available ?? context.away_bullpen_available,
+            factors.away_bullpen_quality_runs ?? context.away_bullpen_quality_runs
+          )}</div>
+          <div>Home bullpen</div>
+          <div>${bullpenText(
+            factors.home_bullpen_available ?? context.home_bullpen_available,
+            factors.home_bullpen_quality_runs ?? context.home_bullpen_quality_runs
+          )}</div>
+          <div>Home-field adjustment</div>
+          <div>${signedNumber(factors.home_field_runs ?? context.home_field_runs)} runs</div>
+          <div>${isTotal ? "Final total signal" : "Final home edge"}</div>
+          <div class="highlight">${signedNumber(
+            isTotal
+              ? (factors.total_run_signal ?? context.total_run_signal)
+              : (factors.home_run_edge ?? context.home_run_edge)
+          )} runs</div>
+        </div>
+      </div>
+
+      <div class="model-section mlb-why-section">
+        <div class="section-title">Why the Model Likes This Pick</div>
+        <ul class="mlb-reason-list">
+          ${reasons.map(reason => `<li>${reason}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="model-section">
+        <div class="section-title">Price and Recommendation</div>
+        <div class="grid">
+          <div>Best sportsbook</div>
+          <div>${selectedPick.best_book_name || selectedPick.best_book || "N/A"}</div>
+          <div>Best price</div>
+          <div>${formatAmericanOdds(selectedPick.best_price)}</div>
+          <div>Fair line</div>
+          <div>${formatAmericanOdds(selectedPick.fair_price)}</div>
+          <div>Recommendation</div>
+          <div class="highlight">${recommendationLabel(selectedPick.recommendation)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove("hidden");
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+};
+
+function signedNumber(value, digits = 2) {
+  if (value === null || value === undefined || value === "") {
+    return "N/A";
+  }
+
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "N/A";
   return `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
 }
 
@@ -1773,6 +2113,12 @@ function mlbModelFactorsHtml(row) {
   const factors = row?.model_factors || {};
   const awayStarter = factors.away_pitcher_name || "TBD";
   const homeStarter = factors.home_pitcher_name || "TBD";
+  const awayBullpen = factors.away_bullpen_available === false
+    ? "N/A"
+    : signedNumber(factors.away_bullpen_quality_runs);
+  const homeBullpen = factors.home_bullpen_available === false
+    ? "N/A"
+    : signedNumber(factors.home_bullpen_quality_runs);
 
   if (row?.model_status !== "ready") {
     return `
@@ -1793,12 +2139,13 @@ function mlbModelFactorsHtml(row) {
       Home offense: ${signedNumber(factors.home_offense_runs)}
       Away pitcher: ${signedNumber(factors.away_pitcher_quality_runs)}
       Home pitcher: ${signedNumber(factors.home_pitcher_quality_runs)}
-      Away bullpen: ${signedNumber(factors.away_bullpen_quality_runs)}
-      Home bullpen: ${signedNumber(factors.home_bullpen_quality_runs)}
+      Away bullpen: ${awayBullpen}
+      Home bullpen: ${homeBullpen}
     ">
       ${awayStarter} vs ${homeStarter}<br>
       ${sideFactor}<br>
-      Bullpens ${signedNumber(factors.away_bullpen_quality_runs)} / ${signedNumber(factors.home_bullpen_quality_runs)}
+      Bullpens ${awayBullpen} / ${homeBullpen}<br>
+      <button type="button" class="mlb-detail-inline-btn">View Detail</button>
     </div>`;
 }
 
@@ -1944,6 +2291,27 @@ function renderMlbOddsScreen() {
         <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
 
       tr.innerHTML = rowHtml;
+      tr.classList.add("mlb-model-clickable-row");
+      tr.title = "Click to view the MLB model breakdown";
+      tr.addEventListener("click", (event) => {
+        if (
+          event.target.closest("button")
+          || event.target.closest("a")
+          || event.target.closest("input")
+        ) {
+          return;
+        }
+
+        window.showMlbModelBreakdown(game, row);
+      });
+
+      tr.querySelector(".mlb-detail-inline-btn")?.addEventListener(
+        "click",
+        (event) => {
+          event.stopPropagation();
+          window.showMlbModelBreakdown(game, row);
+        }
+      );
       attachMlbAddHandler(tr, game, row);
       tbody.appendChild(tr);
     });
@@ -1958,6 +2326,18 @@ function renderMlbValuePicks() {
   if (!container) return;
 
   container.innerHTML = "";
+
+  const tierNote = document.createElement("div");
+  tierNote.className = "mlb-value-tier-note";
+  tierNote.innerHTML = `
+    <strong>Model opportunities:</strong>
+    👀 Lean 0.5%–1.99% EV ·
+    ✅ Value 2.0%+ EV ·
+    🔥 Strong Value 4.0%+ EV.
+    Only Value and Strong Value are included in the official tracked record.
+    Click any opportunity row or View Detail to see the model breakdown.
+  `;
+  container.appendChild(tierNote);
 
   const filteredGames = mlbFilteredGames().filter(game => !game.is_live);
   const table = document.createElement("table");
@@ -1989,17 +2369,41 @@ function renderMlbValuePicks() {
 
   filteredGames.forEach(game => {
     const picks = (game.market_picks || [])
-      .filter(pick =>
-        ["VALUE", "STRONG_VALUE"].includes(pick.recommendation)
-      );
+      .filter(pick => {
+        const tier = String(
+          pick.recommendation || ""
+        ).trim().toUpperCase();
+
+        return [
+          "LEAN",
+          "VALUE",
+          "STRONG_VALUE",
+        ].includes(tier);
+      })
+      .sort((a, b) => {
+        const rank = {
+          STRONG_VALUE: 3,
+          VALUE: 2,
+          LEAN: 1,
+        };
+
+        const aTier = String(
+          a.recommendation || ""
+        ).trim().toUpperCase();
+
+        const bTier = String(
+          b.recommendation || ""
+        ).trim().toUpperCase();
+
+        return (
+          (rank[bTier] || 0)
+          - (rank[aTier] || 0)
+          || Number(b.expected_value_pct || 0)
+          - Number(a.expected_value_pct || 0)
+        );
+      });
 
     if (!picks.length) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${game.event_title}</td>
-        <td>${game.game_time_display || "-"}</td>
-        <td colspan="7">No MLB Model v2 picks with at least 2.0% true EV and usable starter data.</td>`;
-      tbody.appendChild(tr);
       return;
     }
 
@@ -2034,6 +2438,27 @@ function renderMlbValuePicks() {
         <td>${recommendationLabel(pick.recommendation)}</td>
         <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
 
+      tr.classList.add("mlb-model-clickable-row");
+      tr.title = "Click to view why the model likes this pick";
+      tr.addEventListener("click", (event) => {
+        if (
+          event.target.closest("button")
+          || event.target.closest("a")
+          || event.target.closest("input")
+        ) {
+          return;
+        }
+
+        window.showMlbModelBreakdown(game, pick);
+      });
+
+      tr.querySelector(".mlb-detail-inline-btn")?.addEventListener(
+        "click",
+        (event) => {
+          event.stopPropagation();
+          window.showMlbModelBreakdown(game, pick);
+        }
+      );
       attachMlbAddHandler(tr, game, pick);
       tbody.appendChild(tr);
     });
@@ -2041,6 +2466,15 @@ function renderMlbValuePicks() {
 
   const wrapper = document.createElement("div");
   wrapper.className = "table-scroll-wrapper";
+  if (!tbody.children.length) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td colspan="15" class="mlb-empty-opportunities">
+        No Lean, Value, or Strong Value selections currently qualify.
+      </td>`;
+    tbody.appendChild(tr);
+  }
+
   wrapper.appendChild(table);
   container.appendChild(wrapper);
 }
@@ -2433,9 +2867,15 @@ document.addEventListener("click", function(e){
 
   if (e.target?.id === "closeModelBreakdownBtn") {
 
-    document
-      .getElementById("modelBreakdownModal")
-      ?.classList.add("hidden");
+    const modal =
+      document.getElementById("modelBreakdownModal");
+
+    modal?.classList.add("hidden");
+
+    if (modal) {
+      modal.style.display = "";
+      modal.setAttribute("aria-hidden", "true");
+    }
 
   }
 

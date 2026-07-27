@@ -24,15 +24,31 @@
 <style>
 /* MLB ODDS SCREEN ENHANCEMENTS */
 .table-scroll-wrapper {
+  position: relative;
   overflow: auto;
   max-width: 100%;
+  max-height: calc(100vh - 190px);
+  overscroll-behavior: contain;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+}
+
+/*
+  The results area becomes the scroll container so the column headers remain
+  visible while moving through a long slate. The shadow separates the pinned
+  header from the rows beneath it.
+*/
+.odds-table {
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .odds-table thead th {
   position: sticky;
   top: 0;
-  z-index: 8;
+  z-index: 20;
   background: #f8fafc;
+  box-shadow: 0 2px 0 rgba(15, 23, 42, 0.12);
 }
 
 .odds-table .sticky-game {
@@ -62,7 +78,7 @@
 .odds-table thead .sticky-game,
 .odds-table thead .sticky-market,
 .odds-table thead .sticky-selection {
-  z-index: 12;
+  z-index: 30;
   background: #f8fafc;
 }
 
@@ -147,6 +163,395 @@
 .odds-table td {
   vertical-align: top;
 }
+
+.mlb-value-tier-note {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.92);
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+  .table-scroll-wrapper {
+    max-height: calc(100vh - 150px);
+  }
+
+  .mlb-value-tier-note {
+    font-size: 12px;
+  }
+}
+
+
+/* ===== Game Lines visual refresh ===== */
+body {
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 34%),
+    #f8fafc;
+}
+
+.game-lines-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 14px 0;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.tracker-btn,
+.toggle-btn,
+.debug-toggle,
+.tracker-button-row button {
+  min-height: 40px;
+  border-radius: 9px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tracker-btn:hover,
+.toggle-btn:hover,
+.debug-toggle:hover,
+.tracker-button-row button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.1);
+}
+
+.odds-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.045);
+}
+
+.mlb-detail-inline-btn {
+  margin-top: 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 7px;
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mlb-detail-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.mlb-detail-subtitle {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.mlb-confidence-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mlb-probability-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.mlb-probability-card,
+.mlb-team-detail {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.mlb-probability-card span {
+  display: block;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.mlb-probability-card strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 20px;
+  color: #fff;
+}
+
+.mlb-probability-card.featured {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(22, 101, 52, 0.22);
+}
+
+.mlb-matchup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 700px) {
+  body {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .tracker-button-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .game-lines-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .game-lines-controls label {
+    display: none;
+  }
+
+  .game-lines-controls > *,
+  .game-lines-controls select,
+  .game-lines-controls input,
+  .game-lines-controls button {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  #gameSearchInput,
+  #toggleModelDebug,
+  #gameLinesTimestamp {
+    grid-column: 1 / -1;
+  }
+
+  #mlbViewTabs,
+  .view-toggle {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    padding: 8px 0;
+    background: rgba(248, 250, 252, 0.95);
+    backdrop-filter: blur(8px);
+  }
+
+  #mlbViewTabs button,
+  .view-toggle button {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+
+  .analytics-modal-content {
+    width: calc(100vw - 18px);
+    max-height: 92vh;
+    margin: 4vh auto;
+    border-radius: 14px;
+  }
+
+  #modelBreakdownContent {
+    padding: 12px !important;
+  }
+
+  .mlb-detail-hero {
+    flex-direction: column;
+  }
+
+  .mlb-probability-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mlb-matchup-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.analytics-modal:not(.hidden) {
+  display: flex;
+}
+
+
+.mlb-model-clickable-row {
+  cursor: pointer;
+}
+
+.mlb-model-clickable-row:hover {
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+.mlb-reason-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+.mlb-reason-list li + li {
+  margin-top: 7px;
+}
+
+.mlb-empty-opportunities {
+  padding: 24px !important;
+  text-align: center;
+  color: #64748b;
+}
+
+
+.mlb-detail-guidance {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 0 0 7px rgba(59, 130, 246, 0.10);
+  transition: box-shadow 0.2s ease, outline 0.2s ease;
+}
+
+
+.mlb-model-clickable-row td:first-child::after {
+  content: "Tap for model detail";
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@media (min-width: 701px) {
+  .mlb-model-clickable-row td:first-child::after {
+    content: "Click for model detail";
+  }
+}
+
+
+.odds-converter-card {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(238,242,255,.94));
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+}
+
+.odds-converter-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.odds-converter-heading strong,
+.odds-converter-heading span {
+  display: block;
+}
+
+.odds-converter-heading span {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.odds-converter-reset {
+  padding: 6px 10px;
+  border: 1px solid rgba(100,116,139,.25);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.odds-converter-grid {
+  display: grid;
+  grid-template-columns: minmax(150px,1fr) auto minmax(150px,1fr) minmax(180px,1.15fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.odds-converter-field {
+  display: grid;
+  gap: 5px;
+}
+
+.odds-converter-field > span,
+.odds-converter-result > span {
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.odds-converter-field input {
+  width: 100%;
+  min-height: 43px;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border: 1px solid rgba(100,116,139,.28);
+  border-radius: 9px;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.odds-input-wrap { position: relative; }
+.odds-input-wrap input { padding-right: 30px; }
+
+.odds-input-suffix {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-weight: 800;
+}
+
+.odds-converter-swap {
+  padding-bottom: 12px;
+  color: #6366f1;
+  font-size: 22px;
+}
+
+.odds-converter-result {
+  min-height: 43px;
+  padding: 8px 11px;
+  border: 1px solid rgba(34,197,94,.22);
+  border-radius: 9px;
+  background: rgba(240,253,244,.9);
+}
+
+.odds-converter-result strong {
+  display: block;
+  color: #166534;
+  font-size: 17px;
+}
+
+.odds-converter-result small {
+  color: #64748b;
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .odds-converter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .odds-converter-swap { display: none; }
+  .odds-converter-result { grid-column: 1 / -1; }
+}
+
+@media (max-width: 420px) {
+  .odds-converter-grid { grid-template-columns: 1fr; }
+  .odds-converter-result { grid-column: auto; }
+}
+
 </style>
 
 </head>
@@ -158,12 +563,12 @@
 <!-- ===================================================== -->
 <!-- 🧠 Ben's Model Breakdown Modal (ONLY ONE COPY))) -->
 <!-- ===================================================== -->
-<div id="modelBreakdownModal" class="analytics-modal hidden">
+<div id="modelBreakdownModal" class="analytics-modal hidden" aria-hidden="true">
 
   <div class="analytics-modal-content">
 
     <div class="analytics-header">
-      <h2>🧠 Ben's Model Breakdown</h2>
+      <h2>Model Breakdown</h2>
       <button id="closeModelBreakdownBtn" class="analytics-close-btn">✖</button>
     </div>
 
@@ -220,7 +625,41 @@
 
 
 <!-- Controls -->
-<div style="margin:15px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+
+<div id="oddsConverterCard" class="odds-converter-card">
+  <div class="odds-converter-heading">
+    <div>
+      <strong>Pick'em Odds Converter</strong>
+      <span>PrizePicks • Underdog • Betr ↔ American odds</span>
+    </div>
+    <button type="button" id="oddsConverterReset" class="odds-converter-reset">Reset</button>
+  </div>
+
+  <div class="odds-converter-grid">
+    <label class="odds-converter-field">
+      <span>Payout multiplier</span>
+      <div class="odds-input-wrap">
+        <input id="multiplierInput" type="number" inputmode="decimal" min="1.01" step="0.01" placeholder="1.65">
+        <span class="odds-input-suffix">x</span>
+      </div>
+    </label>
+
+    <div class="odds-converter-swap">⇄</div>
+
+    <label class="odds-converter-field">
+      <span>American odds</span>
+      <input id="americanOddsInput" type="number" inputmode="numeric" step="1" placeholder="-135">
+    </label>
+
+    <div class="odds-converter-result">
+      <span>Implied probability</span>
+      <strong id="oddsConverterProbability">—</strong>
+      <small id="oddsConverterSummary">Enter either value</small>
+    </div>
+  </div>
+</div>
+
+<div class="game-lines-controls">
 
   <label for="sportSelect">Sport:</label>
 
