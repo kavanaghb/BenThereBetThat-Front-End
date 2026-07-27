@@ -552,6 +552,104 @@ body {
   .odds-converter-result { grid-column: auto; }
 }
 
+
+/* ===== Accessible table-header and converter tooltips ===== */
+.table-header-label,
+.converter-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.header-info-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1;
+  cursor: help;
+  flex: 0 0 auto;
+}
+
+.header-info-button:hover,
+.header-info-button:focus-visible {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.10);
+  outline: none;
+}
+
+.converter-title-row {
+  gap: 6px;
+}
+
+.floating-header-tooltip {
+  position: fixed;
+  z-index: 99999;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.32);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    visibility 0.12s ease;
+}
+
+.floating-header-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+@media (max-width: 700px) {
+  .table-header-label {
+    gap: 3px;
+  }
+
+  .header-info-button {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+  }
+
+  .floating-header-tooltip {
+    left: 12px !important;
+    right: 12px;
+    top: auto !important;
+    bottom: 18px;
+    width: auto;
+    max-width: none;
+    font-size: 12px;
+  }
+}
+
+
+/* Disable legacy pseudo-element tooltips. */
+.header-info-button::before,
+.header-info-button::after {
+  content: none !important;
+  display: none !important;
+}
+
 </style>
 
 </head>
@@ -629,7 +727,15 @@ body {
 <div id="oddsConverterCard" class="odds-converter-card">
   <div class="odds-converter-heading">
     <div>
-      <strong>Pick'em Odds Converter</strong>
+      <div class="converter-title-row">
+        <strong>Pick'em Odds Converter</strong>
+        <button
+          type="button"
+          class="header-info-button converter-info-button"
+          aria-label="Compare the multiplier implied probability with Final Model percent. Final Model percent should be higher for positive estimated value."
+          data-tooltip="Compare the multiplier's implied probability with Final Model %. Final Model % should be higher for positive estimated value."
+        >ⓘ</button>
+      </div>
       <span>PrizePicks • Underdog • Betr ↔ American odds</span>
     </div>
     <button type="button" id="oddsConverterReset" class="odds-converter-reset">Reset</button>

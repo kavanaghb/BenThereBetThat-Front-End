@@ -978,6 +978,7 @@ function renderSportsbookFilters() {
 // =====================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  initializeFloatingTooltips();
   initializeOddsConverter();
 
   const modelBtn = document.getElementById("toggleModelDebug");
@@ -1773,6 +1774,21 @@ function evCellClass(edge) {
 
 
 
+
+function tableHeaderWithTooltip(label, tooltip) {
+  return `
+    <span class="table-header-label">
+      <span>${label}</span>
+      <button
+        type="button"
+        class="header-info-button"
+        aria-label="${label}: ${tooltip}"
+        data-tooltip="${tooltip}"
+      >ⓘ</button>
+    </span>
+  `;
+}
+
 function multiplierToAmerican(multiplier) {
   const decimalOdds = Number(multiplier);
   if (!Number.isFinite(decimalOdds) || decimalOdds <= 1) return null;
@@ -1852,6 +1868,130 @@ function initializeOddsConverter() {
     probabilityOutput.textContent = "—";
     summaryOutput.textContent = "Enter either value";
     multiplierInput.focus();
+  });
+}
+
+
+function initializeFloatingTooltips() {
+  let tooltip = document.getElementById("floatingHeaderTooltip");
+
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.id = "floatingHeaderTooltip";
+    tooltip.className = "floating-header-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    document.body.appendChild(tooltip);
+  }
+
+  let activeButton = null;
+
+  const hideTooltip = () => {
+    tooltip.classList.remove("is-visible");
+    tooltip.textContent = "";
+    activeButton = null;
+  };
+
+  const positionTooltip = (button) => {
+    const text = button?.dataset?.tooltip;
+    if (!text) return;
+
+    tooltip.textContent = text;
+    tooltip.classList.add("is-visible");
+
+    const buttonRect = button.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const margin = 10;
+    const viewportPadding = 12;
+
+    let left =
+      buttonRect.left
+      + buttonRect.width / 2
+      - tooltipRect.width / 2;
+
+    left = Math.max(
+      viewportPadding,
+      Math.min(
+        left,
+        window.innerWidth
+          - tooltipRect.width
+          - viewportPadding
+      )
+    );
+
+    let top = buttonRect.top - tooltipRect.height - margin;
+
+    if (top < viewportPadding) {
+      top = buttonRect.bottom + margin;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+    activeButton = button;
+  };
+
+  document.addEventListener("pointerover", (event) => {
+    const button =
+      event.target.closest(".header-info-button");
+
+    if (!button) return;
+    positionTooltip(button);
+  });
+
+  document.addEventListener("pointerout", (event) => {
+    const button =
+      event.target.closest(".header-info-button");
+
+    if (!button) return;
+
+    const nextTarget = event.relatedTarget;
+    if (nextTarget && button.contains(nextTarget)) return;
+
+    hideTooltip();
+  });
+
+  document.addEventListener("focusin", (event) => {
+    const button =
+      event.target.closest(".header-info-button");
+
+    if (!button) return;
+    positionTooltip(button);
+  });
+
+  document.addEventListener("focusout", (event) => {
+    const button =
+      event.target.closest(".header-info-button");
+
+    if (!button) return;
+    hideTooltip();
+  });
+
+  document.addEventListener("click", (event) => {
+    const button =
+      event.target.closest(".header-info-button");
+
+    if (!button) {
+      hideTooltip();
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (
+      activeButton === button
+      && tooltip.classList.contains("is-visible")
+    ) {
+      hideTooltip();
+    } else {
+      positionTooltip(button);
+    }
+  });
+
+  window.addEventListener("scroll", hideTooltip, true);
+  window.addEventListener("resize", () => {
+    if (activeButton) {
+      positionTooltip(activeButton);
+    }
   });
 }
 
@@ -2000,11 +2140,11 @@ window.showMlbModelBreakdown = function(game, pick = null) {
           <strong>${percentText(selectedPick.market_probability)}</strong>
         </div>
         <div class="mlb-probability-card">
-          <span>Baseball Model</span>
+          <span>Stats-Adjusted</span>
           <strong>${percentText(selectedPick.baseball_probability)}</strong>
         </div>
         <div class="mlb-probability-card featured">
-          <span>Blended Model</span>
+          <span>Final Model</span>
           <strong>${percentText(selectedPick.blended_probability)}</strong>
         </div>
         <div class="mlb-probability-card">
@@ -2203,14 +2343,38 @@ function renderMlbOddsScreen() {
 
   header += `
         <th>Best</th>
-        <th>Market No-Vig %</th>
-        <th>Baseball %</th>
-        <th>Blended %</th>
-        <th>Fair Line</th>
-        <th>True EV</th>
-        <th>Confidence</th>
-        <th>Model Factors</th>
-        <th>Signal</th>
+        <th>${tableHeaderWithTooltip(
+          "Market No-Vig %",
+          "Sportsbook consensus probability after removing the bookmaker margin."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Stats-Adjusted %",
+          "Market probability after applying the full adjustment from starting pitchers, offense, bullpens, recent form, and home field."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Final Model %",
+          "The conservative probability used for betting decisions. It blends the market consensus with the stats-adjusted estimate."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Model Fair Odds",
+          "American odds corresponding to the Final Model probability."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Estimated EV",
+          "Estimated return at the best available price. Positive EV means the offered odds are better than the model fair odds."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Confidence",
+          "Data-quality rating based on starter history, recency, offense coverage, bullpen data, and available sportsbooks."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Model Factors",
+          "Summary of the matchup inputs that moved the prediction. Click the row for the full explanation."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Signal",
+          "Lean: 0.5%–1.99% EV. Value: 2%+ EV. Strong Value: 4%+ EV with high confidence."
+        )}</th>
         <th>Add</th>
       </tr>
     </thead>
@@ -2352,14 +2516,38 @@ function renderMlbValuePicks() {
         <th>Pick</th>
         <th>Best Book</th>
         <th>Best Price</th>
-        <th>Market No-Vig %</th>
-        <th>Baseball %</th>
-        <th>Blended %</th>
-        <th>Fair Line</th>
-        <th>True EV</th>
-        <th>Confidence</th>
-        <th>Model Factors</th>
-        <th>Signal</th>
+        <th>${tableHeaderWithTooltip(
+          "Market No-Vig %",
+          "Sportsbook consensus probability after removing the bookmaker margin."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Stats-Adjusted %",
+          "Market probability after applying the full adjustment from starting pitchers, offense, bullpens, recent form, and home field."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Final Model %",
+          "The conservative probability used for betting decisions. It blends the market consensus with the stats-adjusted estimate."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Model Fair Odds",
+          "American odds corresponding to the Final Model probability."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Estimated EV",
+          "Estimated return at the best available price. Positive EV means the offered odds are better than the model fair odds."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Confidence",
+          "Data-quality rating based on starter history, recency, offense coverage, bullpen data, and available sportsbooks."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Model Factors",
+          "Summary of the matchup inputs that moved the prediction. Click the row for the full explanation."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Signal",
+          "Lean: 0.5%–1.99% EV. Value: 2%+ EV. Strong Value: 4%+ EV with high confidence."
+        )}</th>
         <th>Add</th>
       </tr>
     </thead>
