@@ -76,6 +76,22 @@ console.log(
   "color:green;font-weight:bold;"
 );
 
+console.log(
+  "🧪 BTBT SCRIPT VERSION: ACCOUNT-SWITCH-FIX-1"
+);
+
+
+// ===================================================
+// 🔐 PREMIUM + FREE PASS ACCESS STATE
+// ===================================================
+
+window.hasPremiumAccess = false;
+
+window.freePassUsed = false;
+window.freePassSport = null;
+window.freePassExpiresAt = null;
+window.hasActiveFreePass = false;
+
 // ===================================================
 // 📌 Pick Tracker — Core State (NO UI)
 // ===================================================
@@ -522,6 +538,23 @@ const signoutBtn = document.getElementById("signout-btn");
 const signinBtn = document.getElementById("signin-btn");
 const signupBtn = document.getElementById("signup-btn");
 
+// ===================================================
+// 🌐 PUBLIC LANDING + AUTH MODAL
+// ===================================================
+const publicLanding =
+  document.getElementById("publicLanding");
+
+const openAuthBtn =
+  document.getElementById("openAuthBtn");
+
+const closeAuthBtn =
+  document.getElementById("closeAuthBtn");
+
+const tryMlbFreeLandingBtn =
+  document.getElementById(
+    "tryMlbFreeLandingBtn"
+  );
+
 const subscriptionStatus = document.getElementById("subscription-status");
 const cancelSubscriptionBtn = document.getElementById("cancel-subscription-btn");
 const resumeSubscriptionBtn = document.getElementById("resume-subscription-btn");
@@ -929,7 +962,567 @@ document.getElementById("manageBillingBtn")?.addEventListener("click", async () 
   }
 });
 
+// ===================================================
+// 🎁 Free Sport Pass — Frontend Status
+// ===================================================
+function isFreePassActiveForSport(sport) {
 
+  if (!window.hasActiveFreePass) {
+    return false;
+  }
+
+  if (!sport) {
+    return false;
+  }
+
+  if (window.freePassSport !== sport) {
+    return false;
+  }
+
+  if (!window.freePassExpiresAt) {
+    return false;
+  }
+
+  const expiresAt =
+    new Date(window.freePassExpiresAt);
+
+  if (
+    Number.isNaN(expiresAt.getTime()) ||
+    expiresAt <= new Date()
+  ) {
+
+    window.hasActiveFreePass = false;
+
+    return false;
+  }
+
+  return true;
+}
+
+
+// ===================================================
+// 🎁 Refresh Free Pass Status From Backend
+// ===================================================
+async function refreshFreePassStatus() {
+
+  // Reset first so another account cannot inherit state
+  window.freePassUsed = false;
+  window.freePassSport = null;
+  window.freePassExpiresAt = null;
+  window.hasActiveFreePass = false;
+
+  try {
+
+    const {
+      data: { session }
+    } =
+      await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+
+      updateMlbFreePassUI();
+
+      return false;
+    }
+
+
+    const res =
+      await fetch(
+        `${window.API_BASE}/api/free-pass-status`,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${session.access_token}`
+          }
+        }
+      );
+
+
+    if (!res.ok) {
+
+      console.warn(
+        "⚠️ Free pass status request failed:",
+        res.status
+      );
+
+      updateMlbFreePassUI();
+
+      return false;
+    }
+
+
+    const data =
+      await res.json();
+
+    const pass =
+      data?.free_pass || {};
+
+
+    window.freePassUsed =
+      Boolean(pass.used);
+
+    window.freePassSport =
+      pass.sport || null;
+
+    window.freePassExpiresAt =
+      pass.expires_at || null;
+
+
+    const expiresAt =
+      window.freePassExpiresAt
+        ? new Date(
+            window.freePassExpiresAt
+          )
+        : null;
+
+
+    window.hasActiveFreePass =
+      Boolean(
+        window.freePassUsed &&
+        window.freePassSport &&
+        expiresAt &&
+        !Number.isNaN(
+          expiresAt.getTime()
+        ) &&
+        expiresAt > new Date()
+      );
+
+
+    console.log(
+      "🎁 Free pass status:",
+      {
+        active:
+          window.hasActiveFreePass,
+
+        sport:
+          window.freePassSport,
+
+        expires:
+          window.freePassExpiresAt
+      }
+    );
+
+
+    // Update all free-pass UI
+    updateMlbFreePassUI();
+
+
+    return window.hasActiveFreePass;
+
+
+  } catch (err) {
+
+    console.error(
+      "❌ Free pass status error:",
+      err
+    );
+
+    updateMlbFreePassUI();
+
+    return false;
+  }
+
+}
+
+
+// ===================================================
+// ⚾ MLB FREE PASS — CUSTOMER UI
+// ===================================================
+function updateMlbFreePassUI() {
+
+  const freePassBtn =
+    document.getElementById(
+      "startMlbFreePassBtn"
+    );
+
+  const message =
+    document.getElementById(
+      "freePassMessage"
+    );
+
+  const banner =
+    document.getElementById(
+      "freePassBanner"
+    );
+
+  const bannerExpires =
+    document.getElementById(
+      "freePassBannerExpires"
+    );
+
+
+  // ===================================================
+  // 🧹 DEFAULT UI STATE
+  // ===================================================
+
+  if (freePassBtn) {
+    freePassBtn.style.display =
+      "none";
+  }
+
+  if (message) {
+    message.style.display =
+      "none";
+
+    message.innerHTML = "";
+  }
+
+  if (banner) {
+    banner.style.display =
+      "none";
+  }
+
+  if (bannerExpires) {
+    bannerExpires.textContent =
+      "";
+  }
+
+
+  // ===================================================
+  // 💳 PREMIUM USER
+  // Paid users see NONE of the free-pass UI
+  // ===================================================
+  if (window.hasPremiumAccess) {
+
+    console.log(
+      "💳 Premium account — free pass UI hidden"
+    );
+
+    return;
+  }
+
+
+  // ===================================================
+  // 🎁 ACTIVE MLB FREE PASS
+  // ===================================================
+  if (
+    window.hasActiveFreePass &&
+    window.freePassSport ===
+      "baseball_mlb" &&
+    window.freePassExpiresAt
+  ) {
+
+    const expires =
+      new Date(
+        window.freePassExpiresAt
+      );
+
+
+    const expiresText =
+      expires.toLocaleString(
+        "en-US",
+        {
+          timeZone:
+            "America/Chicago",
+
+          month:
+            "short",
+
+          day:
+            "numeric",
+
+          hour:
+            "numeric",
+
+          minute:
+            "2-digit"
+        }
+      );
+
+
+    // -----------------------------------
+    // 🔵 Top dashboard banner
+    // -----------------------------------
+    if (banner) {
+      banner.style.display =
+        "block";
+    }
+
+
+    if (bannerExpires) {
+
+      bannerExpires.textContent =
+        `Free MLB access ends ${expiresText}.`;
+
+    }
+
+
+    // -----------------------------------
+    // 🔵 Subscription-area message
+    // -----------------------------------
+if (message) {
+  // Expiration is already shown in the top banner.
+  // Avoid showing it twice.
+  message.innerHTML = "";
+  message.style.display = "none";
+}
+
+
+    console.log(
+      "⚾ Active MLB free-pass UI shown"
+    );
+
+    return;
+  }
+
+
+  // ===================================================
+  // ⛔ PASS ALREADY USED / EXPIRED
+  // ===================================================
+  if (window.freePassUsed) {
+
+    if (message) {
+
+      message.innerHTML = `
+        Your one-time MLB Free Pass
+        has expired.
+        <br>
+        Start your first month free
+        to unlock all sports.
+      `;
+
+      message.style.display =
+        "block";
+    }
+
+    return;
+  }
+
+
+  // ===================================================
+  // ✅ NEW / ELIGIBLE FREE ACCOUNT
+  // ===================================================
+  if (freePassBtn) {
+
+    freePassBtn.style.display =
+      "inline-block";
+
+    freePassBtn.textContent =
+      "⚾ Try MLB Free for 24 Hours";
+  }
+
+
+  if (message) {
+
+    message.innerHTML = `
+      No credit card required
+      &bull;
+      One-time 24-hour MLB access
+    `;
+
+    message.style.display =
+      "block";
+  }
+
+}
+
+
+// ===================================================
+// 💳 FREE PASS BANNER → EXISTING STRIPE CHECKOUT
+// ===================================================
+document
+  .getElementById(
+    "freePassUpgradeBtn"
+  )
+  ?.addEventListener(
+    "click",
+    () => {
+
+      const existingSubscribeBtn =
+        document.getElementById(
+          "subscribeBtn"
+        );
+
+      if (!existingSubscribeBtn) {
+
+        console.error(
+          "❌ Subscribe button not found"
+        );
+
+        return;
+      }
+
+
+      console.log(
+        "💳 Free-pass user selected Premium upgrade"
+      );
+
+
+      // Reuse your EXISTING checkout logic.
+      existingSubscribeBtn.click();
+
+    }
+  );
+
+
+// ===================================================
+// ⚾ ACTIVATE ONE-TIME MLB FREE PASS
+// ===================================================
+document
+  .getElementById(
+    "startMlbFreePassBtn"
+  )
+  ?.addEventListener(
+    "click",
+    async () => {
+
+      const btn =
+        document.getElementById(
+          "startMlbFreePassBtn"
+        );
+
+      if (!btn) return;
+
+
+      const confirmed =
+        confirm(
+          "Start your 24-hour MLB Free Pass now?\n\n" +
+          "The 24-hour clock starts immediately and " +
+          "can only be activated once per account."
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      try {
+
+        btn.disabled = true;
+
+        btn.textContent =
+          "Activating MLB Pass...";
+
+
+        const {
+          data: { session }
+        } =
+          await supabase.auth.getSession();
+
+
+        if (!session?.access_token) {
+
+          throw new Error(
+            "Please sign in before activating your MLB Free Pass."
+          );
+
+        }
+
+
+        const res =
+          await fetch(
+            `${window.API_BASE}/api/activate-free-pass`,
+            {
+              method:
+                "POST",
+
+              headers: {
+
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${session.access_token}`
+
+              },
+
+              body:
+                JSON.stringify({
+                  sport:
+                    "baseball_mlb"
+                })
+            }
+          );
+
+
+        const data =
+          await res.json();
+
+
+        if (!res.ok) {
+
+          const detail =
+            typeof data?.detail ===
+              "string"
+              ? data.detail
+              : data?.detail?.message;
+
+
+          throw new Error(
+            detail ||
+            "Unable to activate MLB Free Pass."
+          );
+
+        }
+
+
+        console.log(
+          "⚾ MLB Free Pass activated:",
+          data
+        );
+
+
+        // Get fresh pass data and redraw UI
+        await refreshFreePassStatus();
+
+
+        // Automatically select MLB
+        const mlbBtn =
+          document.querySelector(
+            '.sport-buttons button[data-sport="baseball_mlb"]'
+          );
+
+
+        if (mlbBtn) {
+          mlbBtn.click();
+        }
+
+
+        alert(
+          "⚾ Your MLB Free Pass is active for the next 24 hours!"
+        );
+
+
+      } catch (err) {
+
+        console.error(
+          "❌ MLB Free Pass activation failed:",
+          err
+        );
+
+
+        alert(
+          err.message ||
+          "Unable to activate your MLB Free Pass."
+        );
+
+
+      } finally {
+
+        btn.disabled =
+          false;
+
+
+        if (
+          !window.hasActiveFreePass &&
+          !window.freePassUsed
+        ) {
+
+          btn.textContent =
+            "⚾ Try MLB Free for 24 Hours";
+
+        }
+
+      }
+
+    }
+  );
+
+
+// ===================================================
+// 🔍 Check Subscription Status (Frontend UI Updater)
+// ===================================================
 // ===================================================
 // 🔍 Check Subscription Status (Frontend UI Updater)
 // ===================================================
@@ -983,8 +1576,39 @@ const enableLoad = (enable) => {
   setRefreshEnabled(enable);
 };
 
-// ✅ Only active users can load or refresh
-enableLoad(subStatus === "active");
+// ===================================================
+// 🔐 Determine actual access
+// ===================================================
+
+const accessDate =
+  accessUntil
+    ? new Date(accessUntil)
+    : null;
+
+const hasFutureAccess =
+  accessDate &&
+  !Number.isNaN(accessDate.getTime()) &&
+  accessDate > new Date();
+
+const hasAccess =
+  subStatus === "active" ||
+  subStatus === "pending_cancel" ||
+  hasFutureAccess;
+
+window.hasPremiumAccess =
+  Boolean(hasAccess);
+
+// Also load authenticated free-pass status
+await refreshFreePassStatus();
+
+// Paid users can use everything.
+// Free users must select their matching pass sport.
+const hasCurrentAccess =
+  window.hasPremiumAccess ||
+  isFreePassActiveForSport(selectedSport);
+
+// Update controls
+enableLoad(hasCurrentAccess);
 
 
     // -----------------------------------------------------------
@@ -1026,21 +1650,70 @@ enableLoad(subStatus === "active");
         break;
 
       case "inactive":
-      case "canceled": {
-        let showSubscribe = true;
-        if (lastPayment) {
-          const lastPayDate = new Date(lastPayment);
-          const today = new Date();
-          const diffDays = Math.floor((today - lastPayDate) / (1000 * 60 * 60 * 24));
-          if (diffDays < 31) {
-            accessEl.style.display = "block";
-            accessEl.textContent = `Access ended recently (${31 - diffDays} days until renewal eligible)`;
-            showSubscribe = false;
-          }
-        }
-        if (showSubscribe && subscribeBtn) subscribeBtn.style.display = "inline-block";
-        break;
+case "canceled": {
+
+  let showSubscribe = true;
+
+  // ===================================================
+  // 🎁 ACTIVE FREE PASS
+  //
+  // The top banner already contains the Premium CTA,
+  // so don't show a second Subscribe button here.
+  // ===================================================
+  if (window.hasActiveFreePass) {
+    showSubscribe = false;
+  }
+
+
+  if (lastPayment) {
+
+    const lastPayDate =
+      new Date(lastPayment);
+
+    const today =
+      new Date();
+
+    const diffDays =
+      Math.floor(
+        (today - lastPayDate) /
+        (1000 * 60 * 60 * 24)
+      );
+
+
+    if (diffDays < 31) {
+
+      if (accessEl) {
+        accessEl.style.display =
+          "block";
+
+        accessEl.textContent =
+          `Access ended recently (${31 - diffDays} days until renewal eligible)`;
       }
+
+      showSubscribe = false;
+    }
+
+  }
+
+
+  if (
+    showSubscribe &&
+    subscribeBtn
+  ) {
+
+    subscribeBtn.style.display =
+      "inline-block";
+
+  } else if (subscribeBtn) {
+
+    subscribeBtn.style.display =
+      "none";
+
+  }
+
+
+  break;
+}
 
       default:
         if (subscribeBtn) subscribeBtn.style.display = "inline-block";
@@ -2761,11 +3434,75 @@ safeAddEventListener(gameSearchInput, "input", () => {
 // 🧩 Enable/Disable Load Data Button
 // ===================================================
 function enableLoadData() {
-  if (loadDataBtn) {
-    loadDataBtn.disabled = false;
-    loadDataBtn.classList.remove("disabled");
-    loadDataBtn.title = "";
+
+  if (!loadDataBtn) return;
+
+  // ===================================================
+  // 🔐 PAID OR MATCHING ACTIVE FREE SPORT PASS
+  // ===================================================
+  const hasAccess =
+    window.hasPremiumAccess ||
+    isFreePassActiveForSport(
+      selectedSport
+    );
+
+  if (!hasAccess) {
+
+    loadDataBtn.disabled = true;
+
+    loadDataBtn.classList.add(
+      "disabled"
+    );
+
+    loadDataBtn.style.opacity =
+      "0.5";
+
+    loadDataBtn.style.cursor =
+      "not-allowed";
+
+    if (
+      window.hasActiveFreePass &&
+      window.freePassSport
+    ) {
+
+      loadDataBtn.title =
+        "Your free pass is active for another sport";
+
+    } else {
+
+      loadDataBtn.title =
+        "Subscription or active free sport pass required";
+
+    }
+
+    return;
   }
+
+  loadDataBtn.disabled = false;
+
+  loadDataBtn.classList.remove(
+    "disabled"
+  );
+
+  loadDataBtn.style.opacity = "1";
+
+  loadDataBtn.style.cursor = "pointer";
+
+  loadDataBtn.title = "";
+
+  if (
+    !window.hasPremiumAccess &&
+    isFreePassActiveForSport(
+      selectedSport
+    )
+  ) {
+
+    console.log(
+      `🎁 Load Data unlocked by free pass: ${selectedSport}`
+    );
+
+  }
+
 }
 function disableLoadData() {
   if (loadDataBtn) {
@@ -3319,10 +4056,120 @@ syncBookmakerCheckboxes();
 
 
 
+// ===================================================
+// 📅 DATE CHANGE — PREMIUM VS FREE MLB PASS
+// ===================================================
+
+function getCentralTodayYMD() {
+
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone: "America/Chicago",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }
+    ).formatToParts(new Date());
+
+  const getPart = (type) =>
+    parts.find(
+      part => part.type === type
+    )?.value;
+
+  return (
+    `${getPart("year")}-` +
+    `${getPart("month")}-` +
+    `${getPart("day")}`
+  );
+}
+
+
 // ✅ Reload when date changes
-safeAddEventListener(dateInput, "change", () => {
-  if (selectedSport && dateInput.value) loadGames();
-});
+safeAddEventListener(
+  dateInput,
+  "change",
+  () => {
+
+    // ===================================================
+    // 🎁 FREE MLB PASS
+    // Today's board ONLY
+    // ===================================================
+    if (
+      !window.hasPremiumAccess &&
+      window.hasActiveFreePass
+    ) {
+
+      const centralToday =
+        getCentralTodayYMD();
+
+      if (
+        dateInput.value !== centralToday
+      ) {
+
+        // Put them back on today's slate
+        dateInput.value =
+          centralToday;
+
+        // Clear any games from the wrong date
+        selectedGames = [];
+
+        if (gameButtonContainer) {
+          gameButtonContainer.innerHTML = "";
+        }
+
+        if (resultsDiv) {
+          resultsDiv.innerHTML = `
+            <div
+              style="
+                padding:14px;
+                margin:12px 0;
+                border-radius:10px;
+                background:#eef6ff;
+                font-weight:600;
+                text-align:center;
+              "
+            >
+              ⚾ Your 24-hour MLB Free Pass includes
+              today's MLB board only.
+              <br>
+              Upgrade to Premium to view other dates
+              and all sports.
+            </div>
+          `;
+        }
+
+        console.log(
+          "🎁 Free pass date restricted to:",
+          centralToday
+        );
+
+        // Reload today's games
+        if (selectedSport) {
+          loadGames();
+        }
+
+        return;
+      }
+    }
+
+
+    // ===================================================
+    // 💳 PREMIUM USER
+    // Normal date behavior — past/today/future
+    // ===================================================
+    if (
+      selectedSport &&
+      dateInput.value
+    ) {
+
+      loadGames();
+
+    }
+
+  }
+);
 
 
 // ===================================================
@@ -3410,9 +4257,11 @@ async function loadData() {
 
   try {
     // ✅ Get logged-in user (for subscription validation)
-    const { data: { user } } = await supabase.auth.getUser();
-    const user_id = user?.id || "";
+    const { data: { session } } = await supabase.auth.getSession();
 
+    const user = session?.user;
+    const user_id = user?.id || "";
+    const accessToken = session?.access_token || "";
     if (!user_id) {
       // 🧱 Inline message for guests
       resultsDiv.innerHTML = `
@@ -3427,38 +4276,86 @@ async function loadData() {
       return;
     }
 
-    // ✅ Check subscription status before fetching
-    const subRes = await fetch(`${window.API_BASE}/api/subscription-details?user_id=${user_id}`);
-    const subData = await subRes.json();
-    if (subData.subscription_status !== "active") {
-      // 🚫 Inline banner for non-subscribers
-      resultsDiv.innerHTML = `
-        <div class="subscription-banner fade-in">
-          <h3>🔒 Subscription Required</h3>
-          <p>Your account does not have an active subscription.</p>
-          <button id="subscribeNowBtn" class="cta-btn">Subscribe Now</button>
-        </div>`;
-      document.getElementById("subscribeNowBtn")?.addEventListener("click", () => {
-        window.location.href = "/subscribe.html";
-      });
-      loadingDiv.style.display = "none";
-      return;
-    }
+    // ===================================================
+// 🔐 Verify Paid OR Active Free Sport Pass
+// ===================================================
 
+// Paid access was checked at login.
+// Refresh free-pass status for non-premium accounts.
+if (!window.hasPremiumAccess) {
+  await refreshFreePassStatus();
+}
+
+const hasPropsAccess =
+  window.hasPremiumAccess ||
+  isFreePassActiveForSport(
+    selectedSport
+  );
+
+if (!hasPropsAccess) {
+
+  resultsDiv.innerHTML = `
+    <div class="subscription-banner fade-in">
+
+      <h3>🔒 Access Required</h3>
+
+      <p>
+        This sport requires an active subscription
+        or matching free sport pass.
+      </p>
+
+      <button
+        id="subscribeNowBtn"
+        class="cta-btn"
+      >
+        Start First Month Free
+      </button>
+
+    </div>
+  `;
+
+  document
+    .getElementById("subscribeNowBtn")
+    ?.addEventListener(
+      "click",
+      () => {
+        window.location.href =
+          "/subscribe.html";
+      }
+    );
+
+  loadingDiv.style.display = "none";
+
+  return;
+}
     // ===================================================
     // 🔍 Build query params
     // ===================================================
     const params = new URLSearchParams();
+
     params.append("sport", selectedSport);
     params.append("date", dateInput.value);
-    params.append("user_id", user_id);
-    selectedMarkets.forEach((m) => params.append("markets", m));
-    selectedGameIds.forEach((id) => params.append("event_ids", id));
+
+    selectedMarkets.forEach((m) => {
+      params.append("markets", m);
+    });
+
+    selectedGameIds.forEach((id) => {
+      params.append("event_ids", id);
+    });
 
     // ===================================================
     // 🔍 Fetch + Inspect Response (Safe + Deduped)
     // ===================================================
-    const res = await fetch(`${window.API_BASE}/api/data?${params.toString()}`, { signal });
+    const res = await fetch(
+    `${window.API_BASE}/api/data?${params.toString()}`,
+    {
+      signal,
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    }
+  );
     const text = await res.text();
     console.log("📦 Raw API Response:", text);
 
@@ -5978,13 +6875,32 @@ if (signupForm) {
 
       const user = data.user;
       if (user) {
-        await fetch(`${window.API_BASE}/api/create-user`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: user.id, email }),
-        });
+        const createUserRes = await fetch(
+  `${window.API_BASE}/api/create-user`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      user_id: user.id,
+      email: email
+    })
+  }
+);
 
-        alert("✅ Account created! Please check your email to verify your account before signing in.");
+if (!createUserRes.ok) {
+  const errorText = await createUserRes.text();
+
+  throw new Error(
+    errorText ||
+    "Unable to create user profile."
+  );
+}
+
+alert(
+  "✅ Account created! Please check your email to verify your account before signing in."
+);
       }
     } catch (err) {
       alert(`Sign-up failed: ${err.message}`);
@@ -5999,69 +6915,575 @@ if (signupForm) {
 }
 
 
-// --- Sign Out ---
-signoutBtn.addEventListener("click", async () => {
-  signoutBtn.classList.add("loading");
-  document.getElementById("logout-spinner").style.display = "inline-block";
+// ===================================================
+// 🧹 Clear Account-Specific Dashboard State
+// ===================================================
+function resetAccountScopedState() {
 
-  await supabase.auth.signOut();
-  authContainer.style.display = "flex";
-  mainContent.style.display = "none";
+  console.log("🧹 Clearing account-specific browser state");
 
-  signoutBtn.classList.remove("loading");
-  document.getElementById("logout-spinner").style.display = "none";
-});
+  // ===================================================
+  // 1️⃣ Reset actual dashboard selection variables
+  // ===================================================
+  selectedSport = null;
+  selectedMarkets = [];
+  selectedGames = [];
 
+  // Reset access until the next account is checked
+  window.hasPremiumAccess = false;
 
-// --- Show/Hide Main Content ---
-function showMainContent() {
-  authContainer.style.display = "none";
-  mainContent.style.display = "block";
+  // Reset active filter state
+  activeFilter = null;
+  window.activeOptimalFilter = null;
+
+  // ===================================================
+  // 2️⃣ Stop any request still running
+  // ===================================================
+  if (currentController) {
+    try {
+      currentController.abort();
+    } catch (err) {
+      console.warn("⚠️ Could not abort old request:", err);
+    }
+
+    currentController = null;
+  }
+
+  // ===================================================
+  // 3️⃣ Completely clear cached games
+  // ===================================================
+  Object.keys(eventCache).forEach((key) => {
+    delete eventCache[key];
+  });
+
+  // ===================================================
+  // 4️⃣ Clear loaded prop datasets
+  // ===================================================
+  window.lastRenderedData = [];
+  window.fullDataset = [];
+  window.baseNoVigCache = {};
+  window.groupedFinal = {};
+
+  // ===================================================
+  // 5️⃣ Clear selected sport buttons
+  // ===================================================
+  sportButtons.forEach((btn) => {
+    btn.classList.remove("active");
+  });
+
+  // ===================================================
+  // 6️⃣ Clear selected market buttons
+  // ===================================================
+  document
+    .querySelectorAll(".market-list button[data-market]")
+    .forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+  // Hide all sport market sections
+  Object.keys(SPORT_MARKETS).forEach((sport) => {
+
+    const marketGroup =
+      document.getElementById(`${sport}Markets`);
+
+    if (marketGroup) {
+      marketGroup.style.display = "none";
+    }
+
+  });
+
+  // ===================================================
+  // 7️⃣ Completely clear games
+  // ===================================================
+  document
+    .querySelectorAll(".game-btn")
+    .forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+  if (gameButtonContainer) {
+    gameButtonContainer.innerHTML = "";
+    gameButtonContainer.style.display = "none";
+  }
+
+  if (gameFilterContainer) {
+    gameFilterContainer.style.display = "none";
+  }
+
+  if (gameSearchInput) {
+    gameSearchInput.value = "";
+  }
+
+  // Hide Refresh Games button
+  if (refreshGamesBtn) {
+    refreshGamesBtn.style.display = "none";
+  }
+
+  // ===================================================
+  // 8️⃣ Clear rendered props/table
+  // ===================================================
+  if (resultsDiv) {
+    resultsDiv.innerHTML = "";
+  }
+
+  if (progressText) {
+    progressText.textContent = "";
+  }
+
+  // ===================================================
+  // 9️⃣ Clear Pick Tracker
+  // ===================================================
+  if (window.pickTracker?.selections) {
+    window.pickTracker.selections.clear();
+  }
+
+  document
+    .querySelectorAll(
+      ".tracker-selected, .picked, .selected, [data-selected='true']"
+    )
+    .forEach((el) => {
+
+      el.classList.remove(
+        "tracker-selected",
+        "picked",
+        "selected"
+      );
+
+      el.removeAttribute("data-selected");
+    });
+
+  if (typeof updatePickTrackerBarUI === "function") {
+    updatePickTrackerBarUI();
+  }
+
+  // ===================================================
+  // 🔟 Clear filter button highlights
+  // ===================================================
+  document
+    .querySelectorAll(".active-filter")
+    .forEach((btn) => {
+      btn.classList.remove("active-filter");
+    });
+
+  // ===================================================
+  // 1️⃣1️⃣ Reset data buttons
+  // ===================================================
+  disableLoadData();
+
+  if (typeof setRefreshEnabled === "function") {
+    setRefreshEnabled(false);
+  }
+
+  console.log("✅ Account-specific state fully cleared");
 }
 
-// --- Auto-Redirect if Already Logged In ---
-supabase.auth.getSession().then(({ data }) => {
-  const session = data.session;
-  if (session?.user) {
-    console.log("Auto-login session found:", session.user.email);
-    showMainContent();
-    checkSubscriptionStatus(session.user.id); // ✅ updated call
-  }
-});
 
-// --- Auth State Listener ---
-supabase.auth.onAuthStateChange((event, session) => {
-  const body = document.body;
-  const authContainer = document.getElementById("auth-container");
-  const mainContent = document.getElementById("main-content");
+// ===================================================
+// 🚪 Sign Out — CLEAN LOCAL ACCOUNT SWITCH
+// ===================================================
+if (signoutBtn) {
 
-  if (session && session.user) {
-    console.log("✅ Authenticated user:", session.user.email);
-    // Show dashboard, hide login
-    body.classList.remove("auth-mode");
-    authContainer.style.display = "none";
-    mainContent.style.display = "block";
+  signoutBtn.addEventListener("click", async () => {
+
+    signoutBtn.classList.add("loading");
+
+    const logoutSpinner =
+      document.getElementById("logout-spinner");
+
+    if (logoutSpinner) {
+      logoutSpinner.style.display = "inline-block";
+    }
+
+    try {
+
+      console.log("🚪 Signing out current browser session...");
+
+      // IMPORTANT:
+      // Only sign out THIS browser session.
+      // Avoid Supabase global logout request.
+      const { error } =
+        await supabase.auth.signOut({
+          scope: "local"
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log("✅ Local Supabase session cleared");
+
+      // Clear any dashboard state we know about
+      resetAccountScopedState();
+
+      // Completely wipe JS memory/cache by reloading
+      window.location.reload();
+
+    } catch (err) {
+
+      console.error(
+        "❌ Sign out error:",
+        err
+      );
+
+      alert(
+        "Unable to sign out. Check console for details."
+      );
+
+      signoutBtn.classList.remove("loading");
+
+      if (logoutSpinner) {
+        logoutSpinner.style.display = "none";
+      }
+
+    }
+
+  });
+
+}
+
+// ===================================================
+// 🌐 PUBLIC LANDING + AUTH MODAL
+// ===================================================
+
+function openAuthModal(mode = "signin") {
+
+  if (!authContainer) return;
+
+
+  authContainer.classList.add(
+    "open"
+  );
+
+  authContainer.style.display =
+    "flex";
+
+  authContainer.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  document.body.classList.add(
+    "auth-modal-open"
+  );
+
+
+  // -----------------------------------
+  // Focus requested form
+  // -----------------------------------
+  if (mode === "signup") {
+
+    setTimeout(() => {
+
+      document
+        .getElementById(
+          "signup-email"
+        )
+        ?.focus();
+
+    }, 50);
+
   } else {
-    console.log("🚪 User logged out or not authenticated");
-    // Hide dashboard completely
-    body.classList.add("auth-mode");
-    authContainer.style.display = "block";
-    mainContent.style.display = "none";
+
+    setTimeout(() => {
+
+      document
+        .getElementById(
+          "signin-email"
+        )
+        ?.focus();
+
+    }, 50);
+
   }
-});
 
-// Set initial state on page load
-(async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  const body = document.body;
+}
 
-  if (session && session.user) {
-    body.classList.remove("auth-mode");
-  } else {
-    body.classList.add("auth-mode");
+
+
+function closeAuthModal() {
+
+  if (!authContainer) return;
+
+
+  authContainer.classList.remove(
+    "open"
+  );
+
+  authContainer.style.display =
+    "none";
+
+  authContainer.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  document.body.classList.remove(
+    "auth-modal-open"
+  );
+
+}
+
+
+
+// ===================================================
+// 🌐 LOGGED-OUT PUBLIC LANDING
+// ===================================================
+function showGuestLanding() {
+
+  window.hasPremiumAccess = false;
+
+
+  if (
+    typeof disableLoadData ===
+    "function"
+  ) {
+
+    disableLoadData();
+
   }
-})();
 
+
+  if (
+    typeof setRefreshEnabled ===
+    "function"
+  ) {
+
+    setRefreshEnabled(false);
+
+  }
+
+
+  document.body.classList.add(
+    "auth-mode"
+  );
+
+
+  if (publicLanding) {
+
+    publicLanding.style.display =
+      "block";
+
+  }
+
+
+  if (mainContent) {
+
+    mainContent.style.display =
+      "none";
+
+  }
+
+
+  closeAuthModal();
+
+
+  console.log(
+    "🌐 Public landing page shown"
+  );
+
+}
+
+
+
+// ===================================================
+// ✅ LOGGED-IN DASHBOARD
+// ===================================================
+function showMainContent() {
+
+  document.body.classList.remove(
+    "auth-mode"
+  );
+
+
+  if (publicLanding) {
+
+    publicLanding.style.display =
+      "none";
+
+  }
+
+
+  closeAuthModal();
+
+
+  if (mainContent) {
+
+    mainContent.style.display =
+      "block";
+
+  }
+
+
+  console.log(
+    "✅ Dashboard shown for signed-in user"
+  );
+
+}
+
+
+
+// ===================================================
+// 🧭 PUBLIC BUTTONS
+// ===================================================
+
+openAuthBtn
+  ?.addEventListener(
+    "click",
+    () => {
+
+      openAuthModal("signin");
+
+    }
+  );
+
+
+// ===================================================
+// 🆓 NAV TRY FREE BUTTON
+// ===================================================
+
+document
+  .getElementById("navTryFreeBtn")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      tryMlbFreeLandingBtn?.click();
+
+    }
+  );
+
+
+tryMlbFreeLandingBtn
+  ?.addEventListener(
+    "click",
+    () => {
+
+      openAuthModal("signup");
+
+    }
+  );
+
+
+closeAuthBtn
+  ?.addEventListener(
+    "click",
+    closeAuthModal
+  );
+
+
+// Click dark background to close
+authContainer
+  ?.addEventListener(
+    "click",
+    (event) => {
+
+      if (
+        event.target ===
+        authContainer
+      ) {
+
+        closeAuthModal();
+
+      }
+
+    }
+  );
+
+
+
+// ESC closes modal
+document.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (
+      event.key === "Escape" &&
+      authContainer
+        ?.classList
+        .contains("open")
+    ) {
+
+      closeAuthModal();
+
+    }
+
+  }
+);
+
+
+
+// ===================================================
+// 🔄 AUTO LOGIN
+// ===================================================
+supabase.auth
+  .getSession()
+  .then(
+    async ({ data }) => {
+
+      const session =
+        data.session;
+
+
+      if (session?.user) {
+
+        console.log(
+          "Auto-login session found:",
+          session.user.email
+        );
+
+
+        showMainContent();
+
+
+        await checkSubscriptionStatus(
+          session.user.id
+        );
+
+
+      } else {
+
+        showGuestLanding();
+
+      }
+
+    }
+  );
+
+
+
+// ===================================================
+// 🔐 AUTH STATE LISTENER
+// ===================================================
+supabase.auth.onAuthStateChange(
+  (event, session) => {
+
+    if (
+      session &&
+      session.user
+    ) {
+
+      console.log(
+        "✅ Authenticated user:",
+        session.user.email
+      );
+
+
+      showMainContent();
+
+
+    } else {
+
+      console.log(
+        "🚪 User logged out or not authenticated"
+      );
+
+
+      showGuestLanding();
+
+    }
+
+  }
+);
 
 
 // -----------------------------------------------------------
@@ -8066,4 +9488,40 @@ document.querySelectorAll(".edge-tab").forEach(tab => {
       .getElementById(`edgeTab-${target}`)
       ?.classList.add("active");
   });
+});
+
+// ===================================================
+// 📅 MAIN PROPS — DEFAULT DATE TO CENTRAL TIME
+// ===================================================
+window.addEventListener("load", () => {
+
+  const input =
+    document.getElementById("dateInput");
+
+  if (!input) return;
+
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone: "America/Chicago",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }
+    ).formatToParts(new Date());
+
+  const getPart = (type) =>
+    parts.find(p => p.type === type)?.value;
+
+  const centralToday =
+    `${getPart("year")}-${getPart("month")}-${getPart("day")}`;
+
+  input.value = centralToday;
+
+  console.log(
+    "📅 Main props default date (Central):",
+    centralToday
+  );
+
 });

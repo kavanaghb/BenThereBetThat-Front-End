@@ -38,6 +38,12 @@
 
 </head>
 
+
+
+
+
+<body>
+
 <!-- ===================================================
      📦 Pick Tracker Bottom Bar
 =================================================== -->
@@ -59,109 +65,659 @@
 
 
 
-
-<body>
-
-
-
-
-  <!-- ===============================
-       🔐 Authentication Section
-  =============================== -->
-  <div id="auth-container">
+<!-- ===================================================
+     🌐 PUBLIC LANDING PAGE — LOGGED OUT USERS
+=================================================== -->
+<section
+  id="publicLanding"
+  class="public-landing"
+  style="display:none;"
+>
 
   <!-- ===============================
-       🔥 Homepage Marketing (NEW)
+       🧭 Public Navigation
   =============================== -->
+  <header class="landing-nav">
 
-  <div class="auth-marketing premium-hero">
-
-  <!-- 🔥 Blurred Background -->
-  <div class="hero-bg"></div>
-  <div class="hero-overlay"></div>
-
-  <div class="hero-content">
-    <h1 class="hero-headline">
-      DFS Slips & <span class="highlight-ev">+EV Team Picks</span>  
-    <br>
-    <span class="headline-sub">Built to Beat the Books</span>
-  </h1>
-
-    <p class="hero-subheadline">
-    Now Featuring Ben’s NCAABB <span class="ev-highlight">EV+</span> Model
-    </p>
-
-    <div class="promo-badge premium">
-      <div class="promo-eyebrow">EARLY ACCESS</div>
-      <div class="promo-code">BETTHAT</div>
-      <div class="promo-subtext">First Month FREE • Cancel Anytime</div>
+    <div class="landing-brand">
+      <span class="landing-brand-ben">Ben</span>
+      There
+      <span class="landing-brand-bet">Bet</span>
+      That<span class="landing-brand-dot">!</span>
     </div>
 
-    <ul class="hero-bullets">
-      <li> The Best Analytics for PrizePicks, Underdog & Betr</li>
-      <li> Live Vegas vs DFS Comparison</li>
-      <li> Proprietary NCAABB EV+ Picks</li>
-      <li> Auto-Build Slips in Seconds</li>
-      <li> Pick tracker and historic analytics to trend sucess!</li>
-    </ul>
+    <div class="landing-nav-actions">
 
-  </div>
+  <button
+    id="navTryFreeBtn"
+    class="landing-nav-try-btn"
+    type="button"
+  >
+    Try Free
+  </button>
+
+  <button
+    id="openAuthBtn"
+    class="landing-signin-btn"
+    type="button"
+  >
+    Sign In
+  </button>
+
 </div>
 
-  <!-- 🔐 EXISTING AUTH CARD (UNCHANGED) -->
-  <div class="auth-card">
+  </header>
 
-    <h1 class="app-title">
-      <span class="app-highlight">Ben</span> There <span class="app-highlight">Bet</span> That<span class="app-dot">!</span>
-    </h1>
-    <p class="app-subtitle">
-     SMART SPORTS INSIGHTS • REAL-TIME EDGE
+<!-- ===================================================
+     🚀 PLATFORM FEATURE STRIP
+=================================================== -->
+<section class="landing-feature-strip">
+
+  <div class="landing-feature-strip-inner">
+
+    <div class="landing-feature-item">
+      <span>📊</span>
+
+      <div>
+        <strong>DFS Props</strong>
+        <small>
+          PrizePicks • Underdog • Betr
+        </small>
+      </div>
+    </div>
+
+
+    <div class="landing-feature-item">
+      <span>📈</span>
+
+      <div>
+        <strong>Game Lines</strong>
+        <small>
+          Spreads • Totals • Moneylines
+        </small>
+      </div>
+    </div>
+
+
+    <div class="landing-feature-item">
+      <span>🏀</span>
+
+      <div>
+        <strong>Proprietary Models</strong>
+        <small>
+          Market-based EV analysis
+        </small>
+      </div>
+    </div>
+
+
+    <div class="landing-feature-item">
+      <span>🎯</span>
+
+      <div>
+        <strong>Track Results</strong>
+        <small>
+          Picks • Slips • Analytics
+        </small>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+<!-- ===================================================
+     🎯 PROFESSIONAL LANDING HERO
+=================================================== -->
+<main class="landing-hero">
+
+  <div class="landing-hero-inner">
+
+    <!-- =================================================
+         LEFT — VALUE + CTA
+    ================================================== -->
+    <div class="landing-copy">
+
+   
+
+  <h1>
+    <span class="headline-line">Compare the Market.</span>
+    <span class="headline-line headline-accent">Find the Edge.</span>
+  </h1>
+
+      <p class="landing-description">
+        Market intelligence for DFS props and straight bets using
+          consensus pricing, no-vig probabilities and proprietary models
+        — with built-in pick tracking.
+      </p>
+
+
+      <!-- ===============================
+           PRIMARY ACTIONS
+      =============================== -->
+      <div class="landing-actions">
+
+        <button
+          id="tryMlbFreeLandingBtn"
+          class="landing-free-btn"
+          type="button"
+        >
+          ⚾ Try MLB Free for 24 Hours
+        </button>
+
+        <a
+          href="https://www.youtube.com/watch?v=uJaciCRcLsQ"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="landing-tutorial-btn"
+        >
+          ▶ Watch Tutorial
+        </a>
+
+
+      </div>
+
+      <p class="landing-no-card">
+        <span class="no-card-desktop">
+          ✓ 24-HOUR MLB ACCESS • NO CREDIT CARD REQUIRED
+        </span>
+
+        <span class="no-card-mobile">
+          ✓ No card required • Instant 24-hour access
+        </span>
+
+
+
+      <!-- ===============================
+           PREMIUM NOTE
+      =============================== -->
+      <div class="landing-premium-note">
+
+        <div>
+          <strong>Want the full platform?</strong>
+          Unlock every sport, future slates,
+          models, tracking and advanced analytics.
+        </div>
+
+        <div class="landing-promo-text">
+          First month FREE with
+          <span class="landing-promo-code">BETTHAT</span>
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         RIGHT — PRODUCT SHOWCASE
+    ================================================== -->
+    <div class="landing-product-showcase">
+
+      <div class="product-glow"></div>
+
+      <div class="product-window">
+
+        <!-- Fake browser/app top bar -->
+        <div class="product-window-top">
+
+          <div class="product-window-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="product-window-title">
+            BEN THERE BET THAT!
+          </div>
+
+          <div class="product-live-pill">
+            ANALYTICS
+          </div>
+
+        </div>
+
+
+        <!-- Main showcase -->
+        <div class="product-window-body">
+
+          <div class="product-preview-heading">
+            Your Sports Betting Analytics Toolkit
+          </div>
+
+          <div class="product-preview-subheading">
+            One platform. Multiple ways to find and track an edge.
+          </div>
+
+
+          <!-- ===========================================
+               FEATURE GRID
+          ============================================ -->
+          <div class="product-feature-grid">
+
+
+            <!-- DFS -->
+            <div class="product-feature-card featured-card">
+
+              <div class="feature-card-icon">
+                📊
+              </div>
+
+              <div class="feature-card-copy">
+
+                <span class="feature-card-label">
+                  DFS PROP EDGE
+                </span>
+
+                <strong>
+                  Compare DFS vs Vegas
+                </strong>
+
+                <p>
+                  PrizePicks, Underdog & Betr against
+                  sportsbook consensus and no-vig probability.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- Game Lines -->
+            <div class="product-feature-card">
+
+              <div class="feature-card-icon">
+                📈
+              </div>
+
+              <div class="feature-card-copy">
+
+                <span class="feature-card-label">
+                  STRAIGHT BETS
+                </span>
+
+                <strong>
+                  Game Lines EV
+                </strong>
+
+                <p>
+                  Evaluate moneylines, spreads and totals
+                  for market value.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- NCAA -->
+            <div class="product-feature-card">
+
+              <div class="feature-card-icon">
+                🏀
+              </div>
+
+              <div class="feature-card-copy">
+
+                <span class="feature-card-label">
+                  PROPRIETARY MODELS
+                </span>
+
+                <strong>
+                   NCAA Basketball + MLB
+                </strong>
+
+              <p>
+                  Proprietary model analysis paired with
+                  sportsbook market pricing.
+              </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- Tracking -->
+            <div class="product-feature-card">
+
+              <div class="feature-card-icon">
+                🎯
+              </div>
+
+              <div class="feature-card-copy">
+
+                <span class="feature-card-label">
+                  PERFORMANCE
+                </span>
+
+                <strong>
+                  Bet Tracking & Analytics
+                </strong>
+
+                <p>
+                  Save picks, grade results and analyze
+                  your historical performance.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ===========================================
+               BOTTOM MARKET SIGNAL BAR
+          ============================================ -->
+          <div class="product-signal-bar">
+
+            <div class="product-signal">
+              <span>🧮</span>
+              No-Vig Probability
+            </div>
+
+            <div class="product-signal">
+              <span>🔥</span>
+              +EV Filters
+            </div>
+
+            <div class="product-signal">
+              <span>⚡</span>
+              Line Differences
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ===================================================
+     📄 PUBLIC LANDING FOOTER
+=================================================== -->
+<footer class="landing-footer">
+
+  <div class="landing-footer-inner">
+
+    <div class="landing-footer-brand">
+      <span>Ben</span> There <span>Bet</span> That!
+    </div>
+
+    <p class="landing-footer-disclaimer">
+      Ben There Bet That provides sports analytics and statistics
+      for informational and entertainment purposes only.
+      We do not accept wagers, offer fantasy contests,
+      or facilitate real-money gaming.
     </p>
 
-    <!-- Sign In Form -->
-    <form id="signin-form" class="auth-form">
+    <p class="landing-footer-copyright">
+      © 2026 Ben There Bet That. All rights reserved.
+    </p>
+
+  </div>
+
+</footer>
+
+
+<!-- ===================================================
+     🌐 CLOSE PUBLIC LANDING PAGE
+=================================================== -->
+</section>
+
+<!-- ===================================================
+     🔐 AUTHENTICATION MODAL
+=================================================== -->
+<div
+  id="auth-container"
+  class="auth-modal-overlay"
+  aria-hidden="true"
+  style="display:none;"
+>
+
+  <div
+    class="auth-card auth-card-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="authModalTitle"
+  >
+
+    <button
+      id="closeAuthBtn"
+      class="auth-modal-close"
+      type="button"
+      aria-label="Close"
+    >
+      &times;
+    </button>
+
+
+    <h1
+  id="authModalTitle"
+  class="app-title auth-brand-title"
+>
+  <span class="auth-brand-line">
+    <span class="auth-brand-blue">BEN</span>
+    THERE
+  </span>
+
+  <span class="auth-brand-line">
+    <span class="auth-brand-blue">BET</span>
+    THAT<span class="auth-brand-bang">!</span>
+  </span>
+</h1>
+
+    <p class="app-subtitle">
+      SMART SPORTS INSIGHTS • REAL-TIME EDGE
+    </p>
+
+
+    <!-- ===============================
+         🔐 SIGN IN
+    =============================== -->
+    <form
+      id="signin-form"
+      class="auth-form"
+    >
+
       <h2>Sign In</h2>
-      <input type="email" id="signin-email" placeholder="Email" required />
-      <input type="password" id="signin-password" placeholder="Password" required />
-      <button type="submit" id="signin-btn" class="primary-btn">
+
+      <input
+        type="email"
+        id="signin-email"
+        placeholder="Email"
+        autocomplete="email"
+        required
+      />
+
+      <input
+        type="password"
+        id="signin-password"
+        placeholder="Password"
+        autocomplete="current-password"
+        required
+      />
+
+      <button
+        type="submit"
+        id="signin-btn"
+        class="primary-btn"
+      >
         Sign In
-        <span id="signin-spinner" class="spinner" style="display:none;"></span>
+
+        <span
+          id="signin-spinner"
+          class="spinner"
+          style="display:none;"
+        ></span>
+
       </button>
+
     </form>
 
-    <div class="divider">OR</div>
 
-    <!-- Sign Up Form -->
-    <form id="signup-form" class="auth-form">
-      <h2>Create Account</h2>
-      <input type="email" id="signup-email" placeholder="Email" required />
-      <input type="password" id="signup-password" placeholder="Password" required />
-      <input type="password" id="signup-confirm" placeholder="Confirm Password" required />
-      <button type="submit" id="signup-btn" class="secondary-btn">
-        Sign Up
-        <span id="signup-spinner" class="spinner" style="display:none;"></span>
+    <div class="divider">
+      OR
+    </div>
+
+
+    <!-- ===============================
+         ⚾ CREATE FREE ACCOUNT
+    =============================== -->
+    <form
+      id="signup-form"
+      class="auth-form"
+    >
+
+      <h2>Create Free Account</h2>
+
+      <p class="auth-free-note">
+        Get 24 hours of today's MLB prop board.
+        No credit card required.
+      </p>
+
+      <input
+        type="email"
+        id="signup-email"
+        placeholder="Email"
+        autocomplete="email"
+        required
+      />
+
+      <input
+        type="password"
+        id="signup-password"
+        placeholder="Password"
+        autocomplete="new-password"
+        required
+      />
+
+      <input
+        type="password"
+        id="signup-confirm"
+        placeholder="Confirm Password"
+        autocomplete="new-password"
+        required
+      />
+
+      <button
+        type="submit"
+        id="signup-btn"
+        class="secondary-btn"
+      >
+        Create Account
+
+        <span
+          id="signup-spinner"
+          class="spinner"
+          style="display:none;"
+        ></span>
+
       </button>
+
     </form>
 
-    <button id="forgot-btn" class="link-btn">Forgot Password?</button>
+
+    <button
+      id="forgot-btn"
+      class="link-btn"
+      type="button"
+    >
+      Forgot Password?
+    </button>
+
+
     <p id="auth-message"></p>
 
-    <!-- ✅ Disclaimer should be here, inside auth-card -->
-    <p class="login-disclaimer">
-      <strong>Disclaimer:</strong> Ben There Bet That provides sports analytics and statistics dashboards 
-      for informational and entertainment purposes only. We do not accept wagers, offer fantasy contests, 
-      or facilitate real-money gaming of any kind.
-    </p>
-  </div>
-</div>
 
+    <p class="login-disclaimer">
+
+      <strong>Disclaimer:</strong>
+
+      Ben There Bet That provides sports analytics and
+      statistics dashboards for informational and
+      entertainment purposes only. We do not accept wagers,
+      offer fantasy contests, or facilitate real-money gaming
+      of any kind.
+
+    </p>
+
+  </div>
+
+</div>
 
   <!-- ===============================
        🏟️ Main Dashboard
   =============================== -->
-  <div id="main-content" style="display:none;">
+ <!-- ===============================
+     🏟️ Main Dashboard
+=============================== -->
+<div id="main-content" style="display:none;">
 
-      <!-- ======================================
+  <!-- ===================================================
+       ⚾ ACTIVE MLB FREE PASS BANNER
+  =================================================== -->
+  <div
+    id="freePassBanner"
+    class="free-pass-banner"
+    style="display:none;"
+  >
+
+    <div class="free-pass-banner-content">
+
+      <div class="free-pass-banner-text">
+
+        <strong class="free-pass-banner-title">
+          ⚾ Your 24-hour MLB Free Pass is active.
+        </strong>
+
+        <div>
+          You can access
+          <strong>today's MLB prop board</strong>
+          during your trial.
+        </div>
+
+        <div class="free-pass-premium-line">
+          <strong>Premium unlocks:</strong>
+          all sports, future dates, Straight Bet / Game Lines,
+          Bet Tracking, and Tracking Analytics.
+        </div>
+
+        <div class="free-pass-promo-line">
+          🎟️ Use promo code
+          <span class="free-pass-promo-code">
+            BETTHAT
+          </span>
+          at checkout for your first month
+          <strong>FREE</strong>.
+        </div>
+
+        <div
+          id="freePassBannerExpires"
+          class="free-pass-expiration"
+        ></div>
+
+      </div>
+
+      <button
+        id="freePassUpgradeBtn"
+        class="free-pass-upgrade-btn"
+        type="button"
+      >
+        Start First Month Free
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ======================================
        🚀 Getting Started Tutorial Callout
   ====================================== -->
   <div class="start-here-box">
@@ -173,7 +729,7 @@
     <a href="https://www.youtube.com/watch?v=uJaciCRcLsQ"
        target="_blank"
        class="tutorial-btn">
-      ▶ Getting Started Tutorial (5 min)
+      ▶ Getting Started Tutorial
     </a>
   </div>
 
@@ -192,15 +748,55 @@
   <!-- Subscription Control Buttons -->
 <!-- Subscription Control Buttons -->
 <div id="subscription-controls" style="margin-top:12px;">
-  <button id="subscribeBtn" class="primary-btn" style="display:none;">Subscribe</button>
-  <button id="cancel-subscription-btn" class="secondary-btn" style="display:none;">Cancel Subscription</button>
-  <button id="resume-subscription-btn" class="primary-btn" style="display:none;">Resume Subscription</button>
-  <button id="manageBillingBtn" class="primary-btn" style="display:none;">Manage Billing</button>
+
+  <button id="subscribeBtn" class="primary-btn" style="display:none;">
+    Subscribe
+  </button>
+
+  <!-- ===================================================
+       ⚾ One-Time 24-Hour MLB Free Pass
+  =================================================== -->
+  <button
+    id="startMlbFreePassBtn"
+    class="primary-btn"
+    style="display:none;"
+  >
+    ⚾ Try MLB Free for 24 Hours
+  </button>
+
+  <p
+    id="freePassMessage"
+    style="
+      display:none;
+      margin:10px auto;
+      max-width:520px;
+      font-size:0.95rem;
+      font-weight:600;
+      color:#0d6efd;
+    "
+  ></p>
+
+  <button id="cancel-subscription-btn" class="secondary-btn" style="display:none;">
+    Cancel Subscription
+  </button>
+
+  <button id="resume-subscription-btn" class="primary-btn" style="display:none;">
+    Resume Subscription
+  </button>
+
+  <button id="manageBillingBtn" class="primary-btn" style="display:none;">
+    Manage Billing
+  </button>
+
   <button id="signout-btn" class="secondary-btn button-with-spinner">
     Sign Out
     <div id="logout-spinner" class="spinner-small" style="display:none;"></div>
   </button>
-  <button id="support-btn" class="secondary-btn">Contact Support</button>
+
+  <button id="support-btn" class="secondary-btn">
+    Contact Support
+  </button>
+
 </div>
 
 </div> <!-- closes subscription-container -->
