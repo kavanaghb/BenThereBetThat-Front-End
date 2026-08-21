@@ -685,17 +685,58 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize default platform UI
   updatePickTrackerBarUI();
 
-  // --------------------------------------------------
-  // 🏀 March Madness Model Button
-  // --------------------------------------------------
-  const openMarchMadnessBtn = document.getElementById("openMarchMadnessBtn");
+// --------------------------------------------------
+// 🏀 March Madness Model Button — PREMIUM ONLY
+// --------------------------------------------------
+const openMarchMadnessBtn =
+  document.getElementById("openMarchMadnessBtn");
 
-  if (openMarchMadnessBtn) {
-    openMarchMadnessBtn.addEventListener("click", () => {
-      console.log("🏀 Opening March Madness page");
-      window.location.href = "march-madness.html";
-    });
-  }
+if (openMarchMadnessBtn) {
+
+  openMarchMadnessBtn.addEventListener("click", async () => {
+
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+
+    // Guest
+    if (!session?.user) {
+
+      openAuthModal("signup");
+
+      return;
+    }
+
+    // Subscription state should normally already be loaded.
+    // Recheck if necessary.
+    if (!window.hasPremiumAccess) {
+
+      await checkSubscriptionStatus(
+        session.user.id
+      );
+
+    }
+
+    if (!window.hasPremiumAccess) {
+
+      alert(
+        "🏀 The March Madness Model is a Premium feature. " +
+        "Your MLB Free Pass includes MLB features only."
+      );
+
+      return;
+    }
+
+    console.log(
+      "🏀 Opening March Madness page"
+    );
+
+    window.location.href =
+      "march-madness.html";
+
+  });
+
+}
 
 
 
@@ -753,9 +794,37 @@ document.addEventListener("DOMContentLoaded", () => {
 const openGameLinesBtn = document.getElementById("openGameLinesBtn");
 
 if (openGameLinesBtn) {
-  openGameLinesBtn.addEventListener("click", () => {
-    window.location.href = "game-lines.html";
+
+  openGameLinesBtn.addEventListener("click", async () => {
+
+    const allowed =
+      await canUseMlbTrialFeatures();
+
+    if (!allowed) {
+
+      alert(
+        "📈 Game Lines EV requires Premium or an active 24-hour MLB Free Pass."
+      );
+
+      return;
+    }
+
+    // Paid users enter normally.
+    // MLB trial users are marked so Game Lines can lock them to MLB.
+    if (window.hasPremiumAccess) {
+
+      window.location.href =
+        "game-lines.html";
+
+    } else {
+
+      window.location.href =
+        "game-lines.html?trial=mlb";
+
+    }
+
   });
+
 }
 
 
@@ -763,15 +832,78 @@ if (openGameLinesBtn) {
 
 // Market Containers
 const hockeyMarkets = document.getElementById("icehockey_nhlMarkets");
-const ufcMarkets = document.getElementById("mma_mixed_martial_artsMarkets");
 const ncaabMarkets = document.getElementById("basketball_ncaabMarkets");
 const wnbaMarkets = document.getElementById("basketball_wnbaMarkets"); // ✅ FIXED
 const footballMarkets = document.getElementById("footballMarkets");
 const nbaMarkets = document.getElementById("nbaMarkets");
 const mlbMarkets = document.getElementById("mlbMarkets");
 
-const sportButtons = document.querySelectorAll(".sport-buttons button");
+const sportButtons =
+  document.querySelectorAll(
+    ".sport-buttons button[data-sport]"
+  );
 
+// ===================================================
+// 🔐 SPORT BUTTON ACCESS UI
+// Premium = all sports
+// MLB Free Pass = MLB active, other sports visible + locked
+// ===================================================
+function updateSportAccessUI() {
+
+  const buttons =
+    document.querySelectorAll(
+      ".sport-buttons button[data-sport]"
+    );
+
+  const hasMlbTrial =
+    !window.hasPremiumAccess &&
+    window.hasActiveFreePass &&
+    window.freePassSport === "baseball_mlb" &&
+    isFreePassActiveForSport("baseball_mlb");
+
+  buttons.forEach(btn => {
+
+    const sport =
+      btn.dataset.sport;
+
+    // Reset
+    btn.classList.remove(
+      "trial-locked-sport"
+    );
+
+    btn.removeAttribute(
+      "aria-disabled"
+    );
+
+    btn.title = "";
+
+    // Premium gets normal buttons
+    if (window.hasPremiumAccess) {
+      return;
+    }
+
+    // Active MLB trial
+    if (
+      hasMlbTrial &&
+      sport !== "baseball_mlb"
+    ) {
+
+      btn.classList.add(
+        "trial-locked-sport"
+      );
+
+      btn.setAttribute(
+        "aria-disabled",
+        "true"
+      );
+
+      btn.title =
+        "Premium required — your Free Pass includes MLB";
+    }
+
+  });
+
+}
 // 🎮 Game UI Elements
 const gameFilterContainer = document.getElementById("gameFilterContainer");
 const gameButtonContainer = document.getElementById("gameButtonContainer");
@@ -1124,7 +1256,38 @@ async function refreshFreePassStatus() {
 
 }
 
+// ===================================================
+// 🔐 MLB TRIAL FEATURE ACCESS
+// Premium = full access
+// Active MLB pass = MLB trial features
+// ===================================================
+async function canUseMlbTrialFeatures() {
 
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  // Not signed in
+  if (!session?.user) {
+    openAuthModal("signup");
+    return false;
+  }
+
+  // Paid subscriber
+  if (window.hasPremiumAccess) {
+    return true;
+  }
+
+  // Make sure free-pass state is current
+  await refreshFreePassStatus();
+
+  // Active MLB 24-hour pass
+  return (
+    window.hasActiveFreePass &&
+    window.freePassSport === "baseball_mlb" &&
+    isFreePassActiveForSport("baseball_mlb")
+  );
+}
 // ===================================================
 // ⚾ MLB FREE PASS — CUSTOMER UI
 // ===================================================
@@ -1161,18 +1324,22 @@ function updateMlbFreePassUI() {
   }
 
   if (message) {
+
     message.style.display =
       "none";
 
-    message.innerHTML = "";
+    message.innerHTML =
+      "";
   }
 
   if (banner) {
+
     banner.style.display =
       "none";
   }
 
   if (bannerExpires) {
+
     bannerExpires.textContent =
       "";
   }
@@ -1181,8 +1348,11 @@ function updateMlbFreePassUI() {
   // ===================================================
   // 💳 PREMIUM USER
   // Paid users see NONE of the free-pass UI
+  // All sports remain unlocked
   // ===================================================
   if (window.hasPremiumAccess) {
+
+    updateSportAccessUI();
 
     console.log(
       "💳 Premium account — free pass UI hidden"
@@ -1234,6 +1404,7 @@ function updateMlbFreePassUI() {
     // 🔵 Top dashboard banner
     // -----------------------------------
     if (banner) {
+
       banner.style.display =
         "block";
     }
@@ -1243,19 +1414,27 @@ function updateMlbFreePassUI() {
 
       bannerExpires.textContent =
         `Free MLB access ends ${expiresText}.`;
-
     }
 
 
     // -----------------------------------
     // 🔵 Subscription-area message
     // -----------------------------------
-if (message) {
-  // Expiration is already shown in the top banner.
-  // Avoid showing it twice.
-  message.innerHTML = "";
-  message.style.display = "none";
-}
+    if (message) {
+
+      // Expiration already shown above
+      message.innerHTML =
+        "";
+
+      message.style.display =
+        "none";
+    }
+
+
+    // -----------------------------------
+    // 🔒 Grey out Premium sports
+    // -----------------------------------
+    updateSportAccessUI();
 
 
     console.log(
@@ -1285,6 +1464,11 @@ if (message) {
         "block";
     }
 
+
+    // Remove trial styling after expiration
+    updateSportAccessUI();
+
+
     return;
   }
 
@@ -1313,6 +1497,9 @@ if (message) {
     message.style.display =
       "block";
   }
+
+
+  updateSportAccessUI();
 
 }
 
@@ -3969,30 +4156,68 @@ function updateSelectedMarkets() {
   selectedMarkets = activeBtns.map((b) => b.getAttribute("data-market"));
 }
 
-// 🧠 Main sport button logic (auto-renders markets + select/deselect support)
+// 🧠 Main sport button logic
+// Premium = all sports
+// MLB Free Pass = MLB only
 sportButtons.forEach((btn) => {
+
   btn.addEventListener("click", () => {
-    // --- UI reset ---
-    sportButtons.forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    selectedSport = btn.getAttribute("data-sport");
+
+    const requestedSport =
+      btn.getAttribute(
+        "data-sport"
+      );
+
+
     // ===================================================
-// 🥊 UFC sportsbook-only mode
+    // 🔒 MLB TRIAL — OTHER SPORTS REQUIRE PREMIUM
+    // ===================================================
+    const hasMlbTrial =
+      !window.hasPremiumAccess &&
+      window.hasActiveFreePass &&
+      window.freePassSport ===
+        "baseball_mlb" &&
+      isFreePassActiveForSport(
+        "baseball_mlb"
+      );
+
+
+    if (
+      hasMlbTrial &&
+      requestedSport !==
+        "baseball_mlb"
+    ) {
+
+      alert(
+        `${btn.textContent.trim()} is available with Premium.\n\n` +
+        `Your 24-hour Free Pass includes full MLB access.`
+      );
+
+      return;
+    }
+
+
+    // ===================================================
+    // ✅ NORMAL SPORT SELECTION
+    // ===================================================
+    sportButtons.forEach(
+      b =>
+        b.classList.remove(
+          "active"
+        )
+    );
+
+    btn.classList.add(
+      "active"
+    );
+
+    selectedSport =
+      requestedSport;
 // ===================================================
-if (selectedSport === "mma_mixed_martial_arts") {
-
-  window.selectedBooks = new Set([
-    "fanduel",
-    "draftkings",
-    "betmgm",
-    "fanatics"
-  ]);
-
-} else {
-
-  window.selectedBooks = new Set(ALL_BOOKS);
-
-}
+// 📚 Restore normal sportsbook comparison set
+// ===================================================
+window.selectedBooks =
+  new Set(ALL_BOOKS);
 
 persistSelectedBooks();
 syncBookmakerCheckboxes();
@@ -8636,13 +8861,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ===================================================
 // PICK TRACKER LOGIC
+// Premium OR active MLB Free Pass
 // ===================================================
 
-const trackerBtn = document.getElementById("openPickTrackerBtn");
+const trackerBtn =
+  document.getElementById("openPickTrackerBtn");
+
 if (trackerBtn) {
-  trackerBtn.addEventListener("click", () => {
-    window.location.href = "pick-tracker.html";
+
+  trackerBtn.addEventListener("click", async () => {
+
+    const allowed =
+      await canUseMlbTrialFeatures();
+
+    if (!allowed) {
+
+      alert(
+        "📊 Pick Tracker requires Premium or an active 24-hour MLB Free Pass."
+      );
+
+      return;
+    }
+
+    if (window.hasPremiumAccess) {
+
+      window.location.href =
+        "pick-tracker.html";
+
+    } else {
+
+      window.location.href =
+        "pick-tracker.html?trial=mlb";
+
+    }
+
   });
+
 }
 
 function getPlayFlag(projectedWinRate) {

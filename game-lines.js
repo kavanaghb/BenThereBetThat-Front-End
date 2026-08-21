@@ -10,6 +10,261 @@ let currentMlbView = "odds"; // odds | value | live
 let liveOddsRefreshTimer = null;
 
 // =====================================================
+// 🔐 GAME LINES ACCESS
+// Premium = all Game Lines
+// MLB Free Pass = MLB + today only
+// =====================================================
+
+let gameLinesIsMlbTrial = false;
+let gameLinesSubscriptionChecked = false;
+
+function getGameLinesCentralTodayYMD() {
+
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone: "America/Chicago",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }
+    ).formatToParts(new Date());
+
+  const getPart = type =>
+    parts.find(part => part.type === type)?.value;
+
+  return (
+    `${getPart("year")}-` +
+    `${getPart("month")}-` +
+    `${getPart("day")}`
+  );
+}
+
+
+async function resolveGameLinesAccess() {
+
+  try {
+
+    const {
+      data: { session }
+    } =
+      await window.supabase.auth.getSession();
+
+    // =====================================================
+    // 🚫 MUST BE SIGNED IN
+    // =====================================================
+    if (!session?.user) {
+
+      alert(
+        "Please sign in to access Game Lines."
+      );
+
+      window.location.href =
+        "index.html";
+
+      return false;
+    }
+
+
+    // =====================================================
+    // 💳 LOAD SUBSCRIPTION STATE ONCE
+    // =====================================================
+    if (
+      !gameLinesSubscriptionChecked &&
+      typeof checkSubscriptionStatus === "function"
+    ) {
+
+      await checkSubscriptionStatus(
+        session.user.id
+      );
+
+      gameLinesSubscriptionChecked = true;
+    }
+
+
+    // =====================================================
+    // 🎁 REFRESH FREE PASS STATE
+    // Important: trial can expire while page is open
+    // =====================================================
+    if (
+      !window.hasPremiumAccess &&
+      typeof refreshFreePassStatus === "function"
+    ) {
+
+      await refreshFreePassStatus();
+    }
+
+
+    const hasActiveMlbPass =
+      Boolean(
+        window.hasActiveFreePass &&
+        window.freePassSport === "baseball_mlb" &&
+        typeof isFreePassActiveForSport === "function" &&
+        isFreePassActiveForSport(
+          "baseball_mlb"
+        )
+      );
+
+
+    // =====================================================
+    // ⚾ DETERMINE TRIAL MODE
+    // =====================================================
+    gameLinesIsMlbTrial =
+      !window.hasPremiumAccess &&
+      hasActiveMlbPass;
+
+
+    // =====================================================
+    // 🔒 NO PREMIUM + NO ACTIVE PASS
+    // =====================================================
+    if (
+      !window.hasPremiumAccess &&
+      !hasActiveMlbPass
+    ) {
+
+      alert(
+        "Your MLB Free Pass has ended. " +
+        "Upgrade to Premium to continue using Game Lines."
+      );
+
+      window.location.href =
+        "index.html";
+
+      return false;
+    }
+
+
+    const sportSelect =
+      document.getElementById(
+        "sportSelect"
+      );
+
+    const dateInput =
+      document.getElementById(
+        "gameLinesDate"
+      );
+
+    const marchMadnessBtn =
+      document.getElementById(
+        "gameLinesMarchMadnessBtn"
+      );
+
+
+    // =====================================================
+    // ⚾ ACTIVE MLB TRIAL
+    // =====================================================
+    if (gameLinesIsMlbTrial) {
+
+      const today =
+        getGameLinesCentralTodayYMD();
+
+
+      if (sportSelect) {
+
+        sportSelect.value =
+          "baseball_mlb";
+
+        sportSelect.disabled =
+          true;
+
+        sportSelect.title =
+          "Your 24-hour Free Pass includes MLB.";
+      }
+
+
+      if (dateInput) {
+
+        dateInput.value =
+          today;
+
+        dateInput.min =
+          today;
+
+        dateInput.max =
+          today;
+
+        dateInput.disabled =
+          true;
+
+        dateInput.title =
+          "Your MLB Free Pass includes today's slate.";
+      }
+
+
+      // March Madness remains Premium only
+      if (marchMadnessBtn) {
+
+        marchMadnessBtn.style.display =
+          "none";
+      }
+
+
+      console.log(
+        "⚾ Game Lines running in MLB Free Pass mode"
+      );
+
+    }
+
+    // =====================================================
+    // 💳 PREMIUM
+    // =====================================================
+    else {
+
+      if (sportSelect) {
+
+        sportSelect.disabled =
+          false;
+
+        sportSelect.title =
+          "";
+      }
+
+
+      if (dateInput) {
+
+        dateInput.disabled =
+          false;
+
+        dateInput.removeAttribute(
+          "min"
+        );
+
+        dateInput.removeAttribute(
+          "max"
+        );
+
+        dateInput.title =
+          "";
+      }
+
+
+      if (marchMadnessBtn) {
+
+        marchMadnessBtn.style.display =
+          "";
+      }
+
+    }
+
+
+    return true;
+
+  }
+
+  catch (err) {
+
+    console.error(
+      "❌ Game Lines access check failed:",
+      err
+    );
+
+    return false;
+  }
+
+}
+
+// =====================================================
 // MODEL DEBUG MODE STATE
 // =====================================================
 
@@ -75,15 +330,27 @@ function setVisibleBooks(bookKeys) {
 // =====================================================
 // 📈 Game Lines EV — Rendering + Pick Tracker Integration
 // =====================================================
-
 async function initGameLines() {
 
   console.log("📈 Game Lines page loaded");
 
-  const container = document.getElementById("gameLinesResults");
+  const container =
+    document.getElementById("gameLinesResults");
 
   if (!container) {
     console.error("Missing gameLinesResults container");
+    return;
+  }
+
+  // =====================================================
+  // 🔐 CHECK ACCESS FIRST
+  // =====================================================
+  container.innerHTML = "Checking access...";
+
+  const accessAllowed =
+    await resolveGameLinesAccess();
+
+  if (!accessAllowed) {
     return;
   }
 
@@ -91,26 +358,98 @@ async function initGameLines() {
 
   try {
 
-    const dateInput = document.getElementById("gameLinesDate");
+    const dateInput =
+      document.getElementById("gameLinesDate");
 
-    const selectedSport =
+    // =====================================================
+    // 🏟️ GET SELECTED SPORT
+    // =====================================================
+    let selectedSport =
       document.getElementById("sportSelect")?.value ||
       "basketball_ncaab";
 
-    let url = `${window.API_BASE}/api/game-lines?sport=${encodeURIComponent(selectedSport)}`;
+    // =====================================================
+    // ⚾ MLB FREE PASS
+    // Force MLB + today's Central date
+    // =====================================================
+    if (gameLinesIsMlbTrial) {
 
-    if (dateInput?.value)
-      url += `&date=${dateInput.value}`;
+      selectedSport = "baseball_mlb";
 
-    const res = await fetch(url);
+      const today =
+        getGameLinesCentralTodayYMD();
 
-    const games = await res.json();
-
-    if (!games || games.length === 0) {
-      container.innerHTML = "No games found";
-      return;
+      if (dateInput) {
+        dateInput.value = today;
+      }
     }
 
+    // =====================================================
+    // 🌐 BUILD GAME LINES URL
+    // =====================================================
+    let url =
+      `${window.API_BASE}/api/game-lines` +
+      `?sport=${encodeURIComponent(selectedSport)}`;
+
+    if (dateInput?.value) {
+      url +=
+        `&date=${encodeURIComponent(dateInput.value)}`;
+    }
+
+    // =====================================================
+    // 🔐 GET AUTHENTICATED SESSION
+    // =====================================================
+    const {
+      data: { session }
+    } =
+      await window.supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error(
+        "No authenticated session."
+      );
+    }
+
+    // =====================================================
+    // 📡 LOAD GAME LINES WITH AUTH TOKEN
+    // =====================================================
+    const res =
+      await fetch(
+        url,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${session.access_token}`
+          }
+        }
+      );
+
+    if (!res.ok) {
+
+      const body =
+        await res.text();
+
+      throw new Error(
+        `Game Lines request failed ${res.status}: ${body}`
+      );
+    }
+
+    const games =
+      await res.json();
+
+    // =====================================================
+    // 🚫 NO GAMES
+    // =====================================================
+    if (
+      !Array.isArray(games) ||
+      games.length === 0
+    ) {
+
+      container.innerHTML =
+        "No games found";
+
+      return;
+    }
     
 currentGameLines = games;
 
@@ -1016,6 +1355,33 @@ if (modelBtn) {
   const refreshBtn = document.getElementById("refreshGameLinesBtn");
   const searchInput = document.getElementById("gameSearchInput");
   const sportSelect = document.getElementById("sportSelect");
+
+  const marchMadnessBtn =
+  document.getElementById(
+    "gameLinesMarchMadnessBtn"
+  );
+
+
+marchMadnessBtn
+  ?.addEventListener(
+    "click",
+    () => {
+
+      if (!window.hasPremiumAccess) {
+
+        alert(
+          "🏀 March Madness is a Premium feature."
+        );
+
+        return;
+      }
+
+
+      window.location.href =
+        "march-madness.html";
+
+    }
+  );
 
   updateModelDetailButtonLabel();
   sportSelect?.addEventListener("change", updateModelDetailButtonLabel);

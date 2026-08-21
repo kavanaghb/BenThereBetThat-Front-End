@@ -8343,7 +8343,7 @@ body.auth-modal-open {
   ------------------------------------------------ */
 
 
-  
+
 .landing-nav {
   position: sticky;
   top: 0;
@@ -8794,4 +8794,21 @@ body.auth-modal-open {
     font-size: 9px;
   }
 
+}
+
+/* ===================================================
+   🔒 MLB FREE PASS — LOCKED PREMIUM SPORTS
+=================================================== */
+
+.sport-buttons button.trial-locked-sport {
+  opacity: 0.38 !important;
+  filter: grayscale(0.85);
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.sport-buttons button.trial-locked-sport:hover {
+  opacity: 0.48 !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
