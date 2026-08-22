@@ -233,6 +233,18 @@ function ensureOptimizerDynamicStyles() {
       font-weight: 700;
     }
 
+    .dk-action-projection.manual {
+      font-weight: 800;
+    }
+
+    .dk-manual-projection-note {
+      display: block;
+      margin-top: 3px;
+      font-size: 11px;
+      opacity: 0.72;
+      font-weight: 700;
+    }
+
     .dk-lineup-results {
       display: block;
       width: 100%;
@@ -1459,6 +1471,23 @@ function getOptimizerPlayerActionsHtml(
         ${excluded ? "🚫 Excluded" : "Exclude"}
       </button>
 
+      <button
+        type="button"
+        class="dk-player-action-btn dk-action-projection ${player.manual_projection_active ? "manual active" : ""}"
+        data-dk-action="projection"
+        data-player-key="${escapeOptimizerHtml(
+          key
+        )}"
+        data-player-team="${escapeOptimizerHtml(
+          String(
+            player.team ||
+            ""
+          ).toUpperCase()
+        )}"
+      >
+        ${player.manual_projection_active ? "✎ Manual" : "Edit Proj"}
+      </button>
+
     </div>
   `;
 
@@ -1844,6 +1873,15 @@ function renderOptimizerClassicPlayers(
                       )
                     : "—"
                 }
+                ${
+                  player.manual_projection_active
+                    ? `
+                      <span class="dk-manual-projection-note">
+                        MANUAL
+                      </span>
+                    `
+                    : ""
+                }
               </td>
 
               <td>
@@ -2199,6 +2237,15 @@ function renderOptimizerShowdownPlayers(
                         2
                       )
                     : "—"
+                }
+                ${
+                  player.manual_projection_active
+                    ? `
+                      <span class="dk-manual-projection-note">
+                        MANUAL
+                      </span>
+                    `
+                    : ""
                 }
               </td>
 
@@ -3050,11 +3097,42 @@ async function loadBtbtOptimizerProjections(
             ...player,
 
             btbt_projection:
-              Number.isFinite(
-                btbtProjection
-              )
-                ? btbtProjection
-                : null,
+              player.manual_projection_active
+                ? player.btbt_projection
+                : (
+                    Number.isFinite(
+                      btbtProjection
+                    )
+                      ? btbtProjection
+                      : null
+                  ),
+
+            original_btbt_projection:
+              player.original_btbt_projection !== undefined
+                ? player.original_btbt_projection
+                : (
+                    Number.isFinite(
+                      btbtProjection
+                    )
+                      ? btbtProjection
+                      : null
+                  ),
+
+            original_projection_source:
+              player.original_projection_source !== undefined
+                ? player.original_projection_source
+                : (
+                    projection.projection_source ||
+                    "NONE"
+                  ),
+
+            original_model_confidence:
+              player.original_model_confidence !== undefined
+                ? player.original_model_confidence
+                : (
+                    projection.model_confidence ||
+                    "—"
+                  ),
 
             btbt_value:
               Number.isFinite(
@@ -3068,8 +3146,12 @@ async function loadBtbtOptimizerProjections(
               null,
 
             model_confidence:
-              projection.model_confidence ||
-              "—",
+              player.manual_projection_active
+                ? "MANUAL"
+                : (
+                    projection.model_confidence ||
+                    "—"
+                  ),
 
             player_type:
               projection.player_type ??
@@ -3124,8 +3206,12 @@ async function loadBtbtOptimizerProjections(
               null,
 
             projection_source:
-              projection.projection_source ||
-              "NONE",
+              player.manual_projection_active
+                ? "MANUAL"
+                : (
+                    projection.projection_source ||
+                    "NONE"
+                  ),
 
             market_stat_count:
               projection.market_stat_count ??
@@ -4024,6 +4110,219 @@ playerSearch
 
 
 // ===================================================
+// MANUAL PROJECTION OVERRIDE
+// ===================================================
+
+function editOptimizerManualProjection(
+  key,
+  team
+) {
+
+  if (
+    !currentSlate ||
+    !Array.isArray(
+      currentSlate.players
+    )
+  ) {
+    return;
+  }
+
+
+  const normalizedTeam =
+    String(
+      team ||
+      ""
+    )
+      .trim()
+      .toUpperCase();
+
+
+  const player =
+    currentSlate.players.find(
+      row =>
+        getOptimizerPlayerKey(
+          row.name
+        ) === key
+        &&
+        (
+          !normalizedTeam
+          ||
+          String(
+            row.team ||
+            ""
+          )
+            .trim()
+            .toUpperCase() ===
+            normalizedTeam
+        )
+    );
+
+
+  if (!player) {
+    return;
+  }
+
+
+  const currentProjection =
+    getOptimizerFiniteNumber(
+      player.btbt_projection
+    );
+
+
+  const originalProjection =
+    getOptimizerFiniteNumber(
+      player.original_btbt_projection
+    );
+
+
+  const entered =
+    window.prompt(
+      `Manual BTBT projection for ${player.name} (${player.team || "--"}).\n\nCurrent: ${
+        Number.isFinite(currentProjection)
+          ? currentProjection.toFixed(2)
+          : "—"
+      }\nOriginal model: ${
+        Number.isFinite(originalProjection)
+          ? originalProjection.toFixed(2)
+          : "—"
+      }\n\nEnter a new projection. Leave blank to restore the original model projection.`,
+      player.manual_projection_active &&
+      Number.isFinite(currentProjection)
+        ? String(currentProjection)
+        : ""
+    );
+
+
+  if (entered === null) {
+    return;
+  }
+
+
+  const trimmed =
+    String(
+      entered
+    ).trim();
+
+
+  // Blank = restore original model projection.
+  if (!trimmed) {
+
+    player.manual_projection_active =
+      false;
+
+    player.btbt_projection =
+      Number.isFinite(
+        originalProjection
+      )
+        ? originalProjection
+        : null;
+
+    player.projection_source =
+      player.original_projection_source ||
+      "NONE";
+
+    player.model_confidence =
+      player.original_model_confidence ||
+      "—";
+
+  } else {
+
+    const manualProjection =
+      Number(
+        trimmed
+      );
+
+
+    if (
+      !Number.isFinite(
+        manualProjection
+      )
+      ||
+      manualProjection < 0
+      ||
+      manualProjection > 100
+    ) {
+
+      window.alert(
+        "Enter a projection from 0 to 100."
+      );
+
+      return;
+    }
+
+
+    player.manual_projection_active =
+      true;
+
+    player.btbt_projection =
+      manualProjection;
+
+    player.projection_source =
+      "MANUAL";
+
+    player.model_confidence =
+      "MANUAL";
+
+  }
+
+
+  const salary =
+    currentSlate.slate_type ===
+      "SHOWDOWN"
+      ? Number(
+          player.util_salary ||
+          player.salary ||
+          0
+        )
+      : Number(
+          player.salary ||
+          0
+        );
+
+
+  player.btbt_value =
+    Number.isFinite(
+      getOptimizerFiniteNumber(
+        player.btbt_projection
+      )
+    )
+    &&
+    salary > 0
+      ? (
+          Number(
+            player.btbt_projection
+          )
+          /
+          (
+            salary /
+            1000
+          )
+        )
+      : null;
+
+
+  clearOptimizerTopLineupHighlight();
+
+
+  renderOptimizerPlayers(
+    currentSlate
+  );
+
+
+  updateOptimizerCounts();
+
+
+  setOptimizerStatus(
+    player.manual_projection_active
+      ? `${player.name} projection manually set to ${Number(player.btbt_projection).toFixed(2)}.`
+      : `${player.name} projection restored to the BTBT model value.`,
+    "success"
+  );
+
+}
+
+
+// ===================================================
 // LOCK / EXCLUDE PLAYER CONTROLS
 // ===================================================
 
@@ -4055,6 +4354,18 @@ document.addEventListener(
 
     if (!key) {
       return;
+    }
+
+
+    if (action === "projection") {
+
+      editOptimizerManualProjection(
+        key,
+        button.dataset.playerTeam
+      );
+
+      return;
+
     }
 
 
@@ -4179,6 +4490,11 @@ function buildOptimizerGeneratePlayers() {
       // btbt_projection.
       dk_projection:
         player.btbt_projection,
+
+      manual_projection:
+        Boolean(
+          player.manual_projection_active
+        ),
 
     })
   );
