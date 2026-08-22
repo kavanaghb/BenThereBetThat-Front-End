@@ -826,6 +826,96 @@ if (openGameLinesBtn) {
   });
 
 }
+if (openGameLinesBtn) {
+
+  openGameLinesBtn.addEventListener("click", async () => {
+
+    const allowed =
+      await canUseMlbTrialFeatures();
+
+    if (!allowed) {
+
+      alert(
+        "📈 Game Lines EV requires Premium or an active 24-hour MLB Free Pass."
+      );
+
+      return;
+    }
+
+    if (window.hasPremiumAccess) {
+
+      window.location.href =
+        "game-lines.html";
+
+    } else {
+
+      window.location.href =
+        "game-lines.html?trial=mlb";
+
+    }
+
+  });
+
+}
+// ===================================================
+// 🏀 DRAFTKINGS OPTIMIZER — PREMIUM PAGE
+// ===================================================
+
+const openDkOptimizerBtn =
+  document.getElementById(
+    "openDkOptimizerBtn"
+  );
+
+if (openDkOptimizerBtn) {
+
+  openDkOptimizerBtn.addEventListener(
+    "click",
+    async () => {
+
+      const {
+        data: { session }
+      } =
+        await supabase.auth.getSession();
+
+      // Guest
+      if (!session?.user) {
+
+        openAuthModal(
+          "signup"
+        );
+
+        return;
+      }
+
+      // Refresh subscription state if needed
+      if (!window.hasPremiumAccess) {
+
+        await checkSubscriptionStatus(
+          session.user.id
+        );
+
+      }
+
+      // Premium only
+      if (!window.hasPremiumAccess) {
+
+        alert(
+          "🏀 The DraftKings Lineup Optimizer " +
+          "is a Premium feature."
+        );
+
+        return;
+      }
+
+      // Open dedicated optimizer page
+      window.location.href =
+        "dk-optimizer.html";
+
+    }
+  );
+
+}
+
 
 
 

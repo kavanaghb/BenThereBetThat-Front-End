@@ -1,0 +1,4470 @@
+// ===================================================
+// 🏀 BTBT DRAFTKINGS LINEUP OPTIMIZER
+// Dedicated multi-sport optimizer page
+// ===================================================
+
+
+// ===================================================
+// GLOBAL PAGE STATE
+// ===================================================
+
+let currentSession = null;
+
+let currentSlate = null;
+
+let optimizerAccessAllowed = false;
+
+let currentProjectionMap =
+  new Map();
+
+// ===================================================
+// OPTIMIZER PLAYER STATE
+// ===================================================
+
+const lockedPlayers =
+  new Set();
+
+const excludedPlayers =
+  new Set();
+
+
+let topOptimalLineupPlayerKeys =
+  new Set();
+
+
+// ===================================================
+// ELEMENT REFERENCES
+// ===================================================
+
+const sportSelect =
+  document.getElementById(
+    "dkSportSelect"
+  );
+
+
+const salaryFile =
+  document.getElementById(
+    "dkSalaryFile"
+  );
+
+
+const loadBtn =
+  document.getElementById(
+    "dkParseCsvBtn"
+  );
+
+
+const resetBtn =
+  document.getElementById(
+    "dkResetBtn"
+  );
+
+
+const statusEl =
+  document.getElementById(
+    "dkOptimizerStatus"
+  );
+
+  const optimizationContainer =
+  document.getElementById(
+    "dkOptimizationContainer"
+  );
+
+
+const allowQuestionable =
+  document.getElementById(
+    "dkAllowQuestionable"
+  );
+
+
+const playerSearch =
+  document.getElementById(
+    "dkPlayerSearch"
+  );
+
+
+const lineupCount =
+  document.getElementById(
+    "dkLineupCount"
+  );
+
+
+const generateLineupBtn =
+  document.getElementById(
+    "dkGenerateLineupBtn"
+  );
+
+
+const generateStatus =
+  document.getElementById(
+    "dkGenerateStatus"
+  );
+
+
+const lockedCount =
+  document.getElementById(
+    "dkLockedCount"
+  );
+
+
+const excludedCount =
+  document.getElementById(
+    "dkExcludedCount"
+  );
+
+
+const eligibleCount =
+  document.getElementById(
+    "dkEligibleCount"
+  );
+
+
+// ===================================================
+// OPTIMIZER DYNAMIC UI HELPERS
+//
+// Keeps this change isolated to dk-optimizer.js.
+// No HTML/CSS change is required for the lineup table
+// or BTBT projection loading wheel.
+// ===================================================
+
+function ensureOptimizerDynamicStyles() {
+
+  if (
+    document.getElementById(
+      "dkOptimizerDynamicStyles"
+    )
+  ) {
+    return;
+  }
+
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.id =
+    "dkOptimizerDynamicStyles";
+
+
+  style.textContent = `
+    @keyframes dkOptimizerSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .dk-projection-loader {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 22px 16px;
+      margin: 12px 0;
+      border: 1px solid rgba(0, 0, 0, 0.10);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.96);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .dk-projection-loader.visible {
+      display: flex;
+    }
+
+    .dk-projection-spinner {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      border: 4px solid rgba(0, 0, 0, 0.14);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: dkOptimizerSpin 0.8s linear infinite;
+    }
+
+    .dk-lineup-results {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 18px;
+      grid-column: 1 / -1;
+    }
+
+    .dk-lineup-card {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0 0 18px;
+      padding: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
+    .dk-lineup-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .dk-lineup-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .dk-lineup-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    .dk-lineup-table th,
+    .dk-lineup-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .dk-lineup-table th {
+      font-weight: 800;
+    }
+
+    .dk-lineup-results .dk-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 768px) {
+      .dk-lineup-card {
+        padding: 12px;
+      }
+
+      .dk-lineup-table {
+        font-size: 12px;
+      }
+
+      .dk-lineup-table th,
+      .dk-lineup-table td {
+        padding: 7px 8px;
+      }
+    }
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+}
+
+
+// ===================================================
+// GENERATED LINEUP RESULTS CONTAINER
+//
+// Prefer the optimizer section, but fall back to the
+// Generate button area if the HTML wrapper ID changes.
+// ===================================================
+
+function getOptimizerLineupResultsContainer() {
+
+  ensureOptimizerDynamicStyles();
+
+
+  let container =
+    document.getElementById(
+      "dkLineupResults"
+    );
+
+
+  if (!container) {
+
+    container =
+      document.createElement(
+        "div"
+      );
+
+
+    container.id =
+      "dkLineupResults";
+
+
+    container.className =
+      "dk-lineup-results";
+
+
+    const preferredParent =
+      optimizationContainer
+      ||
+      generateLineupBtn?.closest(
+        "section"
+      )
+      ||
+      generateLineupBtn?.parentElement
+      ||
+      document.body;
+
+
+    preferredParent.appendChild(
+      container
+    );
+
+  }
+
+
+  container.classList.remove(
+    "hidden"
+  );
+
+
+  container.style.display =
+    "block";
+
+
+  return container;
+
+}
+
+
+// ===================================================
+// BTBT PROJECTION LOADING WHEEL
+// ===================================================
+
+function setOptimizerProjectionLoading(
+  show,
+  message = "Building BTBT projections..."
+) {
+
+  ensureOptimizerDynamicStyles();
+
+
+  const playerPool =
+    document.getElementById(
+      "dkPlayerPoolContainer"
+    );
+
+
+  if (!playerPool) {
+    return;
+  }
+
+
+  let loader =
+    document.getElementById(
+      "dkProjectionLoading"
+    );
+
+
+  if (!loader) {
+
+    loader =
+      document.createElement(
+        "div"
+      );
+
+
+    loader.id =
+      "dkProjectionLoading";
+
+
+    loader.className =
+      "dk-projection-loader";
+
+
+    playerPool.prepend(
+      loader
+    );
+
+  }
+
+
+  loader.innerHTML = `
+    <span
+      class="dk-projection-spinner"
+      aria-hidden="true"
+    ></span>
+
+    <span>
+      ${escapeOptimizerHtml(
+        message
+      )}
+    </span>
+  `;
+
+
+  loader.classList.toggle(
+    "visible",
+    Boolean(show)
+  );
+
+
+  const tableWrap =
+    playerPool.querySelector(
+      ".dk-table-wrap"
+    );
+
+
+  if (tableWrap) {
+
+    tableWrap.style.opacity =
+      show
+        ? "0.38"
+        : "";
+
+
+    tableWrap.style.pointerEvents =
+      show
+        ? "none"
+        : "";
+
+  }
+
+}
+
+
+function setGenerateStatus(
+  message,
+  type = ""
+) {
+
+  if (!generateStatus) {
+    return;
+  }
+
+
+  generateStatus.textContent =
+    message || "";
+
+
+  generateStatus.className =
+    "optimizer-status";
+
+
+  if (type) {
+
+    generateStatus.classList.add(
+      type
+    );
+
+  }
+
+}
+
+
+// ===================================================
+// API BASE SAFETY
+//
+// dk-optimizer.html should normally set window.API_BASE
+// exactly like game-lines.html.
+//
+// This fallback protects the page if it is ever omitted.
+// ===================================================
+
+if (!window.API_BASE) {
+
+  const isLocalhost =
+    window.location.hostname === "localhost"
+    ||
+    window.location.hostname === "127.0.0.1";
+
+
+  window.API_BASE =
+    isLocalhost
+      ? "http://127.0.0.1:5000"
+      : "https://bentherebetthat-api.onrender.com";
+
+
+  console.log(
+    "🌐 DK Optimizer API_BASE fallback:",
+    window.API_BASE
+  );
+
+}
+
+
+// ===================================================
+// SUPABASE CLIENT HELPER
+//
+// script.js currently creates window.supabaseClient.
+//
+// Game Lines also accesses window.supabase directly.
+//
+// Support either one so this page remains resilient.
+// ===================================================
+
+function getOptimizerSupabaseClient() {
+
+  // Preferred shared client created by script.js
+  if (
+    window.supabaseClient &&
+    window.supabaseClient.auth
+  ) {
+
+    return window.supabaseClient;
+
+  }
+
+
+  // Game Lines-compatible fallback
+  if (
+    window.supabase &&
+    window.supabase.auth &&
+    typeof window.supabase.auth.getSession ===
+      "function"
+  ) {
+
+    return window.supabase;
+
+  }
+
+
+  return null;
+
+}
+
+
+// ===================================================
+// STATUS MESSAGE
+// ===================================================
+
+function setOptimizerStatus(
+  message,
+  type = ""
+) {
+
+  if (!statusEl) {
+    return;
+  }
+
+
+  statusEl.textContent =
+    message || "";
+
+
+  statusEl.className =
+    "optimizer-status";
+
+
+  if (type) {
+
+    statusEl.classList.add(
+      type
+    );
+
+  }
+
+}
+// ===================================================
+// PLAYER NAME MATCH KEY
+// Must match backend normalization behavior
+// ===================================================
+
+function getOptimizerPlayerKey(
+  value
+) {
+
+  return String(
+    value || ""
+  )
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /[^a-z0-9]/g,
+      ""
+    );
+
+}
+
+// ===================================================
+// SAFE HTML
+// ===================================================
+
+function escapeOptimizerHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
+
+
+// ===================================================
+// FORMAT SALARY
+// ===================================================
+
+function formatOptimizerSalary(
+  value
+) {
+
+  const salary =
+    Number(
+      value
+    );
+
+
+  if (
+    !Number.isFinite(
+      salary
+    )
+  ) {
+
+    return "--";
+
+  }
+
+
+  return (
+    "$" +
+    salary.toLocaleString()
+  );
+
+}
+
+
+// ===================================================
+// FORMAT NUMBER
+// ===================================================
+
+function formatOptimizerNumber(
+  value,
+  digits = 1
+) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+
+    return "--";
+
+  }
+
+
+  const numeric =
+    Number(
+      value
+    );
+
+
+  if (
+    !Number.isFinite(
+      numeric
+    )
+  ) {
+
+    return "--";
+
+  }
+
+
+  return numeric.toFixed(
+    digits
+  );
+
+}
+
+
+// ===================================================
+// SPORT LABEL
+// ===================================================
+
+function getOptimizerSportLabel() {
+
+  const option =
+    sportSelect
+      ?.selectedOptions
+      ?.[0];
+
+
+  return (
+    option
+      ?.textContent
+      ?.trim()
+    ||
+    "WNBA"
+  );
+
+}
+
+
+// ===================================================
+// UPDATE LOAD BUTTON STATE
+// ===================================================
+
+function updateOptimizerLoadButton() {
+
+  if (!loadBtn) {
+    return;
+  }
+
+
+  const hasFile =
+    Boolean(
+      salaryFile
+        ?.files
+        ?.[0]
+    );
+
+
+  loadBtn.disabled =
+    !optimizerAccessAllowed
+    ||
+    !hasFile;
+
+}
+
+// ===================================================
+// OPTIMIZER COUNTS
+// ===================================================
+
+function updateOptimizerCounts() {
+
+  if (lockedCount) {
+
+    lockedCount.textContent =
+      lockedPlayers.size;
+
+  }
+
+
+  if (excludedCount) {
+
+    excludedCount.textContent =
+      excludedPlayers.size;
+
+  }
+
+
+  if (eligibleCount) {
+
+    const players =
+      Array.isArray(
+        currentSlate?.players
+      )
+        ? currentSlate.players
+        : [];
+
+
+    const allowQ =
+      allowQuestionable
+        ?.checked !== false;
+
+
+    const eligible =
+      players.filter(
+        player => {
+
+          const status =
+            String(
+              player.status ||
+              "ACTIVE"
+            )
+              .trim()
+              .toUpperCase();
+
+
+          if (
+            status === "OUT"
+          ) {
+
+            return false;
+
+          }
+
+
+          if (
+            status === "Q" &&
+            !allowQ
+          ) {
+
+            return false;
+
+          }
+
+
+          const key =
+            getOptimizerPlayerKey(
+              player.name
+            );
+
+
+          if (
+            excludedPlayers.has(
+              key
+            )
+          ) {
+
+            return false;
+
+          }
+
+
+          return Number.isFinite(
+            Number(
+              player.btbt_projection
+            )
+          );
+
+        }
+      );
+
+
+    eligibleCount.textContent =
+      eligible.length;
+
+  }
+
+
+  updateOptimizerGenerateButton();
+
+}
+
+
+function updateOptimizerGenerateButton() {
+
+  if (!generateLineupBtn) {
+    return;
+  }
+
+
+  const players =
+    Array.isArray(
+      currentSlate?.players
+    )
+      ? currentSlate.players
+      : [];
+
+
+  const hasProjection =
+    players.some(
+      player =>
+        Number.isFinite(
+          Number(
+            player.btbt_projection
+          )
+        )
+    );
+
+
+  generateLineupBtn.disabled =
+    !optimizerAccessAllowed
+    ||
+    !currentSlate
+    ||
+    !hasProjection;
+
+}
+
+
+// ===================================================
+// CLEAR CURRENT SLATE DISPLAY
+// ===================================================
+
+function clearOptimizerSlateDisplay() {
+
+  setOptimizerProjectionLoading(
+    false
+  );
+
+
+  currentSlate =
+    null;
+
+
+  currentProjectionMap =
+    new Map();
+
+
+  lockedPlayers.clear();
+
+  excludedPlayers.clear();
+
+
+if (playerSearch) {
+
+  playerSearch.value =
+    "";
+
+}
+
+
+if (allowQuestionable) {
+
+  allowQuestionable.checked =
+    true;
+
+}
+
+
+if (optimizationContainer) {
+
+  optimizationContainer.classList.add(
+    "hidden"
+  );
+
+}
+
+
+if (generateLineupBtn) {
+
+  generateLineupBtn.disabled =
+    true;
+
+}
+
+
+setGenerateStatus(
+  "BTBT projections are not loaded yet."
+);
+
+
+const lineupResults =
+  getOptimizerLineupResultsContainer();
+
+
+if (lineupResults) {
+
+  lineupResults.innerHTML =
+    "";
+
+}
+
+
+  const summary =
+    document.getElementById(
+      "dkSlateSummary"
+    );
+
+
+  const games =
+    document.getElementById(
+      "dkGamesContainer"
+    );
+
+
+  const players =
+    document.getElementById(
+      "dkPlayerPoolContainer"
+    );
+
+
+  const gamesList =
+    document.getElementById(
+      "dkGamesList"
+    );
+
+
+  const tableHead =
+    document.getElementById(
+      "dkPlayerTableHead"
+    );
+
+
+  const tableBody =
+    document.getElementById(
+      "dkPlayerTableBody"
+    );
+
+
+  if (summary) {
+
+    summary.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  if (games) {
+
+    games.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  if (players) {
+
+    players.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  if (gamesList) {
+
+    gamesList.innerHTML =
+      "";
+
+  }
+
+
+  if (tableHead) {
+
+    tableHead.innerHTML =
+      "";
+
+  }
+
+
+  if (tableBody) {
+
+    tableBody.innerHTML =
+      "";
+
+  }
+
+}
+
+
+// ===================================================
+// PLAYER STATUS BADGE
+// ===================================================
+
+function getOptimizerStatusBadge(
+  status
+) {
+
+  const normalized =
+    String(
+      status ||
+      "ACTIVE"
+    )
+      .trim()
+      .toUpperCase();
+
+
+  if (
+    normalized ===
+    "OUT"
+  ) {
+
+    return `
+      <span
+        class="
+          dk-status
+          dk-status-out
+        "
+      >
+        OUT
+      </span>
+    `;
+
+  }
+
+
+  if (
+    normalized ===
+    "Q"
+  ) {
+
+    return `
+      <span
+        class="
+          dk-status
+          dk-status-q
+        "
+      >
+        Q
+      </span>
+    `;
+
+  }
+
+
+  return `
+    <span
+      class="
+        dk-status
+        dk-status-active
+      "
+    >
+      Active
+    </span>
+  `;
+
+}
+
+
+// ===================================================
+// RENDER SLATE SUMMARY
+// ===================================================
+
+function renderOptimizerSummary(
+  data
+) {
+
+  const sport =
+    document.getElementById(
+      "dkSummarySport"
+    );
+
+
+  const mode =
+    document.getElementById(
+      "dkSummaryMode"
+    );
+
+
+  const players =
+    document.getElementById(
+      "dkSummaryPlayers"
+    );
+
+
+  const games =
+    document.getElementById(
+      "dkSummaryGames"
+    );
+
+
+  const salaryCap =
+    document.getElementById(
+      "dkSummaryCap"
+    );
+
+
+  const summary =
+    document.getElementById(
+      "dkSlateSummary"
+    );
+
+
+  if (sport) {
+
+    sport.textContent =
+      getOptimizerSportLabel();
+
+  }
+
+
+  if (mode) {
+
+    mode.textContent =
+      data.slate_type ===
+        "SHOWDOWN"
+        ? "Captain / Showdown"
+        : "Classic";
+
+  }
+
+
+  if (players) {
+
+    players.textContent =
+      data.player_count ??
+      "--";
+
+  }
+
+
+  if (games) {
+
+    games.textContent =
+      data.game_count ??
+      "--";
+
+  }
+
+
+  if (salaryCap) {
+
+    salaryCap.textContent =
+      formatOptimizerSalary(
+        data.salary_cap ||
+        50000
+      );
+
+  }
+
+
+  if (summary) {
+
+    summary.classList.remove(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+// ===================================================
+// RENDER SLATE GAMES
+// ===================================================
+
+function renderOptimizerGames(
+  data
+) {
+
+  const container =
+    document.getElementById(
+      "dkGamesContainer"
+    );
+
+
+  const list =
+    document.getElementById(
+      "dkGamesList"
+    );
+
+
+  if (
+    !container ||
+    !list
+  ) {
+
+    return;
+
+  }
+
+
+  const games =
+    Array.isArray(
+      data.games
+    )
+      ? data.games
+      : [];
+
+
+  if (!games.length) {
+
+    container.classList.add(
+      "hidden"
+    );
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    games
+      .map(
+        game => `
+          <div
+            class="dk-game-pill"
+          >
+            ${escapeOptimizerHtml(
+              game
+            )}
+          </div>
+        `
+      )
+      .join("");
+
+
+  container.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+// ===================================================
+// CLASSIC PLAYER TABLE
+// ===================================================
+
+function getOptimizerPlayerActionsHtml(
+  player
+) {
+
+  const key =
+    getOptimizerPlayerKey(
+      player.name
+    );
+
+
+  const status =
+    String(
+      player.status ||
+      "ACTIVE"
+    )
+      .trim()
+      .toUpperCase();
+
+
+  if (status === "OUT") {
+
+    return `
+      <span class="dk-player-unavailable">
+        Unavailable
+      </span>
+    `;
+
+  }
+
+
+  const locked =
+    lockedPlayers.has(
+      key
+    );
+
+
+  const excluded =
+    excludedPlayers.has(
+      key
+    );
+
+
+  return `
+    <div class="dk-player-actions">
+
+      <button
+        type="button"
+        class="dk-player-action-btn dk-action-lock ${locked ? "active" : ""}"
+        data-dk-action="lock"
+        data-player-key="${escapeOptimizerHtml(
+          key
+        )}"
+      >
+        ${locked ? "🔒 Locked" : "Lock"}
+      </button>
+
+      <button
+        type="button"
+        class="dk-player-action-btn dk-action-exclude ${excluded ? "active" : ""}"
+        data-dk-action="exclude"
+        data-player-key="${escapeOptimizerHtml(
+          key
+        )}"
+      >
+        ${excluded ? "🚫 Excluded" : "Exclude"}
+      </button>
+
+    </div>
+  `;
+
+}
+
+
+function getOptimizerPlayerRowClass(
+  playerKey
+) {
+
+  const classes = [];
+
+
+  if (
+    lockedPlayers.has(
+      playerKey
+    )
+  ) {
+    classes.push(
+      "dk-row-locked"
+    );
+  }
+
+
+  if (
+    excludedPlayers.has(
+      playerKey
+    )
+  ) {
+    classes.push(
+      "dk-row-excluded"
+    );
+  }
+
+
+  if (
+    topOptimalLineupPlayerKeys.has(
+      playerKey
+    )
+  ) {
+    classes.push(
+      "dk-row-optimal"
+    );
+  }
+
+
+  return classes.join(
+    " "
+  );
+
+}
+
+
+function getOptimizerConfidenceTone(
+  value
+) {
+
+  const confidence =
+    String(
+      value ||
+      ""
+    )
+      .trim()
+      .toUpperCase();
+
+
+  if (confidence === "HIGH") {
+    return "high";
+  }
+
+
+  if (confidence === "MEDIUM") {
+    return "medium";
+  }
+
+
+  if (confidence === "LOW") {
+    return "low";
+  }
+
+
+  return "neutral";
+
+}
+
+
+function applyOptimizerTopLineupHighlight() {
+
+  const rows =
+    document.querySelectorAll(
+      "#dkPlayerTableBody tr[data-player-key]"
+    );
+
+
+  rows.forEach(
+    row => {
+
+      const key =
+        String(
+          row.dataset.playerKey ||
+          ""
+        );
+
+
+      row.classList.toggle(
+        "dk-row-optimal",
+        topOptimalLineupPlayerKeys.has(
+          key
+        )
+      );
+
+    }
+  );
+
+}
+
+
+function clearOptimizerTopLineupHighlight() {
+
+  topOptimalLineupPlayerKeys.clear();
+
+
+  document
+    .querySelectorAll(
+      "#dkPlayerTableBody .dk-row-optimal"
+    )
+    .forEach(
+      row =>
+        row.classList.remove(
+          "dk-row-optimal"
+        )
+    );
+
+}
+
+
+function renderOptimizerClassicPlayers(
+  players
+) {
+
+  const head =
+    document.getElementById(
+      "dkPlayerTableHead"
+    );
+
+
+  const body =
+    document.getElementById(
+      "dkPlayerTableBody"
+    );
+
+
+  if (
+    !head ||
+    !body
+  ) {
+
+    return;
+
+  }
+
+
+  head.innerHTML = `
+    <tr>
+      <th>Player</th>
+      <th>Pos</th>
+      <th>Roster</th>
+      <th>Team</th>
+      <th>Salary</th>
+      <th>DK Avg</th>
+      <th>BTBT Proj</th>
+      <th>$ Value</th>
+      <th>vs DK Avg</th>
+      <th>Min</th>
+      <th>Conf</th>
+      <th>Status</th>
+      <th>Controls</th>
+    </tr>
+  `;
+
+
+  body.innerHTML =
+    [...players]
+      .sort(
+        (a, b) => {
+
+          const projectionA =
+            Number(
+              a.btbt_projection
+            );
+
+          const projectionB =
+            Number(
+              b.btbt_projection
+            );
+
+
+          if (
+            Number.isFinite(
+              projectionA
+            )
+            &&
+            Number.isFinite(
+              projectionB
+            )
+          ) {
+
+            return (
+              projectionB -
+              projectionA
+            );
+
+          }
+
+
+          return (
+            Number(
+              b.salary ||
+              0
+            )
+            -
+            Number(
+              a.salary ||
+              0
+            )
+          );
+
+        }
+      )
+      .map(
+        player => {
+
+          const projection =
+            Number(
+              player.btbt_projection
+            );
+
+
+          const value =
+            Number(
+              player.btbt_value
+            );
+
+
+          const dkAverage =
+            Number(
+              player.dk_avg_points
+            );
+
+
+          const averageEdgePct =
+            Number.isFinite(
+              projection
+            )
+            &&
+            Number.isFinite(
+              dkAverage
+            )
+            &&
+            dkAverage !== 0
+
+              ? (
+                  (
+                    projection -
+                    dkAverage
+                  )
+                  /
+                  dkAverage
+                )
+                *
+                100
+
+              : null;
+
+
+          const minutes =
+            Number(
+              player.expected_minutes
+            );
+
+
+          const confidence =
+            String(
+              player.model_confidence ||
+              "—"
+            )
+              .trim()
+              .toUpperCase();
+
+
+          const playerKey =
+            getOptimizerPlayerKey(
+              player.name
+            );
+
+
+          return `
+            <tr
+              class="${escapeOptimizerHtml(
+                getOptimizerPlayerRowClass(
+                  playerKey
+                )
+              )}"
+              data-player-key="${escapeOptimizerHtml(
+                playerKey
+              )}"
+              data-player-name="${escapeOptimizerHtml(
+                String(
+                  player.name ||
+                  ""
+                ).toLowerCase()
+              )}"
+            >
+
+              <td>
+                <strong>
+                  ${escapeOptimizerHtml(
+                    player.name
+                  )}
+                </strong>
+              </td>
+
+              <td>
+                ${escapeOptimizerHtml(
+                  player.position ||
+                  "--"
+                )}
+              </td>
+
+              <td>
+                ${escapeOptimizerHtml(
+                  player.roster_position ||
+                  "--"
+                )}
+              </td>
+
+              <td>
+                ${escapeOptimizerHtml(
+                  player.team ||
+                  "--"
+                )}
+              </td>
+
+              <td>
+                ${formatOptimizerSalary(
+                  player.salary
+                )}
+              </td>
+
+              <td>
+                ${formatOptimizerNumber(
+                  player.dk_avg_points,
+                  1
+                )}
+              </td>
+
+              <td class="dk-projection">
+                ${
+                  Number.isFinite(
+                    projection
+                  )
+                    ? projection.toFixed(
+                        2
+                      )
+                    : "—"
+                }
+              </td>
+
+              <td class="dk-value">
+                ${
+                  Number.isFinite(
+                    value
+                  )
+                    ? `${value.toFixed(
+                        2
+                      )}x`
+                    : "—"
+                }
+              </td>
+
+              <td>
+                ${
+                  Number.isFinite(
+                    averageEdgePct
+                  )
+                    ? `
+                      <span
+                        class="dk-avg-edge ${
+                          averageEdgePct > 0
+                            ? "positive"
+                            : (
+                                averageEdgePct < 0
+                                  ? "negative"
+                                  : "neutral"
+                              )
+                        }"
+                      >
+                        ${averageEdgePct > 0 ? "+" : ""}${averageEdgePct.toFixed(
+                          1
+                        )}%
+                      </span>
+                    `
+                    : "—"
+                }
+              </td>
+
+              <td>
+                ${
+                  Number.isFinite(
+                    minutes
+                  )
+                    ? minutes.toFixed(
+                        1
+                      )
+                    : "—"
+                }
+              </td>
+
+              <td>
+                <span
+                  class="dk-confidence dk-confidence-${getOptimizerConfidenceTone(
+                    confidence
+                  )}"
+                >
+                  ${escapeOptimizerHtml(
+                    confidence
+                  )}
+                </span>
+              </td>
+
+              <td>
+                ${getOptimizerStatusBadge(
+                  player.status
+                )}
+              </td>
+
+              <td>
+                ${getOptimizerPlayerActionsHtml(
+                  player
+                )}
+              </td>
+
+            </tr>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  applyOptimizerPlayerSearch();
+
+}
+
+
+// ===================================================
+// SHOWDOWN PLAYER TABLE
+// ===================================================
+
+function renderOptimizerShowdownPlayers(
+  players
+) {
+
+  const head =
+    document.getElementById(
+      "dkPlayerTableHead"
+    );
+
+
+  const body =
+    document.getElementById(
+      "dkPlayerTableBody"
+    );
+
+
+  if (
+    !head ||
+    !body
+  ) {
+
+    return;
+
+  }
+
+
+  head.innerHTML = `
+    <tr>
+      <th>Player</th>
+      <th>Team</th>
+      <th>UTIL</th>
+      <th>CPT</th>
+      <th>DK Avg</th>
+      <th>BTBT Proj</th>
+      <th>$ Value</th>
+      <th>vs DK Avg</th>
+      <th>Min</th>
+      <th>Conf</th>
+      <th>Status</th>
+      <th>Controls</th>
+    </tr>
+  `;
+
+
+  body.innerHTML =
+    [...players]
+      .sort(
+        (a, b) => {
+
+          const projectionA =
+            Number(
+              a.btbt_projection
+            );
+
+          const projectionB =
+            Number(
+              b.btbt_projection
+            );
+
+
+          if (
+            Number.isFinite(
+              projectionA
+            )
+            &&
+            Number.isFinite(
+              projectionB
+            )
+          ) {
+
+            return (
+              projectionB -
+              projectionA
+            );
+
+          }
+
+
+          return (
+            Number(
+              b.util_salary ||
+              0
+            )
+            -
+            Number(
+              a.util_salary ||
+              0
+            )
+          );
+
+        }
+      )
+      .map(
+        player => {
+
+          const projection =
+            Number(
+              player.btbt_projection
+            );
+
+
+          const value =
+            Number(
+              player.btbt_value
+            );
+
+
+          const dkAverage =
+            Number(
+              player.dk_avg_points
+            );
+
+
+          const averageEdgePct =
+            Number.isFinite(
+              projection
+            )
+            &&
+            Number.isFinite(
+              dkAverage
+            )
+            &&
+            dkAverage !== 0
+
+              ? (
+                  (
+                    projection -
+                    dkAverage
+                  )
+                  /
+                  dkAverage
+                )
+                *
+                100
+
+              : null;
+
+
+          const minutes =
+            Number(
+              player.expected_minutes
+            );
+
+
+          const confidence =
+            String(
+              player.model_confidence ||
+              "—"
+            )
+              .trim()
+              .toUpperCase();
+
+
+          const playerKey =
+            getOptimizerPlayerKey(
+              player.name
+            );
+
+
+          return `
+            <tr
+              class="${escapeOptimizerHtml(
+                getOptimizerPlayerRowClass(
+                  playerKey
+                )
+              )}"
+              data-player-key="${escapeOptimizerHtml(
+                playerKey
+              )}"
+              data-player-name="${escapeOptimizerHtml(
+                String(
+                  player.name ||
+                  ""
+                ).toLowerCase()
+              )}"
+            >
+
+              <td>
+                <strong>
+                  ${escapeOptimizerHtml(
+                    player.name
+                  )}
+                </strong>
+              </td>
+
+              <td>
+                ${escapeOptimizerHtml(
+                  player.team ||
+                  "--"
+                )}
+              </td>
+
+              <td>
+                ${formatOptimizerSalary(
+                  player.util_salary
+                )}
+              </td>
+
+              <td>
+                ${formatOptimizerSalary(
+                  player.cpt_salary
+                )}
+              </td>
+
+              <td>
+                ${formatOptimizerNumber(
+                  player.dk_avg_points,
+                  1
+                )}
+              </td>
+
+              <td class="dk-projection">
+                ${
+                  Number.isFinite(
+                    projection
+                  )
+                    ? projection.toFixed(
+                        2
+                      )
+                    : "—"
+                }
+              </td>
+
+              <td class="dk-value">
+                ${
+                  Number.isFinite(
+                    value
+                  )
+                    ? `${value.toFixed(
+                        2
+                      )}x`
+                    : "—"
+                }
+              </td>
+
+              <td>
+                ${
+                  Number.isFinite(
+                    averageEdgePct
+                  )
+                    ? `
+                      <span
+                        class="dk-avg-edge ${
+                          averageEdgePct > 0
+                            ? "positive"
+                            : (
+                                averageEdgePct < 0
+                                  ? "negative"
+                                  : "neutral"
+                              )
+                        }"
+                      >
+                        ${averageEdgePct > 0 ? "+" : ""}${averageEdgePct.toFixed(
+                          1
+                        )}%
+                      </span>
+                    `
+                    : "—"
+                }
+              </td>
+
+              <td>
+                ${
+                  Number.isFinite(
+                    minutes
+                  )
+                    ? minutes.toFixed(
+                        1
+                      )
+                    : "—"
+                }
+              </td>
+
+              <td>
+                <span
+                  class="dk-confidence dk-confidence-${getOptimizerConfidenceTone(
+                    confidence
+                  )}"
+                >
+                  ${escapeOptimizerHtml(
+                    confidence
+                  )}
+                </span>
+              </td>
+
+              <td>
+                ${getOptimizerStatusBadge(
+                  player.status
+                )}
+              </td>
+
+              <td>
+                ${getOptimizerPlayerActionsHtml(
+                  player
+                )}
+              </td>
+
+            </tr>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  applyOptimizerPlayerSearch();
+
+}
+
+
+// ===================================================
+// RENDER PLAYER POOL
+// ===================================================
+
+function renderOptimizerPlayers(
+  data
+) {
+
+  const container =
+    document.getElementById(
+      "dkPlayerPoolContainer"
+    );
+
+
+  if (!container) {
+
+    return;
+
+  }
+
+
+  const players =
+    Array.isArray(
+      data.players
+    )
+      ? data.players
+      : [];
+
+
+  if (
+    data.slate_type ===
+    "SHOWDOWN"
+  ) {
+
+    renderOptimizerShowdownPlayers(
+      players
+    );
+
+  } else {
+
+    renderOptimizerClassicPlayers(
+      players
+    );
+
+  }
+
+
+  container.classList.remove(
+    "hidden"
+  );
+
+  if (optimizationContainer) {
+
+  optimizationContainer.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+updateOptimizerCounts();
+
+}
+
+
+// ===================================================
+// VERIFY PREMIUM PAGE ACCESS
+// ===================================================
+
+async function verifyOptimizerAccess() {
+
+  optimizerAccessAllowed =
+    false;
+
+
+  updateOptimizerLoadButton();
+
+
+  setOptimizerStatus(
+    "Checking Premium access...",
+    "loading"
+  );
+
+
+  try {
+
+    // =================================================
+    // GET SHARED SUPABASE CLIENT
+    // =================================================
+
+    const supabaseClient =
+      getOptimizerSupabaseClient();
+
+
+    if (!supabaseClient) {
+
+      throw new Error(
+        "Supabase authentication is not initialized."
+      );
+
+    }
+
+
+    // =================================================
+    // GET SESSION
+    // =================================================
+
+    const {
+      data: {
+        session
+      },
+      error
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    if (!session?.user) {
+
+      setOptimizerStatus(
+        "Please sign in from the Sports Dashboard first.",
+        "error"
+      );
+
+
+      setTimeout(
+        () => {
+
+          window.location.href =
+            "index.html";
+
+        },
+        1200
+      );
+
+
+      return false;
+
+    }
+
+
+    currentSession =
+      session;
+
+
+    // =================================================
+    // USE EXISTING BTBT SUBSCRIPTION CHECK
+    //
+    // Same shared system used by Game Lines.
+    // =================================================
+
+    if (
+      typeof checkSubscriptionStatus ===
+      "function"
+    ) {
+
+      await checkSubscriptionStatus(
+        session.user.id
+      );
+
+    } else {
+
+      // -----------------------------------------------
+      // Defensive fallback.
+      //
+      // The backend still verifies Premium on the
+      // /api/dk-optimizer/parse route.
+      // -----------------------------------------------
+
+      console.warn(
+        "⚠️ checkSubscriptionStatus() not available."
+      );
+
+    }
+
+
+    // =================================================
+    // PREMIUM REQUIRED
+    // =================================================
+
+    if (
+      !window.hasPremiumAccess
+    ) {
+
+      setOptimizerStatus(
+        "The DraftKings Lineup Optimizer requires Premium access.",
+        "error"
+      );
+
+
+      return false;
+
+    }
+
+
+    optimizerAccessAllowed =
+      true;
+
+
+    updateOptimizerLoadButton();
+
+
+    setOptimizerStatus(
+      "Premium access confirmed. Choose a DraftKings CSV.",
+      "success"
+    );
+
+
+    console.log(
+      "✅ DK Optimizer Premium access confirmed"
+    );
+
+
+    return true;
+
+
+  } catch (error) {
+
+    console.error(
+      "❌ DK Optimizer access check failed:",
+      error
+    );
+
+
+    optimizerAccessAllowed =
+      false;
+
+
+    updateOptimizerLoadButton();
+
+
+    setOptimizerStatus(
+      error.message ||
+      "Unable to verify Premium access.",
+      "error"
+    );
+
+
+    return false;
+
+  }
+
+}
+
+
+// ===================================================
+// REFRESH SESSION BEFORE API REQUEST
+//
+// Avoid holding an old access token if the page
+// remains open for a long time.
+// ===================================================
+// ===================================================
+// LOAD BTBT WNBA PROJECTIONS
+// ===================================================
+
+async function loadBtbtOptimizerProjections(
+  file,
+  sport
+) {
+
+  if (!file) {
+
+    throw new Error(
+      "DraftKings CSV is missing."
+    );
+
+  }
+
+
+  const session =
+    await refreshOptimizerSession();
+
+
+  setOptimizerStatus(
+    "DraftKings slate loaded. Loading BTBT projections...",
+    "loading"
+  );
+
+
+  const formData =
+    new FormData();
+
+
+  formData.append(
+    "file",
+    file
+  );
+
+
+  const response =
+    await fetch(
+      `${window.API_BASE}/api/dk-optimizer/projections?sport=${encodeURIComponent(
+        sport
+      )}`,
+      {
+
+        method:
+          "POST",
+
+        headers: {
+
+          Authorization:
+            `Bearer ${session.access_token}`
+
+        },
+
+        body:
+          formData
+
+      }
+    );
+
+
+  let data =
+    null;
+
+
+  try {
+
+    data =
+      await response.json();
+
+  } catch {
+
+    data =
+      null;
+
+  }
+
+
+  if (!response.ok) {
+
+    const detail =
+      data?.detail;
+
+
+    let message =
+      `Unable to load BTBT projections (${response.status}).`;
+
+
+    if (
+      typeof detail ===
+      "string"
+    ) {
+
+      message =
+        detail;
+
+    }
+
+
+    else if (
+      detail?.message
+    ) {
+
+      message =
+        detail.message;
+
+    }
+
+
+    throw new Error(
+      message
+    );
+
+  }
+
+
+  if (
+    !data ||
+    data.success !== true ||
+    !Array.isArray(
+      data.players
+    )
+  ) {
+
+    throw new Error(
+      "BTBT projection response was invalid."
+    );
+
+  }
+
+
+  // =================================================
+  // BUILD LOOKUP
+  // =================================================
+
+  currentProjectionMap =
+    new Map();
+
+
+  data.players.forEach(
+    player => {
+
+      const key =
+        getOptimizerPlayerKey(
+          player.player_name
+        );
+
+
+      if (!key) {
+        return;
+      }
+
+
+      currentProjectionMap.set(
+        key,
+        player
+      );
+
+    }
+  );
+
+
+  // =================================================
+  // MERGE PROJECTIONS INTO CURRENT DK PLAYER POOL
+  // =================================================
+
+  if (
+    currentSlate &&
+    Array.isArray(
+      currentSlate.players
+    )
+  ) {
+
+    currentSlate.players =
+      currentSlate.players.map(
+        player => {
+
+          const key =
+            getOptimizerPlayerKey(
+              player.name
+            );
+
+
+          const projection =
+            currentProjectionMap.get(
+              key
+            );
+
+
+          if (!projection) {
+
+            return {
+              ...player,
+
+              btbt_projection:
+                null,
+
+              btbt_value:
+                null,
+
+              expected_minutes:
+                null,
+
+              model_confidence:
+                "—"
+            };
+
+          }
+
+
+          const btbtProjection =
+            Number(
+              projection.dk_projection
+            );
+
+
+          // ---------------------------------------------
+          // Use the correct DK salary for value.
+          //
+          // Classic:
+          //   salary
+          //
+          // Showdown:
+          //   UTIL salary
+          //
+          // This prevents Captain pricing from distorting
+          // the player's normal value rating.
+          // ---------------------------------------------
+
+          const salary =
+            currentSlate.slate_type ===
+              "SHOWDOWN"
+              ? Number(
+                  player.util_salary ||
+                  0
+                )
+              : Number(
+                  player.salary ||
+                  0
+                );
+
+
+          const value =
+            Number.isFinite(
+              btbtProjection
+            )
+            &&
+            salary > 0
+
+              ? (
+                  btbtProjection /
+                  (
+                    salary /
+                    1000
+                  )
+                )
+
+              : null;
+
+
+          return {
+
+            ...player,
+
+            btbt_projection:
+              Number.isFinite(
+                btbtProjection
+              )
+                ? btbtProjection
+                : null,
+
+            btbt_value:
+              Number.isFinite(
+                value
+              )
+                ? value
+                : null,
+
+            expected_minutes:
+              projection.expected_minutes ??
+              null,
+
+            model_confidence:
+              projection.model_confidence ||
+              "—"
+
+          };
+
+        }
+      );
+
+  }
+
+
+  updateOptimizerCounts();
+
+
+  updateOptimizerGenerateButton();
+
+
+  setGenerateStatus(
+    data.matched_count > 0
+      ? `BTBT projections loaded. Ready to generate ${currentSlate?.slate_type === "SHOWDOWN" ? "Showdown" : "Classic"} lineups.`
+      : "No BTBT projections matched this slate.",
+    data.matched_count > 0
+      ? "success"
+      : "error"
+  );
+
+
+  console.log(
+    "🧠 BTBT projections loaded:",
+    {
+      matched:
+        data.matched_count,
+
+      missing:
+        data.missing_count,
+
+      dkPlayers:
+        data.dk_player_count
+    }
+  );
+
+
+  return data;
+
+}
+async function refreshOptimizerSession() {
+
+  const supabaseClient =
+    getOptimizerSupabaseClient();
+
+
+  if (!supabaseClient) {
+
+    throw new Error(
+      "Supabase authentication is not initialized."
+    );
+
+  }
+
+
+  const {
+    data: {
+      session
+    },
+    error
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (error) {
+
+    throw error;
+
+  }
+
+
+  if (
+    !session
+      ?.access_token
+  ) {
+
+    throw new Error(
+      "Your session has expired. Please sign in again."
+    );
+
+  }
+
+
+  currentSession =
+    session;
+
+
+  return session;
+
+}
+
+
+// ===================================================
+// LOAD DRAFTKINGS CSV
+// ===================================================
+
+async function loadOptimizerSlate() {
+
+  // =================================================
+  // ACCESS
+  // =================================================
+
+  if (
+    !optimizerAccessAllowed
+  ) {
+
+    const allowed =
+      await verifyOptimizerAccess();
+
+
+    if (!allowed) {
+
+      return;
+
+    }
+
+  }
+
+
+  // =================================================
+  // FILE
+  // =================================================
+
+  const file =
+    salaryFile
+      ?.files
+      ?.[0];
+
+
+  if (!file) {
+
+    setOptimizerStatus(
+      "Choose a DraftKings CSV first.",
+      "error"
+    );
+
+
+    updateOptimizerLoadButton();
+
+
+    return;
+
+  }
+
+
+  if (
+    !file.name
+      .toLowerCase()
+      .endsWith(
+        ".csv"
+      )
+  ) {
+
+    setOptimizerStatus(
+      "DraftKings salary file must be a CSV.",
+      "error"
+    );
+
+
+    return;
+
+  }
+
+
+  // =================================================
+  // CLEAR OLD SLATE
+  // =================================================
+
+  clearOptimizerSlateDisplay();
+
+
+  if (loadBtn) {
+
+    loadBtn.disabled =
+      true;
+
+  }
+
+
+  setOptimizerStatus(
+    "Reading DraftKings slate...",
+    "loading"
+  );
+
+
+  try {
+
+    // =================================================
+    // REFRESH AUTH SESSION
+    // =================================================
+
+    const session =
+      await refreshOptimizerSession();
+
+
+    // =================================================
+    // MULTIPART REQUEST
+    // =================================================
+
+    const formData =
+      new FormData();
+
+
+    formData.append(
+      "file",
+      file
+    );
+
+
+    // Keep sport available in frontend state.
+    // Backend parse endpoint currently only requires file.
+    const selectedSport =
+      sportSelect?.value ||
+      "basketball_wnba";
+
+
+    console.log(
+      "📤 Uploading DK slate:",
+      {
+        file:
+          file.name,
+
+        sport:
+          selectedSport,
+
+        api:
+          window.API_BASE
+      }
+    );
+
+
+    const response =
+      await fetch(
+        `${window.API_BASE}/api/dk-optimizer/parse`,
+        {
+
+          method:
+            "POST",
+
+          headers: {
+
+            Authorization:
+              `Bearer ${session.access_token}`
+
+          },
+
+          body:
+            formData
+
+        }
+      );
+
+
+    // =================================================
+    // READ RESPONSE
+    // =================================================
+
+    let data =
+      null;
+
+
+    try {
+
+      data =
+        await response.json();
+
+    } catch {
+
+      data =
+        null;
+
+    }
+
+
+    // =================================================
+    // API ERROR
+    // =================================================
+
+    if (!response.ok) {
+
+      const detail =
+        data?.detail;
+
+
+      let message =
+        `Unable to load DraftKings slate (${response.status}).`;
+
+
+      if (
+        typeof detail ===
+        "string"
+      ) {
+
+        message =
+          detail;
+
+      }
+
+
+      else if (
+        detail &&
+        typeof detail ===
+          "object"
+      ) {
+
+        if (
+          detail.message
+        ) {
+
+          message =
+            detail.message;
+
+        }
+
+
+        if (
+          Array.isArray(
+            detail.missing_columns
+          )
+          &&
+          detail.missing_columns.length
+        ) {
+
+          message +=
+            ` Missing: ${detail.missing_columns.join(", ")}`;
+
+        }
+
+      }
+
+
+      throw new Error(
+        message
+      );
+
+    }
+
+
+    // =================================================
+    // VALIDATE RESPONSE
+    // =================================================
+
+    if (
+      !data ||
+      data.success !== true
+    ) {
+
+      throw new Error(
+        "DraftKings parser returned an invalid response."
+      );
+
+    }
+
+
+    // =================================================
+    // SAVE CURRENT SLATE
+    // =================================================
+
+    currentSlate = {
+
+      ...data,
+
+      sport:
+        selectedSport
+
+    };
+
+
+    // Useful later when we add optimization controls.
+    window.currentDkSlate =
+      currentSlate;
+
+
+    console.log(
+      "🏀 DK slate loaded:",
+      currentSlate
+    );
+
+
+    // =================================================
+    // RENDER
+    // =================================================
+
+    // =================================================
+// FIRST RENDER — DK CSV DATA
+// =================================================
+
+renderOptimizerSummary(
+  currentSlate
+);
+
+
+renderOptimizerGames(
+  currentSlate
+);
+
+
+renderOptimizerPlayers(
+  currentSlate
+);
+
+
+// =================================================
+// LOAD BTBT PROJECTIONS
+// =================================================
+
+setOptimizerProjectionLoading(
+  true,
+  "Building BTBT projections from Vegas + model data..."
+);
+
+
+let projectionResult =
+  null;
+
+
+try {
+
+  projectionResult =
+    await loadBtbtOptimizerProjections(
+      file,
+      selectedSport
+    );
+
+} finally {
+
+  setOptimizerProjectionLoading(
+    false
+  );
+
+}
+
+
+// =================================================
+// SECOND RENDER — NOW WITH BTBT PROJECTIONS
+// =================================================
+
+renderOptimizerPlayers(
+  currentSlate
+);
+
+    const modeLabel =
+      currentSlate.slate_type ===
+        "SHOWDOWN"
+        ? "Captain / Showdown"
+        : "Classic";
+
+
+    const matchedCount =
+      Number(
+        projectionResult.matched_count ||
+        0
+      );
+
+
+    const dkPlayerCount =
+      Number(
+        projectionResult.dk_player_count ||
+        0
+      );
+
+
+    const unmatchedCount =
+      Math.max(
+        0,
+        dkPlayerCount -
+        matchedCount
+      );
+
+
+    setOptimizerStatus(
+      `✅ ${modeLabel} ready • ${matchedCount} matched • ${unmatchedCount} unmatched`,
+      "success"
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "❌ DK slate upload failed:",
+      error
+    );
+
+
+    setOptimizerStatus(
+      error.message ||
+      "Unable to load DraftKings slate.",
+      "error"
+    );
+
+
+  } finally {
+
+    updateOptimizerLoadButton();
+
+  }
+
+}
+
+
+// ===================================================
+// RESET / NEW SLATE
+// ===================================================
+
+function resetOptimizerSlate() {
+
+  clearOptimizerSlateDisplay();
+
+
+  if (salaryFile) {
+
+    salaryFile.value =
+      "";
+
+  }
+
+
+  window.currentDkSlate =
+    null;
+
+
+  if (
+    optimizerAccessAllowed
+  ) {
+
+    setOptimizerStatus(
+      "Choose a DraftKings CSV.",
+      "success"
+    );
+
+  } else {
+
+    setOptimizerStatus(
+      "Checking Premium access...",
+      "loading"
+    );
+
+  }
+
+
+  updateOptimizerLoadButton();
+
+}
+
+
+// ===================================================
+// FILE CHANGE
+//
+// This is what lets the user keep uploading new
+// slates without leaving the optimizer page.
+// ===================================================
+
+salaryFile
+  ?.addEventListener(
+    "change",
+    () => {
+
+      clearOptimizerSlateDisplay();
+
+
+      const file =
+        salaryFile
+          ?.files
+          ?.[0];
+
+
+      if (!file) {
+
+        setOptimizerStatus(
+          "Choose a DraftKings CSV.",
+          "success"
+        );
+
+
+        updateOptimizerLoadButton();
+
+
+        return;
+
+      }
+
+
+      if (
+        !file.name
+          .toLowerCase()
+          .endsWith(
+            ".csv"
+          )
+      ) {
+
+        setOptimizerStatus(
+          "DraftKings salary file must be a CSV.",
+          "error"
+        );
+
+
+        updateOptimizerLoadButton();
+
+
+        return;
+
+      }
+
+
+      setOptimizerStatus(
+        `${file.name} ready to load.`,
+        "success"
+      );
+
+
+      updateOptimizerLoadButton();
+
+    }
+  );
+
+
+// ===================================================
+// SPORT CHANGE
+//
+// Right now only WNBA is enabled, but this prepares
+// the page for NBA / NFL / MLB / NHL expansion.
+// ===================================================
+
+sportSelect
+  ?.addEventListener(
+    "change",
+    () => {
+
+      clearOptimizerSlateDisplay();
+
+
+      if (
+        salaryFile
+          ?.files
+          ?.[0]
+      ) {
+
+        setOptimizerStatus(
+          `${getOptimizerSportLabel()} selected. Slate ready to load.`,
+          "success"
+        );
+
+      }
+
+
+      updateOptimizerLoadButton();
+
+    }
+  );
+
+
+// ===================================================
+// LOAD BUTTON
+// ===================================================
+
+loadBtn
+  ?.addEventListener(
+    "click",
+    loadOptimizerSlate
+  );
+
+
+// ===================================================
+// NEW SLATE BUTTON
+// ===================================================
+
+resetBtn
+  ?.addEventListener(
+    "click",
+    resetOptimizerSlate
+  );
+
+
+// ===================================================
+// AUTH STATE WATCH
+//
+// If the user's session changes while the optimizer
+// page stays open, refresh our state.
+// ===================================================
+
+function attachOptimizerAuthWatcher() {
+
+  const supabaseClient =
+    getOptimizerSupabaseClient();
+
+
+  if (
+    !supabaseClient ||
+    !supabaseClient.auth
+  ) {
+
+    return;
+
+  }
+
+
+  supabaseClient.auth.onAuthStateChange(
+    (
+      event,
+      session
+    ) => {
+
+      console.log(
+        "🔐 DK Optimizer auth event:",
+        event
+      );
+
+
+      if (
+        event ===
+        "SIGNED_OUT"
+      ) {
+
+        currentSession =
+          null;
+
+
+        optimizerAccessAllowed =
+          false;
+
+
+        updateOptimizerLoadButton();
+
+
+        setOptimizerStatus(
+          "You have been signed out.",
+          "error"
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        session
+          ?.access_token
+      ) {
+
+        currentSession =
+          session;
+
+      }
+
+    }
+  );
+
+}
+
+// ===================================================
+// PLAYER SEARCH
+// ===================================================
+
+function applyOptimizerPlayerSearch() {
+
+  const query =
+    String(
+      playerSearch?.value ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  const rows =
+    document.querySelectorAll(
+      "#dkPlayerTableBody tr[data-player-key]"
+    );
+
+
+  rows.forEach(
+    row => {
+
+      const name =
+        String(
+          row.dataset.playerName ||
+          ""
+        );
+
+
+      row.hidden =
+        Boolean(
+          query
+        )
+        &&
+        !name.includes(
+          query
+        );
+
+    }
+  );
+
+}
+
+
+playerSearch
+  ?.addEventListener(
+    "input",
+    applyOptimizerPlayerSearch
+  );
+
+
+// ===================================================
+// LOCK / EXCLUDE PLAYER CONTROLS
+// ===================================================
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const button =
+      event.target.closest(
+        "[data-dk-action][data-player-key]"
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    const action =
+      button.dataset.dkAction;
+
+
+    const key =
+      String(
+        button.dataset.playerKey ||
+        ""
+      );
+
+
+    if (!key) {
+      return;
+    }
+
+
+    clearOptimizerTopLineupHighlight();
+
+
+    if (action === "lock") {
+
+      if (
+        lockedPlayers.has(
+          key
+        )
+      ) {
+
+        lockedPlayers.delete(
+          key
+        );
+
+      } else {
+
+        excludedPlayers.delete(
+          key
+        );
+
+        lockedPlayers.add(
+          key
+        );
+
+      }
+
+    }
+
+
+    if (action === "exclude") {
+
+      if (
+        excludedPlayers.has(
+          key
+        )
+      ) {
+
+        excludedPlayers.delete(
+          key
+        );
+
+      } else {
+
+        lockedPlayers.delete(
+          key
+        );
+
+        excludedPlayers.add(
+          key
+        );
+
+      }
+
+    }
+
+
+    renderOptimizerPlayers(
+      currentSlate
+    );
+
+
+    updateOptimizerCounts();
+
+  }
+);
+
+
+// ===================================================
+// GENERATE OPTIMAL LINEUPS
+// ===================================================
+
+function getOptimizerNamesForKeys(
+  keys
+) {
+
+  const players =
+    Array.isArray(
+      currentSlate?.players
+    )
+      ? currentSlate.players
+      : [];
+
+
+  return players
+    .filter(
+      player =>
+        keys.has(
+          getOptimizerPlayerKey(
+            player.name
+          )
+        )
+    )
+    .map(
+      player =>
+        player.name
+    );
+
+}
+
+
+function buildOptimizerGeneratePlayers() {
+
+  const players =
+    Array.isArray(
+      currentSlate?.players
+    )
+      ? currentSlate.players
+      : [];
+
+
+  return players.map(
+    player => ({
+
+      ...player,
+
+      // dk_optimizer_service.py reads dk_projection.
+      // The page stores the merged projection as
+      // btbt_projection.
+      dk_projection:
+        player.btbt_projection,
+
+    })
+  );
+
+}
+
+
+function getClassicLineupDisplayPlayers(
+  players
+) {
+
+  let guardsAssigned =
+    0;
+
+  let forwardsAssigned =
+    0;
+
+
+  return players.map(
+    player => {
+
+      let role =
+        "UTIL";
+
+
+      if (
+        player.bucket === "G" &&
+        guardsAssigned < 2
+      ) {
+
+        role =
+          "G";
+
+        guardsAssigned +=
+          1;
+
+      }
+
+
+      else if (
+        player.bucket === "F" &&
+        forwardsAssigned < 3
+      ) {
+
+        role =
+          "F";
+
+        forwardsAssigned +=
+          1;
+
+      }
+
+
+      return {
+        ...player,
+        role
+      };
+
+    }
+  );
+
+}
+
+
+function renderOptimizerLineups(
+  data
+) {
+
+  const container =
+    getOptimizerLineupResultsContainer();
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const lineups =
+    Array.isArray(
+      data?.lineups
+    )
+      ? data.lineups
+      : [];
+
+
+  if (!lineups.length) {
+
+    topOptimalLineupPlayerKeys.clear();
+
+
+    container.innerHTML = `
+      <div class="dk-lineup-empty">
+        No valid optimal lineups were returned for the current settings.
+      </div>
+    `;
+
+
+    return;
+
+  }
+
+
+  container.classList.remove(
+    "hidden"
+  );
+
+
+  container.style.display =
+    "block";
+
+
+  const topLineup =
+    lineups[0];
+
+
+  const topLineupPlayers =
+    topLineup?.slate_type ===
+      "SHOWDOWN"
+
+      ? [
+          topLineup.captain,
+          ...(
+            Array.isArray(
+              topLineup.utilities
+            )
+              ? topLineup.utilities
+              : []
+          )
+        ]
+
+      : (
+          Array.isArray(
+            topLineup?.players
+          )
+            ? topLineup.players
+            : []
+        );
+
+
+  topOptimalLineupPlayerKeys =
+    new Set(
+      topLineupPlayers
+        .filter(
+          Boolean
+        )
+        .map(
+          player =>
+            getOptimizerPlayerKey(
+              player.name
+            )
+        )
+        .filter(
+          Boolean
+        )
+    );
+
+
+  applyOptimizerTopLineupHighlight();
+
+
+  const resultHeading = `
+    <div class="dk-results-heading">
+
+      <div>
+
+        <span class="dk-results-eyebrow">
+          BTBT OPTIMIZED
+        </span>
+
+        <h3>
+          Optimal Lineups
+        </h3>
+
+        <p>
+          Ranked by projected DraftKings points using the
+          currently loaded BTBT projections.
+        </p>
+
+      </div>
+
+
+      <span class="dk-results-count">
+        ${lineups.length}
+        lineup${lineups.length === 1 ? "" : "s"}
+      </span>
+
+    </div>
+  `;
+
+
+  const cards =
+    lineups
+      .map(
+        lineup => {
+
+          const isShowdown =
+            lineup.slate_type ===
+              "SHOWDOWN";
+
+
+          const players =
+            isShowdown
+
+              ? [
+                  lineup.captain,
+                  ...(
+                    Array.isArray(
+                      lineup.utilities
+                    )
+                      ? lineup.utilities
+                      : []
+                  )
+                ]
+
+              : getClassicLineupDisplayPlayers(
+                  Array.isArray(
+                    lineup.players
+                  )
+                    ? lineup.players
+                    : []
+                );
+
+
+          const rank =
+            Number(
+              lineup.rank ||
+              0
+            );
+
+
+          const isTopLineup =
+            rank === 1;
+
+
+          const lineupTitle =
+            isTopLineup
+              ? "Top Projected"
+              : `Lineup #${rank || ""}`;
+
+
+          return `
+            <section class="dk-lineup-card ${isTopLineup ? "dk-lineup-card-top" : ""}">
+
+              <div class="dk-lineup-card-header">
+
+                <div class="dk-lineup-title-group">
+
+                  <div class="dk-lineup-rank">
+                    #${escapeOptimizerHtml(
+                      rank ||
+                      ""
+                    )}
+                  </div>
+
+                  <div>
+
+                    <div class="dk-lineup-title-line">
+
+                      <strong>
+                        ${escapeOptimizerHtml(
+                          lineupTitle
+                        )}
+                      </strong>
+
+                      ${
+                        isTopLineup
+                          ? `
+                            <span class="dk-top-projected-badge">
+                              TOP PROJECTED
+                            </span>
+                          `
+                          : ""
+                      }
+
+                    </div>
+
+                    <div class="dk-lineup-subtitle">
+                      ${isShowdown ? "Captain / Showdown" : "Classic"} lineup
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <div class="dk-lineup-summary">
+
+                  <span class="dk-summary-chip dk-summary-projection">
+                    <small>Projection</small>
+                    <strong>
+                      ${formatOptimizerNumber(
+                        lineup.projected_points,
+                        2
+                      )}
+                    </strong>
+                  </span>
+
+                  <span class="dk-summary-chip">
+                    <small>Salary</small>
+                    <strong>
+                      ${formatOptimizerSalary(
+                        lineup.salary
+                      )}
+                    </strong>
+                  </span>
+
+                  <span class="dk-summary-chip">
+                    <small>Remaining</small>
+                    <strong>
+                      ${formatOptimizerSalary(
+                        lineup.salary_remaining
+                      )}
+                    </strong>
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="dk-table-wrap">
+
+                <table class="dk-lineup-table">
+
+                  <thead>
+                    <tr>
+                      <th>Role</th>
+                      <th>Player</th>
+                      <th>Team</th>
+                      <th>Salary</th>
+                      <th>Proj</th>
+                      <th>Min</th>
+                      <th>Conf</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+
+                    ${players
+                      .filter(
+                        Boolean
+                      )
+                      .map(
+                        player => {
+
+                          const role =
+                            String(
+                              player.role ||
+                              player.bucket ||
+                              "--"
+                            )
+                              .trim()
+                              .toUpperCase();
+
+
+                          const confidence =
+                            String(
+                              player.confidence ||
+                              "UNKNOWN"
+                            )
+                              .trim()
+                              .toUpperCase();
+
+
+                          return `
+                            <tr class="${role === "CPT" ? "dk-captain-row" : ""}">
+
+                              <td>
+                                <span class="dk-role-badge ${role === "CPT" ? "captain" : ""}">
+                                  ${escapeOptimizerHtml(
+                                    role
+                                  )}
+                                </span>
+                              </td>
+
+                              <td class="dk-lineup-player-name">
+                                ${player.locked ? '<span class="dk-locked-icon" title="Locked player">🔒</span>' : ""}
+                                <strong>
+                                  ${escapeOptimizerHtml(
+                                    player.name ||
+                                    "--"
+                                  )}
+                                </strong>
+                              </td>
+
+                              <td>
+                                ${escapeOptimizerHtml(
+                                  player.team ||
+                                  "--"
+                                )}
+                              </td>
+
+                              <td>
+                                ${formatOptimizerSalary(
+                                  player.salary
+                                )}
+                              </td>
+
+                              <td>
+                                <strong class="dk-lineup-projection">
+                                  ${formatOptimizerNumber(
+                                    player.projection,
+                                    2
+                                  )}
+                                </strong>
+                              </td>
+
+                              <td>
+                                ${formatOptimizerNumber(
+                                  player.expected_minutes,
+                                  1
+                                )}
+                              </td>
+
+                              <td>
+                                <span
+                                  class="dk-confidence dk-confidence-${getOptimizerConfidenceTone(
+                                    confidence
+                                  )}"
+                                >
+                                  ${escapeOptimizerHtml(
+                                    confidence
+                                  )}
+                                </span>
+                              </td>
+
+                              <td>
+                                ${getOptimizerStatusBadge(
+                                  player.status
+                                )}
+                              </td>
+
+                            </tr>
+                          `;
+
+                        }
+                      )
+                      .join("")}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </section>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  container.innerHTML =
+    resultHeading +
+    cards;
+
+
+  console.log(
+    "🎨 Rendered optimizer lineup table:",
+    {
+      lineupCount:
+        lineups.length,
+
+      container:
+        container
+    }
+  );
+
+
+  requestAnimationFrame(
+    () => {
+
+      container.scrollIntoView(
+        {
+          behavior:
+            "smooth",
+
+          block:
+            "start"
+        }
+      );
+
+    }
+  );
+
+}
+
+async function generateOptimizerLineups() {
+
+  if (
+    !currentSlate ||
+    !Array.isArray(
+      currentSlate.players
+    )
+  ) {
+
+    setGenerateStatus(
+      "Load a DraftKings slate first.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const session =
+    await refreshOptimizerSession();
+
+
+  const requestedCount =
+    Math.max(
+      1,
+      Math.min(
+        10,
+        Number.parseInt(
+          lineupCount?.value ||
+          "1",
+          10
+        )
+        ||
+        1
+      )
+    );
+
+
+  const payload = {
+
+    sport:
+      currentSlate.sport ||
+      sportSelect?.value ||
+      "basketball_wnba",
+
+    slate_type:
+      currentSlate.slate_type,
+
+    players:
+      buildOptimizerGeneratePlayers(),
+
+    locked_names:
+      getOptimizerNamesForKeys(
+        lockedPlayers
+      ),
+
+    excluded_names:
+      getOptimizerNamesForKeys(
+        excludedPlayers
+      ),
+
+    allow_questionable:
+      allowQuestionable
+        ?.checked !== false,
+
+    top_n:
+      requestedCount,
+
+  };
+
+
+  if (generateLineupBtn) {
+
+    generateLineupBtn.disabled =
+      true;
+
+  }
+
+
+  setGenerateStatus(
+    "Generating optimal lineup...",
+    "loading"
+  );
+
+
+  clearOptimizerTopLineupHighlight();
+
+
+  const pendingResults =
+    getOptimizerLineupResultsContainer();
+
+
+  if (pendingResults) {
+
+    pendingResults.innerHTML = `
+      <div class="dk-projection-loader visible">
+        <span
+          class="dk-projection-spinner"
+          aria-hidden="true"
+        ></span>
+
+        <span>
+          Optimizing lineup...
+        </span>
+      </div>
+    `;
+
+  }
+
+
+  try {
+
+    const response =
+      await fetch(
+        `${window.API_BASE}/api/dk-optimizer/generate`,
+        {
+
+          method:
+            "POST",
+
+          headers: {
+
+            Authorization:
+              `Bearer ${session.access_token}`,
+
+            "Content-Type":
+              "application/json",
+
+          },
+
+          body:
+            JSON.stringify(
+              payload
+            ),
+
+        }
+      );
+
+
+    let data =
+      null;
+
+
+    try {
+
+      data =
+        await response.json();
+
+    } catch {
+
+      data =
+        null;
+
+    }
+
+
+    if (!response.ok) {
+
+      const detail =
+        data?.detail;
+
+
+      const message =
+        typeof detail ===
+          "string"
+
+          ? detail
+
+          : (
+              detail?.message ||
+              `Unable to generate lineup (${response.status}).`
+            );
+
+
+      throw new Error(
+        message
+      );
+
+    }
+
+
+    if (
+      !data ||
+      data.success !== true ||
+      !Array.isArray(
+        data.lineups
+      )
+    ) {
+
+      throw new Error(
+        "Optimizer returned an invalid lineup response."
+      );
+
+    }
+
+
+    renderOptimizerLineups(
+      data
+    );
+
+
+    setGenerateStatus(
+      `✅ Generated ${data.lineup_count} optimal lineup${data.lineup_count === 1 ? "" : "s"}.`,
+      "success"
+    );
+
+
+    console.log(
+      "🧠 DK optimal lineups:",
+      data.lineups
+    );
+
+  } catch (error) {
+
+    console.error(
+      "❌ DK lineup generation failed:",
+      error
+    );
+
+
+    const results =
+      getOptimizerLineupResultsContainer();
+
+
+    if (results) {
+
+      results.innerHTML =
+        "";
+
+    }
+
+
+    setGenerateStatus(
+      error.message ||
+      "Unable to generate optimal lineup.",
+      "error"
+    );
+
+  } finally {
+
+    updateOptimizerGenerateButton();
+
+  }
+
+}
+
+
+generateLineupBtn
+  ?.addEventListener(
+    "click",
+    generateOptimizerLineups
+  );
+
+
+// ===================================================
+// QUESTIONABLE PLAYER TOGGLE
+// ===================================================
+
+allowQuestionable
+  ?.addEventListener(
+    "change",
+    () => {
+
+      clearOptimizerTopLineupHighlight();
+
+
+      updateOptimizerCounts();
+
+
+      const results =
+        getOptimizerLineupResultsContainer();
+
+
+      if (results) {
+
+        results.innerHTML =
+          "";
+
+      }
+
+
+      setGenerateStatus(
+        "Lineup controls changed. Generate again to refresh results."
+      );
+
+
+      console.log(
+        "🏥 Allow questionable:",
+        allowQuestionable.checked
+      );
+
+    }
+  );
+// ===================================================
+// INITIALIZE PAGE
+// ===================================================
+
+async function initializeOptimizerPage() {
+
+  ensureOptimizerDynamicStyles();
+
+
+  console.log(
+    "🏀 BTBT DraftKings Optimizer loaded"
+  );
+
+
+  console.log(
+    "🌐 Optimizer API:",
+    window.API_BASE
+  );
+
+
+  // Start disabled until Premium access is confirmed.
+  optimizerAccessAllowed =
+    false;
+
+
+  updateOptimizerLoadButton();
+
+
+  attachOptimizerAuthWatcher();
+
+
+  await verifyOptimizerAccess();
+
+}
+
+
+// ===================================================
+// START
+// ===================================================
+
+initializeOptimizerPage();

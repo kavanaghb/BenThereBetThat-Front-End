@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <!-- ===================================================
+       BASIC PAGE SETTINGS
+  =================================================== -->
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Ben There Bet That DraftKings lineup optimizer."
+  >
+
+  <title>
+    DraftKings Lineup Optimizer | Ben There Bet That
+  </title>
+
+
+  <!-- ===================================================
+       OPTIMIZER CSS
+  =================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="dk-optimizer.css"
+  >
+
+
+  <!-- ===================================================
+       API BASE
+       Local development → localhost backend
+       Production → Render backend
+  =================================================== -->
+
+  <script>
+
+    const isLocalhost =
+      window.location.hostname === "localhost"
+      ||
+      window.location.hostname === "127.0.0.1";
+
+
+    window.API_BASE =
+      isLocalhost
+        ? "http://127.0.0.1:5000"
+        : "https://bentherebetthat-api.onrender.com";
+
+
+    console.log(
+      "🌐 DK Optimizer API_BASE:",
+      window.API_BASE
+    );
+
+  </script>
+
+</head>
+
+
+<body>
+
+
+  <!-- ===================================================
+       TOP NAVIGATION
+  =================================================== -->
+
+  <header class="optimizer-topbar">
+
+
+    <!-- BRAND -->
+
+    <a
+      href="index.html"
+      class="optimizer-brand"
+      aria-label="Ben There Bet That home"
+    >
+
+      <span class="brand-ben">
+        Ben
+      </span>
+
+      There
+
+      <span class="brand-bet">
+        Bet
+      </span>
+
+      That!
+
+    </a>
+
+
+    <!-- BACK BUTTON -->
+
+    <a
+      href="index.html"
+      class="back-btn"
+    >
+      ← Sports Dashboard
+    </a>
+
+
+  </header>
+
+
+
+  <!-- ===================================================
+       MAIN PAGE
+  =================================================== -->
+
+  <main class="optimizer-shell">
+
+
+    <!-- =================================================
+         HERO
+    ================================================== -->
+
+    <section class="optimizer-hero">
+
+
+      <div>
+
+
+        <div class="premium-label">
+          PREMIUM
+        </div>
+
+
+        <h1>
+          🏀 DraftKings Lineup Optimizer
+        </h1>
+
+
+        <p>
+          Upload an official DraftKings salary CSV,
+          review the slate, and build optimized lineups
+          using Ben There Bet That projections.
+        </p>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         UPLOAD PANEL
+    ================================================== -->
+
+    <section class="optimizer-panel">
+
+
+      <h2>
+        Load DraftKings Slate
+      </h2>
+
+
+      <p>
+        Download the salary CSV directly from DraftKings
+        and upload it below.
+      </p>
+
+
+      <div class="upload-grid">
+
+
+        <!-- =============================================
+             SPORT
+        ============================================== -->
+
+        <div class="form-field">
+
+
+          <label for="dkSportSelect">
+            Sport
+          </label>
+
+
+          <select
+            id="dkSportSelect"
+            name="dkSportSelect"
+          >
+
+            <option
+              value="basketball_wnba"
+              selected
+            >
+              WNBA
+            </option>
+
+          </select>
+
+
+          <small>
+            WNBA is available first. Additional sports
+            will be added to the optimizer.
+          </small>
+
+
+        </div>
+
+
+
+        <!-- =============================================
+             DRAFTKINGS CSV
+        ============================================== -->
+
+        <div class="form-field file-field">
+
+
+          <label for="dkSalaryFile">
+            DraftKings Salary CSV
+          </label>
+
+
+          <input
+            id="dkSalaryFile"
+            name="dkSalaryFile"
+            type="file"
+            accept=".csv,text/csv"
+          >
+
+
+          <small>
+            Classic and Captain / Showdown files are
+            detected automatically.
+          </small>
+
+
+        </div>
+
+
+      </div>
+
+
+
+      <!-- ===============================================
+           UPLOAD ACTIONS
+      ================================================ -->
+
+      <div class="upload-actions">
+
+
+        <button
+          id="dkParseCsvBtn"
+          class="primary-btn"
+          type="button"
+          disabled
+        >
+          Load Slate
+        </button>
+
+
+        <button
+          id="dkResetBtn"
+          class="secondary-btn"
+          type="button"
+        >
+          New Slate
+        </button>
+
+
+      </div>
+
+
+
+      <!-- ===============================================
+           STATUS
+      ================================================ -->
+
+      <p
+        id="dkOptimizerStatus"
+        class="optimizer-status"
+        role="status"
+        aria-live="polite"
+      >
+        Checking Premium access...
+      </p>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         SLATE SUMMARY
+    ================================================== -->
+
+    <section
+      id="dkSlateSummary"
+      class="summary-grid hidden"
+    >
+
+
+      <!-- SPORT -->
+
+      <div class="summary-card">
+
+        <span>
+          Sport
+        </span>
+
+        <strong id="dkSummarySport">
+          --
+        </strong>
+
+      </div>
+
+
+
+      <!-- MODE -->
+
+      <div class="summary-card">
+
+        <span>
+          Mode
+        </span>
+
+        <strong id="dkSummaryMode">
+          --
+        </strong>
+
+      </div>
+
+
+
+      <!-- PLAYERS -->
+
+      <div class="summary-card">
+
+        <span>
+          Players
+        </span>
+
+        <strong id="dkSummaryPlayers">
+          --
+        </strong>
+
+      </div>
+
+
+
+      <!-- GAMES -->
+
+      <div class="summary-card">
+
+        <span>
+          Games
+        </span>
+
+        <strong id="dkSummaryGames">
+          --
+        </strong>
+
+      </div>
+
+
+
+      <!-- SALARY CAP -->
+
+      <div class="summary-card">
+
+        <span>
+          Salary Cap
+        </span>
+
+        <strong id="dkSummaryCap">
+          $50,000
+        </strong>
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         SLATE GAMES
+    ================================================== -->
+
+    <section
+      id="dkGamesContainer"
+      class="optimizer-panel hidden"
+    >
+
+
+      <h2>
+        Slate Games
+      </h2>
+
+
+      <div id="dkGamesList">
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         PLAYER POOL
+    ================================================== -->
+
+    <section
+      id="dkPlayerPoolContainer"
+      class="optimizer-panel hidden"
+    >
+
+
+      <div class="player-pool-header">
+
+
+        <div>
+
+
+          <h2>
+            DraftKings Player Pool
+          </h2>
+
+
+          <p>
+            DraftKings salary information for the
+            currently loaded slate.
+          </p>
+
+
+        </div>
+
+
+      </div>
+
+
+
+      <!-- ===============================================
+           PLAYER TABLE
+      ================================================ -->
+
+      <div class="table-wrap">
+
+
+        <table class="player-table">
+
+
+          <thead
+            id="dkPlayerTableHead"
+          >
+          </thead>
+
+
+          <tbody
+            id="dkPlayerTableBody"
+          >
+          </tbody>
+
+
+        </table>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         PROJECTION / OPTIMIZER PLACEHOLDER
+         We will activate this in the next step.
+    ================================================== -->
+
+    <!-- =================================================
+     BTBT LINEUP OPTIMIZATION
+================================================== -->
+
+<section
+  id="dkOptimizationContainer"
+  class="optimizer-panel hidden"
+>
+
+  <div class="optimizer-control-header">
+
+    <div>
+
+      <h2>
+        🧠 BTBT Lineup Optimization
+      </h2>
+
+      <p>
+        Use Ben There Bet That projections to build
+        the highest-projected DraftKings lineup.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===============================================
+       OPTIMIZER CONTROLS
+  ================================================ -->
+
+  <div class="optimizer-controls">
+
+
+    <!-- QUESTIONABLE PLAYERS -->
+
+    <label class="optimizer-checkbox">
+
+      <input
+        id="dkAllowQuestionable"
+        type="checkbox"
+        checked
+      >
+
+      <span>
+        Allow Questionable Players
+      </span>
+
+    </label>
+
+
+    <!-- SEARCH -->
+
+    <div class="optimizer-search-field">
+
+      <label for="dkPlayerSearch">
+        Search Player
+      </label>
+
+      <input
+        id="dkPlayerSearch"
+        type="text"
+        placeholder="Player name..."
+      >
+
+    </div>
+
+
+    <!-- LINEUP COUNT -->
+
+    <div class="optimizer-lineup-count">
+
+      <label for="dkLineupCount">
+        Lineups
+      </label>
+
+      <select id="dkLineupCount">
+
+        <option value="1">
+          1
+        </option>
+
+        <option value="3" selected>
+          3
+        </option>
+
+        <option value="5">
+          5
+        </option>
+
+        <option value="10">
+          10
+        </option>
+
+      </select>
+
+    </div>
+
+
+  </div>
+
+
+  <!-- ===============================================
+       SELECTION SUMMARY
+  ================================================ -->
+
+  <div class="optimizer-selection-summary">
+
+    <div>
+
+      <span>
+        Locked
+      </span>
+
+      <strong id="dkLockedCount">
+        0
+      </strong>
+
+    </div>
+
+
+    <div>
+
+      <span>
+        Excluded
+      </span>
+
+      <strong id="dkExcludedCount">
+        0
+      </strong>
+
+    </div>
+
+
+    <div>
+
+      <span>
+        Eligible
+      </span>
+
+      <strong id="dkEligibleCount">
+        --
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===============================================
+       GENERATE BUTTON
+  ================================================ -->
+
+  <div class="optimizer-generate-area">
+
+    <button
+      id="dkGenerateLineupBtn"
+      class="primary-btn optimizer-generate-btn"
+      type="button"
+      disabled
+    >
+      Generate Optimal Lineup
+    </button>
+
+
+    <p
+      id="dkGenerateStatus"
+      class="optimizer-generate-status"
+    >
+      BTBT projections are not loaded yet.
+    </p>
+
+  </div>
+
+
+  <!-- ===============================================
+       LINEUP RESULTS
+  ================================================ -->
+
+  <div
+    id="dkLineupResults"
+    class="lineup-results hidden"
+  >
+
+    <h3>
+      Optimal Lineups
+    </h3>
+
+
+    <div id="dkLineupResultsList">
+    </div>
+
+  </div>
+
+
+</section>
+
+
+  </main>
+
+
+
+  <!-- ===================================================
+       FOOTER
+  =================================================== -->
+
+  <footer class="optimizer-footer">
+
+    Ben There Bet That provides analytics for
+    informational and entertainment purposes only.
+
+  </footer>
+
+
+
+  <!-- ===================================================
+       JAVASCRIPT
+  =================================================== -->
+
+
+  <!--
+    Supabase browser library must load FIRST.
+  -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+
+
+  <!--
+    Existing BTBT shared script.
+
+    This supplies:
+      • Supabase client
+      • authentication session
+      • subscription status logic
+      • window.hasPremiumAccess
+      • shared backend configuration
+  -->
+
+  <script
+    src="script.js"
+  ></script>
+
+
+
+  <!--
+    Dedicated DraftKings optimizer logic.
+    Keep this AFTER script.js.
+  -->
+
+  <script
+    src="dk-optimizer.js"
+  ></script>
+
+
+</body>
+
+</html>

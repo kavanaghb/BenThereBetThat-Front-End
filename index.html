@@ -36,6 +36,66 @@
         : "https://bentherebetthat-api.onrender.com";
   </script>
 
+
+  <style id="btbtCustomSportIconStyles">
+    .sport-buttons button.btbt-sport-logo-btn,
+    .sport-buttons button.btbt-feature-logo-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btbt-sport-icon,
+    .btbt-feature-icon {
+      width: 31px;
+      height: 31px;
+      flex: 0 0 31px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .btbt-sport-icon svg,
+    .btbt-feature-icon svg {
+      width: 31px;
+      height: 31px;
+      display: block;
+      pointer-events: none;
+    }
+
+    .btbt-sport-label,
+    .btbt-feature-label {
+      pointer-events: none;
+      line-height: 1.05;
+    }
+
+    .sport-buttons button.btbt-feature-logo-btn .btbt-feature-icon {
+      width: 34px;
+      height: 34px;
+      flex-basis: 34px;
+    }
+
+    .sport-buttons button.btbt-feature-logo-btn .btbt-feature-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    @media (max-width: 760px) {
+      .sport-buttons button.btbt-sport-logo-btn,
+      .sport-buttons button.btbt-feature-logo-btn {
+        gap: 8px;
+      }
+
+      .btbt-sport-icon,
+      .btbt-sport-icon svg {
+        width: 27px;
+        height: 27px;
+      }
+    }
+  </style>
+
 </head>
 
 
@@ -808,18 +868,118 @@
 
     <!-- Sport Buttons -->
     <div class="sport-buttons">
-      <button data-sport="americanfootball_nfl">NFL</button>
-      <button data-sport="americanfootball_ncaaf">NCAAF</button>
-      <button data-sport="basketball_nba">NBA</button>
-      <button data-sport="basketball_ncaab">NCAAB</button>
-      <button data-sport="basketball_wnba">WNBA</button>
-      <button data-sport="baseball_mlb">MLB</button>
-      <button data-sport="icehockey_nhl">NHL</button>
-      <button id="openPickTrackerBtn">📊 Pick Tracker</button>
-      <button id="openGameLinesBtn">📈 Game Lines EV</button>
-      <button id="openMarchMadnessBtn">🏀 March Madness Model</button>
-      
+      <button data-sport="americanfootball_nfl" class="btbt-sport-logo-btn">
+        <span class="btbt-sport-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M7.2 10.1C11.5 5.8 20.4 4.8 25.7 6.3c1.5 5.3.5 14.2-3.8 18.5-4.3 4.3-11.5 3.8-15.4-.1-3.9-3.9-3.6-10.3.7-14.6Z" fill="#9A5A2B"/>
+      <path d="M9.2 22.8 23.6 8.4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <path d="m13.8 13.2 5 5M11.9 15.2l5 5M15.8 11.3l5 5" stroke="#fff" stroke-width="1.45" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-sport-label">NFL</span>
+      </button>
+
+      <button data-sport="americanfootball_ncaaf" class="btbt-sport-logo-btn">
+        <span class="btbt-sport-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M6.5 11.5c4-4 12.5-5.3 18-3.8 1.5 5.5.2 14-3.8 18-4.2 4.2-10.7 3.7-14.2.2-3.5-3.5-4.2-10.2 0-14.4Z" fill="#9A5A2B"/>
+      <path d="M8.3 23.7 23.4 8.6" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="m13.4 13.5 5.1 5.1M11.5 15.5l5.1 5.1M15.4 11.6l5.1 5.1" stroke="#fff" stroke-width="1.35" stroke-linecap="round"/>
+      <path d="M24.5 3.8v7.1M24.5 4h5l-1.8 2 1.8 2h-5" fill="none" stroke="#4A74F5" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-sport-label">NCAAF</span>
+      </button>
+
+      <button data-sport="basketball_nba" class="btbt-sport-logo-btn">
+        <span class="btbt-sport-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="12" fill="#F28C28"/>
+      <path d="M16 4c3.3 2.9 5.2 7.1 5.2 12S19.3 25.1 16 28M16 4c-3.3 2.9-5.2 7.1-5.2 12S12.7 25.1 16 28M4 16h24M6.3 10.4c2.7 1.4 6 2.1 9.7 2.1s7-.7 9.7-2.1M6.3 21.6c2.7-1.4 6-2.1 9.7-2.1s7 .7 9.7 2.1" fill="none" stroke="#263238" stroke-width="1.45" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-sport-label">NBA</span>
+      </button>
+
+      <button data-sport="basketball_ncaab" class="btbt-sport-logo-btn">
+        <span class="btbt-sport-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="14.5" cy="16" r="10.5" fill="#F28C28"/>
+      <path d="M14.5 5.5c2.9 2.6 4.6 6.3 4.6 10.5s-1.7 7.9-4.6 10.5M14.5 5.5C11.6 8.1 10 11.8 10 16s1.6 7.9 4.5 10.5M4 16h21M6 11.1c2.4 1.2 5.2 1.8 8.5 1.8s6.1-.6 8.5-1.8M6 20.9c2.4-1.2 5.2-1.8 8.5-1.8s6.1.6 8.5 1.8" fill="none" stroke="#263238" stroke-width="1.25" stroke-linecap="round"/>
+      <path d="M24.5 8.2h4v5M24.5 23.8h4v-5" fill="none" stroke="#4A74F5" stroke-width="1.8" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-sport-label">NCAAB</span>
+      </button>
+
+      <button data-sport="basketball_wnba" class="btbt-sport-logo-btn">
+        <span class="btbt-sport-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="15.5" cy="16" r="11.5" fill="#F28C28"/>
+      <path d="M15.5 4.5c3.1 2.8 4.9 6.7 4.9 11.5s-1.8 8.7-4.9 11.5M15.5 4.5C12.4 7.3 10.6 11.2 10.6 16s1.8 8.7 4.9 11.5M4 16h23M6 10.7c2.6 1.3 5.8 2 9.5 2s6.9-.7 9.5-2M6 21.3c2.6-1.3 5.8-2 9.5-2s6.9.7 9.5 2" fill="none" stroke="#263238" stroke-width="1.3" stroke-linecap="round"/>
+      <circle cx="25.7" cy="7" r="4.4" fill="#4A74F5"/>
+      <path d="m23.7 5.5 1.2 3 1.1-2.1 1.1 2.1 1-3" fill="none" stroke="#fff" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg></span>
+        <span class="btbt-sport-label">WNBA</span>
+      </button>
+
+      <button data-sport="baseball_mlb" class="btbt-sport-logo-btn">
+        <span class="btbt-sport-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="12" fill="#fff" stroke="#D9E1EC" stroke-width="1.2"/>
+      <path d="M9.2 6.3c2.4 2.5 3.6 5.6 3.6 9.7s-1.2 7.2-3.6 9.7M22.8 6.3c-2.4 2.5-3.6 5.6-3.6 9.7s1.2 7.2 3.6 9.7" fill="none" stroke="#D64B4B" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="m10.9 9.5 2.2 1M10.3 12.6l2.4.7M10.2 19.3l2.4-.7M10.9 22.5l2.2-1M21.1 9.5l-2.2 1M21.7 12.6l-2.4.7M21.8 19.3l-2.4-.7M21.1 22.5l-2.2-1" stroke="#D64B4B" stroke-width="1.05" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-sport-label">MLB</span>
+      </button>
+
+      <button data-sport="icehockey_nhl" class="btbt-sport-logo-btn">
+        <span class="btbt-sport-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M8 5.5 18 23.2c.6 1 1.5 1.6 2.7 1.6h5.8" fill="none" stroke="#334155" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M24 5.5 14 23.2c-.6 1-1.5 1.6-2.7 1.6H5.5" fill="none" stroke="#4A74F5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="16" cy="26.4" rx="7.2" ry="2.1" fill="#1F2937"/>
+    </svg></span>
+        <span class="btbt-sport-label">NHL</span>
+      </button>
+
+      <button id="openPickTrackerBtn" class="btbt-feature-logo-btn">
+        <span class="btbt-feature-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="5" y="15" width="5" height="11" rx="1.7" fill="#77A3FF"/>
+      <rect x="13.5" y="10" width="5" height="16" rx="1.7" fill="#62C28B"/>
+      <rect x="22" y="6" width="5" height="20" rx="1.7" fill="#C97BE8"/>
+      <path d="M4 27h24" stroke="#334155" stroke-width="1.5" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-feature-label">Pick Tracker</span>
+      </button>
+
+      <button id="openGameLinesBtn" class="btbt-feature-logo-btn">
+        <span class="btbt-feature-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M5 25V7M5 25h22" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="m8 21 5.5-6 4.4 3.7L25.5 10" fill="none" stroke="#4A74F5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="8" cy="21" r="1.7" fill="#4A74F5"/>
+      <circle cx="13.5" cy="15" r="1.7" fill="#4A74F5"/>
+      <circle cx="17.9" cy="18.7" r="1.7" fill="#4A74F5"/>
+      <circle cx="25.5" cy="10" r="1.7" fill="#4A74F5"/>
+    </svg></span>
+        <span class="btbt-feature-label">Game Lines EV</span>
+      </button>
+
+      <button id="openMarchMadnessBtn" class="btbt-feature-logo-btn">
+        <span class="btbt-feature-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="6" cy="7" r="2.1" fill="#F28C28"/>
+      <circle cx="6" cy="25" r="2.1" fill="#F28C28"/>
+      <circle cx="15" cy="11.5" r="2.1" fill="#F28C28"/>
+      <circle cx="15" cy="20.5" r="2.1" fill="#F28C28"/>
+      <circle cx="25.5" cy="16" r="2.2" fill="#4A74F5"/>
+      <path d="M8.1 7h2.4c1.3 0 2.4 1.1 2.4 2.4v.1M8.1 25h2.4c1.3 0 2.4-1.1 2.4-2.4v-.1M17.1 11.5h3.1c1.5 0 2.7 1.2 2.7 2.7v.1M17.1 20.5h3.1c1.5 0 2.7-1.2 2.7-2.7v-.1" fill="none" stroke="#64748B" stroke-width="1.7" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-feature-label">March Madness Model</span>
+      </button>
+
+      <button id="openDkOptimizerBtn" class="btbt-feature-logo-btn">
+        <span class="btbt-feature-icon"><svg viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="4.5" y="5" width="9" height="9" rx="2.2" fill="#E9F1FF" stroke="#4A74F5" stroke-width="1.7"/>
+      <rect x="18.5" y="5" width="9" height="9" rx="2.2" fill="#E9F1FF" stroke="#4A74F5" stroke-width="1.7"/>
+      <rect x="4.5" y="18" width="9" height="9" rx="2.2" fill="#E9F1FF" stroke="#4A74F5" stroke-width="1.7"/>
+      <path d="m18.9 22.5 2.8 2.8 5.7-6.4" fill="none" stroke="#22A55B" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7.5 9.5h3M21.5 9.5h3M7.5 22.5h3" stroke="#4A74F5" stroke-width="1.7" stroke-linecap="round"/>
+    </svg></span>
+        <span class="btbt-feature-label">DK Lineup Optimizer</span>
+      </button>
     </div>
+
+
+</section>
 
     <!-- 🏟️ Game Selector -->
     <div id="gameFilterContainer" style="display:none; margin:15px 0;">
