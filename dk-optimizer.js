@@ -83,6 +83,19 @@ const playerSearch =
   );
 
 
+let hideUnavailablePlayers =
+  true;
+
+
+const OPTIMIZER_HIDDEN_PLAYER_REASONS =
+  new Set([
+    "DK_STATUS_OUT",
+    "NOT_DK_STARTER",
+    "NOT_PROBABLE_STARTER",
+    "RELIEF_PITCHER_NO_STARTER_ROLE"
+  ]);
+
+
 const lineupCount =
   document.getElementById(
     "dkLineupCount"
@@ -183,6 +196,41 @@ function ensureOptimizerDynamicStyles() {
       border-top-color: currentColor;
       border-radius: 50%;
       animation: dkOptimizerSpin 0.8s linear infinite;
+    }
+
+    .dk-player-pool-filters {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(0, 0, 0, 0.10);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .dk-player-pool-search {
+      min-width: 220px;
+      flex: 1 1 280px;
+      padding: 10px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      border-radius: 9px;
+      font: inherit;
+    }
+
+    .dk-player-pool-filter-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .dk-player-pool-filter-count {
+      color: rgba(0, 0, 0, 0.58);
+      font-size: 13px;
+      font-weight: 700;
     }
 
     .dk-lineup-results {
@@ -700,6 +748,35 @@ function formatOptimizerNumber(
 }
 
 
+
+function getOptimizerFiniteNumber(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+
+  const numeric =
+    Number(
+      value
+    );
+
+
+  return Number.isFinite(
+    numeric
+  )
+    ? numeric
+    : null;
+
+}
+
+
 // ===================================================
 // SPORT LABEL
 // ===================================================
@@ -835,10 +912,16 @@ function updateOptimizerCounts() {
           }
 
 
-          return Number.isFinite(
-            Number(
+          const projection =
+            getOptimizerFiniteNumber(
               player.btbt_projection
-            )
+            );
+
+
+          return (
+            projection !== null
+            &&
+            projection > 0
           );
 
         }
@@ -873,12 +956,18 @@ function updateOptimizerGenerateButton() {
 
   const hasProjection =
     players.some(
-      player =>
-        Number.isFinite(
-          Number(
+      player => {
+        const projection =
+          getOptimizerFiniteNumber(
             player.btbt_projection
-          )
-        )
+          );
+
+        return (
+          projection !== null
+          &&
+          projection > 0
+        );
+      }
     );
 
 
@@ -1532,6 +1621,11 @@ function renderOptimizerClassicPlayers(
   }
 
 
+  const isMlb =
+    currentSlate?.sport ===
+    "baseball_mlb";
+
+
   head.innerHTML = `
     <tr>
       <th>Player</th>
@@ -1541,9 +1635,10 @@ function renderOptimizerClassicPlayers(
       <th>Salary</th>
       <th>DK Avg</th>
       <th>BTBT Proj</th>
+      <th>Source</th>
       <th>$ Value</th>
       <th>vs DK Avg</th>
-      <th>Min</th>
+      <th>${isMlb ? "Type" : "Min"}</th>
       <th>Conf</th>
       <th>Status</th>
       <th>Controls</th>
@@ -1603,19 +1698,19 @@ function renderOptimizerClassicPlayers(
         player => {
 
           const projection =
-            Number(
+            getOptimizerFiniteNumber(
               player.btbt_projection
             );
 
 
           const value =
-            Number(
+            getOptimizerFiniteNumber(
               player.btbt_value
             );
 
 
           const dkAverage =
-            Number(
+            getOptimizerFiniteNumber(
               player.dk_avg_points
             );
 
@@ -1646,7 +1741,7 @@ function renderOptimizerClassicPlayers(
 
 
           const minutes =
-            Number(
+            getOptimizerFiniteNumber(
               player.expected_minutes
             );
 
@@ -1681,6 +1776,19 @@ function renderOptimizerClassicPlayers(
                   player.name ||
                   ""
                 ).toLowerCase()
+              )}"
+              data-player-status="${escapeOptimizerHtml(
+                String(
+                  player.status ||
+                  ""
+                ).toUpperCase()
+              )}"
+              data-player-source="${escapeOptimizerHtml(
+                String(
+                  player.projection_skip_reason ||
+                  player.projection_source ||
+                  ""
+                ).toUpperCase()
               )}"
             >
 
@@ -1738,6 +1846,18 @@ function renderOptimizerClassicPlayers(
                 }
               </td>
 
+              <td>
+                ${escapeOptimizerHtml(
+                  player.projection_source &&
+                  player.projection_source !== "—"
+                    ? player.projection_source
+                    : (
+                        player.projection_skip_reason ||
+                        "—"
+                      )
+                )}
+              </td>
+
               <td class="dk-value">
                 ${
                   Number.isFinite(
@@ -1778,13 +1898,29 @@ function renderOptimizerClassicPlayers(
 
               <td>
                 ${
-                  Number.isFinite(
-                    minutes
-                  )
-                    ? minutes.toFixed(
-                        1
+                  isMlb
+                    ? escapeOptimizerHtml(
+                        String(
+                          player.player_type ||
+                          (
+                            String(
+                              player.position ||
+                              ""
+                            ).toUpperCase().includes("P")
+                              ? "Pitcher"
+                              : "Batter"
+                          )
+                        )
                       )
-                    : "—"
+                    : (
+                        Number.isFinite(
+                          minutes
+                        )
+                          ? minutes.toFixed(
+                              1
+                            )
+                          : "—"
+                      )
                 }
               </td>
 
@@ -1863,6 +1999,7 @@ function renderOptimizerShowdownPlayers(
       <th>CPT</th>
       <th>DK Avg</th>
       <th>BTBT Proj</th>
+      <th>Source</th>
       <th>$ Value</th>
       <th>vs DK Avg</th>
       <th>Min</th>
@@ -1925,19 +2062,19 @@ function renderOptimizerShowdownPlayers(
         player => {
 
           const projection =
-            Number(
+            getOptimizerFiniteNumber(
               player.btbt_projection
             );
 
 
           const value =
-            Number(
+            getOptimizerFiniteNumber(
               player.btbt_value
             );
 
 
           const dkAverage =
-            Number(
+            getOptimizerFiniteNumber(
               player.dk_avg_points
             );
 
@@ -1968,7 +2105,7 @@ function renderOptimizerShowdownPlayers(
 
 
           const minutes =
-            Number(
+            getOptimizerFiniteNumber(
               player.expected_minutes
             );
 
@@ -2003,6 +2140,19 @@ function renderOptimizerShowdownPlayers(
                   player.name ||
                   ""
                 ).toLowerCase()
+              )}"
+              data-player-status="${escapeOptimizerHtml(
+                String(
+                  player.status ||
+                  ""
+                ).toUpperCase()
+              )}"
+              data-player-source="${escapeOptimizerHtml(
+                String(
+                  player.projection_skip_reason ||
+                  player.projection_source ||
+                  ""
+                ).toUpperCase()
               )}"
             >
 
@@ -2050,6 +2200,18 @@ function renderOptimizerShowdownPlayers(
                       )
                     : "—"
                 }
+              </td>
+
+              <td>
+                ${escapeOptimizerHtml(
+                  player.projection_source &&
+                  player.projection_source !== "—"
+                    ? player.projection_source
+                    : (
+                        player.projection_skip_reason ||
+                        "—"
+                      )
+                )}
               </td>
 
               <td class="dk-value">
@@ -2140,6 +2302,180 @@ function renderOptimizerShowdownPlayers(
 
 
 // ===================================================
+// PLAYER POOL SEARCH / VISIBILITY FILTERS
+// ===================================================
+
+function ensureOptimizerPlayerPoolFilters() {
+
+  const container =
+    document.getElementById(
+      "dkPlayerPoolContainer"
+    );
+
+
+  if (
+    !container ||
+    document.getElementById(
+      "dkPlayerPoolFilters"
+    )
+  ) {
+    return;
+  }
+
+
+  const tableWrap =
+    container.querySelector(
+      ".dk-table-wrap"
+    )
+    ||
+    container.querySelector(
+      "table"
+    );
+
+
+  const filters =
+    document.createElement(
+      "div"
+    );
+
+
+  filters.id =
+    "dkPlayerPoolFilters";
+
+  filters.className =
+    "dk-player-pool-filters";
+
+
+  filters.innerHTML = `
+    <input
+      id="dkPlayerPoolSearch"
+      class="dk-player-pool-search"
+      type="search"
+      placeholder="Search player name..."
+      autocomplete="off"
+      aria-label="Search DraftKings player pool by player name"
+    >
+
+    <label
+      class="dk-player-pool-filter-check"
+    >
+      <input
+        id="dkHideUnavailablePlayers"
+        type="checkbox"
+        ${hideUnavailablePlayers ? "checked" : ""}
+      >
+      Hide OUT / non-starters
+    </label>
+
+    <span
+      id="dkPlayerPoolVisibleCount"
+      class="dk-player-pool-filter-count"
+    ></span>
+  `;
+
+
+  if (tableWrap) {
+
+    tableWrap.parentNode.insertBefore(
+      filters,
+      tableWrap
+    );
+
+  } else {
+
+    container.prepend(
+      filters
+    );
+
+  }
+
+
+  const poolSearch =
+    document.getElementById(
+      "dkPlayerPoolSearch"
+    );
+
+  const hideCheckbox =
+    document.getElementById(
+      "dkHideUnavailablePlayers"
+    );
+
+
+  if (
+    playerSearch &&
+    poolSearch
+  ) {
+
+    poolSearch.value =
+      playerSearch.value ||
+      "";
+
+  }
+
+
+  poolSearch
+    ?.addEventListener(
+      "input",
+      () => {
+
+        if (playerSearch) {
+          playerSearch.value =
+            poolSearch.value;
+        }
+
+        applyOptimizerPlayerSearch();
+
+      }
+    );
+
+
+  hideCheckbox
+    ?.addEventListener(
+      "change",
+      () => {
+
+        hideUnavailablePlayers =
+          Boolean(
+            hideCheckbox.checked
+          );
+
+        applyOptimizerPlayerSearch();
+
+      }
+    );
+
+}
+
+
+function optimizerRowIsUnavailable(
+  row
+) {
+
+  const status =
+    String(
+      row.dataset.playerStatus ||
+      ""
+    ).toUpperCase();
+
+  const source =
+    String(
+      row.dataset.playerSource ||
+      ""
+    ).toUpperCase();
+
+
+  return (
+    status === "OUT"
+    ||
+    OPTIMIZER_HIDDEN_PLAYER_REASONS.has(
+      source
+    )
+  );
+
+}
+
+
+// ===================================================
 // RENDER PLAYER POOL
 // ===================================================
 
@@ -2158,6 +2494,9 @@ function renderOptimizerPlayers(
     return;
 
   }
+
+
+  ensureOptimizerPlayerPoolFilters();
 
 
   const players =
@@ -2559,6 +2898,38 @@ async function loadBtbtOptimizerProjections(
   );
 
 
+  const missingProjectionMap =
+    new Map();
+
+
+  (
+    Array.isArray(
+      data.missing_players
+    )
+      ? data.missing_players
+      : []
+  ).forEach(
+    player => {
+
+      const key =
+        getOptimizerPlayerKey(
+          player.player_name
+        );
+
+
+      if (key) {
+
+        missingProjectionMap.set(
+          key,
+          player
+        );
+
+      }
+
+    }
+  );
+
+
   // =================================================
   // MERGE PROJECTIONS INTO CURRENT DK PLAYER POOL
   // =================================================
@@ -2588,6 +2959,12 @@ async function loadBtbtOptimizerProjections(
 
           if (!projection) {
 
+            const missing =
+              missingProjectionMap.get(
+                key
+              );
+
+
             return {
               ...player,
 
@@ -2601,14 +2978,25 @@ async function loadBtbtOptimizerProjections(
                 null,
 
               model_confidence:
-                "—"
+                "—",
+
+              projection_source:
+                "—",
+
+              projection_skip_reason:
+                missing?.reason ||
+                "NO_PROJECTION",
+
+              history_games:
+                missing?.history_games ??
+                0
             };
 
           }
 
 
           const btbtProjection =
-            Number(
+            getOptimizerFiniteNumber(
               projection.dk_projection
             );
 
@@ -2681,7 +3069,79 @@ async function loadBtbtOptimizerProjections(
 
             model_confidence:
               projection.model_confidence ||
-              "—"
+              "—",
+
+            player_type:
+              projection.player_type ??
+              null,
+
+            hits:
+              projection.hits ??
+              null,
+
+            total_bases:
+              projection.total_bases ??
+              null,
+
+            runs:
+              projection.runs ??
+              null,
+
+            rbis:
+              projection.rbis ??
+              null,
+
+            home_runs:
+              projection.home_runs ??
+              null,
+
+            walks:
+              projection.walks ??
+              null,
+
+            stolen_bases:
+              projection.stolen_bases ??
+              null,
+
+            strikeouts:
+              projection.strikeouts ??
+              null,
+
+            outs:
+              projection.outs ??
+              null,
+
+            earned_runs:
+              projection.earned_runs ??
+              null,
+
+            hits_allowed:
+              projection.hits_allowed ??
+              null,
+
+            opposing_probable_pitcher:
+              projection.opposing_probable_pitcher ??
+              null,
+
+            projection_source:
+              projection.projection_source ||
+              "NONE",
+
+            market_stat_count:
+              projection.market_stat_count ??
+              0,
+
+            model_stat_count:
+              projection.model_stat_count ??
+              0,
+
+            history_games:
+              projection.history_games ??
+              0,
+
+            source_counts:
+              projection.source_counts ??
+              null
 
           };
 
@@ -2918,7 +3378,9 @@ async function loadOptimizerSlate() {
 
     const response =
       await fetch(
-        `${window.API_BASE}/api/dk-optimizer/parse`,
+        `${window.API_BASE}/api/dk-optimizer/parse?sport=${encodeURIComponent(
+          selectedSport
+        )}`,
         {
 
           method:
@@ -3059,7 +3521,7 @@ async function loadOptimizerSlate() {
 
 
     console.log(
-      "🏀 DK slate loaded:",
+      `${selectedSport === "baseball_mlb" ? "⚾" : "🏀"} DK slate loaded:`,
       currentSlate
     );
 
@@ -3441,19 +3903,44 @@ function attachOptimizerAuthWatcher() {
 
 function applyOptimizerPlayerSearch() {
 
+  const poolSearch =
+    document.getElementById(
+      "dkPlayerPoolSearch"
+    );
+
+
   const query =
     String(
-      playerSearch?.value ||
+      poolSearch?.value
+      ??
+      playerSearch?.value
+      ??
       ""
     )
       .trim()
       .toLowerCase();
 
 
+  if (
+    playerSearch &&
+    poolSearch &&
+    playerSearch.value !==
+      poolSearch.value
+  ) {
+
+    playerSearch.value =
+      poolSearch.value;
+
+  }
+
+
   const rows =
     document.querySelectorAll(
       "#dkPlayerTableBody tr[data-player-key]"
     );
+
+
+  let visibleCount = 0;
 
 
   rows.forEach(
@@ -3466,25 +3953,73 @@ function applyOptimizerPlayerSearch() {
         );
 
 
-      row.hidden =
-        Boolean(
-          query
-        )
-        &&
-        !name.includes(
+      const matchesSearch =
+        !query
+        ||
+        name.includes(
           query
         );
+
+
+      const hiddenByAvailability =
+        hideUnavailablePlayers
+        &&
+        optimizerRowIsUnavailable(
+          row
+        );
+
+
+      row.hidden =
+        !matchesSearch
+        ||
+        hiddenByAvailability;
+
+
+      if (!row.hidden) {
+        visibleCount += 1;
+      }
 
     }
   );
 
+
+  const visibleCountEl =
+    document.getElementById(
+      "dkPlayerPoolVisibleCount"
+    );
+
+
+  if (visibleCountEl) {
+
+    visibleCountEl.textContent =
+      `${visibleCount} shown`;
+
+  }
+
 }
+
 
 
 playerSearch
   ?.addEventListener(
     "input",
-    applyOptimizerPlayerSearch
+    () => {
+
+      const poolSearch =
+        document.getElementById(
+          "dkPlayerPoolSearch"
+        );
+
+
+      if (poolSearch) {
+        poolSearch.value =
+          playerSearch.value;
+      }
+
+
+      applyOptimizerPlayerSearch();
+
+    }
   );
 
 
@@ -3655,6 +4190,27 @@ function getClassicLineupDisplayPlayers(
   players
 ) {
 
+  if (
+    currentSlate?.sport ===
+    "baseball_mlb"
+  ) {
+
+    return players.map(
+      player => ({
+        ...player,
+
+        role:
+          player.role ||
+          player.roster_position ||
+          player.position ||
+          "UTIL"
+      })
+    );
+
+  }
+
+
+
   let guardsAssigned =
     0;
 
@@ -3727,6 +4283,13 @@ function renderOptimizerLineups(
     )
       ? data.lineups
       : [];
+
+
+  const isMlb =
+    (
+      data?.sport ||
+      currentSlate?.sport
+    ) === "baseball_mlb";
 
 
   if (!lineups.length) {
@@ -3975,7 +4538,7 @@ function renderOptimizerLineups(
                       <th>Team</th>
                       <th>Salary</th>
                       <th>Proj</th>
-                      <th>Min</th>
+                      <th>${isMlb ? "Pos" : "Min"}</th>
                       <th>Conf</th>
                       <th>Status</th>
                     </tr>
@@ -4053,10 +4616,19 @@ function renderOptimizerLineups(
                               </td>
 
                               <td>
-                                ${formatOptimizerNumber(
-                                  player.expected_minutes,
-                                  1
-                                )}
+                                ${
+                                  isMlb
+                                    ? escapeOptimizerHtml(
+                                        player.position ||
+                                        player.roster_position ||
+                                        role ||
+                                        "--"
+                                      )
+                                    : formatOptimizerNumber(
+                                        player.expected_minutes,
+                                        1
+                                      )
+                                }
                               </td>
 
                               <td>
