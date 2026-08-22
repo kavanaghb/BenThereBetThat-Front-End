@@ -453,7 +453,13 @@ async function initGameLines() {
     
 currentGameLines = games;
 
-const mlbTabs = document.getElementById("mlbViewTabs");
+// 📊 Update analytical market snapshot
+renderMlbAnalyticsSummary();
+
+const mlbTabs =
+  document.getElementById(
+    "mlbViewTabs"
+  );
 if (mlbTabs) {
   mlbTabs.style.display = games[0]?.mode === "mlb_market"
     ? "flex"
@@ -2654,7 +2660,209 @@ function mlbModelFactorsHtml(row) {
       <button type="button" class="mlb-detail-inline-btn">View Detail</button>
     </div>`;
 }
+// =====================================================
+// 📊 MLB MARKET INTELLIGENCE SUMMARY
+// =====================================================
+function renderMlbAnalyticsSummary() {
 
+  const container =
+    document.getElementById(
+      "mlbAnalyticsSummary"
+    );
+
+  if (!container) {
+    return;
+  }
+
+
+  const isMlb =
+    currentGameLines?.[0]?.mode ===
+      "mlb_market";
+
+
+  // College basketball does not use this dashboard
+  if (!isMlb) {
+
+    container.style.display =
+      "none";
+
+    return;
+  }
+
+
+  container.style.display =
+    "block";
+
+
+  // =====================================================
+  // ⚾ GAMES
+  // =====================================================
+
+  const pregameGames =
+    currentGameLines.filter(
+      game => !game.is_live
+    );
+
+
+  // =====================================================
+  // 📚 ALL MARKET ROWS
+  // =====================================================
+
+  const marketRows =
+    pregameGames.flatMap(
+      game =>
+        Array.isArray(game.market_board)
+          ? game.market_board
+          : []
+    );
+
+
+  // =====================================================
+  // 🧠 MODEL PICKS
+  // =====================================================
+
+  const picks =
+    pregameGames.flatMap(
+      game =>
+        Array.isArray(game.market_picks)
+          ? game.market_picks
+          : []
+    );
+
+
+  const valuePicks =
+    picks.filter(pick => {
+
+      const tier =
+        String(
+          pick.recommendation || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      return (
+        tier === "VALUE" ||
+        tier === "STRONG_VALUE"
+      );
+
+    });
+
+
+  const strongPicks =
+    picks.filter(
+      pick =>
+        String(
+          pick.recommendation || ""
+        )
+          .trim()
+          .toUpperCase() ===
+        "STRONG_VALUE"
+    );
+
+
+  // =====================================================
+  // 💰 BEST EV
+  // =====================================================
+
+  const evValues =
+    picks
+      .map(
+        pick =>
+          Number(
+            pick.expected_value_pct
+          )
+      )
+      .filter(
+        Number.isFinite
+      );
+
+
+  const bestEv =
+    evValues.length
+      ? Math.max(...evValues)
+      : null;
+
+
+  // =====================================================
+  // 🧬 MODEL COVERAGE
+  // =====================================================
+
+  const readyRows =
+    marketRows.filter(
+      row =>
+        row.model_status ===
+        "ready"
+    );
+
+
+  const coverage =
+    marketRows.length
+      ? (
+          readyRows.length /
+          marketRows.length *
+          100
+        )
+      : 0;
+
+
+  // =====================================================
+  // 🖥️ UPDATE UI
+  // =====================================================
+
+  const setText =
+    (id, value) => {
+
+      const el =
+        document.getElementById(
+          id
+        );
+
+      if (el) {
+        el.textContent =
+          value;
+      }
+
+    };
+
+
+  setText(
+    "summaryGames",
+    pregameGames.length
+  );
+
+
+  setText(
+    "summaryMarkets",
+    marketRows.length
+  );
+
+
+  setText(
+    "summaryValue",
+    valuePicks.length
+  );
+
+
+  setText(
+    "summaryStrong",
+    strongPicks.length
+  );
+
+
+  setText(
+    "summaryBestEv",
+    bestEv !== null
+      ? `${bestEv.toFixed(2)}%`
+      : "—"
+  );
+
+
+  setText(
+    "summaryCoverage",
+    `${coverage.toFixed(0)}%`
+  );
+
+}
 function mlbFilteredGames() {
   return currentGameLines.filter(game => {
     if (!searchFilter) return true;
