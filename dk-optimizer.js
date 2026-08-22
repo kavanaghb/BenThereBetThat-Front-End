@@ -92,6 +92,7 @@ const OPTIMIZER_HIDDEN_PLAYER_REASONS =
     "DK_STATUS_OUT",
     "NOT_DK_STARTER",
     "NOT_PROBABLE_STARTER",
+    "NOT_CONFIRMED_STARTER",
     "RELIEF_PITCHER_NO_STARTER_ROLE"
   ]);
 
@@ -1667,7 +1668,7 @@ function renderOptimizerClassicPlayers(
       <th>Source</th>
       <th>$ Value</th>
       <th>vs DK Avg</th>
-      <th>${isMlb ? "Type" : "Min"}</th>
+      <th>${isMlb ? "Lineup" : "Min"}</th>
       <th>Conf</th>
       <th>Status</th>
       <th>Controls</th>
@@ -1939,15 +1940,13 @@ function renderOptimizerClassicPlayers(
                   isMlb
                     ? escapeOptimizerHtml(
                         String(
-                          player.player_type ||
-                          (
-                            String(
-                              player.position ||
-                              ""
-                            ).toUpperCase().includes("P")
-                              ? "Pitcher"
-                              : "Batter"
-                          )
+                          player.player_type === "pitcher"
+                            ? (player.starting === "P" ? "STARTER" : "PITCHER")
+                            : (
+                                player.lineup_status
+                                  ? `${player.lineup_status}${player.batting_order ? ` #${player.batting_order}` : ""}`
+                                  : "UNKNOWN"
+                              )
                         )
                       )
                     : (
@@ -3036,7 +3035,19 @@ async function loadBtbtOptimizerProjections(
 
               history_games:
                 missing?.history_games ??
-                0
+                0,
+
+              lineup_status:
+                missing?.lineup_status ??
+                null,
+
+              lineup_source:
+                missing?.lineup_source ??
+                null,
+
+              batting_order:
+                missing?.batting_order ??
+                null
             };
 
           }
@@ -3155,6 +3166,26 @@ async function loadBtbtOptimizerProjections(
 
             player_type:
               projection.player_type ??
+              null,
+
+            lineup_status:
+              projection.lineup_status ??
+              null,
+
+            lineup_source:
+              projection.lineup_source ??
+              null,
+
+            batting_order:
+              projection.batting_order ??
+              null,
+
+            projected_start_rate:
+              projection.projected_start_rate ??
+              null,
+
+            is_projected_starter:
+              projection.is_projected_starter ??
               null,
 
             hits:
