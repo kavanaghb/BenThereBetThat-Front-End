@@ -1655,6 +1655,10 @@ function renderOptimizerClassicPlayers(
     currentSlate?.sport ===
     "baseball_mlb";
 
+  const isNcaaf =
+    currentSlate?.sport ===
+    "americanfootball_ncaaf";
+
 
   head.innerHTML = `
     <tr>
@@ -1668,7 +1672,7 @@ function renderOptimizerClassicPlayers(
       <th>Source</th>
       <th>$ Value</th>
       <th>vs DK Avg</th>
-      <th>${isMlb ? "Lineup" : "Min"}</th>
+      <th>${isMlb ? "Lineup" : (isNcaaf ? "History" : "Min")}</th>
       <th>Conf</th>
       <th>Status</th>
       <th>Controls</th>
@@ -1950,13 +1954,19 @@ function renderOptimizerClassicPlayers(
                         )
                       )
                     : (
-                        Number.isFinite(
-                          minutes
-                        )
-                          ? minutes.toFixed(
-                              1
+                        isNcaaf
+                          ? escapeOptimizerHtml(
+                              `${player.history_games ?? 0} gm${Number(player.history_games ?? 0) === 1 ? "" : "s"}`
                             )
-                          : "—"
+                          : (
+                              Number.isFinite(
+                                minutes
+                              )
+                                ? minutes.toFixed(
+                                    1
+                                  )
+                                : "—"
+                            )
                       )
                 }
               </td>
@@ -3244,6 +3254,54 @@ async function loadBtbtOptimizerProjections(
                     "NONE"
                   ),
 
+            opponent:
+              projection.opponent ??
+              null,
+
+            sp_rating:
+              projection.sp_rating ??
+              null,
+
+            opponent_sp_rating:
+              projection.opponent_sp_rating ??
+              null,
+
+            sp_offense:
+              projection.sp_offense ??
+              null,
+
+            opponent_sp_defense:
+              projection.opponent_sp_defense ??
+              null,
+
+            sp_context_weight_pct:
+              projection.sp_context_weight_pct ??
+              null,
+
+            current_context_weight_pct:
+              projection.current_context_weight_pct ??
+              null,
+
+            context_adjustment_pct:
+              projection.context_adjustment_pct ??
+              null,
+
+            game_script_adjustment_pct:
+              projection.game_script_adjustment_pct ??
+              null,
+
+            projected_team_margin:
+              projection.projected_team_margin ??
+              null,
+
+            sp_component:
+              projection.sp_component ??
+              null,
+
+            profile_games:
+              projection.profile_games ??
+              null,
+
             market_stat_count:
               projection.market_stat_count ??
               0,
@@ -3638,7 +3696,7 @@ async function loadOptimizerSlate() {
 
 
     console.log(
-      `${selectedSport === "baseball_mlb" ? "⚾" : "🏀"} DK slate loaded:`,
+      `${selectedSport === "baseball_mlb" ? "⚾" : (selectedSport === "americanfootball_ncaaf" ? "🏈" : "🏀")} DK slate loaded:`,
       currentSlate
     );
 
@@ -4540,6 +4598,9 @@ function getClassicLineupDisplayPlayers(
   if (
     currentSlate?.sport ===
     "baseball_mlb"
+    ||
+    currentSlate?.sport ===
+    "americanfootball_ncaaf"
   ) {
 
     return players.map(
@@ -4632,11 +4693,17 @@ function renderOptimizerLineups(
       : [];
 
 
-  const isMlb =
+  const lineupSport =
     (
       data?.sport ||
       currentSlate?.sport
-    ) === "baseball_mlb";
+    );
+
+  const isMlb =
+    lineupSport === "baseball_mlb";
+
+  const isNcaaf =
+    lineupSport === "americanfootball_ncaaf";
 
 
   if (!lineups.length) {
@@ -4885,7 +4952,7 @@ function renderOptimizerLineups(
                       <th>Team</th>
                       <th>Salary</th>
                       <th>Proj</th>
-                      <th>${isMlb ? "Pos" : "Min"}</th>
+                      <th>${isMlb || isNcaaf ? "Pos" : "Min"}</th>
                       <th>Conf</th>
                       <th>Status</th>
                     </tr>
@@ -4964,7 +5031,7 @@ function renderOptimizerLineups(
 
                               <td>
                                 ${
-                                  isMlb
+                                  isMlb || isNcaaf
                                     ? escapeOptimizerHtml(
                                         player.position ||
                                         player.roster_position ||
