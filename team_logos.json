@@ -1,651 +1,231 @@
 {
-  "arizona cardinals": {
-    "league": "nfl",
-    "slug": "ari"
+  "af": {
+    "cfbd_name": "Air Force",
+    "league": "ncaaf",
+    "slug": "2005",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2005.png"
   },
-  "atlanta falcons": {
-    "league": "nfl",
-    "slug": "atl"
+  "air force": {
+    "cfbd_name": "Air Force",
+    "league": "ncaaf",
+    "slug": "2005",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2005.png"
   },
-  "baltimore ravens": {
-    "league": "nfl",
-    "slug": "bal"
+  "air force falcons": {
+    "cfbd_name": "Air Force",
+    "league": "ncaaf",
+    "slug": "2005",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2005.png"
   },
-  "buffalo bills": {
-    "league": "nfl",
-    "slug": "buf"
+  "akr": {
+    "cfbd_name": "Akron",
+    "league": "ncaaf",
+    "slug": "2006",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2006.png"
   },
-  "carolina panthers": {
-    "league": "nfl",
-    "slug": "car"
+  "akron": {
+    "cfbd_name": "Akron",
+    "league": "ncaaf",
+    "slug": "2006",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2006.png"
   },
-  "chicago bears": {
-    "league": "nfl",
-    "slug": "chi"
+  "akron zips": {
+    "cfbd_name": "Akron",
+    "league": "ncaaf",
+    "slug": "2006",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2006.png"
   },
-  "cincinnati bengals": {
-    "league": "nfl",
-    "slug": "cin"
+  "ala": {
+    "cfbd_name": "Alabama",
+    "league": "ncaaf",
+    "slug": "333",
+    "url": "https://cdn.collegefootballdata.com/logos/128/333.png"
   },
-  "cleveland browns": {
-    "league": "nfl",
-    "slug": "cle"
+  "alabama": {
+    "cfbd_name": "Alabama",
+    "league": "ncaaf",
+    "slug": "333",
+    "url": "https://cdn.collegefootballdata.com/logos/128/333.png"
   },
-  "dallas cowboys": {
-    "league": "nfl",
-    "slug": "dal"
+  "alabama crimson tide": {
+    "cfbd_name": "Alabama",
+    "league": "ncaaf",
+    "slug": "333",
+    "url": "https://cdn.collegefootballdata.com/logos/128/333.png"
   },
-  "denver broncos": {
-    "league": "nfl",
-    "slug": "den"
-  },
-  "detroit lions": {
-    "league": "nfl",
-    "slug": "det"
-  },
-  "green bay packers": {
-    "league": "nfl",
-    "slug": "gb"
-  },
-  "houston texans": {
-    "league": "nfl",
-    "slug": "hou"
-  },
-  "indianapolis colts": {
-    "league": "nfl",
-    "slug": "ind"
-  },
-  "jacksonville jaguars": {
-    "league": "nfl",
-    "slug": "jax"
-  },
-  "kansas city chiefs": {
-    "league": "nfl",
-    "slug": "kc"
-  },
-  "las vegas raiders": {
-    "league": "nfl",
-    "slug": "lv"
-  },
-  "los angeles chargers": {
-    "league": "nfl",
-    "slug": "lac"
-  },
-  "los angeles rams": {
-    "league": "nfl",
-    "slug": "lar"
-  },
-  "miami dolphins": {
-    "league": "nfl",
-    "slug": "mia"
-  },
-  "minnesota vikings": {
-    "league": "nfl",
-    "slug": "min"
-  },
-  "new england patriots": {
-    "league": "nfl",
-    "slug": "ne"
-  },
-  "new orleans saints": {
-    "league": "nfl",
-    "slug": "no"
-  },
-  "new york giants": {
-    "league": "nfl",
-    "slug": "nyg"
-  },
-  "new york jets": {
-    "league": "nfl",
-    "slug": "nyj"
-  },
-  "philadelphia eagles": {
-    "league": "nfl",
-    "slug": "phi"
-  },
-  "pittsburgh steelers": {
-    "league": "nfl",
-    "slug": "pit"
-  },
-  "san francisco 49ers": {
-    "league": "nfl",
-    "slug": "sf"
-  },
-  "seattle seahawks": {
-    "league": "nfl",
-    "slug": "sea"
-  },
-  "tampa bay buccaneers": {
-    "league": "nfl",
-    "slug": "tb"
-  },
-  "tennessee titans": {
-    "league": "nfl",
-    "slug": "ten"
-  },
-  "washington commanders": {
-    "league": "nfl",
-    "slug": "wsh"
-  },
-  "anaheim ducks": {
-    "league": "nhl",
-    "slug": "ana"
-  },
-  "boston bruins": {
-    "league": "nhl",
-    "slug": "bos"
-  },
-  "buffalo sabres": {
-    "league": "nhl",
-    "slug": "buf"
-  },
-  "calgary flames": {
-    "league": "nhl",
-    "slug": "cgy"
-  },
-  "carolina hurricanes": {
-    "league": "nhl",
-    "slug": "car"
-  },
-  "chicago blackhawks": {
-    "league": "nhl",
-    "slug": "chi"
-  },
-  "colorado avalanche": {
-    "league": "nhl",
-    "slug": "col"
-  },
-  "columbus blue jackets": {
-    "league": "nhl",
-    "slug": "cbj"
-  },
-  "dallas stars": {
-    "league": "nhl",
-    "slug": "dal"
-  },
-  "detroit red wings": {
-    "league": "nhl",
-    "slug": "det"
-  },
-  "edmonton oilers": {
-    "league": "nhl",
-    "slug": "edm"
-  },
-  "florida panthers": {
-    "league": "nhl",
-    "slug": "fla"
-  },
-  "los angeles kings": {
-    "league": "nhl",
-    "slug": "la"
-  },
-  "minnesota wild": {
-    "league": "nhl",
-    "slug": "min"
-  },
-  "montreal canadiens": {
-    "league": "nhl",
-    "slug": "mtl"
-  },
-  "nashville predators": {
-    "league": "nhl",
-    "slug": "nsh"
-  },
-  "new jersey devils": {
-    "league": "nhl",
-    "slug": "nj"
-  },
-  "new york islanders": {
-    "league": "nhl",
-    "slug": "nyi"
-  },
-  "new york rangers": {
-    "league": "nhl",
-    "slug": "nyr"
-  },
-  "ottawa senators": {
-    "league": "nhl",
-    "slug": "ott"
-  },
-  "philadelphia flyers": {
-    "league": "nhl",
-    "slug": "phi"
-  },
-  "pittsburgh penguins": {
-    "league": "nhl",
-    "slug": "pit"
-  },
-  "san jose sharks": {
-    "league": "nhl",
-    "slug": "sj"
-  },
-  "seattle kraken": {
-    "league": "nhl",
-    "slug": "sea"
-  },
-  "st. louis blues": {
-    "league": "nhl",
-    "slug": "stl"
-  },
-  "tampa bay lightning": {
-    "league": "nhl",
-    "slug": "tb"
-  },
-  "toronto maple leafs": {
-    "league": "nhl",
-    "slug": "tor"
-  },
-  "utah mammoth": {
-    "league": "nhl",
-    "slug": "utah"
-  },
-  "vancouver canucks": {
-    "league": "nhl",
-    "slug": "van"
-  },
-  "vegas golden knights": {
-    "league": "nhl",
-    "slug": "vgk"
-  },
-  "washington capitals": {
-    "league": "nhl",
-    "slug": "wsh"
-  },
-  "winnipeg jets": {
-    "league": "nhl",
-    "slug": "wpg"
+  "alabama-birmingham": {
+    "cfbd_name": "UAB",
+    "league": "ncaaf",
+    "slug": "5",
+    "url": "https://cdn.collegefootballdata.com/logos/128/5.png"
   },
   "american university eagles": {
     "league": "ncaab",
     "slug": "amer"
   },
-  "arizona state sun devils": {
-    "league": "ncaab",
-    "slug": "asu"
-  },
-  "arizona wildcats": {
-    "league": "ncaab",
-    "slug": "ariz"
-  },
-  "arkansas razorbacks": {
-    "league": "ncaab",
-    "slug": "ark"
-  },
-  "auburn tigers": {
-    "league": "ncaab",
-    "slug": "aub"
-  },
-  "bellarmine knights": {
-    "league": "ncaab",
-    "slug": "bell"
-  },
-  "boise state broncos": {
-    "league": "ncaab",
-    "slug": "bois"
-  },
-  "bradley braves": {
-    "league": "ncaab",
-    "slug": "brad"
-  },
-  "cal poly mustangs": {
-    "league": "ncaab",
-    "slug": "cp"
-  },
-  "california golden bears": {
-    "league": "ncaab",
-    "slug": "cal"
-  },
-  "colorado buffaloes": {
-    "league": "ncaab",
-    "slug": "colo"
-  },
-  "colorado state rams": {
-    "league": "ncaab",
-    "slug": "csu"
-  },
-  "delaware blue hens": {
-    "league": "ncaab",
-    "slug": "del"
-  },
-  "florida a&m rattlers": {
-    "league": "ncaab",
-    "slug": "famu"
-  },
-  "florida gators": {
-    "league": "ncaab",
-    "slug": "fla"
-  },
-  "florida state seminoles": {
-    "league": "ncaab",
-    "slug": "fsu"
-  },
-  "george washington revolutionaries": {
-    "league": "ncaab",
-    "slug": "gw"
-  },
-  "georgetown hoyas": {
-    "league": "ncaab",
-    "slug": "gtwn"
-  },
-  "georgia bulldogs": {
-    "league": "ncaab",
-    "slug": "uga"
-  },
-  "georgia tech yellow jackets": {
-    "league": "ncaab",
-    "slug": "gt"
-  },
-  "hawai'i rainbow warriors": {
-    "league": "ncaab",
-    "slug": "haw"
-  },
-  "howard bison": {
-    "league": "ncaab",
-    "slug": "how"
-  },
-  "iu indianapolis jaguars": {
-    "league": "ncaab",
-    "slug": "iuin"
-  },
-  "idaho vandals": {
-    "league": "ncaab",
-    "slug": "idho"
-  },
-  "indiana hoosiers": {
-    "league": "ncaab",
-    "slug": "iu"
-  },
-  "iowa state cyclones": {
-    "league": "ncaab",
-    "slug": "isu"
-  },
-  "jacksonville state gamecocks": {
-    "league": "ncaab",
-    "slug": "jxst"
-  },
-  "kentucky wildcats": {
-    "league": "ncaab",
-    "slug": "uk"
-  },
-  "louisville cardinals": {
-    "league": "ncaab",
-    "slug": "lou"
-  },
-  "murray state racers": {
-    "league": "ncaab",
-    "slug": "mur"
-  },
-  "northern kentucky norse": {
-    "league": "ncaab",
-    "slug": "nku"
-  },
-  "northwestern wildcats": {
-    "league": "ncaab",
-    "slug": "nu"
-  },
-  "notre dame fighting irish": {
-    "league": "ncaab",
-    "slug": "nd"
-  },
-  "sacramento state hornets": {
-    "league": "ncaab",
-    "slug": "sac"
-  },
-  "san diego state aztecs": {
-    "league": "ncaab",
-    "slug": "sdsu"
-  },
-  "san jos\u00e9 state spartans": {
-    "league": "ncaab",
-    "slug": "sjsu"
-  },
-  "south alabama jaguars": {
-    "league": "ncaab",
-    "slug": "usa"
-  },
-  "south florida bulls": {
-    "league": "ncaab",
-    "slug": "usf"
-  },
-  "southern illinois salukis": {
-    "league": "ncaab",
-    "slug": "siu"
-  },
-  "stanford cardinal": {
-    "league": "ncaab",
-    "slug": "stan"
-  },
-  "stetson hatters": {
-    "league": "ncaab",
-    "slug": "stet"
-  },
-  "uab blazers": {
-    "league": "ncaab",
-    "slug": "uab"
-  },
-  "uc riverside highlanders": {
-    "league": "ncaab",
-    "slug": "ucr"
-  },
-  "uc san diego tritons": {
-    "league": "ncaab",
-    "slug": "ucsd"
-  },
-  "ucla bruins": {
-    "league": "ncaab",
-    "slug": "ucla"
-  },
-  "uconn huskies": {
-    "league": "ncaab",
-    "slug": "conn"
-  },
-  "uic flames": {
-    "league": "ncaab",
-    "slug": "uic"
-  },
-  "usc trojans": {
-    "league": "ncaab",
-    "slug": "usc"
-  },
-  "western kentucky hilltoppers": {
-    "league": "ncaab",
-    "slug": "wku"
-  },
-  "yale bulldogs": {
-    "league": "ncaab",
-    "slug": "yale"
-  },
   "amherst mammoths": {
     "league": "ncaaf",
     "slug": "amh"
+  },
+  "anaheim ducks": {
+    "league": "nhl",
+    "slug": "ana"
   },
   "anna maria college amcats": {
     "league": "ncaaf",
     "slug": "ann"
   },
-  "bridgewater state bears": {
+  "app": {
+    "cfbd_name": "App State",
     "league": "ncaaf",
-    "slug": "brst"
+    "slug": "2026",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2026.png"
   },
-  "buena vista beavers": {
+  "app state": {
+    "cfbd_name": "App State",
     "league": "ncaaf",
-    "slug": "buena"
+    "slug": "2026",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2026.png"
   },
-  "carroll university (wi) pioneers": {
+  "app state mountaineers": {
+    "cfbd_name": "App State",
     "league": "ncaaf",
-    "slug": "car"
+    "slug": "2026",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2026.png"
   },
-  "claremont-mudd-scripps college stags/athenas": {
+  "appalachian st mountaineers": {
+    "cfbd_name": "App State",
     "league": "ncaaf",
-    "slug": "cla"
+    "slug": "2026",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2026.png"
   },
-  "colby college white mules": {
+  "appalachian state": {
+    "cfbd_name": "App State",
     "league": "ncaaf",
-    "slug": "colby"
+    "slug": "2026",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2026.png"
   },
-  "colorado mesa mavericks": {
+  "ariz": {
+    "cfbd_name": "Arizona",
     "league": "ncaaf",
-    "slug": "mesa"
+    "slug": "12",
+    "url": "https://cdn.collegefootballdata.com/logos/128/12.png"
   },
-  "curry college colonels": {
+  "arizona": {
+    "cfbd_name": "Arizona",
     "league": "ncaaf",
-    "slug": "cur"
+    "slug": "12",
+    "url": "https://cdn.collegefootballdata.com/logos/128/12.png"
   },
-  "dubuque spartans": {
-    "league": "ncaaf",
-    "slug": "dub"
-  },
-  "elmhurst bluejays": {
-    "league": "ncaaf",
-    "slug": "elm"
-  },
-  "grinnell pioneers": {
-    "league": "ncaaf",
-    "slug": "gri"
-  },
-  "luther norse": {
-    "league": "ncaaf",
-    "slug": "lut"
-  },
-  "millikin big blue": {
-    "league": "ncaaf",
-    "slug": "mil"
-  },
-  "morehouse college maroon tigers": {
-    "league": "ncaaf",
-    "slug": "mor"
-  },
-  "north park vikings": {
-    "league": "ncaaf",
-    "slug": "nor"
-  },
-  "redlands bulldogs": {
-    "league": "ncaaf",
-    "slug": "red"
-  },
-  "atlanta hawks": {
-    "league": "nba",
-    "slug": "atl"
-  },
-  "boston celtics": {
-    "league": "nba",
-    "slug": "bos"
-  },
-  "brooklyn nets": {
-    "league": "nba",
-    "slug": "bkn"
-  },
-  "charlotte hornets": {
-    "league": "nba",
-    "slug": "cha"
-  },
-  "chicago bulls": {
-    "league": "nba",
-    "slug": "chi"
-  },
-  "cleveland cavaliers": {
-    "league": "nba",
-    "slug": "cle"
-  },
-  "dallas mavericks": {
-    "league": "nba",
-    "slug": "dal"
-  },
-  "denver nuggets": {
-    "league": "nba",
-    "slug": "den"
-  },
-  "detroit pistons": {
-    "league": "nba",
-    "slug": "det"
-  },
-  "golden state warriors": {
-    "league": "nba",
-    "slug": "gs"
-  },
-  "houston rockets": {
-    "league": "nba",
-    "slug": "hou"
-  },
-  "indiana pacers": {
-    "league": "nba",
-    "slug": "ind"
-  },
-  "la clippers": {
-    "league": "nba",
-    "slug": "lac"
-  },
-  "los angeles lakers": {
-    "league": "nba",
-    "slug": "lal"
-  },
-  "memphis grizzlies": {
-    "league": "nba",
-    "slug": "mem"
-  },
-  "miami heat": {
-    "league": "nba",
-    "slug": "mia"
-  },
-  "milwaukee bucks": {
-    "league": "nba",
-    "slug": "mil"
-  },
-  "minnesota timberwolves": {
-    "league": "nba",
-    "slug": "min"
-  },
-  "new orleans pelicans": {
-    "league": "nba",
-    "slug": "no"
-  },
-  "new york knicks": {
-    "league": "nba",
-    "slug": "ny"
-  },
-  "oklahoma city thunder": {
-    "league": "nba",
-    "slug": "okc"
-  },
-  "orlando magic": {
-    "league": "nba",
-    "slug": "orl"
-  },
-  "philadelphia 76ers": {
-    "league": "nba",
-    "slug": "phi"
-  },
-  "phoenix suns": {
-    "league": "nba",
-    "slug": "phx"
-  },
-  "portland trail blazers": {
-    "league": "nba",
-    "slug": "por"
-  },
-  "sacramento kings": {
-    "league": "nba",
-    "slug": "sac"
-  },
-  "san antonio spurs": {
-    "league": "nba",
-    "slug": "sa"
-  },
-  "toronto raptors": {
-    "league": "nba",
-    "slug": "tor"
-  },
-  "utah jazz": {
-    "league": "nba",
-    "slug": "utah"
-  },
-  "washington wizards": {
-    "league": "nba",
-    "slug": "wsh"
+  "arizona cardinals": {
+    "league": "nfl",
+    "slug": "ari"
   },
   "arizona diamondbacks": {
     "league": "mlb",
     "slug": "ari"
+  },
+  "arizona st": {
+    "cfbd_name": "Arizona State",
+    "league": "ncaaf",
+    "slug": "9",
+    "url": "https://cdn.collegefootballdata.com/logos/128/9.png"
+  },
+  "arizona st sun devils": {
+    "cfbd_name": "Arizona State",
+    "league": "ncaaf",
+    "slug": "9",
+    "url": "https://cdn.collegefootballdata.com/logos/128/9.png"
+  },
+  "arizona state": {
+    "cfbd_name": "Arizona State",
+    "league": "ncaaf",
+    "slug": "9",
+    "url": "https://cdn.collegefootballdata.com/logos/128/9.png"
+  },
+  "arizona state sun devils": {
+    "cfbd_name": "Arizona State",
+    "league": "ncaaf",
+    "slug": "9",
+    "url": "https://cdn.collegefootballdata.com/logos/128/9.png"
+  },
+  "arizona wildcats": {
+    "cfbd_name": "Arizona",
+    "league": "ncaaf",
+    "slug": "12",
+    "url": "https://cdn.collegefootballdata.com/logos/128/12.png"
+  },
+  "ark": {
+    "cfbd_name": "Arkansas",
+    "league": "ncaaf",
+    "slug": "8",
+    "url": "https://cdn.collegefootballdata.com/logos/128/8.png"
+  },
+  "arkansas": {
+    "cfbd_name": "Arkansas",
+    "league": "ncaaf",
+    "slug": "8",
+    "url": "https://cdn.collegefootballdata.com/logos/128/8.png"
+  },
+  "arkansas razorbacks": {
+    "cfbd_name": "Arkansas",
+    "league": "ncaaf",
+    "slug": "8",
+    "url": "https://cdn.collegefootballdata.com/logos/128/8.png"
+  },
+  "arkansas st": {
+    "cfbd_name": "Arkansas State",
+    "league": "ncaaf",
+    "slug": "2032",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2032.png"
+  },
+  "arkansas st red wolves": {
+    "cfbd_name": "Arkansas State",
+    "league": "ncaaf",
+    "slug": "2032",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2032.png"
+  },
+  "arkansas state": {
+    "cfbd_name": "Arkansas State",
+    "league": "ncaaf",
+    "slug": "2032",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2032.png"
+  },
+  "arkansas state red wolves": {
+    "cfbd_name": "Arkansas State",
+    "league": "ncaaf",
+    "slug": "2032",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2032.png"
+  },
+  "army": {
+    "cfbd_name": "Army",
+    "league": "ncaaf",
+    "slug": "349",
+    "url": "https://cdn.collegefootballdata.com/logos/128/349.png"
+  },
+  "army black knights": {
+    "cfbd_name": "Army",
+    "league": "ncaaf",
+    "slug": "349",
+    "url": "https://cdn.collegefootballdata.com/logos/128/349.png"
+  },
+  "army knights": {
+    "cfbd_name": "Army",
+    "league": "ncaaf",
+    "slug": "349",
+    "url": "https://cdn.collegefootballdata.com/logos/128/349.png"
+  },
+  "arst": {
+    "cfbd_name": "Arkansas State",
+    "league": "ncaaf",
+    "slug": "2032",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2032.png"
+  },
+  "asu": {
+    "cfbd_name": "Arizona State",
+    "league": "ncaaf",
+    "slug": "9",
+    "url": "https://cdn.collegefootballdata.com/logos/128/9.png"
   },
   "athletics": {
     "league": "mlb",
@@ -655,13 +235,313 @@
     "league": "mlb",
     "slug": "atl"
   },
+  "atlanta falcons": {
+    "league": "nfl",
+    "slug": "atl"
+  },
+  "atlanta hawks": {
+    "league": "nba",
+    "slug": "atl"
+  },
+  "aub": {
+    "cfbd_name": "Auburn",
+    "league": "ncaaf",
+    "slug": "2",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2.png"
+  },
+  "auburn": {
+    "cfbd_name": "Auburn",
+    "league": "ncaaf",
+    "slug": "2",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2.png"
+  },
+  "auburn tigers": {
+    "cfbd_name": "Auburn",
+    "league": "ncaaf",
+    "slug": "2",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2.png"
+  },
+  "ball": {
+    "cfbd_name": "Ball State",
+    "league": "ncaaf",
+    "slug": "2050",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2050.png"
+  },
+  "ball state": {
+    "cfbd_name": "Ball State",
+    "league": "ncaaf",
+    "slug": "2050",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2050.png"
+  },
+  "ball state cardinals": {
+    "cfbd_name": "Ball State",
+    "league": "ncaaf",
+    "slug": "2050",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2050.png"
+  },
   "baltimore orioles": {
     "league": "mlb",
     "slug": "bal"
   },
+  "baltimore ravens": {
+    "league": "nfl",
+    "slug": "bal"
+  },
+  "bay": {
+    "cfbd_name": "Baylor",
+    "league": "ncaaf",
+    "slug": "239",
+    "url": "https://cdn.collegefootballdata.com/logos/128/239.png"
+  },
+  "baylor": {
+    "cfbd_name": "Baylor",
+    "league": "ncaaf",
+    "slug": "239",
+    "url": "https://cdn.collegefootballdata.com/logos/128/239.png"
+  },
+  "baylor bears": {
+    "cfbd_name": "Baylor",
+    "league": "ncaaf",
+    "slug": "239",
+    "url": "https://cdn.collegefootballdata.com/logos/128/239.png"
+  },
+  "bc": {
+    "cfbd_name": "Boston College",
+    "league": "ncaaf",
+    "slug": "103",
+    "url": "https://cdn.collegefootballdata.com/logos/128/103.png"
+  },
+  "bellarmine knights": {
+    "league": "ncaab",
+    "slug": "bell"
+  },
+  "bgsu": {
+    "cfbd_name": "Bowling Green",
+    "league": "ncaaf",
+    "slug": "189",
+    "url": "https://cdn.collegefootballdata.com/logos/128/189.png"
+  },
+  "bois": {
+    "cfbd_name": "Boise State",
+    "league": "ncaaf",
+    "slug": "68",
+    "url": "https://cdn.collegefootballdata.com/logos/128/68.png"
+  },
+  "boise st": {
+    "cfbd_name": "Boise State",
+    "league": "ncaaf",
+    "slug": "68",
+    "url": "https://cdn.collegefootballdata.com/logos/128/68.png"
+  },
+  "boise state": {
+    "cfbd_name": "Boise State",
+    "league": "ncaaf",
+    "slug": "68",
+    "url": "https://cdn.collegefootballdata.com/logos/128/68.png"
+  },
+  "boise state broncos": {
+    "cfbd_name": "Boise State",
+    "league": "ncaaf",
+    "slug": "68",
+    "url": "https://cdn.collegefootballdata.com/logos/128/68.png"
+  },
+  "boston bruins": {
+    "league": "nhl",
+    "slug": "bos"
+  },
+  "boston celtics": {
+    "league": "nba",
+    "slug": "bos"
+  },
+  "boston college": {
+    "cfbd_name": "Boston College",
+    "league": "ncaaf",
+    "slug": "103",
+    "url": "https://cdn.collegefootballdata.com/logos/128/103.png"
+  },
+  "boston college eagles": {
+    "cfbd_name": "Boston College",
+    "league": "ncaaf",
+    "slug": "103",
+    "url": "https://cdn.collegefootballdata.com/logos/128/103.png"
+  },
   "boston red sox": {
     "league": "mlb",
     "slug": "bos"
+  },
+  "bowling green": {
+    "cfbd_name": "Bowling Green",
+    "league": "ncaaf",
+    "slug": "189",
+    "url": "https://cdn.collegefootballdata.com/logos/128/189.png"
+  },
+  "bowling green falcons": {
+    "cfbd_name": "Bowling Green",
+    "league": "ncaaf",
+    "slug": "189",
+    "url": "https://cdn.collegefootballdata.com/logos/128/189.png"
+  },
+  "bowling green state": {
+    "cfbd_name": "Bowling Green",
+    "league": "ncaaf",
+    "slug": "189",
+    "url": "https://cdn.collegefootballdata.com/logos/128/189.png"
+  },
+  "bradley braves": {
+    "league": "ncaab",
+    "slug": "brad"
+  },
+  "bridgewater state bears": {
+    "league": "ncaaf",
+    "slug": "brst"
+  },
+  "brigham young": {
+    "cfbd_name": "BYU",
+    "league": "ncaaf",
+    "slug": "252",
+    "url": "https://cdn.collegefootballdata.com/logos/128/252.png"
+  },
+  "brooklyn nets": {
+    "league": "nba",
+    "slug": "bkn"
+  },
+  "buena vista beavers": {
+    "league": "ncaaf",
+    "slug": "buena"
+  },
+  "buf": {
+    "cfbd_name": "Buffalo",
+    "league": "ncaaf",
+    "slug": "2084",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2084.png"
+  },
+  "buffalo": {
+    "cfbd_name": "Buffalo",
+    "league": "ncaaf",
+    "slug": "2084",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2084.png"
+  },
+  "buffalo bills": {
+    "league": "nfl",
+    "slug": "buf"
+  },
+  "buffalo bulls": {
+    "cfbd_name": "Buffalo",
+    "league": "ncaaf",
+    "slug": "2084",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2084.png"
+  },
+  "buffalo sabres": {
+    "league": "nhl",
+    "slug": "buf"
+  },
+  "byu": {
+    "cfbd_name": "BYU",
+    "league": "ncaaf",
+    "slug": "252",
+    "url": "https://cdn.collegefootballdata.com/logos/128/252.png"
+  },
+  "byu cougars": {
+    "cfbd_name": "BYU",
+    "league": "ncaaf",
+    "slug": "252",
+    "url": "https://cdn.collegefootballdata.com/logos/128/252.png"
+  },
+  "c michigan": {
+    "cfbd_name": "Central Michigan",
+    "league": "ncaaf",
+    "slug": "2117",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2117.png"
+  },
+  "cal": {
+    "cfbd_name": "California",
+    "league": "ncaaf",
+    "slug": "25",
+    "url": "https://cdn.collegefootballdata.com/logos/128/25.png"
+  },
+  "cal poly mustangs": {
+    "league": "ncaab",
+    "slug": "cp"
+  },
+  "calgary flames": {
+    "league": "nhl",
+    "slug": "cgy"
+  },
+  "california": {
+    "cfbd_name": "California",
+    "league": "ncaaf",
+    "slug": "25",
+    "url": "https://cdn.collegefootballdata.com/logos/128/25.png"
+  },
+  "california golden bears": {
+    "cfbd_name": "California",
+    "league": "ncaaf",
+    "slug": "25",
+    "url": "https://cdn.collegefootballdata.com/logos/128/25.png"
+  },
+  "carolina hurricanes": {
+    "league": "nhl",
+    "slug": "car"
+  },
+  "carolina panthers": {
+    "league": "nfl",
+    "slug": "car"
+  },
+  "carroll university (wi) pioneers": {
+    "league": "ncaaf",
+    "slug": "car"
+  },
+  "ccu": {
+    "cfbd_name": "Coastal Carolina",
+    "league": "ncaaf",
+    "slug": "324",
+    "url": "https://cdn.collegefootballdata.com/logos/128/324.png"
+  },
+  "central florida": {
+    "cfbd_name": "UCF",
+    "league": "ncaaf",
+    "slug": "2116",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2116.png"
+  },
+  "central michigan": {
+    "cfbd_name": "Central Michigan",
+    "league": "ncaaf",
+    "slug": "2117",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2117.png"
+  },
+  "central michigan chippewas": {
+    "cfbd_name": "Central Michigan",
+    "league": "ncaaf",
+    "slug": "2117",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2117.png"
+  },
+  "charlotte": {
+    "cfbd_name": "Charlotte",
+    "league": "ncaaf",
+    "slug": "2429",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2429.png"
+  },
+  "charlotte 49ers": {
+    "cfbd_name": "Charlotte",
+    "league": "ncaaf",
+    "slug": "2429",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2429.png"
+  },
+  "charlotte hornets": {
+    "league": "nba",
+    "slug": "cha"
+  },
+  "chicago bears": {
+    "league": "nfl",
+    "slug": "chi"
+  },
+  "chicago blackhawks": {
+    "league": "nhl",
+    "slug": "chi"
+  },
+  "chicago bulls": {
+    "league": "nba",
+    "slug": "chi"
   },
   "chicago cubs": {
     "league": "mlb",
@@ -671,96 +551,2870 @@
     "league": "mlb",
     "slug": "chw"
   },
+  "cin": {
+    "cfbd_name": "Cincinnati",
+    "league": "ncaaf",
+    "slug": "2132",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2132.png"
+  },
+  "cincinnati": {
+    "cfbd_name": "Cincinnati",
+    "league": "ncaaf",
+    "slug": "2132",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2132.png"
+  },
+  "cincinnati bearcats": {
+    "cfbd_name": "Cincinnati",
+    "league": "ncaaf",
+    "slug": "2132",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2132.png"
+  },
+  "cincinnati bengals": {
+    "league": "nfl",
+    "slug": "cin"
+  },
   "cincinnati reds": {
     "league": "mlb",
     "slug": "cin"
+  },
+  "claremont-mudd-scripps college stags/athenas": {
+    "league": "ncaaf",
+    "slug": "cla"
+  },
+  "clem": {
+    "cfbd_name": "Clemson",
+    "league": "ncaaf",
+    "slug": "228",
+    "url": "https://cdn.collegefootballdata.com/logos/128/228.png"
+  },
+  "clemson": {
+    "cfbd_name": "Clemson",
+    "league": "ncaaf",
+    "slug": "228",
+    "url": "https://cdn.collegefootballdata.com/logos/128/228.png"
+  },
+  "clemson tigers": {
+    "cfbd_name": "Clemson",
+    "league": "ncaaf",
+    "slug": "228",
+    "url": "https://cdn.collegefootballdata.com/logos/128/228.png"
+  },
+  "cleveland browns": {
+    "league": "nfl",
+    "slug": "cle"
+  },
+  "cleveland cavaliers": {
+    "league": "nba",
+    "slug": "cle"
   },
   "cleveland guardians": {
     "league": "mlb",
     "slug": "cle"
   },
+  "clt": {
+    "cfbd_name": "Charlotte",
+    "league": "ncaaf",
+    "slug": "2429",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2429.png"
+  },
+  "cmu": {
+    "cfbd_name": "Central Michigan",
+    "league": "ncaaf",
+    "slug": "2117",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2117.png"
+  },
+  "coastal": {
+    "cfbd_name": "Coastal Carolina",
+    "league": "ncaaf",
+    "slug": "324",
+    "url": "https://cdn.collegefootballdata.com/logos/128/324.png"
+  },
+  "coastal carolina": {
+    "cfbd_name": "Coastal Carolina",
+    "league": "ncaaf",
+    "slug": "324",
+    "url": "https://cdn.collegefootballdata.com/logos/128/324.png"
+  },
+  "coastal carolina chanticleers": {
+    "cfbd_name": "Coastal Carolina",
+    "league": "ncaaf",
+    "slug": "324",
+    "url": "https://cdn.collegefootballdata.com/logos/128/324.png"
+  },
+  "colby college white mules": {
+    "league": "ncaaf",
+    "slug": "colby"
+  },
+  "colo": {
+    "cfbd_name": "Colorado",
+    "league": "ncaaf",
+    "slug": "38",
+    "url": "https://cdn.collegefootballdata.com/logos/128/38.png"
+  },
+  "colorado": {
+    "cfbd_name": "Colorado",
+    "league": "ncaaf",
+    "slug": "38",
+    "url": "https://cdn.collegefootballdata.com/logos/128/38.png"
+  },
+  "colorado avalanche": {
+    "league": "nhl",
+    "slug": "col"
+  },
+  "colorado buffaloes": {
+    "cfbd_name": "Colorado",
+    "league": "ncaaf",
+    "slug": "38",
+    "url": "https://cdn.collegefootballdata.com/logos/128/38.png"
+  },
+  "colorado mesa mavericks": {
+    "league": "ncaaf",
+    "slug": "mesa"
+  },
   "colorado rockies": {
     "league": "mlb",
     "slug": "col"
+  },
+  "colorado st": {
+    "cfbd_name": "Colorado State",
+    "league": "ncaaf",
+    "slug": "36",
+    "url": "https://cdn.collegefootballdata.com/logos/128/36.png"
+  },
+  "colorado st rams": {
+    "cfbd_name": "Colorado State",
+    "league": "ncaaf",
+    "slug": "36",
+    "url": "https://cdn.collegefootballdata.com/logos/128/36.png"
+  },
+  "colorado state": {
+    "cfbd_name": "Colorado State",
+    "league": "ncaaf",
+    "slug": "36",
+    "url": "https://cdn.collegefootballdata.com/logos/128/36.png"
+  },
+  "colorado state rams": {
+    "cfbd_name": "Colorado State",
+    "league": "ncaaf",
+    "slug": "36",
+    "url": "https://cdn.collegefootballdata.com/logos/128/36.png"
+  },
+  "columbus blue jackets": {
+    "league": "nhl",
+    "slug": "cbj"
+  },
+  "conn": {
+    "cfbd_name": "UConn",
+    "league": "ncaaf",
+    "slug": "41",
+    "url": "https://cdn.collegefootballdata.com/logos/128/41.png"
+  },
+  "connecticut": {
+    "cfbd_name": "UConn",
+    "league": "ncaaf",
+    "slug": "41",
+    "url": "https://cdn.collegefootballdata.com/logos/128/41.png"
+  },
+  "csu": {
+    "cfbd_name": "Colorado State",
+    "league": "ncaaf",
+    "slug": "36",
+    "url": "https://cdn.collegefootballdata.com/logos/128/36.png"
+  },
+  "curry college colonels": {
+    "league": "ncaaf",
+    "slug": "cur"
+  },
+  "dallas cowboys": {
+    "league": "nfl",
+    "slug": "dal"
+  },
+  "dallas mavericks": {
+    "league": "nba",
+    "slug": "dal"
+  },
+  "dallas stars": {
+    "league": "nhl",
+    "slug": "dal"
+  },
+  "del": {
+    "cfbd_name": "Delaware",
+    "league": "ncaaf",
+    "slug": "48",
+    "url": "https://cdn.collegefootballdata.com/logos/128/48.png"
+  },
+  "delaware": {
+    "cfbd_name": "Delaware",
+    "league": "ncaaf",
+    "slug": "48",
+    "url": "https://cdn.collegefootballdata.com/logos/128/48.png"
+  },
+  "delaware blue hens": {
+    "cfbd_name": "Delaware",
+    "league": "ncaaf",
+    "slug": "48",
+    "url": "https://cdn.collegefootballdata.com/logos/128/48.png"
+  },
+  "denver broncos": {
+    "league": "nfl",
+    "slug": "den"
+  },
+  "denver nuggets": {
+    "league": "nba",
+    "slug": "den"
+  },
+  "detroit lions": {
+    "league": "nfl",
+    "slug": "det"
+  },
+  "detroit pistons": {
+    "league": "nba",
+    "slug": "det"
+  },
+  "detroit red wings": {
+    "league": "nhl",
+    "slug": "det"
   },
   "detroit tigers": {
     "league": "mlb",
     "slug": "det"
   },
+  "dubuque spartans": {
+    "league": "ncaaf",
+    "slug": "dub"
+  },
+  "duke": {
+    "cfbd_name": "Duke",
+    "league": "ncaaf",
+    "slug": "150",
+    "url": "https://cdn.collegefootballdata.com/logos/128/150.png"
+  },
+  "duke blue devils": {
+    "cfbd_name": "Duke",
+    "league": "ncaaf",
+    "slug": "150",
+    "url": "https://cdn.collegefootballdata.com/logos/128/150.png"
+  },
+  "e michigan": {
+    "cfbd_name": "Eastern Michigan",
+    "league": "ncaaf",
+    "slug": "2199",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2199.png"
+  },
+  "east carolina": {
+    "cfbd_name": "East Carolina",
+    "league": "ncaaf",
+    "slug": "151",
+    "url": "https://cdn.collegefootballdata.com/logos/128/151.png"
+  },
+  "east carolina pirates": {
+    "cfbd_name": "East Carolina",
+    "league": "ncaaf",
+    "slug": "151",
+    "url": "https://cdn.collegefootballdata.com/logos/128/151.png"
+  },
+  "eastern michigan": {
+    "cfbd_name": "Eastern Michigan",
+    "league": "ncaaf",
+    "slug": "2199",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2199.png"
+  },
+  "eastern michigan eagles": {
+    "cfbd_name": "Eastern Michigan",
+    "league": "ncaaf",
+    "slug": "2199",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2199.png"
+  },
+  "ecu": {
+    "cfbd_name": "East Carolina",
+    "league": "ncaaf",
+    "slug": "151",
+    "url": "https://cdn.collegefootballdata.com/logos/128/151.png"
+  },
+  "edmonton oilers": {
+    "league": "nhl",
+    "slug": "edm"
+  },
+  "elmhurst bluejays": {
+    "league": "ncaaf",
+    "slug": "elm"
+  },
+  "emu": {
+    "cfbd_name": "Eastern Michigan",
+    "league": "ncaaf",
+    "slug": "2199",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2199.png"
+  },
+  "fau": {
+    "cfbd_name": "Florida Atlantic",
+    "league": "ncaaf",
+    "slug": "2226",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2226.png"
+  },
+  "fiu": {
+    "cfbd_name": "Florida International",
+    "league": "ncaaf",
+    "slug": "2229",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2229.png"
+  },
+  "fla": {
+    "cfbd_name": "Florida",
+    "league": "ncaaf",
+    "slug": "57",
+    "url": "https://cdn.collegefootballdata.com/logos/128/57.png"
+  },
+  "florida": {
+    "cfbd_name": "Florida",
+    "league": "ncaaf",
+    "slug": "57",
+    "url": "https://cdn.collegefootballdata.com/logos/128/57.png"
+  },
+  "florida a&m rattlers": {
+    "league": "ncaab",
+    "slug": "famu"
+  },
+  "florida atlantic": {
+    "cfbd_name": "Florida Atlantic",
+    "league": "ncaaf",
+    "slug": "2226",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2226.png"
+  },
+  "florida atlantic owls": {
+    "cfbd_name": "Florida Atlantic",
+    "league": "ncaaf",
+    "slug": "2226",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2226.png"
+  },
+  "florida gators": {
+    "cfbd_name": "Florida",
+    "league": "ncaaf",
+    "slug": "57",
+    "url": "https://cdn.collegefootballdata.com/logos/128/57.png"
+  },
+  "florida int'l golden panthers": {
+    "cfbd_name": "Florida International",
+    "league": "ncaaf",
+    "slug": "2229",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2229.png"
+  },
+  "florida international": {
+    "cfbd_name": "Florida International",
+    "league": "ncaaf",
+    "slug": "2229",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2229.png"
+  },
+  "florida international panthers": {
+    "cfbd_name": "Florida International",
+    "league": "ncaaf",
+    "slug": "2229",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2229.png"
+  },
+  "florida intl": {
+    "cfbd_name": "Florida International",
+    "league": "ncaaf",
+    "slug": "2229",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2229.png"
+  },
+  "florida panthers": {
+    "league": "nhl",
+    "slug": "fla"
+  },
+  "florida st": {
+    "cfbd_name": "Florida State",
+    "league": "ncaaf",
+    "slug": "52",
+    "url": "https://cdn.collegefootballdata.com/logos/128/52.png"
+  },
+  "florida st seminoles": {
+    "cfbd_name": "Florida State",
+    "league": "ncaaf",
+    "slug": "52",
+    "url": "https://cdn.collegefootballdata.com/logos/128/52.png"
+  },
+  "florida state": {
+    "cfbd_name": "Florida State",
+    "league": "ncaaf",
+    "slug": "52",
+    "url": "https://cdn.collegefootballdata.com/logos/128/52.png"
+  },
+  "florida state seminoles": {
+    "cfbd_name": "Florida State",
+    "league": "ncaaf",
+    "slug": "52",
+    "url": "https://cdn.collegefootballdata.com/logos/128/52.png"
+  },
+  "fres": {
+    "cfbd_name": "Fresno State",
+    "league": "ncaaf",
+    "slug": "278",
+    "url": "https://cdn.collegefootballdata.com/logos/128/278.png"
+  },
+  "fresno st": {
+    "cfbd_name": "Fresno State",
+    "league": "ncaaf",
+    "slug": "278",
+    "url": "https://cdn.collegefootballdata.com/logos/128/278.png"
+  },
+  "fresno st bulldogs": {
+    "cfbd_name": "Fresno State",
+    "league": "ncaaf",
+    "slug": "278",
+    "url": "https://cdn.collegefootballdata.com/logos/128/278.png"
+  },
+  "fresno state": {
+    "cfbd_name": "Fresno State",
+    "league": "ncaaf",
+    "slug": "278",
+    "url": "https://cdn.collegefootballdata.com/logos/128/278.png"
+  },
+  "fresno state bulldogs": {
+    "cfbd_name": "Fresno State",
+    "league": "ncaaf",
+    "slug": "278",
+    "url": "https://cdn.collegefootballdata.com/logos/128/278.png"
+  },
+  "fsu": {
+    "cfbd_name": "Florida State",
+    "league": "ncaaf",
+    "slug": "52",
+    "url": "https://cdn.collegefootballdata.com/logos/128/52.png"
+  },
+  "ga southern": {
+    "cfbd_name": "Georgia Southern",
+    "league": "ncaaf",
+    "slug": "290",
+    "url": "https://cdn.collegefootballdata.com/logos/128/290.png"
+  },
+  "gaso": {
+    "cfbd_name": "Georgia Southern",
+    "league": "ncaaf",
+    "slug": "290",
+    "url": "https://cdn.collegefootballdata.com/logos/128/290.png"
+  },
+  "gast": {
+    "cfbd_name": "Georgia State",
+    "league": "ncaaf",
+    "slug": "2247",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2247.png"
+  },
+  "george washington revolutionaries": {
+    "league": "ncaab",
+    "slug": "gw"
+  },
+  "georgetown hoyas": {
+    "league": "ncaab",
+    "slug": "gtwn"
+  },
+  "georgia": {
+    "cfbd_name": "Georgia",
+    "league": "ncaaf",
+    "slug": "61",
+    "url": "https://cdn.collegefootballdata.com/logos/128/61.png"
+  },
+  "georgia bulldogs": {
+    "cfbd_name": "Georgia",
+    "league": "ncaaf",
+    "slug": "61",
+    "url": "https://cdn.collegefootballdata.com/logos/128/61.png"
+  },
+  "georgia southern": {
+    "cfbd_name": "Georgia Southern",
+    "league": "ncaaf",
+    "slug": "290",
+    "url": "https://cdn.collegefootballdata.com/logos/128/290.png"
+  },
+  "georgia southern eagles": {
+    "cfbd_name": "Georgia Southern",
+    "league": "ncaaf",
+    "slug": "290",
+    "url": "https://cdn.collegefootballdata.com/logos/128/290.png"
+  },
+  "georgia st": {
+    "cfbd_name": "Georgia State",
+    "league": "ncaaf",
+    "slug": "2247",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2247.png"
+  },
+  "georgia st panthers": {
+    "cfbd_name": "Georgia State",
+    "league": "ncaaf",
+    "slug": "2247",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2247.png"
+  },
+  "georgia state": {
+    "cfbd_name": "Georgia State",
+    "league": "ncaaf",
+    "slug": "2247",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2247.png"
+  },
+  "georgia state panthers": {
+    "cfbd_name": "Georgia State",
+    "league": "ncaaf",
+    "slug": "2247",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2247.png"
+  },
+  "georgia tech": {
+    "cfbd_name": "Georgia Tech",
+    "league": "ncaaf",
+    "slug": "59",
+    "url": "https://cdn.collegefootballdata.com/logos/128/59.png"
+  },
+  "georgia tech yellow jackets": {
+    "cfbd_name": "Georgia Tech",
+    "league": "ncaaf",
+    "slug": "59",
+    "url": "https://cdn.collegefootballdata.com/logos/128/59.png"
+  },
+  "golden state warriors": {
+    "league": "nba",
+    "slug": "gs"
+  },
+  "green bay packers": {
+    "league": "nfl",
+    "slug": "gb"
+  },
+  "grinnell pioneers": {
+    "league": "ncaaf",
+    "slug": "gri"
+  },
+  "gt": {
+    "cfbd_name": "Georgia Tech",
+    "league": "ncaaf",
+    "slug": "59",
+    "url": "https://cdn.collegefootballdata.com/logos/128/59.png"
+  },
+  "haw": {
+    "cfbd_name": "Hawai'i",
+    "league": "ncaaf",
+    "slug": "62",
+    "url": "https://cdn.collegefootballdata.com/logos/128/62.png"
+  },
+  "hawai'i": {
+    "cfbd_name": "Hawai'i",
+    "league": "ncaaf",
+    "slug": "62",
+    "url": "https://cdn.collegefootballdata.com/logos/128/62.png"
+  },
+  "hawai'i rainbow warriors": {
+    "cfbd_name": "Hawai'i",
+    "league": "ncaaf",
+    "slug": "62",
+    "url": "https://cdn.collegefootballdata.com/logos/128/62.png"
+  },
+  "hawaii warriors": {
+    "cfbd_name": "Hawai'i",
+    "league": "ncaaf",
+    "slug": "62",
+    "url": "https://cdn.collegefootballdata.com/logos/128/62.png"
+  },
+  "hou": {
+    "cfbd_name": "Houston",
+    "league": "ncaaf",
+    "slug": "248",
+    "url": "https://cdn.collegefootballdata.com/logos/128/248.png"
+  },
+  "houston": {
+    "cfbd_name": "Houston",
+    "league": "ncaaf",
+    "slug": "248",
+    "url": "https://cdn.collegefootballdata.com/logos/128/248.png"
+  },
   "houston astros": {
     "league": "mlb",
     "slug": "hou"
+  },
+  "houston cougars": {
+    "cfbd_name": "Houston",
+    "league": "ncaaf",
+    "slug": "248",
+    "url": "https://cdn.collegefootballdata.com/logos/128/248.png"
+  },
+  "houston rockets": {
+    "league": "nba",
+    "slug": "hou"
+  },
+  "houston texans": {
+    "league": "nfl",
+    "slug": "hou"
+  },
+  "howard bison": {
+    "league": "ncaab",
+    "slug": "how"
+  },
+  "idaho vandals": {
+    "league": "ncaab",
+    "slug": "idho"
+  },
+  "ill": {
+    "cfbd_name": "Illinois",
+    "league": "ncaaf",
+    "slug": "356",
+    "url": "https://cdn.collegefootballdata.com/logos/128/356.png"
+  },
+  "illinois": {
+    "cfbd_name": "Illinois",
+    "league": "ncaaf",
+    "slug": "356",
+    "url": "https://cdn.collegefootballdata.com/logos/128/356.png"
+  },
+  "illinois fighting illini": {
+    "cfbd_name": "Illinois",
+    "league": "ncaaf",
+    "slug": "356",
+    "url": "https://cdn.collegefootballdata.com/logos/128/356.png"
+  },
+  "indiana": {
+    "cfbd_name": "Indiana",
+    "league": "ncaaf",
+    "slug": "84",
+    "url": "https://cdn.collegefootballdata.com/logos/128/84.png"
+  },
+  "indiana hoosiers": {
+    "cfbd_name": "Indiana",
+    "league": "ncaaf",
+    "slug": "84",
+    "url": "https://cdn.collegefootballdata.com/logos/128/84.png"
+  },
+  "indiana pacers": {
+    "league": "nba",
+    "slug": "ind"
+  },
+  "indianapolis colts": {
+    "league": "nfl",
+    "slug": "ind"
+  },
+  "iowa": {
+    "cfbd_name": "Iowa",
+    "league": "ncaaf",
+    "slug": "2294",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2294.png"
+  },
+  "iowa hawkeyes": {
+    "cfbd_name": "Iowa",
+    "league": "ncaaf",
+    "slug": "2294",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2294.png"
+  },
+  "iowa state": {
+    "cfbd_name": "Iowa State",
+    "league": "ncaaf",
+    "slug": "66",
+    "url": "https://cdn.collegefootballdata.com/logos/128/66.png"
+  },
+  "iowa state cyclones": {
+    "cfbd_name": "Iowa State",
+    "league": "ncaaf",
+    "slug": "66",
+    "url": "https://cdn.collegefootballdata.com/logos/128/66.png"
+  },
+  "isu": {
+    "cfbd_name": "Iowa State",
+    "league": "ncaaf",
+    "slug": "66",
+    "url": "https://cdn.collegefootballdata.com/logos/128/66.png"
+  },
+  "iu": {
+    "cfbd_name": "Indiana",
+    "league": "ncaaf",
+    "slug": "84",
+    "url": "https://cdn.collegefootballdata.com/logos/128/84.png"
+  },
+  "iu indianapolis jaguars": {
+    "league": "ncaab",
+    "slug": "iuin"
+  },
+  "jacksonville jaguars": {
+    "league": "nfl",
+    "slug": "jax"
+  },
+  "jacksonville st gamecocks": {
+    "cfbd_name": "Jacksonville State",
+    "league": "ncaaf",
+    "slug": "55",
+    "url": "https://cdn.collegefootballdata.com/logos/128/55.png"
+  },
+  "jacksonville state": {
+    "cfbd_name": "Jacksonville State",
+    "league": "ncaaf",
+    "slug": "55",
+    "url": "https://cdn.collegefootballdata.com/logos/128/55.png"
+  },
+  "jacksonville state gamecocks": {
+    "cfbd_name": "Jacksonville State",
+    "league": "ncaaf",
+    "slug": "55",
+    "url": "https://cdn.collegefootballdata.com/logos/128/55.png"
+  },
+  "james madison": {
+    "cfbd_name": "James Madison",
+    "league": "ncaaf",
+    "slug": "256",
+    "url": "https://cdn.collegefootballdata.com/logos/128/256.png"
+  },
+  "james madison dukes": {
+    "cfbd_name": "James Madison",
+    "league": "ncaaf",
+    "slug": "256",
+    "url": "https://cdn.collegefootballdata.com/logos/128/256.png"
+  },
+  "jax state": {
+    "cfbd_name": "Jacksonville State",
+    "league": "ncaaf",
+    "slug": "55",
+    "url": "https://cdn.collegefootballdata.com/logos/128/55.png"
+  },
+  "jmu": {
+    "cfbd_name": "James Madison",
+    "league": "ncaaf",
+    "slug": "256",
+    "url": "https://cdn.collegefootballdata.com/logos/128/256.png"
+  },
+  "jxst": {
+    "cfbd_name": "Jacksonville State",
+    "league": "ncaaf",
+    "slug": "55",
+    "url": "https://cdn.collegefootballdata.com/logos/128/55.png"
+  },
+  "kansas": {
+    "cfbd_name": "Kansas",
+    "league": "ncaaf",
+    "slug": "2305",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2305.png"
+  },
+  "kansas city chiefs": {
+    "league": "nfl",
+    "slug": "kc"
   },
   "kansas city royals": {
     "league": "mlb",
     "slug": "kc"
   },
+  "kansas jayhawks": {
+    "cfbd_name": "Kansas",
+    "league": "ncaaf",
+    "slug": "2305",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2305.png"
+  },
+  "kansas st": {
+    "cfbd_name": "Kansas State",
+    "league": "ncaaf",
+    "slug": "2306",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2306.png"
+  },
+  "kansas st wildcats": {
+    "cfbd_name": "Kansas State",
+    "league": "ncaaf",
+    "slug": "2306",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2306.png"
+  },
+  "kansas state": {
+    "cfbd_name": "Kansas State",
+    "league": "ncaaf",
+    "slug": "2306",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2306.png"
+  },
+  "kansas state wildcats": {
+    "cfbd_name": "Kansas State",
+    "league": "ncaaf",
+    "slug": "2306",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2306.png"
+  },
+  "kenn": {
+    "cfbd_name": "Kennesaw State",
+    "league": "ncaaf",
+    "slug": "338",
+    "url": "https://cdn.collegefootballdata.com/logos/128/338.png"
+  },
+  "kennesaw": {
+    "cfbd_name": "Kennesaw State",
+    "league": "ncaaf",
+    "slug": "338",
+    "url": "https://cdn.collegefootballdata.com/logos/128/338.png"
+  },
+  "kennesaw st": {
+    "cfbd_name": "Kennesaw State",
+    "league": "ncaaf",
+    "slug": "338",
+    "url": "https://cdn.collegefootballdata.com/logos/128/338.png"
+  },
+  "kennesaw st owls": {
+    "cfbd_name": "Kennesaw State",
+    "league": "ncaaf",
+    "slug": "338",
+    "url": "https://cdn.collegefootballdata.com/logos/128/338.png"
+  },
+  "kennesaw state": {
+    "cfbd_name": "Kennesaw State",
+    "league": "ncaaf",
+    "slug": "338",
+    "url": "https://cdn.collegefootballdata.com/logos/128/338.png"
+  },
+  "kennesaw state owls": {
+    "cfbd_name": "Kennesaw State",
+    "league": "ncaaf",
+    "slug": "338",
+    "url": "https://cdn.collegefootballdata.com/logos/128/338.png"
+  },
+  "kent": {
+    "cfbd_name": "Kent State",
+    "league": "ncaaf",
+    "slug": "2309",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2309.png"
+  },
+  "kent state": {
+    "cfbd_name": "Kent State",
+    "league": "ncaaf",
+    "slug": "2309",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2309.png"
+  },
+  "kent state golden flashes": {
+    "cfbd_name": "Kent State",
+    "league": "ncaaf",
+    "slug": "2309",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2309.png"
+  },
+  "kentucky": {
+    "cfbd_name": "Kentucky",
+    "league": "ncaaf",
+    "slug": "96",
+    "url": "https://cdn.collegefootballdata.com/logos/128/96.png"
+  },
+  "kentucky wildcats": {
+    "cfbd_name": "Kentucky",
+    "league": "ncaaf",
+    "slug": "96",
+    "url": "https://cdn.collegefootballdata.com/logos/128/96.png"
+  },
+  "ksu": {
+    "cfbd_name": "Kansas State",
+    "league": "ncaaf",
+    "slug": "2306",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2306.png"
+  },
+  "ku": {
+    "cfbd_name": "Kansas",
+    "league": "ncaaf",
+    "slug": "2305",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2305.png"
+  },
+  "la clippers": {
+    "league": "nba",
+    "slug": "lac"
+  },
+  "la.-monroe": {
+    "cfbd_name": "UL Monroe",
+    "league": "ncaaf",
+    "slug": "2433",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2433.png"
+  },
+  "las vegas raiders": {
+    "league": "nfl",
+    "slug": "lv"
+  },
+  "lib": {
+    "cfbd_name": "Liberty",
+    "league": "ncaaf",
+    "slug": "2335",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2335.png"
+  },
+  "liberty": {
+    "cfbd_name": "Liberty",
+    "league": "ncaaf",
+    "slug": "2335",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2335.png"
+  },
+  "liberty flames": {
+    "cfbd_name": "Liberty",
+    "league": "ncaaf",
+    "slug": "2335",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2335.png"
+  },
   "los angeles angels": {
     "league": "mlb",
     "slug": "laa"
+  },
+  "los angeles chargers": {
+    "league": "nfl",
+    "slug": "lac"
   },
   "los angeles dodgers": {
     "league": "mlb",
     "slug": "lad"
   },
+  "los angeles kings": {
+    "league": "nhl",
+    "slug": "la"
+  },
+  "los angeles lakers": {
+    "league": "nba",
+    "slug": "lal"
+  },
+  "los angeles rams": {
+    "league": "nfl",
+    "slug": "lar"
+  },
+  "lou": {
+    "cfbd_name": "Louisville",
+    "league": "ncaaf",
+    "slug": "97",
+    "url": "https://cdn.collegefootballdata.com/logos/128/97.png"
+  },
+  "louisiana": {
+    "cfbd_name": "Louisiana",
+    "league": "ncaaf",
+    "slug": "309",
+    "url": "https://cdn.collegefootballdata.com/logos/128/309.png"
+  },
+  "louisiana ragin' cajuns": {
+    "cfbd_name": "Louisiana",
+    "league": "ncaaf",
+    "slug": "309",
+    "url": "https://cdn.collegefootballdata.com/logos/128/309.png"
+  },
+  "louisiana state": {
+    "cfbd_name": "LSU",
+    "league": "ncaaf",
+    "slug": "99",
+    "url": "https://cdn.collegefootballdata.com/logos/128/99.png"
+  },
+  "louisiana tech": {
+    "cfbd_name": "Louisiana Tech",
+    "league": "ncaaf",
+    "slug": "2348",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2348.png"
+  },
+  "louisiana tech bulldogs": {
+    "cfbd_name": "Louisiana Tech",
+    "league": "ncaaf",
+    "slug": "2348",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2348.png"
+  },
+  "louisville": {
+    "cfbd_name": "Louisville",
+    "league": "ncaaf",
+    "slug": "97",
+    "url": "https://cdn.collegefootballdata.com/logos/128/97.png"
+  },
+  "louisville cardinals": {
+    "cfbd_name": "Louisville",
+    "league": "ncaaf",
+    "slug": "97",
+    "url": "https://cdn.collegefootballdata.com/logos/128/97.png"
+  },
+  "lsu": {
+    "cfbd_name": "LSU",
+    "league": "ncaaf",
+    "slug": "99",
+    "url": "https://cdn.collegefootballdata.com/logos/128/99.png"
+  },
+  "lsu tigers": {
+    "cfbd_name": "LSU",
+    "league": "ncaaf",
+    "slug": "99",
+    "url": "https://cdn.collegefootballdata.com/logos/128/99.png"
+  },
+  "lt": {
+    "cfbd_name": "Louisiana Tech",
+    "league": "ncaaf",
+    "slug": "2348",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2348.png"
+  },
+  "luther norse": {
+    "league": "ncaaf",
+    "slug": "lut"
+  },
+  "m-oh": {
+    "cfbd_name": "Miami (OH)",
+    "league": "ncaaf",
+    "slug": "193",
+    "url": "https://cdn.collegefootballdata.com/logos/128/193.png"
+  },
+  "marshall": {
+    "cfbd_name": "Marshall",
+    "league": "ncaaf",
+    "slug": "276",
+    "url": "https://cdn.collegefootballdata.com/logos/128/276.png"
+  },
+  "marshall thundering herd": {
+    "cfbd_name": "Marshall",
+    "league": "ncaaf",
+    "slug": "276",
+    "url": "https://cdn.collegefootballdata.com/logos/128/276.png"
+  },
+  "maryland": {
+    "cfbd_name": "Maryland",
+    "league": "ncaaf",
+    "slug": "120",
+    "url": "https://cdn.collegefootballdata.com/logos/128/120.png"
+  },
+  "maryland terrapins": {
+    "cfbd_name": "Maryland",
+    "league": "ncaaf",
+    "slug": "120",
+    "url": "https://cdn.collegefootballdata.com/logos/128/120.png"
+  },
+  "mass": {
+    "cfbd_name": "Massachusetts",
+    "league": "ncaaf",
+    "slug": "113",
+    "url": "https://cdn.collegefootballdata.com/logos/128/113.png"
+  },
+  "massachusetts": {
+    "cfbd_name": "Massachusetts",
+    "league": "ncaaf",
+    "slug": "113",
+    "url": "https://cdn.collegefootballdata.com/logos/128/113.png"
+  },
+  "massachusetts minutemen": {
+    "cfbd_name": "Massachusetts",
+    "league": "ncaaf",
+    "slug": "113",
+    "url": "https://cdn.collegefootballdata.com/logos/128/113.png"
+  },
+  "md": {
+    "cfbd_name": "Maryland",
+    "league": "ncaaf",
+    "slug": "120",
+    "url": "https://cdn.collegefootballdata.com/logos/128/120.png"
+  },
+  "mem": {
+    "cfbd_name": "Memphis",
+    "league": "ncaaf",
+    "slug": "235",
+    "url": "https://cdn.collegefootballdata.com/logos/128/235.png"
+  },
+  "memphis": {
+    "cfbd_name": "Memphis",
+    "league": "ncaaf",
+    "slug": "235",
+    "url": "https://cdn.collegefootballdata.com/logos/128/235.png"
+  },
+  "memphis grizzlies": {
+    "league": "nba",
+    "slug": "mem"
+  },
+  "memphis tigers": {
+    "cfbd_name": "Memphis",
+    "league": "ncaaf",
+    "slug": "235",
+    "url": "https://cdn.collegefootballdata.com/logos/128/235.png"
+  },
+  "mia": {
+    "cfbd_name": "Miami",
+    "league": "ncaaf",
+    "slug": "2390",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2390.png"
+  },
+  "miami": {
+    "cfbd_name": "Miami",
+    "league": "ncaaf",
+    "slug": "2390",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2390.png"
+  },
+  "miami (fl)": {
+    "cfbd_name": "Miami",
+    "league": "ncaaf",
+    "slug": "2390",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2390.png"
+  },
+  "miami (oh)": {
+    "cfbd_name": "Miami (OH)",
+    "league": "ncaaf",
+    "slug": "193",
+    "url": "https://cdn.collegefootballdata.com/logos/128/193.png"
+  },
+  "miami (oh) redhawks": {
+    "cfbd_name": "Miami (OH)",
+    "league": "ncaaf",
+    "slug": "193",
+    "url": "https://cdn.collegefootballdata.com/logos/128/193.png"
+  },
+  "miami dolphins": {
+    "league": "nfl",
+    "slug": "mia"
+  },
+  "miami heat": {
+    "league": "nba",
+    "slug": "mia"
+  },
+  "miami hurricanes": {
+    "cfbd_name": "Miami",
+    "league": "ncaaf",
+    "slug": "2390",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2390.png"
+  },
   "miami marlins": {
     "league": "mlb",
     "slug": "mia"
+  },
+  "miami oh": {
+    "cfbd_name": "Miami (OH)",
+    "league": "ncaaf",
+    "slug": "193",
+    "url": "https://cdn.collegefootballdata.com/logos/128/193.png"
+  },
+  "mich": {
+    "cfbd_name": "Michigan",
+    "league": "ncaaf",
+    "slug": "130",
+    "url": "https://cdn.collegefootballdata.com/logos/128/130.png"
+  },
+  "michigan": {
+    "cfbd_name": "Michigan",
+    "league": "ncaaf",
+    "slug": "130",
+    "url": "https://cdn.collegefootballdata.com/logos/128/130.png"
+  },
+  "michigan st": {
+    "cfbd_name": "Michigan State",
+    "league": "ncaaf",
+    "slug": "127",
+    "url": "https://cdn.collegefootballdata.com/logos/128/127.png"
+  },
+  "michigan st spartans": {
+    "cfbd_name": "Michigan State",
+    "league": "ncaaf",
+    "slug": "127",
+    "url": "https://cdn.collegefootballdata.com/logos/128/127.png"
+  },
+  "michigan state": {
+    "cfbd_name": "Michigan State",
+    "league": "ncaaf",
+    "slug": "127",
+    "url": "https://cdn.collegefootballdata.com/logos/128/127.png"
+  },
+  "michigan state spartans": {
+    "cfbd_name": "Michigan State",
+    "league": "ncaaf",
+    "slug": "127",
+    "url": "https://cdn.collegefootballdata.com/logos/128/127.png"
+  },
+  "michigan wolverines": {
+    "cfbd_name": "Michigan",
+    "league": "ncaaf",
+    "slug": "130",
+    "url": "https://cdn.collegefootballdata.com/logos/128/130.png"
+  },
+  "middle tennessee": {
+    "cfbd_name": "Middle Tennessee",
+    "league": "ncaaf",
+    "slug": "2393",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2393.png"
+  },
+  "middle tennessee blue raiders": {
+    "cfbd_name": "Middle Tennessee",
+    "league": "ncaaf",
+    "slug": "2393",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2393.png"
+  },
+  "middle tennessee state": {
+    "cfbd_name": "Middle Tennessee",
+    "league": "ncaaf",
+    "slug": "2393",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2393.png"
+  },
+  "millikin big blue": {
+    "league": "ncaaf",
+    "slug": "mil"
   },
   "milwaukee brewers": {
     "league": "mlb",
     "slug": "mil"
   },
+  "milwaukee bucks": {
+    "league": "nba",
+    "slug": "mil"
+  },
+  "minn": {
+    "cfbd_name": "Minnesota",
+    "league": "ncaaf",
+    "slug": "135",
+    "url": "https://cdn.collegefootballdata.com/logos/128/135.png"
+  },
+  "minnesota": {
+    "cfbd_name": "Minnesota",
+    "league": "ncaaf",
+    "slug": "135",
+    "url": "https://cdn.collegefootballdata.com/logos/128/135.png"
+  },
+  "minnesota golden gophers": {
+    "cfbd_name": "Minnesota",
+    "league": "ncaaf",
+    "slug": "135",
+    "url": "https://cdn.collegefootballdata.com/logos/128/135.png"
+  },
+  "minnesota timberwolves": {
+    "league": "nba",
+    "slug": "min"
+  },
   "minnesota twins": {
     "league": "mlb",
     "slug": "min"
+  },
+  "minnesota vikings": {
+    "league": "nfl",
+    "slug": "min"
+  },
+  "minnesota wild": {
+    "league": "nhl",
+    "slug": "min"
+  },
+  "miss": {
+    "cfbd_name": "Ole Miss",
+    "league": "ncaaf",
+    "slug": "145",
+    "url": "https://cdn.collegefootballdata.com/logos/128/145.png"
+  },
+  "mississippi st": {
+    "cfbd_name": "Mississippi State",
+    "league": "ncaaf",
+    "slug": "344",
+    "url": "https://cdn.collegefootballdata.com/logos/128/344.png"
+  },
+  "mississippi st bulldogs": {
+    "cfbd_name": "Mississippi State",
+    "league": "ncaaf",
+    "slug": "344",
+    "url": "https://cdn.collegefootballdata.com/logos/128/344.png"
+  },
+  "mississippi state": {
+    "cfbd_name": "Mississippi State",
+    "league": "ncaaf",
+    "slug": "344",
+    "url": "https://cdn.collegefootballdata.com/logos/128/344.png"
+  },
+  "mississippi state bulldogs": {
+    "cfbd_name": "Mississippi State",
+    "league": "ncaaf",
+    "slug": "344",
+    "url": "https://cdn.collegefootballdata.com/logos/128/344.png"
+  },
+  "missouri": {
+    "cfbd_name": "Missouri",
+    "league": "ncaaf",
+    "slug": "142",
+    "url": "https://cdn.collegefootballdata.com/logos/128/142.png"
+  },
+  "missouri st": {
+    "cfbd_name": "Missouri State",
+    "league": "ncaaf",
+    "slug": "2623",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2623.png"
+  },
+  "missouri st bears": {
+    "cfbd_name": "Missouri State",
+    "league": "ncaaf",
+    "slug": "2623",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2623.png"
+  },
+  "missouri state": {
+    "cfbd_name": "Missouri State",
+    "league": "ncaaf",
+    "slug": "2623",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2623.png"
+  },
+  "missouri state bears": {
+    "cfbd_name": "Missouri State",
+    "league": "ncaaf",
+    "slug": "2623",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2623.png"
+  },
+  "missouri tigers": {
+    "cfbd_name": "Missouri",
+    "league": "ncaaf",
+    "slug": "142",
+    "url": "https://cdn.collegefootballdata.com/logos/128/142.png"
+  },
+  "miz": {
+    "cfbd_name": "Missouri",
+    "league": "ncaaf",
+    "slug": "142",
+    "url": "https://cdn.collegefootballdata.com/logos/128/142.png"
+  },
+  "montreal canadiens": {
+    "league": "nhl",
+    "slug": "mtl"
+  },
+  "morehouse college maroon tigers": {
+    "league": "ncaaf",
+    "slug": "mor"
+  },
+  "most": {
+    "cfbd_name": "Missouri State",
+    "league": "ncaaf",
+    "slug": "2623",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2623.png"
+  },
+  "mrsh": {
+    "cfbd_name": "Marshall",
+    "league": "ncaaf",
+    "slug": "276",
+    "url": "https://cdn.collegefootballdata.com/logos/128/276.png"
+  },
+  "msst": {
+    "cfbd_name": "Mississippi State",
+    "league": "ncaaf",
+    "slug": "344",
+    "url": "https://cdn.collegefootballdata.com/logos/128/344.png"
+  },
+  "msu": {
+    "cfbd_name": "Michigan State",
+    "league": "ncaaf",
+    "slug": "127",
+    "url": "https://cdn.collegefootballdata.com/logos/128/127.png"
+  },
+  "mtsu": {
+    "cfbd_name": "Middle Tennessee",
+    "league": "ncaaf",
+    "slug": "2393",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2393.png"
+  },
+  "murray state racers": {
+    "league": "ncaab",
+    "slug": "mur"
+  },
+  "n illinois": {
+    "cfbd_name": "Northern Illinois",
+    "league": "ncaaf",
+    "slug": "2459",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2459.png"
+  },
+  "nashville predators": {
+    "league": "nhl",
+    "slug": "nsh"
+  },
+  "navy": {
+    "cfbd_name": "Navy",
+    "league": "ncaaf",
+    "slug": "2426",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2426.png"
+  },
+  "navy midshipmen": {
+    "cfbd_name": "Navy",
+    "league": "ncaaf",
+    "slug": "2426",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2426.png"
+  },
+  "nc state": {
+    "cfbd_name": "NC State",
+    "league": "ncaaf",
+    "slug": "152",
+    "url": "https://cdn.collegefootballdata.com/logos/128/152.png"
+  },
+  "nc state wolfpack": {
+    "cfbd_name": "NC State",
+    "league": "ncaaf",
+    "slug": "152",
+    "url": "https://cdn.collegefootballdata.com/logos/128/152.png"
+  },
+  "ncsu": {
+    "cfbd_name": "NC State",
+    "league": "ncaaf",
+    "slug": "152",
+    "url": "https://cdn.collegefootballdata.com/logos/128/152.png"
+  },
+  "nd": {
+    "cfbd_name": "Notre Dame",
+    "league": "ncaaf",
+    "slug": "87",
+    "url": "https://cdn.collegefootballdata.com/logos/128/87.png"
+  },
+  "neb": {
+    "cfbd_name": "Nebraska",
+    "league": "ncaaf",
+    "slug": "158",
+    "url": "https://cdn.collegefootballdata.com/logos/128/158.png"
+  },
+  "nebraska": {
+    "cfbd_name": "Nebraska",
+    "league": "ncaaf",
+    "slug": "158",
+    "url": "https://cdn.collegefootballdata.com/logos/128/158.png"
+  },
+  "nebraska cornhuskers": {
+    "cfbd_name": "Nebraska",
+    "league": "ncaaf",
+    "slug": "158",
+    "url": "https://cdn.collegefootballdata.com/logos/128/158.png"
+  },
+  "nev": {
+    "cfbd_name": "Nevada",
+    "league": "ncaaf",
+    "slug": "2440",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2440.png"
+  },
+  "nevada": {
+    "cfbd_name": "Nevada",
+    "league": "ncaaf",
+    "slug": "2440",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2440.png"
+  },
+  "nevada wolf pack": {
+    "cfbd_name": "Nevada",
+    "league": "ncaaf",
+    "slug": "2440",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2440.png"
+  },
+  "nevada-las vegas": {
+    "cfbd_name": "UNLV",
+    "league": "ncaaf",
+    "slug": "2439",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2439.png"
+  },
+  "new england patriots": {
+    "league": "nfl",
+    "slug": "ne"
+  },
+  "new jersey devils": {
+    "league": "nhl",
+    "slug": "nj"
+  },
+  "new mexico": {
+    "cfbd_name": "New Mexico",
+    "league": "ncaaf",
+    "slug": "167",
+    "url": "https://cdn.collegefootballdata.com/logos/128/167.png"
+  },
+  "new mexico lobos": {
+    "cfbd_name": "New Mexico",
+    "league": "ncaaf",
+    "slug": "167",
+    "url": "https://cdn.collegefootballdata.com/logos/128/167.png"
+  },
+  "new mexico st": {
+    "cfbd_name": "New Mexico State",
+    "league": "ncaaf",
+    "slug": "166",
+    "url": "https://cdn.collegefootballdata.com/logos/128/166.png"
+  },
+  "new mexico st aggies": {
+    "cfbd_name": "New Mexico State",
+    "league": "ncaaf",
+    "slug": "166",
+    "url": "https://cdn.collegefootballdata.com/logos/128/166.png"
+  },
+  "new mexico state": {
+    "cfbd_name": "New Mexico State",
+    "league": "ncaaf",
+    "slug": "166",
+    "url": "https://cdn.collegefootballdata.com/logos/128/166.png"
+  },
+  "new mexico state aggies": {
+    "cfbd_name": "New Mexico State",
+    "league": "ncaaf",
+    "slug": "166",
+    "url": "https://cdn.collegefootballdata.com/logos/128/166.png"
+  },
+  "new orleans pelicans": {
+    "league": "nba",
+    "slug": "no"
+  },
+  "new orleans saints": {
+    "league": "nfl",
+    "slug": "no"
+  },
+  "new york giants": {
+    "league": "nfl",
+    "slug": "nyg"
+  },
+  "new york islanders": {
+    "league": "nhl",
+    "slug": "nyi"
+  },
+  "new york jets": {
+    "league": "nfl",
+    "slug": "nyj"
+  },
+  "new york knicks": {
+    "league": "nba",
+    "slug": "ny"
   },
   "new york mets": {
     "league": "mlb",
     "slug": "nym"
   },
+  "new york rangers": {
+    "league": "nhl",
+    "slug": "nyr"
+  },
   "new york yankees": {
     "league": "mlb",
     "slug": "nyy"
+  },
+  "niu": {
+    "cfbd_name": "Northern Illinois",
+    "league": "ncaaf",
+    "slug": "2459",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2459.png"
+  },
+  "nmsu": {
+    "cfbd_name": "New Mexico State",
+    "league": "ncaaf",
+    "slug": "166",
+    "url": "https://cdn.collegefootballdata.com/logos/128/166.png"
+  },
+  "north carolina": {
+    "cfbd_name": "North Carolina",
+    "league": "ncaaf",
+    "slug": "153",
+    "url": "https://cdn.collegefootballdata.com/logos/128/153.png"
+  },
+  "north carolina st.": {
+    "cfbd_name": "NC State",
+    "league": "ncaaf",
+    "slug": "152",
+    "url": "https://cdn.collegefootballdata.com/logos/128/152.png"
+  },
+  "north carolina tar heels": {
+    "cfbd_name": "North Carolina",
+    "league": "ncaaf",
+    "slug": "153",
+    "url": "https://cdn.collegefootballdata.com/logos/128/153.png"
+  },
+  "north park vikings": {
+    "league": "ncaaf",
+    "slug": "nor"
+  },
+  "north texas": {
+    "cfbd_name": "North Texas",
+    "league": "ncaaf",
+    "slug": "249",
+    "url": "https://cdn.collegefootballdata.com/logos/128/249.png"
+  },
+  "north texas mean green": {
+    "cfbd_name": "North Texas",
+    "league": "ncaaf",
+    "slug": "249",
+    "url": "https://cdn.collegefootballdata.com/logos/128/249.png"
+  },
+  "northern illinois": {
+    "cfbd_name": "Northern Illinois",
+    "league": "ncaaf",
+    "slug": "2459",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2459.png"
+  },
+  "northern illinois huskies": {
+    "cfbd_name": "Northern Illinois",
+    "league": "ncaaf",
+    "slug": "2459",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2459.png"
+  },
+  "northern kentucky norse": {
+    "league": "ncaab",
+    "slug": "nku"
+  },
+  "northwestern": {
+    "cfbd_name": "Northwestern",
+    "league": "ncaaf",
+    "slug": "77",
+    "url": "https://cdn.collegefootballdata.com/logos/128/77.png"
+  },
+  "northwestern wildcats": {
+    "cfbd_name": "Northwestern",
+    "league": "ncaaf",
+    "slug": "77",
+    "url": "https://cdn.collegefootballdata.com/logos/128/77.png"
+  },
+  "notre dame": {
+    "cfbd_name": "Notre Dame",
+    "league": "ncaaf",
+    "slug": "87",
+    "url": "https://cdn.collegefootballdata.com/logos/128/87.png"
+  },
+  "notre dame fighting irish": {
+    "cfbd_name": "Notre Dame",
+    "league": "ncaaf",
+    "slug": "87",
+    "url": "https://cdn.collegefootballdata.com/logos/128/87.png"
+  },
+  "nu": {
+    "cfbd_name": "Northwestern",
+    "league": "ncaaf",
+    "slug": "77",
+    "url": "https://cdn.collegefootballdata.com/logos/128/77.png"
+  },
+  "odu": {
+    "cfbd_name": "Old Dominion",
+    "league": "ncaaf",
+    "slug": "295",
+    "url": "https://cdn.collegefootballdata.com/logos/128/295.png"
+  },
+  "ohio": {
+    "cfbd_name": "Ohio",
+    "league": "ncaaf",
+    "slug": "195",
+    "url": "https://cdn.collegefootballdata.com/logos/128/195.png"
+  },
+  "ohio bobcats": {
+    "cfbd_name": "Ohio",
+    "league": "ncaaf",
+    "slug": "195",
+    "url": "https://cdn.collegefootballdata.com/logos/128/195.png"
+  },
+  "ohio state": {
+    "cfbd_name": "Ohio State",
+    "league": "ncaaf",
+    "slug": "194",
+    "url": "https://cdn.collegefootballdata.com/logos/128/194.png"
+  },
+  "ohio state buckeyes": {
+    "cfbd_name": "Ohio State",
+    "league": "ncaaf",
+    "slug": "194",
+    "url": "https://cdn.collegefootballdata.com/logos/128/194.png"
+  },
+  "oklahoma": {
+    "cfbd_name": "Oklahoma",
+    "league": "ncaaf",
+    "slug": "201",
+    "url": "https://cdn.collegefootballdata.com/logos/128/201.png"
+  },
+  "oklahoma city thunder": {
+    "league": "nba",
+    "slug": "okc"
+  },
+  "oklahoma sooners": {
+    "cfbd_name": "Oklahoma",
+    "league": "ncaaf",
+    "slug": "201",
+    "url": "https://cdn.collegefootballdata.com/logos/128/201.png"
+  },
+  "oklahoma st": {
+    "cfbd_name": "Oklahoma State",
+    "league": "ncaaf",
+    "slug": "197",
+    "url": "https://cdn.collegefootballdata.com/logos/128/197.png"
+  },
+  "oklahoma st cowboys": {
+    "cfbd_name": "Oklahoma State",
+    "league": "ncaaf",
+    "slug": "197",
+    "url": "https://cdn.collegefootballdata.com/logos/128/197.png"
+  },
+  "oklahoma state": {
+    "cfbd_name": "Oklahoma State",
+    "league": "ncaaf",
+    "slug": "197",
+    "url": "https://cdn.collegefootballdata.com/logos/128/197.png"
+  },
+  "oklahoma state cowboys": {
+    "cfbd_name": "Oklahoma State",
+    "league": "ncaaf",
+    "slug": "197",
+    "url": "https://cdn.collegefootballdata.com/logos/128/197.png"
+  },
+  "okst": {
+    "cfbd_name": "Oklahoma State",
+    "league": "ncaaf",
+    "slug": "197",
+    "url": "https://cdn.collegefootballdata.com/logos/128/197.png"
+  },
+  "old dominion": {
+    "cfbd_name": "Old Dominion",
+    "league": "ncaaf",
+    "slug": "295",
+    "url": "https://cdn.collegefootballdata.com/logos/128/295.png"
+  },
+  "old dominion monarchs": {
+    "cfbd_name": "Old Dominion",
+    "league": "ncaaf",
+    "slug": "295",
+    "url": "https://cdn.collegefootballdata.com/logos/128/295.png"
+  },
+  "ole miss": {
+    "cfbd_name": "Ole Miss",
+    "league": "ncaaf",
+    "slug": "145",
+    "url": "https://cdn.collegefootballdata.com/logos/128/145.png"
+  },
+  "ole miss rebels": {
+    "cfbd_name": "Ole Miss",
+    "league": "ncaaf",
+    "slug": "145",
+    "url": "https://cdn.collegefootballdata.com/logos/128/145.png"
+  },
+  "ore": {
+    "cfbd_name": "Oregon",
+    "league": "ncaaf",
+    "slug": "2483",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2483.png"
+  },
+  "oregon": {
+    "cfbd_name": "Oregon",
+    "league": "ncaaf",
+    "slug": "2483",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2483.png"
+  },
+  "oregon ducks": {
+    "cfbd_name": "Oregon",
+    "league": "ncaaf",
+    "slug": "2483",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2483.png"
+  },
+  "oregon st": {
+    "cfbd_name": "Oregon State",
+    "league": "ncaaf",
+    "slug": "204",
+    "url": "https://cdn.collegefootballdata.com/logos/128/204.png"
+  },
+  "oregon st beavers": {
+    "cfbd_name": "Oregon State",
+    "league": "ncaaf",
+    "slug": "204",
+    "url": "https://cdn.collegefootballdata.com/logos/128/204.png"
+  },
+  "oregon state": {
+    "cfbd_name": "Oregon State",
+    "league": "ncaaf",
+    "slug": "204",
+    "url": "https://cdn.collegefootballdata.com/logos/128/204.png"
+  },
+  "oregon state beavers": {
+    "cfbd_name": "Oregon State",
+    "league": "ncaaf",
+    "slug": "204",
+    "url": "https://cdn.collegefootballdata.com/logos/128/204.png"
+  },
+  "orlando magic": {
+    "league": "nba",
+    "slug": "orl"
+  },
+  "orst": {
+    "cfbd_name": "Oregon State",
+    "league": "ncaaf",
+    "slug": "204",
+    "url": "https://cdn.collegefootballdata.com/logos/128/204.png"
+  },
+  "osu": {
+    "cfbd_name": "Ohio State",
+    "league": "ncaaf",
+    "slug": "194",
+    "url": "https://cdn.collegefootballdata.com/logos/128/194.png"
+  },
+  "ottawa senators": {
+    "league": "nhl",
+    "slug": "ott"
+  },
+  "ou": {
+    "cfbd_name": "Oklahoma",
+    "league": "ncaaf",
+    "slug": "201",
+    "url": "https://cdn.collegefootballdata.com/logos/128/201.png"
+  },
+  "penn state": {
+    "cfbd_name": "Penn State",
+    "league": "ncaaf",
+    "slug": "213",
+    "url": "https://cdn.collegefootballdata.com/logos/128/213.png"
+  },
+  "penn state nittany lions": {
+    "cfbd_name": "Penn State",
+    "league": "ncaaf",
+    "slug": "213",
+    "url": "https://cdn.collegefootballdata.com/logos/128/213.png"
+  },
+  "philadelphia 76ers": {
+    "league": "nba",
+    "slug": "phi"
+  },
+  "philadelphia eagles": {
+    "league": "nfl",
+    "slug": "phi"
+  },
+  "philadelphia flyers": {
+    "league": "nhl",
+    "slug": "phi"
   },
   "philadelphia phillies": {
     "league": "mlb",
     "slug": "phi"
   },
+  "phoenix suns": {
+    "league": "nba",
+    "slug": "phx"
+  },
+  "pitt": {
+    "cfbd_name": "Pittsburgh",
+    "league": "ncaaf",
+    "slug": "221",
+    "url": "https://cdn.collegefootballdata.com/logos/128/221.png"
+  },
+  "pittsburgh": {
+    "cfbd_name": "Pittsburgh",
+    "league": "ncaaf",
+    "slug": "221",
+    "url": "https://cdn.collegefootballdata.com/logos/128/221.png"
+  },
+  "pittsburgh panthers": {
+    "cfbd_name": "Pittsburgh",
+    "league": "ncaaf",
+    "slug": "221",
+    "url": "https://cdn.collegefootballdata.com/logos/128/221.png"
+  },
+  "pittsburgh penguins": {
+    "league": "nhl",
+    "slug": "pit"
+  },
   "pittsburgh pirates": {
     "league": "mlb",
     "slug": "pit"
+  },
+  "pittsburgh steelers": {
+    "league": "nfl",
+    "slug": "pit"
+  },
+  "portland trail blazers": {
+    "league": "nba",
+    "slug": "por"
+  },
+  "psu": {
+    "cfbd_name": "Penn State",
+    "league": "ncaaf",
+    "slug": "213",
+    "url": "https://cdn.collegefootballdata.com/logos/128/213.png"
+  },
+  "pur": {
+    "cfbd_name": "Purdue",
+    "league": "ncaaf",
+    "slug": "2509",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2509.png"
+  },
+  "purdue": {
+    "cfbd_name": "Purdue",
+    "league": "ncaaf",
+    "slug": "2509",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2509.png"
+  },
+  "purdue boilermakers": {
+    "cfbd_name": "Purdue",
+    "league": "ncaaf",
+    "slug": "2509",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2509.png"
+  },
+  "redlands bulldogs": {
+    "league": "ncaaf",
+    "slug": "red"
+  },
+  "rice": {
+    "cfbd_name": "Rice",
+    "league": "ncaaf",
+    "slug": "242",
+    "url": "https://cdn.collegefootballdata.com/logos/128/242.png"
+  },
+  "rice owls": {
+    "cfbd_name": "Rice",
+    "league": "ncaaf",
+    "slug": "242",
+    "url": "https://cdn.collegefootballdata.com/logos/128/242.png"
+  },
+  "rutg": {
+    "cfbd_name": "Rutgers",
+    "league": "ncaaf",
+    "slug": "164",
+    "url": "https://cdn.collegefootballdata.com/logos/128/164.png"
+  },
+  "rutgers": {
+    "cfbd_name": "Rutgers",
+    "league": "ncaaf",
+    "slug": "164",
+    "url": "https://cdn.collegefootballdata.com/logos/128/164.png"
+  },
+  "rutgers scarlet knights": {
+    "cfbd_name": "Rutgers",
+    "league": "ncaaf",
+    "slug": "164",
+    "url": "https://cdn.collegefootballdata.com/logos/128/164.png"
+  },
+  "sacramento kings": {
+    "league": "nba",
+    "slug": "sac"
+  },
+  "sacramento state hornets": {
+    "league": "ncaab",
+    "slug": "sac"
+  },
+  "sam houston": {
+    "cfbd_name": "Sam Houston",
+    "league": "ncaaf",
+    "slug": "2534",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2534.png"
+  },
+  "sam houston bearkats": {
+    "cfbd_name": "Sam Houston",
+    "league": "ncaaf",
+    "slug": "2534",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2534.png"
+  },
+  "sam houston st bearkats": {
+    "cfbd_name": "Sam Houston",
+    "league": "ncaaf",
+    "slug": "2534",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2534.png"
+  },
+  "sam houston state": {
+    "cfbd_name": "Sam Houston",
+    "league": "ncaaf",
+    "slug": "2534",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2534.png"
+  },
+  "san antonio spurs": {
+    "league": "nba",
+    "slug": "sa"
   },
   "san diego padres": {
     "league": "mlb",
     "slug": "sd"
   },
+  "san diego st": {
+    "cfbd_name": "San Diego State",
+    "league": "ncaaf",
+    "slug": "21",
+    "url": "https://cdn.collegefootballdata.com/logos/128/21.png"
+  },
+  "san diego st aztecs": {
+    "cfbd_name": "San Diego State",
+    "league": "ncaaf",
+    "slug": "21",
+    "url": "https://cdn.collegefootballdata.com/logos/128/21.png"
+  },
+  "san diego state": {
+    "cfbd_name": "San Diego State",
+    "league": "ncaaf",
+    "slug": "21",
+    "url": "https://cdn.collegefootballdata.com/logos/128/21.png"
+  },
+  "san diego state aztecs": {
+    "cfbd_name": "San Diego State",
+    "league": "ncaaf",
+    "slug": "21",
+    "url": "https://cdn.collegefootballdata.com/logos/128/21.png"
+  },
+  "san francisco 49ers": {
+    "league": "nfl",
+    "slug": "sf"
+  },
   "san francisco giants": {
     "league": "mlb",
     "slug": "sf"
+  },
+  "san jose sharks": {
+    "league": "nhl",
+    "slug": "sj"
+  },
+  "san jose st.": {
+    "cfbd_name": "San José State",
+    "league": "ncaaf",
+    "slug": "23",
+    "url": "https://cdn.collegefootballdata.com/logos/128/23.png"
+  },
+  "san josé st": {
+    "cfbd_name": "San José State",
+    "league": "ncaaf",
+    "slug": "23",
+    "url": "https://cdn.collegefootballdata.com/logos/128/23.png"
+  },
+  "san josé st spartans": {
+    "cfbd_name": "San José State",
+    "league": "ncaaf",
+    "slug": "23",
+    "url": "https://cdn.collegefootballdata.com/logos/128/23.png"
+  },
+  "san josé state": {
+    "cfbd_name": "San José State",
+    "league": "ncaaf",
+    "slug": "23",
+    "url": "https://cdn.collegefootballdata.com/logos/128/23.png"
+  },
+  "san josé state spartans": {
+    "cfbd_name": "San José State",
+    "league": "ncaaf",
+    "slug": "23",
+    "url": "https://cdn.collegefootballdata.com/logos/128/23.png"
+  },
+  "sc": {
+    "cfbd_name": "South Carolina",
+    "league": "ncaaf",
+    "slug": "2579",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2579.png"
+  },
+  "sdsu": {
+    "cfbd_name": "San Diego State",
+    "league": "ncaaf",
+    "slug": "21",
+    "url": "https://cdn.collegefootballdata.com/logos/128/21.png"
+  },
+  "seattle kraken": {
+    "league": "nhl",
+    "slug": "sea"
   },
   "seattle mariners": {
     "league": "mlb",
     "slug": "sea"
   },
+  "seattle seahawks": {
+    "league": "nfl",
+    "slug": "sea"
+  },
+  "shsu": {
+    "cfbd_name": "Sam Houston",
+    "league": "ncaaf",
+    "slug": "2534",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2534.png"
+  },
+  "sjsu": {
+    "cfbd_name": "San José State",
+    "league": "ncaaf",
+    "slug": "23",
+    "url": "https://cdn.collegefootballdata.com/logos/128/23.png"
+  },
+  "smu": {
+    "cfbd_name": "SMU",
+    "league": "ncaaf",
+    "slug": "2567",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2567.png"
+  },
+  "smu mustangs": {
+    "cfbd_name": "SMU",
+    "league": "ncaaf",
+    "slug": "2567",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2567.png"
+  },
+  "south alabama": {
+    "cfbd_name": "South Alabama",
+    "league": "ncaaf",
+    "slug": "6",
+    "url": "https://cdn.collegefootballdata.com/logos/128/6.png"
+  },
+  "south alabama jaguars": {
+    "cfbd_name": "South Alabama",
+    "league": "ncaaf",
+    "slug": "6",
+    "url": "https://cdn.collegefootballdata.com/logos/128/6.png"
+  },
+  "south carolina": {
+    "cfbd_name": "South Carolina",
+    "league": "ncaaf",
+    "slug": "2579",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2579.png"
+  },
+  "south carolina gamecocks": {
+    "cfbd_name": "South Carolina",
+    "league": "ncaaf",
+    "slug": "2579",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2579.png"
+  },
+  "south florida": {
+    "cfbd_name": "South Florida",
+    "league": "ncaaf",
+    "slug": "58",
+    "url": "https://cdn.collegefootballdata.com/logos/128/58.png"
+  },
+  "south florida bulls": {
+    "cfbd_name": "South Florida",
+    "league": "ncaaf",
+    "slug": "58",
+    "url": "https://cdn.collegefootballdata.com/logos/128/58.png"
+  },
+  "southern illinois salukis": {
+    "league": "ncaab",
+    "slug": "siu"
+  },
+  "southern methodist": {
+    "cfbd_name": "SMU",
+    "league": "ncaaf",
+    "slug": "2567",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2567.png"
+  },
+  "southern miss": {
+    "cfbd_name": "Southern Miss",
+    "league": "ncaaf",
+    "slug": "2572",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2572.png"
+  },
+  "southern miss golden eagles": {
+    "cfbd_name": "Southern Miss",
+    "league": "ncaaf",
+    "slug": "2572",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2572.png"
+  },
+  "southern mississippi": {
+    "cfbd_name": "Southern Miss",
+    "league": "ncaaf",
+    "slug": "2572",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2572.png"
+  },
+  "st. louis blues": {
+    "league": "nhl",
+    "slug": "stl"
+  },
   "st. louis cardinals": {
     "league": "mlb",
     "slug": "stl"
+  },
+  "stan": {
+    "cfbd_name": "Stanford",
+    "league": "ncaaf",
+    "slug": "24",
+    "url": "https://cdn.collegefootballdata.com/logos/128/24.png"
+  },
+  "stanford": {
+    "cfbd_name": "Stanford",
+    "league": "ncaaf",
+    "slug": "24",
+    "url": "https://cdn.collegefootballdata.com/logos/128/24.png"
+  },
+  "stanford cardinal": {
+    "cfbd_name": "Stanford",
+    "league": "ncaaf",
+    "slug": "24",
+    "url": "https://cdn.collegefootballdata.com/logos/128/24.png"
+  },
+  "stetson hatters": {
+    "league": "ncaab",
+    "slug": "stet"
+  },
+  "syr": {
+    "cfbd_name": "Syracuse",
+    "league": "ncaaf",
+    "slug": "183",
+    "url": "https://cdn.collegefootballdata.com/logos/128/183.png"
+  },
+  "syracuse": {
+    "cfbd_name": "Syracuse",
+    "league": "ncaaf",
+    "slug": "183",
+    "url": "https://cdn.collegefootballdata.com/logos/128/183.png"
+  },
+  "syracuse orange": {
+    "cfbd_name": "Syracuse",
+    "league": "ncaaf",
+    "slug": "183",
+    "url": "https://cdn.collegefootballdata.com/logos/128/183.png"
+  },
+  "ta&m": {
+    "cfbd_name": "Texas A&M",
+    "league": "ncaaf",
+    "slug": "245",
+    "url": "https://cdn.collegefootballdata.com/logos/128/245.png"
+  },
+  "tampa bay buccaneers": {
+    "league": "nfl",
+    "slug": "tb"
+  },
+  "tampa bay lightning": {
+    "league": "nhl",
+    "slug": "tb"
   },
   "tampa bay rays": {
     "league": "mlb",
     "slug": "tb"
   },
+  "tcu": {
+    "cfbd_name": "TCU",
+    "league": "ncaaf",
+    "slug": "2628",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2628.png"
+  },
+  "tcu horned frogs": {
+    "cfbd_name": "TCU",
+    "league": "ncaaf",
+    "slug": "2628",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2628.png"
+  },
+  "tem": {
+    "cfbd_name": "Temple",
+    "league": "ncaaf",
+    "slug": "218",
+    "url": "https://cdn.collegefootballdata.com/logos/128/218.png"
+  },
+  "temple": {
+    "cfbd_name": "Temple",
+    "league": "ncaaf",
+    "slug": "218",
+    "url": "https://cdn.collegefootballdata.com/logos/128/218.png"
+  },
+  "temple owls": {
+    "cfbd_name": "Temple",
+    "league": "ncaaf",
+    "slug": "218",
+    "url": "https://cdn.collegefootballdata.com/logos/128/218.png"
+  },
+  "tenn": {
+    "cfbd_name": "Tennessee",
+    "league": "ncaaf",
+    "slug": "2633",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2633.png"
+  },
+  "tennessee": {
+    "cfbd_name": "Tennessee",
+    "league": "ncaaf",
+    "slug": "2633",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2633.png"
+  },
+  "tennessee titans": {
+    "league": "nfl",
+    "slug": "ten"
+  },
+  "tennessee volunteers": {
+    "cfbd_name": "Tennessee",
+    "league": "ncaaf",
+    "slug": "2633",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2633.png"
+  },
+  "tex": {
+    "cfbd_name": "Texas",
+    "league": "ncaaf",
+    "slug": "251",
+    "url": "https://cdn.collegefootballdata.com/logos/128/251.png"
+  },
+  "texas": {
+    "cfbd_name": "Texas",
+    "league": "ncaaf",
+    "slug": "251",
+    "url": "https://cdn.collegefootballdata.com/logos/128/251.png"
+  },
+  "texas a&m": {
+    "cfbd_name": "Texas A&M",
+    "league": "ncaaf",
+    "slug": "245",
+    "url": "https://cdn.collegefootballdata.com/logos/128/245.png"
+  },
+  "texas a&m aggies": {
+    "cfbd_name": "Texas A&M",
+    "league": "ncaaf",
+    "slug": "245",
+    "url": "https://cdn.collegefootballdata.com/logos/128/245.png"
+  },
+  "texas christian": {
+    "cfbd_name": "TCU",
+    "league": "ncaaf",
+    "slug": "2628",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2628.png"
+  },
+  "texas longhorns": {
+    "cfbd_name": "Texas",
+    "league": "ncaaf",
+    "slug": "251",
+    "url": "https://cdn.collegefootballdata.com/logos/128/251.png"
+  },
   "texas rangers": {
     "league": "mlb",
     "slug": "tex"
+  },
+  "texas st": {
+    "cfbd_name": "Texas State",
+    "league": "ncaaf",
+    "slug": "326",
+    "url": "https://cdn.collegefootballdata.com/logos/128/326.png"
+  },
+  "texas state": {
+    "cfbd_name": "Texas State",
+    "league": "ncaaf",
+    "slug": "326",
+    "url": "https://cdn.collegefootballdata.com/logos/128/326.png"
+  },
+  "texas state bobcats": {
+    "cfbd_name": "Texas State",
+    "league": "ncaaf",
+    "slug": "326",
+    "url": "https://cdn.collegefootballdata.com/logos/128/326.png"
+  },
+  "texas tech": {
+    "cfbd_name": "Texas Tech",
+    "league": "ncaaf",
+    "slug": "2641",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2641.png"
+  },
+  "texas tech red raiders": {
+    "cfbd_name": "Texas Tech",
+    "league": "ncaaf",
+    "slug": "2641",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2641.png"
+  },
+  "texas-el paso": {
+    "cfbd_name": "UTEP",
+    "league": "ncaaf",
+    "slug": "2638",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2638.png"
+  },
+  "texas-san antonio": {
+    "cfbd_name": "UTSA",
+    "league": "ncaaf",
+    "slug": "2636",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2636.png"
+  },
+  "tlsa": {
+    "cfbd_name": "Tulsa",
+    "league": "ncaaf",
+    "slug": "202",
+    "url": "https://cdn.collegefootballdata.com/logos/128/202.png"
+  },
+  "tol": {
+    "cfbd_name": "Toledo",
+    "league": "ncaaf",
+    "slug": "2649",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2649.png"
+  },
+  "toledo": {
+    "cfbd_name": "Toledo",
+    "league": "ncaaf",
+    "slug": "2649",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2649.png"
+  },
+  "toledo rockets": {
+    "cfbd_name": "Toledo",
+    "league": "ncaaf",
+    "slug": "2649",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2649.png"
   },
   "toronto blue jays": {
     "league": "mlb",
     "slug": "tor"
   },
+  "toronto maple leafs": {
+    "league": "nhl",
+    "slug": "tor"
+  },
+  "toronto raptors": {
+    "league": "nba",
+    "slug": "tor"
+  },
+  "troy": {
+    "cfbd_name": "Troy",
+    "league": "ncaaf",
+    "slug": "2653",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2653.png"
+  },
+  "troy trojans": {
+    "cfbd_name": "Troy",
+    "league": "ncaaf",
+    "slug": "2653",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2653.png"
+  },
+  "ttu": {
+    "cfbd_name": "Texas Tech",
+    "league": "ncaaf",
+    "slug": "2641",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2641.png"
+  },
+  "tulane": {
+    "cfbd_name": "Tulane",
+    "league": "ncaaf",
+    "slug": "2655",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2655.png"
+  },
+  "tulane green wave": {
+    "cfbd_name": "Tulane",
+    "league": "ncaaf",
+    "slug": "2655",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2655.png"
+  },
+  "tuln": {
+    "cfbd_name": "Tulane",
+    "league": "ncaaf",
+    "slug": "2655",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2655.png"
+  },
+  "tulsa": {
+    "cfbd_name": "Tulsa",
+    "league": "ncaaf",
+    "slug": "202",
+    "url": "https://cdn.collegefootballdata.com/logos/128/202.png"
+  },
+  "tulsa golden hurricane": {
+    "cfbd_name": "Tulsa",
+    "league": "ncaaf",
+    "slug": "202",
+    "url": "https://cdn.collegefootballdata.com/logos/128/202.png"
+  },
+  "txst": {
+    "cfbd_name": "Texas State",
+    "league": "ncaaf",
+    "slug": "326",
+    "url": "https://cdn.collegefootballdata.com/logos/128/326.png"
+  },
+  "uab": {
+    "cfbd_name": "UAB",
+    "league": "ncaaf",
+    "slug": "5",
+    "url": "https://cdn.collegefootballdata.com/logos/128/5.png"
+  },
+  "uab blazers": {
+    "cfbd_name": "UAB",
+    "league": "ncaaf",
+    "slug": "5",
+    "url": "https://cdn.collegefootballdata.com/logos/128/5.png"
+  },
+  "uc riverside highlanders": {
+    "league": "ncaab",
+    "slug": "ucr"
+  },
+  "uc san diego tritons": {
+    "league": "ncaab",
+    "slug": "ucsd"
+  },
+  "ucf": {
+    "cfbd_name": "UCF",
+    "league": "ncaaf",
+    "slug": "2116",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2116.png"
+  },
+  "ucf knights": {
+    "cfbd_name": "UCF",
+    "league": "ncaaf",
+    "slug": "2116",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2116.png"
+  },
+  "ucla": {
+    "cfbd_name": "UCLA",
+    "league": "ncaaf",
+    "slug": "26",
+    "url": "https://cdn.collegefootballdata.com/logos/128/26.png"
+  },
+  "ucla bruins": {
+    "cfbd_name": "UCLA",
+    "league": "ncaaf",
+    "slug": "26",
+    "url": "https://cdn.collegefootballdata.com/logos/128/26.png"
+  },
+  "uconn": {
+    "cfbd_name": "UConn",
+    "league": "ncaaf",
+    "slug": "41",
+    "url": "https://cdn.collegefootballdata.com/logos/128/41.png"
+  },
+  "uconn huskies": {
+    "cfbd_name": "UConn",
+    "league": "ncaaf",
+    "slug": "41",
+    "url": "https://cdn.collegefootballdata.com/logos/128/41.png"
+  },
+  "uga": {
+    "cfbd_name": "Georgia",
+    "league": "ncaaf",
+    "slug": "61",
+    "url": "https://cdn.collegefootballdata.com/logos/128/61.png"
+  },
+  "uic flames": {
+    "league": "ncaab",
+    "slug": "uic"
+  },
+  "uk": {
+    "cfbd_name": "Kentucky",
+    "league": "ncaaf",
+    "slug": "96",
+    "url": "https://cdn.collegefootballdata.com/logos/128/96.png"
+  },
+  "ul": {
+    "cfbd_name": "Louisiana",
+    "league": "ncaaf",
+    "slug": "309",
+    "url": "https://cdn.collegefootballdata.com/logos/128/309.png"
+  },
+  "ul lafayette": {
+    "cfbd_name": "Louisiana",
+    "league": "ncaaf",
+    "slug": "309",
+    "url": "https://cdn.collegefootballdata.com/logos/128/309.png"
+  },
+  "ul monroe": {
+    "cfbd_name": "UL Monroe",
+    "league": "ncaaf",
+    "slug": "2433",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2433.png"
+  },
+  "ul monroe warhawks": {
+    "cfbd_name": "UL Monroe",
+    "league": "ncaaf",
+    "slug": "2433",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2433.png"
+  },
+  "ulm": {
+    "cfbd_name": "UL Monroe",
+    "league": "ncaaf",
+    "slug": "2433",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2433.png"
+  },
+  "umass": {
+    "cfbd_name": "Massachusetts",
+    "league": "ncaaf",
+    "slug": "113",
+    "url": "https://cdn.collegefootballdata.com/logos/128/113.png"
+  },
+  "unc": {
+    "cfbd_name": "North Carolina",
+    "league": "ncaaf",
+    "slug": "153",
+    "url": "https://cdn.collegefootballdata.com/logos/128/153.png"
+  },
+  "unlv": {
+    "cfbd_name": "UNLV",
+    "league": "ncaaf",
+    "slug": "2439",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2439.png"
+  },
+  "unlv rebels": {
+    "cfbd_name": "UNLV",
+    "league": "ncaaf",
+    "slug": "2439",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2439.png"
+  },
+  "unm": {
+    "cfbd_name": "New Mexico",
+    "league": "ncaaf",
+    "slug": "167",
+    "url": "https://cdn.collegefootballdata.com/logos/128/167.png"
+  },
+  "unt": {
+    "cfbd_name": "North Texas",
+    "league": "ncaaf",
+    "slug": "249",
+    "url": "https://cdn.collegefootballdata.com/logos/128/249.png"
+  },
+  "usa": {
+    "cfbd_name": "South Alabama",
+    "league": "ncaaf",
+    "slug": "6",
+    "url": "https://cdn.collegefootballdata.com/logos/128/6.png"
+  },
+  "usc": {
+    "cfbd_name": "USC",
+    "league": "ncaaf",
+    "slug": "30",
+    "url": "https://cdn.collegefootballdata.com/logos/128/30.png"
+  },
+  "usc trojans": {
+    "cfbd_name": "USC",
+    "league": "ncaaf",
+    "slug": "30",
+    "url": "https://cdn.collegefootballdata.com/logos/128/30.png"
+  },
+  "usf": {
+    "cfbd_name": "South Florida",
+    "league": "ncaaf",
+    "slug": "58",
+    "url": "https://cdn.collegefootballdata.com/logos/128/58.png"
+  },
+  "usm": {
+    "cfbd_name": "Southern Miss",
+    "league": "ncaaf",
+    "slug": "2572",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2572.png"
+  },
+  "usu": {
+    "cfbd_name": "Utah State",
+    "league": "ncaaf",
+    "slug": "328",
+    "url": "https://cdn.collegefootballdata.com/logos/128/328.png"
+  },
+  "utah": {
+    "cfbd_name": "Utah",
+    "league": "ncaaf",
+    "slug": "254",
+    "url": "https://cdn.collegefootballdata.com/logos/128/254.png"
+  },
+  "utah jazz": {
+    "league": "nba",
+    "slug": "utah"
+  },
+  "utah mammoth": {
+    "league": "nhl",
+    "slug": "utah"
+  },
+  "utah state": {
+    "cfbd_name": "Utah State",
+    "league": "ncaaf",
+    "slug": "328",
+    "url": "https://cdn.collegefootballdata.com/logos/128/328.png"
+  },
+  "utah state aggies": {
+    "cfbd_name": "Utah State",
+    "league": "ncaaf",
+    "slug": "328",
+    "url": "https://cdn.collegefootballdata.com/logos/128/328.png"
+  },
+  "utah utes": {
+    "cfbd_name": "Utah",
+    "league": "ncaaf",
+    "slug": "254",
+    "url": "https://cdn.collegefootballdata.com/logos/128/254.png"
+  },
+  "utep": {
+    "cfbd_name": "UTEP",
+    "league": "ncaaf",
+    "slug": "2638",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2638.png"
+  },
+  "utep miners": {
+    "cfbd_name": "UTEP",
+    "league": "ncaaf",
+    "slug": "2638",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2638.png"
+  },
+  "utsa": {
+    "cfbd_name": "UTSA",
+    "league": "ncaaf",
+    "slug": "2636",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2636.png"
+  },
+  "utsa roadrunners": {
+    "cfbd_name": "UTSA",
+    "league": "ncaaf",
+    "slug": "2636",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2636.png"
+  },
+  "uva": {
+    "cfbd_name": "Virginia",
+    "league": "ncaaf",
+    "slug": "258",
+    "url": "https://cdn.collegefootballdata.com/logos/128/258.png"
+  },
+  "van": {
+    "cfbd_name": "Vanderbilt",
+    "league": "ncaaf",
+    "slug": "238",
+    "url": "https://cdn.collegefootballdata.com/logos/128/238.png"
+  },
+  "vancouver canucks": {
+    "league": "nhl",
+    "slug": "van"
+  },
+  "vanderbilt": {
+    "cfbd_name": "Vanderbilt",
+    "league": "ncaaf",
+    "slug": "238",
+    "url": "https://cdn.collegefootballdata.com/logos/128/238.png"
+  },
+  "vanderbilt commodores": {
+    "cfbd_name": "Vanderbilt",
+    "league": "ncaaf",
+    "slug": "238",
+    "url": "https://cdn.collegefootballdata.com/logos/128/238.png"
+  },
+  "vegas golden knights": {
+    "league": "nhl",
+    "slug": "vgk"
+  },
+  "virginia": {
+    "cfbd_name": "Virginia",
+    "league": "ncaaf",
+    "slug": "258",
+    "url": "https://cdn.collegefootballdata.com/logos/128/258.png"
+  },
+  "virginia cavaliers": {
+    "cfbd_name": "Virginia",
+    "league": "ncaaf",
+    "slug": "258",
+    "url": "https://cdn.collegefootballdata.com/logos/128/258.png"
+  },
+  "virginia tech": {
+    "cfbd_name": "Virginia Tech",
+    "league": "ncaaf",
+    "slug": "259",
+    "url": "https://cdn.collegefootballdata.com/logos/128/259.png"
+  },
+  "virginia tech hokies": {
+    "cfbd_name": "Virginia Tech",
+    "league": "ncaaf",
+    "slug": "259",
+    "url": "https://cdn.collegefootballdata.com/logos/128/259.png"
+  },
+  "vt": {
+    "cfbd_name": "Virginia Tech",
+    "league": "ncaaf",
+    "slug": "259",
+    "url": "https://cdn.collegefootballdata.com/logos/128/259.png"
+  },
+  "w michigan": {
+    "cfbd_name": "Western Michigan",
+    "league": "ncaaf",
+    "slug": "2711",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2711.png"
+  },
+  "wake": {
+    "cfbd_name": "Wake Forest",
+    "league": "ncaaf",
+    "slug": "154",
+    "url": "https://cdn.collegefootballdata.com/logos/128/154.png"
+  },
+  "wake forest": {
+    "cfbd_name": "Wake Forest",
+    "league": "ncaaf",
+    "slug": "154",
+    "url": "https://cdn.collegefootballdata.com/logos/128/154.png"
+  },
+  "wake forest demon deacons": {
+    "cfbd_name": "Wake Forest",
+    "league": "ncaaf",
+    "slug": "154",
+    "url": "https://cdn.collegefootballdata.com/logos/128/154.png"
+  },
+  "wash": {
+    "cfbd_name": "Washington",
+    "league": "ncaaf",
+    "slug": "264",
+    "url": "https://cdn.collegefootballdata.com/logos/128/264.png"
+  },
+  "washington": {
+    "cfbd_name": "Washington",
+    "league": "ncaaf",
+    "slug": "264",
+    "url": "https://cdn.collegefootballdata.com/logos/128/264.png"
+  },
+  "washington capitals": {
+    "league": "nhl",
+    "slug": "wsh"
+  },
+  "washington commanders": {
+    "league": "nfl",
+    "slug": "wsh"
+  },
+  "washington huskies": {
+    "cfbd_name": "Washington",
+    "league": "ncaaf",
+    "slug": "264",
+    "url": "https://cdn.collegefootballdata.com/logos/128/264.png"
+  },
   "washington nationals": {
     "league": "mlb",
     "slug": "wsh"
+  },
+  "washington st": {
+    "cfbd_name": "Washington State",
+    "league": "ncaaf",
+    "slug": "265",
+    "url": "https://cdn.collegefootballdata.com/logos/128/265.png"
+  },
+  "washington st cougars": {
+    "cfbd_name": "Washington State",
+    "league": "ncaaf",
+    "slug": "265",
+    "url": "https://cdn.collegefootballdata.com/logos/128/265.png"
+  },
+  "washington state": {
+    "cfbd_name": "Washington State",
+    "league": "ncaaf",
+    "slug": "265",
+    "url": "https://cdn.collegefootballdata.com/logos/128/265.png"
+  },
+  "washington state cougars": {
+    "cfbd_name": "Washington State",
+    "league": "ncaaf",
+    "slug": "265",
+    "url": "https://cdn.collegefootballdata.com/logos/128/265.png"
+  },
+  "washington wizards": {
+    "league": "nba",
+    "slug": "wsh"
+  },
+  "west virginia": {
+    "cfbd_name": "West Virginia",
+    "league": "ncaaf",
+    "slug": "277",
+    "url": "https://cdn.collegefootballdata.com/logos/128/277.png"
+  },
+  "west virginia mountaineers": {
+    "cfbd_name": "West Virginia",
+    "league": "ncaaf",
+    "slug": "277",
+    "url": "https://cdn.collegefootballdata.com/logos/128/277.png"
+  },
+  "western kentucky": {
+    "cfbd_name": "Western Kentucky",
+    "league": "ncaaf",
+    "slug": "98",
+    "url": "https://cdn.collegefootballdata.com/logos/128/98.png"
+  },
+  "western kentucky hilltoppers": {
+    "cfbd_name": "Western Kentucky",
+    "league": "ncaaf",
+    "slug": "98",
+    "url": "https://cdn.collegefootballdata.com/logos/128/98.png"
+  },
+  "western ky": {
+    "cfbd_name": "Western Kentucky",
+    "league": "ncaaf",
+    "slug": "98",
+    "url": "https://cdn.collegefootballdata.com/logos/128/98.png"
+  },
+  "western michigan": {
+    "cfbd_name": "Western Michigan",
+    "league": "ncaaf",
+    "slug": "2711",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2711.png"
+  },
+  "western michigan broncos": {
+    "cfbd_name": "Western Michigan",
+    "league": "ncaaf",
+    "slug": "2711",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2711.png"
+  },
+  "winnipeg jets": {
+    "league": "nhl",
+    "slug": "wpg"
+  },
+  "wis": {
+    "cfbd_name": "Wisconsin",
+    "league": "ncaaf",
+    "slug": "275",
+    "url": "https://cdn.collegefootballdata.com/logos/128/275.png"
+  },
+  "wisconsin": {
+    "cfbd_name": "Wisconsin",
+    "league": "ncaaf",
+    "slug": "275",
+    "url": "https://cdn.collegefootballdata.com/logos/128/275.png"
+  },
+  "wisconsin badgers": {
+    "cfbd_name": "Wisconsin",
+    "league": "ncaaf",
+    "slug": "275",
+    "url": "https://cdn.collegefootballdata.com/logos/128/275.png"
+  },
+  "wku": {
+    "cfbd_name": "Western Kentucky",
+    "league": "ncaaf",
+    "slug": "98",
+    "url": "https://cdn.collegefootballdata.com/logos/128/98.png"
+  },
+  "wmu": {
+    "cfbd_name": "Western Michigan",
+    "league": "ncaaf",
+    "slug": "2711",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2711.png"
+  },
+  "wsu": {
+    "cfbd_name": "Washington State",
+    "league": "ncaaf",
+    "slug": "265",
+    "url": "https://cdn.collegefootballdata.com/logos/128/265.png"
+  },
+  "wvu": {
+    "cfbd_name": "West Virginia",
+    "league": "ncaaf",
+    "slug": "277",
+    "url": "https://cdn.collegefootballdata.com/logos/128/277.png"
+  },
+  "wyo": {
+    "cfbd_name": "Wyoming",
+    "league": "ncaaf",
+    "slug": "2751",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2751.png"
+  },
+  "wyoming": {
+    "cfbd_name": "Wyoming",
+    "league": "ncaaf",
+    "slug": "2751",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2751.png"
+  },
+  "wyoming cowboys": {
+    "cfbd_name": "Wyoming",
+    "league": "ncaaf",
+    "slug": "2751",
+    "url": "https://cdn.collegefootballdata.com/logos/128/2751.png"
+  },
+  "yale bulldogs": {
+    "league": "ncaab",
+    "slug": "yale"
   }
 }

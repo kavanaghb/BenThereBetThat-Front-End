@@ -2436,8 +2436,18 @@ async function loadMetaMaps() {
   }
 }
 
+function normalizeTeamLogoKey(teamName) {
+  return String(teamName || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\bstate\b/g, "st")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 // ===================================================
-// ⭐ GET TEAM LOGO URL — Final Working Version
+// ⭐ GET TEAM LOGO URL — supports direct college URLs
 // ===================================================
 function getTeamLogoUrl(teamName) {
   if (!teamName) {
@@ -2445,14 +2455,35 @@ function getTeamLogoUrl(teamName) {
     return null;
   }
 
-  const key = teamName.toLowerCase().trim();
-  const meta = TEAM_LOGO_MAP[key];
+  const exactKey = teamName.toLowerCase().trim();
+
+  // Try exact match first.
+  let meta = TEAM_LOGO_MAP[exactKey];
+
+  // Then try normalized provider-name matching.
+  if (!meta) {
+    const wanted = normalizeTeamLogoKey(teamName);
+
+    const matchedKey = Object.keys(TEAM_LOGO_MAP).find(
+      key => normalizeTeamLogoKey(key) === wanted
+    );
+
+    if (matchedKey) {
+      meta = TEAM_LOGO_MAP[matchedKey];
+    }
+  }
 
   if (!meta) {
-    console.warn(`❌ No logo meta found for key="${key}"`);
+    console.warn(`❌ No logo meta found for team="${teamName}"`);
     return null;
   }
 
+  // NCAAF direct CFBD logo URL.
+  if (meta.url) {
+    return meta.url;
+  }
+
+  // Existing pro / legacy logo behavior.
   const baseByLeague = {
     nfl:   "https://a.espncdn.com/i/teamlogos/nfl/500",
     nba:   "https://a.espncdn.com/i/teamlogos/nba/500",
@@ -2463,16 +2494,14 @@ function getTeamLogoUrl(teamName) {
   };
 
   const base = baseByLeague[meta.league];
-  const url = `${base}/${meta.slug}.png`;
 
-  console.log(
-    `🟦 Logo URL generated for "${teamName}" (league=${meta.league} slug=${meta.slug}):`,
-    url
-  );
+  if (!base || !meta.slug) {
+    console.warn(`❌ Invalid logo meta for team="${teamName}"`, meta);
+    return null;
+  }
 
-  return url;
+  return `${base}/${meta.slug}.png`;
 }
-
 
 
 // ===================================================
@@ -5578,12 +5607,24 @@ row._platformSignals = {};
 
   const signalCurve = buildNoVigCurve(signalData, row);
 
-  let signalMarketLine = Number(getMarketMedianPoint(row));
-  if (!Number.isFinite(signalMarketLine)) signalMarketLine = Number(getTrueConsensusPoint(row));
-  if (!Number.isFinite(signalMarketLine)) {
-    const fallbackMarket = Number(row.ConsensusPoint);
-    signalMarketLine = Number.isFinite(fallbackMarket) ? fallbackMarket : null;
-  }
+  let signalMarketLine =
+  toValidLine(
+    getMarketMedianPoint(row)
+  );
+
+if (!Number.isFinite(signalMarketLine)) {
+  signalMarketLine =
+    toValidLine(
+      getTrueConsensusPoint(row)
+    );
+}
+
+if (!Number.isFinite(signalMarketLine)) {
+  signalMarketLine =
+    toValidLine(
+      row.ConsensusPoint
+    );
+}
 
   const platformDefinitions = [
     ["PrizePickPoint", "PrizePicks", row.PrizePickPoint ?? row.PrizePicksPoint],
@@ -6082,12 +6123,35 @@ return;
     }
   }
 
-  // ⚡ Mismatch badge (unchanged)
-  const marketFavoredOver =
-    ["FanduelPrice", "DraftKingsPrice", "BetMGMPrice", "FanaticsPrice"].some(
-      (k) => Number(row[k]) < 0
-    );
-  const marketFavored = marketFavoredOver ? "Over" : "Under";
+ const marketPriceKeys = [
+  "FanduelPrice",
+  "DraftKingsPrice",
+  "BetMGMPrice",
+  "FanaticsPrice"
+];
+
+const validMarketPrices =
+  marketPriceKeys
+    .map(k => row[k])
+    .filter(v =>
+      v !== null &&
+      v !== undefined &&
+      v !== "" &&
+      Number.isFinite(Number(v))
+    )
+    .map(Number);
+
+const marketFavoredOver =
+  validMarketPrices.some(
+    price => price < 0
+  );
+
+const marketFavored =
+  validMarketPrices.length === 0
+    ? "—"
+    : marketFavoredOver
+    ? "Over"
+    : "Under";
   const modelFavored = side || "—";
 
   // Add the row-level signal generated from the actual DFS platform lines.
@@ -6224,12 +6288,70 @@ if (
 }
 
     if (!signal || !signal.available) {
-      td.textContent = "—";
-      td.style.setProperty("background", "transparent", "important");
-      td.style.setProperty("color", "inherit", "important");
-      tr.appendChild(td);
-      return;
-    }
+
+  const rawDfsLine =
+    col === "PrizePickPoint"
+      ? toValidLine(
+          row.PrizePickPoint ??
+          row.PrizePicksPoint
+        )
+      : col === "UnderdogPoint"
+      ? toValidLine(
+          row.UnderdogPoint
+        )
+      : toValidLine(
+          row.BetrPoint
+        );
+
+  // DFS has posted a line but sportsbooks have not.
+  if (Number.isFinite(rawDfsLine)) {
+
+    td.innerHTML = `
+      <div class="dfs-line-main">
+        ${rawDfsLine.toFixed(2)}
+      </div>
+
+      <div class="dfs-fair-prob">
+        Vegas pending
+      </div>
+    `;
+
+    td.style.setProperty(
+      "background",
+      "transparent",
+      "important"
+    );
+
+    td.style.setProperty(
+      "color",
+      "inherit",
+      "important"
+    );
+
+    td.title =
+      "DFS line available; sportsbook prop market has not posted enough data yet.";
+
+  } else {
+
+    td.textContent = "—";
+
+    td.style.setProperty(
+      "background",
+      "transparent",
+      "important"
+    );
+
+    td.style.setProperty(
+      "color",
+      "inherit",
+      "important"
+    );
+  }
+
+  tr.appendChild(td);
+  return;
+}
+
 
     // Background color represents line quality ONLY.
     if (signal.isEqual) {
@@ -6254,8 +6376,6 @@ if (
 
     td.style.fontWeight = icons.length || signal.isWorse ? "700" : "600";
 
-    // Compact mobile-friendly display:
-    // line + signal on the first row, fair side/probability on the second.
     const topLine = icons.length
       ? `${icons.join(" ")} ${signal.dfsLine.toFixed(2)}`
       : signal.dfsLine.toFixed(2);
@@ -6388,8 +6508,17 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "B
 
   // Difference columns use the displayed book average/consensus, matching the
   // table label and the historical meaning of these columns.
-  let marketLine = Number(getTrueConsensusPoint(row));
-  if (!Number.isFinite(marketLine)) marketLine = Number(row.ConsensusPoint);
+  let marketLine =
+  toValidLine(
+    getTrueConsensusPoint(row)
+  );
+
+if (!Number.isFinite(marketLine)) {
+  marketLine =
+    toValidLine(
+      row.ConsensusPoint
+    );
+}
 
   if (!Number.isFinite(dfsLine) || !Number.isFinite(marketLine)) {
     row[col] = null;
@@ -6417,6 +6546,7 @@ if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "B
 if (col === "Description") {
 
   const isMLBPlayerProp =
+    selectedSport === "baseball_mlb" &&
     value &&
     value !== "None" &&
     (
@@ -6424,13 +6554,21 @@ if (col === "Description") {
       row.Market?.startsWith("batter_")
     );
 
+  const isNCAAFPlayerProp =
+    selectedSport === "americanfootball_ncaaf" &&
+    value &&
+    value !== "None" &&
+    row.Market?.startsWith("player_");
+
+  const hasEdgeProfile = isMLBPlayerProp || isNCAAFPlayerProp;
+
   td.innerHTML = `
     <div class="player-cell-with-edge">
       <span>${value === null || value === undefined || value === "" ? "—" : String(value)}</span>
 
       ${
-        isMLBPlayerProp
-          ? `<button class="edge-profile-btn" type="button">📊</button>`
+        hasEdgeProfile
+          ? `<button class="edge-profile-btn" type="button" title="Player profile">📊</button>`
           : ""
       }
     </div>
@@ -8511,7 +8649,10 @@ return `
   </button>
 
   ${
-    selectedSport === "baseball_mlb"
+    (
+      selectedSport === "baseball_mlb" ||
+      selectedSport === "americanfootball_ncaaf"
+    )
       ? `
         <button
           type="button"
@@ -9003,9 +9144,281 @@ function getPlayFlag(projectedWinRate) {
   return "❌ No Edge";
 }
 
+function renderNcaafEdgeProfile({
+  rowData,
+  profile,
+  line,
+  outcome,
+  noVig,
+  availableLines,
+  lineEdge,
+  bestSide,
+  bestSideLower,
+  numericLine
+}) {
+  const matchup = profile.matchup || {};
+  const weights = profile.weights || {};
+  const identity = profile.identity || {};
+  const modelWin = Number(profile.projected_win_rate || 0);
+  const marketAvailable = profile.market_available === true && Number.isFinite(Number(profile.market_probability));
+  const marketWin = marketAvailable ? Number(profile.market_probability) : null;
+
+  const aiNotes = [];
+
+  if (!marketAvailable) {
+    aiNotes.push("Vegas has not posted enough two-sided prop data yet, so this AI read is informational only and receives Low confidence.");
+  }
+
+  if (identity.match_confidence === "Unavailable") {
+    aiNotes.push("No player history was safely matched, so the model stays market-driven.");
+  } else if (Number(profile.prior_2025_games || 0) > 0) {
+    aiNotes.push(
+      `2025 history currently contributes ${Number(weights.prior_2025_pct || 0).toFixed(1)}% and automatically fades as 2026 games accumulate.`
+    );
+  }
+
+  if (Number(profile.season_games || 0) > 0) {
+    aiNotes.push(
+      `${profile.season_games} current-season game${Number(profile.season_games) === 1 ? "" : "s"} are now feeding the 2026 component.`
+    );
+  }
+
+  if (matchup.verdict && !String(matchup.verdict).includes("Neutral")) {
+    aiNotes.push(matchup.verdict.replace(/^[🔥🧠⚠️➖]\s*/, ""));
+  }
+
+  if (marketAvailable && modelWin && marketWin) {
+    const delta = modelWin - marketWin;
+    if (delta >= 2) {
+      aiNotes.push(`Player history and matchup add ${delta.toFixed(1)} percentage points above the market lean.`);
+    } else if (delta <= -2) {
+      aiNotes.push(`Player history and matchup reduce the market lean by ${Math.abs(delta).toFixed(1)} points.`);
+    }
+  }
+
+  if (Number(profile.season_games || 0) < 3 && profile.model_status !== "market_only") {
+    aiNotes.push("Early-season sample is still small, so Vegas remains the dominant input.");
+  }
+
+  const aiRead = aiNotes.length
+    ? aiNotes.slice(0, 4).join(" ")
+    : "Market-driven early-season projection; no strong statistical adjustment yet.";
+
+  let edgeSymbol = marketAvailable ? "📊" : "⏳";
+  let edgeLabel = !marketAvailable
+    ? "Vegas Market Pending"
+    : profile.model_status === "market_only"
+    ? "Market-Only Profile"
+    : "Early-Season AI";
+
+  if (
+    marketAvailable &&
+    marketWin >= 60 &&
+    modelWin >= 58 &&
+    lineEdge !== null &&
+    lineEdge > 0
+  ) {
+    edgeSymbol = "🔥";
+    edgeLabel = "Market + AI Agree";
+  } else if (
+    marketAvailable &&
+    marketWin >= 54 &&
+    modelWin >= 54
+  ) {
+    edgeSymbol = "🧠";
+    edgeLabel = "Market + AI Agree";
+  }
+
+  document.getElementById("edgeFlag").textContent =
+    `${edgeSymbol} ${edgeLabel} · ${profile.confidence_label || "Low"} Confidence`;
+
+  document.getElementById("edgeKeyPoints").innerHTML = `
+    <div class="edge-hero-read">
+      <div class="edge-hero-main">
+        <span class="edge-small-label">Best Side</span>
+        <strong>${bestSide || "N/A"}</strong>
+      </div>
+
+      <div class="edge-side-pill ${bestSideLower || ""}">
+        ${bestSide || "N/A"} ${line || ""}
+      </div>
+
+      <div class="edge-confidence">
+        <div class="edge-confidence-top">
+          <span>Vegas Fair Win Rate</span>
+          <strong>${marketAvailable ? `${marketWin.toFixed(1)}%` : "N/A"}</strong>
+        </div>
+        <div class="edge-confidence-track">
+          <div
+            class="edge-confidence-fill"
+            style="width:${marketAvailable ? Math.min(marketWin, 100) : 0}%;"
+          ></div>
+        </div>
+      </div>
+
+      <div class="edge-confidence">
+        <div class="edge-confidence-top">
+          <span>NCAAF AI Projection</span>
+          <strong>${modelWin ? `${modelWin.toFixed(1)}%` : "N/A"}</strong>
+        </div>
+        <div class="edge-confidence-track">
+          <div
+            class="edge-confidence-fill"
+            style="width:${Math.min(modelWin || 0, 100)}%;"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edge-summary-card">
+      <h4>📈 Line Shopping</h4>
+      ${availableLines || `<div class="edge-line-row"><span>Lines</span><strong>N/A</strong></div>`}
+      <div class="edge-line-row edge-line-edge">
+        <span>Line Edge</span>
+        <strong>
+          ${lineEdge !== null
+            ? `${lineEdge > 0 ? "+" : ""}${lineEdge.toFixed(2)} pts`
+            : "N/A"}
+        </strong>
+      </div>
+    </div>
+
+    <div class="edge-summary-grid">
+      <div class="edge-mini-card">
+        <span>Last 5</span>
+        <strong>${profile.last5_record || "N/A"}</strong>
+        <small>Avg ${profile.last5_avg ?? "N/A"}</small>
+      </div>
+
+      <div class="edge-mini-card">
+        <span>Last 10</span>
+        <strong>${profile.last10_record || "N/A"}</strong>
+        <small>Avg ${profile.last10_avg ?? "N/A"}</small>
+      </div>
+
+      <div class="edge-mini-card">
+        <span>2026</span>
+        <strong>${profile.season_record || "N/A"}</strong>
+        <small>Avg ${profile.season_avg ?? "N/A"}</small>
+      </div>
+
+      <div class="edge-mini-card">
+        <span>2025 Prior</span>
+        <strong>${profile.prior_2025_record || "N/A"}</strong>
+        <small>Avg ${profile.prior_2025_avg ?? "N/A"}</small>
+      </div>
+    </div>
+
+    <div class="edge-summary-card">
+      <h4>⚔️ Matchup</h4>
+      <div class="edge-line-row">
+        <span>Player Team</span>
+        <strong>${matchup.player_team || identity.team || "N/A"}</strong>
+      </div>
+      <div class="edge-line-row">
+        <span>Opponent</span>
+        <strong>${matchup.opponent || "N/A"}</strong>
+      </div>
+      <div class="edge-line-row">
+        <span>Run Defense</span>
+        <strong>${matchup.rush_defense_description || "N/A"}</strong>
+      </div>
+      <div class="edge-line-row">
+        <span>Pass Defense</span>
+        <strong>${matchup.pass_defense_description || "N/A"}</strong>
+      </div>
+      <div class="edge-line-row">
+        <span>Team Offense</span>
+        <strong>${matchup.team_offense_description || "N/A"}</strong>
+      </div>
+
+      <div class="edge-ai-read edge-ai-large">
+        🤖 <strong>AI Analysis:</strong><br>
+        ${aiRead}
+      </div>
+    </div>
+  `;
+
+  const realGameLog = Array.isArray(profile.game_log) ? profile.game_log : [];
+  const vals = realGameLog
+    .map(g => Number(g.value))
+    .filter(Number.isFinite);
+
+  const scaleMax = Math.max(
+    numericLine || 0,
+    ...vals,
+    1
+  ) * 1.15;
+
+  const formatShortDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  document.getElementById("edgeGameLogChart").innerHTML =
+    realGameLog.length
+      ? realGameLog.map((g, index) => {
+          const value = Number(g.value || 0);
+          const width = Math.min((value / scaleMax) * 100, 100);
+          const isUnder = String(outcome || "").toLowerCase() === "under";
+          const isHit = isUnder ? value < numericLine : value > numericLine;
+          const seasonTag = Number(g.season) === 2025 ? " '25" : "";
+          return `
+            <div class="edge-log-row">
+              <span>${g.date ? formatShortDate(g.date) : `G${index + 1}`}${seasonTag}</span>
+              <div class="edge-log-bar-track">
+                <div class="edge-log-bar ${isHit ? "hit" : "miss"}" style="width:${width}%"></div>
+              </div>
+              <strong>${value}</strong>
+            </div>
+          `;
+        }).join("")
+      : `<p>No historical game log matched. This is normal for new starters/freshmen.</p>`;
+
+  document.getElementById("edgeGameLogTable").innerHTML = `
+    <tr><td>Line</td><td>${numericLine || "N/A"}</td></tr>
+    <tr><td>Last 5 Hit Rate</td><td>${profile.last5_record || "N/A"}</td></tr>
+    <tr><td>Last 5 Average</td><td>${profile.last5_avg ?? "N/A"}</td></tr>
+    <tr><td>Last 10 Hit Rate</td><td>${profile.last10_record || "N/A"}</td></tr>
+    <tr><td>Last 10 Average</td><td>${profile.last10_avg ?? "N/A"}</td></tr>
+    <tr><td>2026 Hit Rate</td><td>${profile.season_record || "N/A"}</td></tr>
+    <tr><td>2026 Average</td><td>${profile.season_avg ?? "N/A"}</td></tr>
+    <tr><td>2025 Prior</td><td>${profile.prior_2025_record || "N/A"}</td></tr>
+  `;
+
+  document.getElementById("edgeMatchupTable").innerHTML = `
+    <tr><td>Opponent</td><td>${matchup.opponent || "N/A"}</td></tr>
+    <tr><td>Matchup Grade</td><td>${matchup.verdict || "N/A"}</td></tr>
+    <tr><td>Run Defense</td><td>${matchup.rush_defense_description || "N/A"}</td></tr>
+    <tr><td>Rush Yds Allowed/G</td><td>${matchup.rush_yards_allowed_pg ?? "N/A"}</td></tr>
+    <tr><td>Rush Yds/Att Allowed</td><td>${matchup.rush_yards_allowed_per_attempt ?? "N/A"}</td></tr>
+    <tr><td>Pass Defense</td><td>${matchup.pass_defense_description || "N/A"}</td></tr>
+    <tr><td>Pass Yds Allowed/G</td><td>${matchup.pass_yards_allowed_pg ?? "N/A"}</td></tr>
+    <tr><td>Pass Yds/Att Allowed</td><td>${matchup.pass_yards_allowed_per_attempt ?? "N/A"}</td></tr>
+    <tr><td>Scoring Defense</td><td>${matchup.scoring_defense_description || "N/A"}</td></tr>
+    <tr><td>Team Offense</td><td>${matchup.team_offense_description || "N/A"}</td></tr>
+  `;
+
+  document.getElementById("edgeDetailsTable").innerHTML = `
+    <tr><td>Model Status</td><td>${profile.model_status || "N/A"}</td></tr>
+    <tr><td>Confidence</td><td>${profile.confidence_label || "N/A"}</td></tr>
+    <tr><td>Vegas Weight</td><td>${Number(weights.market_pct || 0).toFixed(1)}%</td></tr>
+    <tr><td>2026 Weight</td><td>${Number(weights.current_2026_pct || 0).toFixed(1)}%</td></tr>
+    <tr><td>2025 Weight</td><td>${Number(weights.prior_2025_pct || 0).toFixed(1)}%</td></tr>
+    <tr><td>Matchup Weight</td><td>${Number(weights.matchup_pct || 0).toFixed(1)}%</td></tr>
+    <tr><td>Identity Match</td><td>${identity.match_method || "N/A"} (${identity.match_confidence || "N/A"})</td></tr>
+    <tr><td>Position</td><td>${identity.position || "N/A"}</td></tr>
+    <tr><td>2026 Games</td><td>${profile.season_games ?? 0}</td></tr>
+    <tr><td>2025 Prior Games</td><td>${profile.prior_2025_games ?? 0}</td></tr>
+  `;
+}
+
+
 async function openEdgeProfile(rowData) {
 
   const modal = document.getElementById("edgeProfileModal");
+  const isNCAAF = selectedSport === "americanfootball_ncaaf";
 
 const eventName = rowData.Event || "";
 const [teamA, teamB] = extractTeams(eventName);
@@ -9063,6 +9476,7 @@ logoWrap.innerHTML = `
   const prettyMarket = market
   .replace("pitcher_", "")
   .replace("batter_", "")
+  .replace("player_", "")
   .replaceAll("_", " ")
   .replace(/\b\w/g, c => c.toUpperCase());
 
@@ -9090,7 +9504,7 @@ logoWrap.innerHTML = `
   `${prettyMarket} • ${outcome} ${line}`;
 
   document.getElementById("edgeFlag").textContent =
-    "Loading MLB profile...";
+    isNCAAF ? "Loading NCAAF AI profile..." : "Loading MLB profile...";
 
   document.getElementById("edgeKeyPoints").innerHTML = `
     <li>Loading edge report...</li>
@@ -9140,12 +9554,38 @@ logoWrap.innerHTML = `
     // Needed so the backend can identify which game team is the opponent.
     if (playerTeam) params.append("player_team", playerTeam);
 
+    if (isNCAAF) {
+      const fairProb = Number(
+        rowData.NoVigWinProb ??
+        rowData.NoVigProb ??
+        rowData._canonicalNoVig?.probability
+      );
+
+      const booksUsed = Number(
+        rowData._canonicalNoVig?.booksUsed ??
+        rowData.NoVigBooksUsed ??
+        0
+      );
+
+      if (Number.isFinite(fairProb) && fairProb > 0 && fairProb < 100) {
+        params.append("no_vig", fairProb);
+      }
+
+      if (Number.isFinite(booksUsed) && booksUsed > 0) {
+        params.append("books_used", booksUsed);
+      }
+    }
+
+    const profilePath = isNCAAF
+      ? "/api/ncaaf/player-profile"
+      : "/api/mlb/player-profile";
+
     const res = await fetch(
-      `${window.API_BASE}/api/mlb/player-profile?${params.toString()}`
+      `${window.API_BASE}${profilePath}?${params.toString()}`
     );
 
     if (!res.ok) {
-      throw new Error(`MLB profile failed: ${res.status}`);
+      throw new Error(`${isNCAAF ? "NCAAF" : "MLB"} profile failed: ${res.status}`);
     }
 
     const profile = await res.json();
@@ -9267,13 +9707,30 @@ const bestSideLower =
 
 const lineEdge =
   bestDfsLine !== null &&
-  Number.isFinite(vegasNum)
+  Number.isFinite(vegasNum) &&
+  vegasNum > 0
     ? bestSideLower === "over"
       ? vegasNum - bestDfsLine
       : bestSideLower === "under"
       ? bestDfsLine - vegasNum
       : null
     : null;
+
+if (isNCAAF) {
+  renderNcaafEdgeProfile({
+    rowData,
+    profile,
+    line,
+    outcome,
+    noVig,
+    availableLines,
+    lineEdge,
+    bestSide,
+    bestSideLower,
+    numericLine
+  });
+  return;
+}
 
 // ===================================================
 // 🧠 AI Verdict / Outlook
@@ -9782,7 +10239,7 @@ document.getElementById("edgeDetailsTable").innerHTML = `
     console.error("❌ Edge profile error:", err);
 
     document.getElementById("edgeFlag").textContent =
-      "❌ Could not load MLB profile";
+      `❌ Could not load ${isNCAAF ? "NCAAF" : "MLB"} profile`;
 
     document.getElementById("edgeKeyPoints").innerHTML = `
       <li>Could not load profile data.</li>

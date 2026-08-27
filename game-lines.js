@@ -9,6 +9,31 @@ let currentViewMode = "table"; // preserves table vs card state
 let currentMlbView = "odds"; // odds | value | live
 let liveOddsRefreshTimer = null;
 
+function isMarketEvMode(mode) {
+  return mode === "mlb_market" || mode === "ncaaf_market";
+}
+
+function isMarketEvSport(sport) {
+  return sport === "baseball_mlb" || sport === "americanfootball_ncaaf";
+}
+
+function isNcaafMarketMode() {
+  return currentGameLines?.[0]?.mode === "ncaaf_market";
+}
+
+function marketSportLabel() {
+  return isNcaafMarketMode() ? "NCAAF" : "MLB";
+}
+
+function showMarketRowBreakdown(game, pick = null) {
+  if (game?.mode === "ncaaf_market" || ["NCAAF Market EV v1", "NCAAF EV+ v2"].includes(game?.model_version)) {
+    window.showNcaafMarketBreakdown(game, pick);
+    return;
+  }
+
+  window.showMlbModelBreakdown(game, pick);
+}
+
 // =====================================================
 // 🔐 GAME LINES ACCESS
 // Premium = all Game Lines
@@ -454,23 +479,62 @@ async function initGameLines() {
 currentGameLines = games;
 
 // 📊 Update analytical market snapshot
-renderMlbAnalyticsSummary();
+renderMarketAnalyticsSummary();
+
+const currentMode = games[0]?.mode || "";
+const isMarketMode = isMarketEvMode(currentMode);
+const isNcaafMode = currentMode === "ncaaf_market";
 
 const mlbTabs =
   document.getElementById(
     "mlbViewTabs"
   );
+
 if (mlbTabs) {
-  mlbTabs.style.display = games[0]?.mode === "mlb_market"
+  mlbTabs.style.display = isMarketMode
     ? "flex"
     : "none";
 }
 
+const oddsTabButton =
+  document.getElementById("mlbOddsScreenBtn");
+const valueTabButton =
+  document.getElementById("mlbValuePicksBtn");
+const liveTabButton =
+  document.getElementById("mlbLiveOddsBtn");
+
+if (oddsTabButton) {
+  oddsTabButton.textContent =
+    isNcaafMode
+      ? "📚 NCAAF Odds"
+      : "📚 Pregame Odds";
+}
+
+if (valueTabButton) {
+  valueTabButton.textContent =
+    isNcaafMode
+      ? "💰 NCAAF EV+ Picks"
+      : "🧠 Value Picks";
+}
+
+if (liveTabButton) {
+  liveTabButton.textContent = "🔴 Live Odds";
+}
+
 const modeNote = document.getElementById("gameLinesModeNote");
 if (modeNote) {
-  modeNote.innerHTML = games[0]?.mode === "mlb_market"
-    ? "⚾ MLB Model v3: Lean = 1.0%–1.99% EV with 3+ books; Value = 2%+ EV with 3+ books; Strong Value = 4%+ EV, High confidence, and 4+ books. Only Value and Strong Value enter the official tracked record."
-    : "🏀 College basketball spreads use Ben's learned Torvik/market model.";
+  if (isNcaafMode) {
+    modeNote.innerHTML =
+      "🏈 NCAAF EV+ v2: multi-book no-vig market remains the anchor. Pregame spreads add a conservative SP+/Team Model v2 adjustment; moneylines and totals stay market-only. Lean = 1%+ EV; Value = 3%+ EV; Strong Value = 5%+ EV with book-count safeguards.";
+  }
+  else if (currentMode === "mlb_market") {
+    modeNote.innerHTML =
+      "⚾ MLB Model v3: Lean = 0.5%–1.99% EV with 3+ books; Value = 2%+ EV with 3+ books; Strong Value = 4%+ EV, High confidence, and 4+ books. Only Value and Strong Value enter the official tracked record.";
+  }
+  else {
+    modeNote.innerHTML =
+      "🏀 College basketball spreads use Ben's learned Torvik/market model.";
+  }
 }
 
 
@@ -712,7 +776,7 @@ function renderGameLines() {
 
   const container = document.getElementById("gameLinesResults");
 
-  if (currentGameLines?.[0]?.mode === "mlb_market") {
+  if (isMarketEvMode(currentGameLines?.[0]?.mode)) {
     renderMlbMarketPicks();
     return;
   }
@@ -1413,10 +1477,19 @@ marchMadnessBtn
   sportSelect?.addEventListener("change", () => {
     window.modelDebugMode = false;
 
-    if (sportSelect.value !== "baseball_mlb") {
-      stopLiveOddsRefresh();
-      currentMlbView = "odds";
-    }
+    stopLiveOddsRefresh();
+    currentMlbView = "odds";
+
+    const mlbOddsScreenBtn =
+      document.getElementById("mlbOddsScreenBtn");
+    const mlbValuePicksBtn =
+      document.getElementById("mlbValuePicksBtn");
+    const mlbLiveOddsBtn =
+      document.getElementById("mlbLiveOddsBtn");
+
+    mlbOddsScreenBtn?.classList.add("active");
+    mlbValuePicksBtn?.classList.remove("active");
+    mlbLiveOddsBtn?.classList.remove("active");
 
     initGameLines();
   });
@@ -1589,8 +1662,17 @@ cardBtn?.addEventListener("click", () => {
 window.showModelBreakdown = function(game)
 {
   if (
-    game?.model_version === "MLB Model v3"
-    || game?.model_context
+    game?.mode === "ncaaf_market"
+    || ["NCAAF Market EV v1", "NCAAF EV+ v2"].includes(game?.model_version)
+    || document.getElementById("sportSelect")?.value === "americanfootball_ncaaf"
+  ) {
+    window.showNcaafMarketBreakdown(game);
+    return;
+  }
+
+  if (
+    game?.mode === "mlb_market"
+    || game?.model_version === "MLB Model v3"
     || document.getElementById("sportSelect")?.value === "baseball_mlb"
   ) {
     window.showMlbModelBreakdown(game);
@@ -2036,11 +2118,16 @@ function startLiveOddsRefresh() {
   stopLiveOddsRefresh();
 
   liveOddsRefreshTimer = setInterval(() => {
+    const sport =
+      document.getElementById("sportSelect")?.value;
+
     if (
-      currentMlbView === "live" &&
-      document.getElementById("sportSelect")?.value === "baseball_mlb"
+      currentMlbView === "live"
+      && isMarketEvSport(sport)
     ) {
-      console.log("🔴 Refreshing live MLB odds...");
+      console.log(
+        `🔴 Refreshing live ${sport === "americanfootball_ncaaf" ? "NCAAF" : "MLB"} odds...`
+      );
       initGameLines(true);
     }
   }, 30000);
@@ -2372,16 +2459,16 @@ function updateModelDetailButtonLabel() {
   const sport = document.getElementById("sportSelect")?.value;
   if (!button) return;
 
-  const isMlb = sport === "baseball_mlb";
+  const isMarketSport = isMarketEvSport(sport);
 
-  // MLB detail is always available by clicking a specific market row.
-  // The global button remains only for the college model-debug workflow.
-  button.hidden = isMlb;
-  button.style.display = isMlb ? "none" : "";
+  // Market-EV detail is available by clicking a specific market row.
+  // The global button remains only for the NCAAB model-debug workflow.
+  button.hidden = isMarketSport;
+  button.style.display = isMarketSport ? "none" : "";
 
-  if (!isMlb) {
+  if (!isMarketSport) {
     button.innerHTML = "🧠 Ben's Model Detail";
-    button.title = "Toggle college model details.";
+    button.title = "Toggle college basketball model details.";
   }
 }
 
@@ -2611,6 +2698,776 @@ window.showMlbModelBreakdown = function(game, pick = null) {
   modal.setAttribute("aria-hidden", "false");
 };
 
+
+window.showNcaafMarketBreakdown = function(game, pick = null) {
+  if (!document.getElementById("ncaafModalReadStyles")) {
+    const style = document.createElement("style");
+    style.id = "ncaafModalReadStyles";
+    style.textContent = `
+      .ncaaf-market-read-grid {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .ncaaf-market-read-item {
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        gap: 10px;
+        align-items: start;
+        padding: 12px 14px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.34);
+      }
+
+      .ncaaf-market-read-icon {
+        font-size: 18px;
+        line-height: 1.35;
+        text-align: center;
+      }
+
+      .ncaaf-market-read-text {
+        line-height: 1.45;
+      }
+
+      .ncaaf-detail-subheading {
+        margin: 14px 0 6px;
+        padding-bottom: 5px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        opacity: 0.72;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      }
+
+      .ncaaf-detail-subheading:first-of-type {
+        margin-top: 4px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const modal = document.getElementById("modelBreakdownModal");
+  const content = document.getElementById("modelBreakdownContent");
+  const title = modal?.querySelector(".analytics-header h2");
+
+  if (!modal || !content) return;
+
+  if (title) {
+    title.textContent = "🏈 NCAAF EV+ · Detail v6";
+  }
+
+  const selectedPick =
+    pick || (game?.market_picks || [])[0] || (game?.market_board || [])[0] || {};
+
+  const context = game?.model_context || {};
+  const factors = selectedPick?.model_factors || {};
+  const advanced = context?.advanced_ratings || {};
+  const homeRating = advanced?.home || {};
+  const awayRating = advanced?.away || {};
+  const components = context?.components || {};
+
+  const formatRank = value => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? `#${Math.round(n)}` : "N/A";
+  };
+
+  const formatRating = (value, digits = 1) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toFixed(digits) : "N/A";
+  };
+
+  const ratingRow = (label, value, digits = 1, rank = null) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "";
+
+    const rankNum = Number(rank);
+    const rankText =
+      Number.isFinite(rankNum) && rankNum > 0
+        ? ` · #${Math.round(rankNum)}`
+        : "";
+
+    return `
+      <div class="ncaaf-detail-row">
+        <span>${label}</span>
+        <strong>${n.toFixed(digits)}${rankText}</strong>
+      </div>
+    `;
+  };
+
+  const formatSignedPts = (value, digits = 2) => {
+    const n = Number(value);
+    return Number.isFinite(n)
+      ? `${n > 0 ? "+" : ""}${n.toFixed(digits)}`
+      : "N/A";
+  };
+
+  const marketProbability =
+    selectedPick.market_probability != null
+      ? Number(selectedPick.market_probability)
+      : null;
+
+  const modelProbability =
+    selectedPick.model_probability != null
+      ? Number(selectedPick.model_probability)
+      : marketProbability;
+
+  const teamModelProbability =
+    selectedPick.team_model_probability != null
+      ? Number(selectedPick.team_model_probability)
+      : null;
+
+  const evPlusActive = selectedPick.ev_plus_active === true;
+
+  const modelEdgePoints =
+    selectedPick.model_edge_points != null
+      ? Number(selectedPick.model_edge_points)
+      : null;
+
+  const teamModelWeight =
+    selectedPick.team_model_weight != null
+      ? Number(selectedPick.team_model_weight)
+      : 0;
+
+  const bestImplied =
+    selectedPick.best_implied_probability != null
+      ? Number(selectedPick.best_implied_probability)
+      : americanImpliedProbability(selectedPick.best_price);
+
+  const ev =
+    selectedPick.expected_value_pct != null
+      ? Number(selectedPick.expected_value_pct)
+      : null;
+
+  const priceEdge =
+    selectedPick.price_edge_pct != null
+      ? Number(selectedPick.price_edge_pct)
+      : (
+          Number.isFinite(marketProbability)
+          && Number.isFinite(bestImplied)
+            ? (modelProbability - bestImplied) * 100
+            : null
+        );
+
+  const recommendation =
+    String(selectedPick.recommendation || "PASS")
+      .trim()
+      .toUpperCase();
+
+  const confidence =
+    String(selectedPick.model_confidence || "Low")
+      .trim();
+
+  const validBooks =
+    Number(selectedPick.valid_books_compared ?? 0);
+
+  const totalBooks =
+    Number(selectedPick.books_compared ?? 0);
+
+  const bestBook =
+    selectedPick.best_book_name ||
+    selectedPick.best_book ||
+    "N/A";
+
+  const marketKey =
+    String(selectedPick.market || "").toLowerCase();
+
+  const point =
+    selectedPick.point != null
+      ? Number(selectedPick.point)
+      : null;
+
+  let selectionText =
+    selectedPick.pick_label ||
+    selectedPick.selection ||
+    "N/A";
+
+  // Totals read more naturally as "Over 46.5" than "Over +46.5".
+  if (
+    marketKey === "totals" &&
+    Number.isFinite(point)
+  ) {
+  }
+
+  if (
+    marketKey === "totals" &&
+    Number.isFinite(point)
+  ) {
+    selectionText =
+      `${selectedPick.selection || "Total"} ${Number(point).toString()}`;
+  }
+
+  const marketLabel =
+    selectedPick.market_label ||
+    (
+      marketKey === "h2h"
+        ? "Moneyline"
+        : marketKey === "spreads"
+        ? "Spread"
+        : marketKey === "totals"
+        ? "Game Total"
+        : "Market"
+    );
+
+  const signalMeta = {
+    STRONG_VALUE: {
+      label: "🔥 Strong Value",
+      className: "ncaaf-signal-strong",
+      message: "The best available price is materially better than the market's fair probability."
+    },
+    VALUE: {
+      label: "✅ Value",
+      className: "ncaaf-signal-value",
+      message: "The best available price clears the market-implied break-even threshold."
+    },
+    LEAN: {
+      label: "👀 Lean",
+      className: "ncaaf-signal-lean",
+      message: "There is a small positive pricing edge, but it is below the stronger value threshold."
+    },
+    PASS: {
+      label: "⛔ Pass",
+      className: "ncaaf-signal-pass",
+      message: "The best available price is not good enough versus the broader market right now."
+    }
+  }[recommendation] || {
+    label: recommendation || "Pass",
+    className: "ncaaf-signal-pass",
+    message: "No qualified market-value signal is available."
+  };
+
+  const evClass =
+    Number.isFinite(ev) && ev > 0
+      ? "positive"
+      : Number.isFinite(ev) && ev < 0
+      ? "negative"
+      : "neutral";
+
+  const edgeClass =
+    Number.isFinite(priceEdge) && priceEdge > 0
+      ? "positive"
+      : Number.isFinite(priceEdge) && priceEdge < 0
+      ? "negative"
+      : "neutral";
+
+  const marketFairPct =
+    Number.isFinite(marketProbability)
+      ? (marketProbability * 100).toFixed(1) + "%"
+      : "N/A";
+
+  const modelFairPct =
+    Number.isFinite(modelProbability)
+      ? (modelProbability * 100).toFixed(1) + "%"
+      : "N/A";
+
+  const teamModelPct =
+    Number.isFinite(teamModelProbability)
+      ? (teamModelProbability * 100).toFixed(1) + "%"
+      : "N/A";
+
+  const fairPct = modelFairPct;
+
+  const breakEvenPct =
+    Number.isFinite(bestImplied)
+      ? (bestImplied * 100).toFixed(1) + "%"
+      : "N/A";
+
+  const edgeText =
+    Number.isFinite(priceEdge)
+      ? `${priceEdge >= 0 ? "+" : ""}${priceEdge.toFixed(2)} pp`
+      : "N/A";
+
+  const evText =
+    Number.isFinite(ev)
+      ? `${ev >= 0 ? "+" : ""}${ev.toFixed(2)}%`
+      : "N/A";
+
+  const prices =
+    Object.entries(selectedPick.prices || {})
+      .sort((a, b) => {
+        const priceA = Number(a?.[1]?.price);
+        const priceB = Number(b?.[1]?.price);
+
+        if (!Number.isFinite(priceA)) return 1;
+        if (!Number.isFinite(priceB)) return -1;
+
+        return priceB - priceA;
+      });
+
+  const readItems = [];
+
+  if (
+    Number.isFinite(modelProbability) &&
+    Number.isFinite(bestImplied)
+  ) {
+    if (evPlusActive && Number.isFinite(teamModelProbability)) {
+      readItems.push(
+        `Market no-vig is ${marketFairPct}; Team Model v2 prices this exact spread side at ${teamModelPct}. EV+ blends them to ${modelFairPct} with ${(teamModelWeight * 100).toFixed(1)}% model weight.`
+      );
+
+      if (Number.isFinite(modelEdgePoints)) {
+        readItems.push(
+          `The independent spread model shows ${modelEdgePoints >= 0 ? "+" : ""}${modelEdgePoints.toFixed(2)} points of edge toward this selection.`
+        );
+      }
+    } else {
+      readItems.push(
+        `This ${marketLabel.toLowerCase()} remains market-only: the no-vig consensus is ${marketFairPct}.`
+      );
+    }
+
+    if (priceEdge > 0) {
+      readItems.push(
+        `The best price only needs ${breakEvenPct} to break even, producing a ${edgeText} EV+ pricing advantage at ${bestBook}.`
+      );
+    } else if (priceEdge < 0) {
+      readItems.push(
+        `The best price requires ${breakEvenPct} to break even, which is ${Math.abs(priceEdge).toFixed(2)} percentage points above the current EV+ fair probability.`
+      );
+    } else {
+      readItems.push(
+        `The best price is essentially aligned with the current EV+ fair probability.`
+      );
+    }
+  }
+
+  if (validBooks > 0) {
+    readItems.push(
+      `${validBooks} non-outlier books are contributing to the consensus${totalBooks ? ` out of ${totalBooks} comparable prices` : ""}.`
+    );
+  }
+
+  if (
+    context?.model_status === "ready"
+    && Number.isFinite(Number(context?.projected_home_spread))
+  ) {
+    const projectedSpread = Number(context.projected_home_spread);
+    const projectedFavorite = context.projected_favorite || "N/A";
+
+    readItems.push(
+      `Team Model v2 projects ${projectedFavorite} ${formatSignedPts(context.projected_favorite_spread)} with ${context.power_source || "SP+"} as the power source${context.neutral_site ? " at a neutral site" : ""}.`
+    );
+
+    if (Number.isFinite(Number(context?.model_vs_market_points))) {
+      readItems.push(
+        `The projected spread differs from the market by ${formatSignedPts(context.model_vs_market_points)} points toward the home-team side.`
+      );
+    }
+  }
+
+  if (
+    marketKey === "h2h"
+    && !evPlusActive
+    && Number.isFinite(marketProbability)
+    && marketProbability < 0.10
+  ) {
+    readItems.push(
+      "Low-probability moneylines use stricter relative outlier filtering, and market-only longshots are capped at Lean until a separate football win-probability model validates the side."
+    );
+  }
+
+  if (recommendation === "PASS") {
+    readItems.push(
+      "No bet is recommended at the current price. A better number or market move could change the signal."
+    );
+  }
+
+  const bestBookKey =
+    String(selectedPick.best_book || "");
+
+  const priceRows =
+    prices.length
+      ? prices.map(([bookKey, info], index) => {
+          const implied =
+            info?.implied_probability != null
+              ? Number(info.implied_probability)
+              : americanImpliedProbability(info?.price);
+
+          const bookNoVig =
+            info?.book_no_vig_probability != null
+              ? Number(info.book_no_vig_probability)
+              : null;
+
+          const rowEdge =
+            Number.isFinite(marketProbability) && Number.isFinite(implied)
+              ? (modelProbability - implied) * 100
+              : null;
+
+          const isBest =
+            bookKey === bestBookKey ||
+            (
+              !bestBookKey &&
+              index === 0
+            );
+
+          return `
+            <tr class="${isBest ? "ncaaf-best-book-row" : ""}">
+              <td>
+                <div class="ncaaf-book-name">
+                  ${info?.book_name || bookDisplayNames?.[bookKey] || bookKey}
+                  ${isBest ? `<span class="ncaaf-best-tag">BEST</span>` : ""}
+                </div>
+              </td>
+              <td class="ncaaf-price-cell">${formatAmericanOdds(info?.price)}</td>
+              <td>${Number.isFinite(implied)
+                ? (implied * 100).toFixed(1) + "%"
+                : "N/A"}</td>
+              <td>${Number.isFinite(bookNoVig)
+                ? (bookNoVig * 100).toFixed(1) + "%"
+                : "N/A"}</td>
+              <td class="${
+                Number.isFinite(rowEdge) && rowEdge > 0
+                  ? "ncaaf-positive-text"
+                  : Number.isFinite(rowEdge) && rowEdge < 0
+                  ? "ncaaf-negative-text"
+                  : ""
+              }">
+                ${Number.isFinite(rowEdge)
+                  ? `${rowEdge >= 0 ? "+" : ""}${rowEdge.toFixed(2)} pp`
+                  : "N/A"}
+              </td>
+              <td>
+                <span class="ncaaf-book-status ${
+                  info?.is_outlier
+                    ? "outlier"
+                    : "included"
+                }">
+                  ${info?.is_outlier ? "Outlier" : "Included"}
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join("")
+      : `
+          <tr>
+            <td colspan="6" class="ncaaf-empty-row">
+              No individual sportsbook price detail was returned.
+            </td>
+          </tr>
+        `;
+
+  content.innerHTML = `
+    <div class="ncaaf-ev-panel">
+
+      <div class="ncaaf-ev-hero">
+        <div class="ncaaf-ev-matchup">
+          <div class="ncaaf-ev-teams">
+            ${game?.away_team || ""} @ ${game?.home_team || ""}
+          </div>
+
+          <div class="ncaaf-ev-market">
+            ${marketLabel}
+            <span>•</span>
+            <strong>${selectionText}</strong>
+          </div>
+        </div>
+
+        <div class="ncaaf-confidence-pill">
+          ${confidence} Market Confidence
+        </div>
+      </div>
+
+      <div class="ncaaf-signal-banner ${signalMeta.className}">
+        <div>
+          <div class="ncaaf-signal-label">${signalMeta.label}</div>
+          <div class="ncaaf-signal-message">${signalMeta.message}</div>
+        </div>
+
+        <div class="ncaaf-best-price-block">
+          <span>Best available</span>
+          <strong>${formatAmericanOdds(selectedPick.best_price)}</strong>
+          <small>${bestBook}</small>
+        </div>
+      </div>
+
+      <div class="ncaaf-kpi-grid">
+        <div class="ncaaf-kpi-card">
+          <span>Market Fair</span>
+          <strong>${marketFairPct}</strong>
+          <small>Multi-book no-vig anchor</small>
+        </div>
+
+        <div class="ncaaf-kpi-card">
+          <span>${evPlusActive ? "Team Model" : "Team Model"}</span>
+          <strong>${evPlusActive ? teamModelPct : "Market-only"}</strong>
+          <small>${evPlusActive
+            ? `${Number.isFinite(modelEdgePoints) ? `${modelEdgePoints >= 0 ? "+" : ""}${modelEdgePoints.toFixed(2)} pts` : "SP+ spread model"}`
+            : "Not applied to this market"}</small>
+        </div>
+
+        <div class="ncaaf-kpi-card featured">
+          <span>${evPlusActive ? "EV+ Fair" : "Market Fair"}</span>
+          <strong>${modelFairPct}</strong>
+          <small>${evPlusActive ? "Market + Team Model v2" : "No model adjustment"}</small>
+        </div>
+
+        <div class="ncaaf-kpi-card">
+          <span>Break-Even</span>
+          <strong>${breakEvenPct}</strong>
+          <small>Needed at best price</small>
+        </div>
+
+        <div class="ncaaf-kpi-card ${edgeClass}">
+          <span>Price Edge</span>
+          <strong>${edgeText}</strong>
+          <small>EV+ fair % minus break-even %</small>
+        </div>
+
+        <div class="ncaaf-kpi-card ${evClass}">
+          <span>Expected Value</span>
+          <strong>${evText}</strong>
+          <small>At the current best price</small>
+        </div>
+      </div>
+
+      <div class="ncaaf-detail-grid">
+        <div class="ncaaf-detail-card">
+          <div class="ncaaf-section-heading">🏈 ${game?.away_team || "Away"} Team Profile</div>
+
+          ${ratingRow("SP+ Rating", awayRating.sp, 1, awayRating.sp_rank)}
+          ${ratingRow("SP+ Offense", awayRating.sp_offense, 1, awayRating.sp_offense_rank)}
+          ${ratingRow("SP+ Defense", awayRating.sp_defense, 1, awayRating.sp_defense_rank)}
+          ${ratingRow("Pass Offense", awayRating.sp_offense_passing, 2)}
+          ${ratingRow("Rush Offense", awayRating.sp_offense_rushing, 2)}
+          ${ratingRow("Pass Defense", awayRating.sp_defense_passing, 2)}
+          ${ratingRow("Rush Defense", awayRating.sp_defense_rushing, 2)}
+          ${ratingRow("Defensive Havoc", awayRating.sp_defense_havoc, 3)}
+        </div>
+
+        <div class="ncaaf-detail-card">
+          <div class="ncaaf-section-heading">🏠 ${game?.home_team || "Home"} Team Profile</div>
+
+          ${ratingRow("SP+ Rating", homeRating.sp, 1, homeRating.sp_rank)}
+          ${ratingRow("SP+ Offense", homeRating.sp_offense, 1, homeRating.sp_offense_rank)}
+          ${ratingRow("SP+ Defense", homeRating.sp_defense, 1, homeRating.sp_defense_rank)}
+          ${ratingRow("Pass Offense", homeRating.sp_offense_passing, 2)}
+          ${ratingRow("Rush Offense", homeRating.sp_offense_rushing, 2)}
+          ${ratingRow("Pass Defense", homeRating.sp_defense_passing, 2)}
+          ${ratingRow("Rush Defense", homeRating.sp_defense_rushing, 2)}
+          ${ratingRow("Defensive Havoc", homeRating.sp_defense_havoc, 3)}
+        </div>
+      </div>
+
+      <div class="ncaaf-detail-grid">
+        <div class="ncaaf-detail-card">
+          <div class="ncaaf-section-heading">🧠 Team Model v2</div>
+
+          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Projection</div>
+
+          <div class="ncaaf-detail-row">
+            <span>Projected Favorite</span>
+            <strong>${context.projected_favorite || "N/A"} ${context.projected_favorite_spread != null ? formatSignedPts(context.projected_favorite_spread) : ""}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Projected Home Spread</span>
+            <strong>${context.projected_home_spread != null ? formatSignedPts(context.projected_home_spread) : "N/A"}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Market Home Spread</span>
+            <strong>${context.market_home_spread != null ? formatSignedPts(context.market_home_spread) : "N/A"}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Model vs Market</span>
+            <strong>${context.model_vs_market_points != null ? `${formatSignedPts(context.model_vs_market_points)} pts` : "N/A"}</strong>
+          </div>
+
+          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Model Context</div>
+
+          <div class="ncaaf-detail-row">
+            <span>Power Source</span>
+            <strong>${context.power_source || "N/A"}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Model Confidence</span>
+            <strong>${context.confidence_label || "N/A"}${context.data_confidence != null ? ` · ${(Number(context.data_confidence) * 100).toFixed(0)}%` : ""}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Neutral Site</span>
+            <strong>${context.neutral_site ? "Yes" : "No"}${context?.neutral_site_meta?.venue ? ` · ${context.neutral_site_meta.venue}` : ""}</strong>
+          </div>
+        </div>
+
+        <div class="ncaaf-detail-card">
+          <div class="ncaaf-section-heading">⚙️ Projection Components</div>
+
+          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Base Rating</div>
+
+          <div class="ncaaf-detail-row">
+            <span>Base Power Margin</span>
+            <strong>${formatSignedPts(components.base_power_margin_home)} pts</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>SP+ Margin</span>
+            <strong>${components.sp_plus_margin_home != null ? `${formatSignedPts(components.sp_plus_margin_home)} pts` : "N/A"}</strong>
+          </div>
+
+          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Adjustments</div>
+
+          <div class="ncaaf-detail-row">
+            <span>Current Form</span>
+            <strong>${formatSignedPts(components.current_form_adjustment_home)} pts</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Pass Matchup</span>
+            <strong>${formatSignedPts(components.pass_matchup_adjustment_home)} pts</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Rush Matchup</span>
+            <strong>${formatSignedPts(components.rush_matchup_adjustment_home)} pts</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Home Field</span>
+            <strong>${formatSignedPts(components.home_field_adjustment)} pts</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>2026 Games in Profile</span>
+            <strong>${context?.profile_snapshot?.away_2026_games ?? 0} away · ${context?.profile_snapshot?.home_2026_games ?? 0} home</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="ncaaf-detail-grid">
+        <div class="ncaaf-detail-card">
+          <div class="ncaaf-section-heading">Market Pricing</div>
+
+          <div class="ncaaf-detail-row">
+            <span>Selection</span>
+            <strong>${selectionText}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Best sportsbook</span>
+            <strong>${bestBook}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Best price</span>
+            <strong>${formatAmericanOdds(selectedPick.best_price)}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>EV+ fair odds</span>
+            <strong>${formatAmericanOdds(selectedPick.fair_price)}</strong>
+          </div>
+
+          <div class="ncaaf-detail-row">
+            <span>Books used</span>
+            <strong>${validBooks} / ${totalBooks}</strong>
+          </div>
+        </div>
+
+        <div class="ncaaf-detail-card">
+          <div class="ncaaf-section-heading">AI + Market Read</div>
+
+          <div
+            class="ncaaf-market-read-grid"
+            style="
+              display:grid;
+              grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+              gap:12px;
+              margin-top:12px;
+            "
+          >
+            ${readItems.map((item, index) => `
+              <div
+                class="ncaaf-market-read-item"
+                style="
+                  display:grid;
+                  grid-template-columns:38px 1fr;
+                  gap:12px;
+                  align-items:start;
+                  padding:14px 16px;
+                  border:1px solid rgba(148,163,184,.28);
+                  border-radius:12px;
+                  background:rgba(15,23,42,.42);
+                  min-height:82px;
+                "
+              >
+                <div
+                  class="ncaaf-market-read-icon"
+                  style="
+                    width:34px;
+                    height:34px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    border-radius:10px;
+                    background:rgba(59,130,246,.12);
+                    font-size:19px;
+                  "
+                >
+                  ${index === 0 ? "MARKET" : index === 1 ? "PRICE" : index === 2 ? "BOOKS" : index === 3 ? "MODEL" : index === 4 ? "EDGE" : "CALL"}
+                </div>
+                <div
+                  class="ncaaf-market-read-text"
+                  style="
+                    line-height:1.5;
+                    font-size:.94rem;
+                  "
+                >${item}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+
+      <div class="ncaaf-market-only-note">
+        <span>${evPlusActive ? "EV+ spread model" : "Market-only market"}</span>
+        ${evPlusActive
+          ? `NCAAF EV+ v2 keeps Vegas as the anchor and applies a conservative Team Model v2/SP+ adjustment. Current model weight: ${(teamModelWeight * 100).toFixed(1)}%.`
+          : `Moneyline and totals remain multi-book no-vig market models until those conversions are separately validated.`}
+      </div>
+
+      <div class="ncaaf-book-section">
+        <div class="ncaaf-section-heading-row">
+          <div>
+            <div class="ncaaf-section-heading">Sportsbook Comparison</div>
+            <div class="ncaaf-section-subtitle">
+              Sorted by best available price for this exact market and line.
+            </div>
+          </div>
+        </div>
+
+        <div class="ncaaf-book-wrap">
+          <table class="ncaaf-book-table">
+            <thead>
+              <tr>
+                <th>Book</th>
+                <th>Price</th>
+                <th>Break-Even</th>
+                <th>No-Vig</th>
+                <th>Price Edge</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              ${priceRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  modal.classList.remove("hidden");
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+};
+
 function signedNumber(value, digits = 2) {
   if (value === null || value === undefined || value === "") {
     return "N/A";
@@ -2621,8 +3478,83 @@ function signedNumber(value, digits = 2) {
   return `${n > 0 ? "+" : ""}${n.toFixed(digits)}`;
 }
 
+if (!document.getElementById("ncaafTableProjectionStyles")) {
+  const style = document.createElement("style");
+  style.id = "ncaafTableProjectionStyles";
+  style.textContent = `
+    .ncaaf-table-projection {
+      min-width: 135px;
+      line-height: 1.25;
+    }
+    .ncaaf-table-projection strong {
+      white-space: nowrap;
+    }
+    .ncaaf-table-projection .edge-sub {
+      margin-top: 3px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function ncaafTableProjectionHtml(game, row) {
+  const context = game?.model_context || {};
+  const projectedFavorite = context?.projected_favorite;
+  const projectedFavoriteSpread = Number(context?.projected_favorite_spread);
+  const edgePoints = Number(row?.model_edge_points);
+
+  const projectionText =
+    projectedFavorite && Number.isFinite(projectedFavoriteSpread)
+      ? `${projectedFavorite} ${projectedFavoriteSpread > 0 ? "+" : ""}${projectedFavoriteSpread.toFixed(2)}`
+      : "N/A";
+
+  const edgeText =
+    row?.ev_plus_active && Number.isFinite(edgePoints)
+      ? `${edgePoints > 0 ? "+" : ""}${edgePoints.toFixed(2)} pts`
+      : "Market-only";
+
+  return `
+    <div class="ncaaf-table-projection">
+      <strong>${projectionText}</strong>
+      <div class="edge-sub">${edgeText}</div>
+    </div>
+  `;
+}
+
 function mlbModelFactorsHtml(row) {
   const factors = row?.model_factors || {};
+
+  if (row?.model_name === "NCAAF EV+ v2") {
+    if (row?.ev_plus_active) {
+      return `
+        <div class="edge-sub">
+          EV+ spread · ${signedNumber(row?.model_edge_points)} pts model edge
+          <br>
+          ${(Number(row?.team_model_weight || 0) * 100).toFixed(1)}% Team Model weight · ${row?.valid_books_compared ?? 0}/${row?.books_compared ?? 0} books
+          <br>
+          <button type="button" class="mlb-detail-inline-btn">View Detail</button>
+        </div>`;
+    }
+
+    return `
+      <div class="edge-sub">
+        Market-only ${row?.market_label || "market"} · ${row?.valid_books_compared ?? 0}/${row?.books_compared ?? 0} books
+        <br>
+        <button type="button" class="mlb-detail-inline-btn">View Detail</button>
+      </div>`;
+  }
+
+  if (
+    row?.model_status === "market_only"
+    || row?.model_name === "NCAAF Market EV v1"
+  ) {
+    return `
+      <div class="edge-sub">
+        Market-only · ${row?.valid_books_compared ?? 0}/${row?.books_compared ?? 0} books
+        <br>
+        <button type="button" class="mlb-detail-inline-btn">View Detail</button>
+      </div>`;
+  }
+
   const awayStarter = factors.away_pitcher_name || "TBD";
   const homeStarter = factors.home_pitcher_name || "TBD";
   const awayBullpen = factors.away_bullpen_available === false
@@ -2663,7 +3595,7 @@ function mlbModelFactorsHtml(row) {
 // =====================================================
 // 📊 MLB MARKET INTELLIGENCE SUMMARY
 // =====================================================
-function renderMlbAnalyticsSummary() {
+function renderMarketAnalyticsSummary() {
 
   const container =
     document.getElementById(
@@ -2675,23 +3607,73 @@ function renderMlbAnalyticsSummary() {
   }
 
 
+  const currentMode =
+    currentGameLines?.[0]?.mode || "";
+
   const isMlb =
-    currentGameLines?.[0]?.mode ===
-      "mlb_market";
+    currentMode === "mlb_market";
 
+  const isNcaaf =
+    currentMode === "ncaaf_market";
 
-  // College basketball does not use this dashboard
-  if (!isMlb) {
-
-    container.style.display =
-      "none";
-
+  // NCAAB does not use this market-EV dashboard.
+  if (!isMarketEvMode(currentMode)) {
+    container.style.display = "none";
     return;
   }
 
+  container.style.display = "block";
 
-  container.style.display =
-    "block";
+  const title =
+    container.querySelector(".mlb-summary-title");
+  const pipeline =
+    container.querySelector(".mlb-model-pipeline");
+
+  if (title) {
+    title.textContent =
+      isNcaaf
+        ? "NCAAF Market EV Snapshot"
+        : "MLB Model Snapshot";
+  }
+
+  if (pipeline) {
+    pipeline.innerHTML =
+      isNcaaf
+        ? `Market No-Vig <span>→</span> Best Price <span>→</span> EV`
+        : `Market No-Vig <span>→</span> Stats Adjusted <span>→</span> Final Model <span>→</span> EV`;
+  }
+
+  const summaryCards =
+    container.querySelectorAll(".mlb-summary-card");
+
+  if (summaryCards?.[2]) {
+    const small = summaryCards[2].querySelector("small");
+    if (small) {
+      small.textContent =
+        isNcaaf
+          ? "3%+ EV with 4+ books"
+          : "2%+ estimated EV";
+    }
+  }
+
+  if (summaryCards?.[5]) {
+    const label = summaryCards[5].querySelector("span");
+    const small = summaryCards[5].querySelector("small");
+
+    if (label) {
+      label.textContent =
+        isNcaaf
+          ? "Market Coverage"
+          : "Model Coverage";
+    }
+
+    if (small) {
+      small.textContent =
+        isNcaaf
+          ? "Rows with 3+ valid books"
+          : "Markets with model data";
+    }
+  }
 
 
   // =====================================================
@@ -2788,11 +3770,13 @@ function renderMlbAnalyticsSummary() {
   // =====================================================
 
   const readyRows =
-    marketRows.filter(
-      row =>
-        row.model_status ===
-        "ready"
-    );
+    marketRows.filter(row => {
+      if (isNcaaf) {
+        return Number(row.valid_books_compared || 0) >= 3;
+      }
+
+      return row.model_status === "ready";
+    });
 
 
   const coverage =
@@ -2894,6 +3878,8 @@ function renderMlbOddsScreen() {
 
   container.innerHTML = "";
 
+  const isNcaaf = isNcaafMarketMode();
+  const sportLabel = marketSportLabel();
   const selectedBooks = [...visibleBooks];
   const filteredGames = mlbFilteredGames().filter(game => !game.is_live);
 
@@ -2915,7 +3901,52 @@ function renderMlbOddsScreen() {
     header += `<th>${bookDisplayNames?.[book] || book}</th>`;
   });
 
-  header += `
+  if (isNcaaf) {
+    header += `
+        <th>Best</th>
+        <th>${tableHeaderWithTooltip(
+          "Market Fair %",
+          "Multi-book no-vig consensus probability before any Team Model adjustment."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Team Model %",
+          "Independent Team Model v2 probability for this exact spread side. Moneylines and totals remain market-only."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "EV+ Fair %",
+          "Final probability used by NCAAF EV+. Spreads conservatively blend the market with Team Model v2."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Model Projection",
+          "Team Model v2 projected game favorite/spread, plus the model edge for this exact selection when applicable."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Fair Odds",
+          "American odds corresponding to the final EV+ fair probability."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Estimated EV",
+          "Estimated return at the best available price using the final EV+ fair probability."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Confidence",
+          "Combined market/model confidence for EV+ spreads; market confidence for moneylines and totals."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Model Basis",
+          "Spreads use Market + Team Model v2. Moneylines and totals remain market-only."
+        )}</th>
+        <th>${tableHeaderWithTooltip(
+          "Signal",
+          "Lean: 1%+ EV with 3+ books. Value: 3%+ EV with 4+ books. Strong Value: 5%+ EV with 5+ books."
+        )}</th>
+        <th>Add</th>
+      </tr>
+    </thead>
+    <tbody></tbody>`;
+  }
+  else {
+    header += `
         <th>Best</th>
         <th>${tableHeaderWithTooltip(
           "Market No-Vig %",
@@ -2953,6 +3984,7 @@ function renderMlbOddsScreen() {
       </tr>
     </thead>
     <tbody></tbody>`;
+  }
 
   table.innerHTML = header;
   const tbody = table.querySelector("tbody");
@@ -2962,12 +3994,15 @@ function renderMlbOddsScreen() {
 
     if (!rows.length) {
       const tr = document.createElement("tr");
+      const extraColumns = isNcaaf ? 11 : 10;
+
       tr.innerHTML = `
-        <td>${game.event_title}</td>
+        <td class="sticky-game">${game.event_title}</td>
         <td>${game.game_time_display || "-"}</td>
-        <td colspan="${selectedBooks.length + 12}">
-          No MLB odds comparison rows were returned by the API.
+        <td colspan="${selectedBooks.length + extraColumns}">
+          No ${sportLabel} odds comparison rows were returned by the API.
         </td>`;
+
       tbody.appendChild(tr);
       return;
     }
@@ -2988,8 +4023,11 @@ function renderMlbOddsScreen() {
         const priceInfo = row.prices?.[book];
         const bookPrice = priceInfo?.price;
         const isOutlier = priceInfo?.is_outlier === true;
-        const isBest = !isOutlier && bookPrice != null &&
-          Number(bookPrice) === Number(row.best_price);
+        const isBest =
+          !isOutlier
+          && bookPrice != null
+          && Number(bookPrice) === Number(row.best_price);
+
         const cellClass = isOutlier
           ? "odds-cell-worse"
           : oddsCellClass(bookPrice, row.best_price);
@@ -3005,33 +4043,61 @@ function renderMlbOddsScreen() {
           </td>`;
       });
 
-      rowHtml += `
-        <td>
-          <strong>${formatAmericanOdds(row.best_price)}</strong>
-          <div class="edge-sub">${row.best_book_name || row.best_book || "-"}</div>
-        </td>
-        <td>${row.market_probability != null
-          ? (Number(row.market_probability) * 100).toFixed(1) + "%"
-          : "-"}</td>
-        <td>${row.baseball_probability != null
-          ? (Number(row.baseball_probability) * 100).toFixed(1) + "%"
-          : "-"}</td>
-        <td><strong>${row.blended_probability != null
-          ? (Number(row.blended_probability) * 100).toFixed(1) + "%"
-          : "-"}</strong></td>
-        <td>${formatAmericanOdds(row.fair_price)}</td>
-        <td class="${evCellClass(row.expected_value_pct)}">
-          ${mlbEvBadge(row.expected_value_pct, row.recommendation)}
-        </td>
-        <td>${row.model_confidence || "-"}</td>
-        <td>${mlbModelFactorsHtml(row)}</td>
-        <td>${recommendationLabel(row.recommendation)}</td>
-        <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
+      if (isNcaaf) {
+        rowHtml += `
+          <td>
+            <strong>${formatAmericanOdds(row.best_price)}</strong>
+            <div class="edge-sub">${row.best_book_name || row.best_book || "-"}</div>
+          </td>
+          <td>${row.market_probability != null
+            ? (Number(row.market_probability) * 100).toFixed(1) + "%"
+            : "-"}</td>
+          <td>${row.team_model_probability != null
+            ? (Number(row.team_model_probability) * 100).toFixed(1) + "%"
+            : '<span class="edge-sub">Market-only</span>'}</td>
+          <td><strong>${row.model_probability != null
+            ? (Number(row.model_probability) * 100).toFixed(1) + "%"
+            : "-"}</strong></td>
+          <td>${ncaafTableProjectionHtml(game, row)}</td>
+          <td>${formatAmericanOdds(row.fair_price)}</td>
+          <td class="${evCellClass(row.expected_value_pct)}">
+            ${mlbEvBadge(row.expected_value_pct, row.recommendation)}
+          </td>
+          <td>${row.model_confidence || "-"}</td>
+          <td>${mlbModelFactorsHtml(row)}</td>
+          <td>${recommendationLabel(row.recommendation)}</td>
+          <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
+      }
+      else {
+        rowHtml += `
+          <td>
+            <strong>${formatAmericanOdds(row.best_price)}</strong>
+            <div class="edge-sub">${row.best_book_name || row.best_book || "-"}</div>
+          </td>
+          <td>${row.market_probability != null
+            ? (Number(row.market_probability) * 100).toFixed(1) + "%"
+            : "-"}</td>
+          <td>${row.baseball_probability != null
+            ? (Number(row.baseball_probability) * 100).toFixed(1) + "%"
+            : "-"}</td>
+          <td><strong>${row.blended_probability != null
+            ? (Number(row.blended_probability) * 100).toFixed(1) + "%"
+            : "-"}</strong></td>
+          <td>${formatAmericanOdds(row.fair_price)}</td>
+          <td class="${evCellClass(row.expected_value_pct)}">
+            ${mlbEvBadge(row.expected_value_pct, row.recommendation)}
+          </td>
+          <td>${row.model_confidence || "-"}</td>
+          <td>${mlbModelFactorsHtml(row)}</td>
+          <td>${recommendationLabel(row.recommendation)}</td>
+          <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
+      }
 
       tr.innerHTML = rowHtml;
       tr.classList.add("mlb-model-clickable-row");
-      tr.title = "Click to view the MLB model breakdown";
-      tr.addEventListener("click", (event) => {
+      tr.title = `Click to view the ${sportLabel} market detail`;
+
+      tr.addEventListener("click", event => {
         if (
           event.target.closest("button")
           || event.target.closest("a")
@@ -3040,16 +4106,17 @@ function renderMlbOddsScreen() {
           return;
         }
 
-        window.showMlbModelBreakdown(game, row);
+        showMarketRowBreakdown(game, row);
       });
 
       tr.querySelector(".mlb-detail-inline-btn")?.addEventListener(
         "click",
-        (event) => {
+        event => {
           event.stopPropagation();
-          window.showMlbModelBreakdown(game, row);
+          showMarketRowBreakdown(game, row);
         }
       );
+
       attachMlbAddHandler(tr, game, row);
       tbody.appendChild(tr);
     });
@@ -3065,67 +4132,135 @@ function renderMlbValuePicks() {
 
   container.innerHTML = "";
 
+  const isNcaaf = isNcaafMarketMode();
+  const sportLabel = marketSportLabel();
+
   const tierNote = document.createElement("div");
   tierNote.className = "mlb-value-tier-note";
-  tierNote.innerHTML = `
-    <strong>Model opportunities:</strong>
-    👀 Lean 0.5%–1.99% EV ·
-    ✅ Value 2.0%+ EV ·
-    🔥 Strong Value 4.0%+ EV.
-    Only Value and Strong Value are included in the official tracked record.
-    Click any opportunity row or View Detail to see the model breakdown.
-  `;
+
+  tierNote.innerHTML = isNcaaf
+    ? `
+      <strong>NCAAF EV+ opportunities:</strong>
+      👀 Lean 1.0%+ EV with 3+ valid books ·
+      ✅ Value 3.0%+ EV with 4+ books ·
+      🔥 Strong Value 5.0%+ EV with 5+ books.
+      Pregame spreads show Market Fair, Team Model v2, EV+ Fair, and the projected game spread.
+      Moneylines and totals remain market-only.
+    `
+    : `
+      <strong>Model opportunities:</strong>
+      👀 Lean 0.5%–1.99% EV ·
+      ✅ Value 2.0%+ EV ·
+      🔥 Strong Value 4.0%+ EV.
+      Only Value and Strong Value are included in the official tracked record.
+      Click any opportunity row or View Detail to see the model breakdown.
+    `;
+
   container.appendChild(tierNote);
 
-  const filteredGames = mlbFilteredGames().filter(game => !game.is_live);
+  const filteredGames =
+    mlbFilteredGames().filter(game => !game.is_live);
+
   const table = document.createElement("table");
   table.className = "odds-table";
 
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>Game</th>
-        <th>Time</th>
-        <th>Market</th>
-        <th>Pick</th>
-        <th>Best Book</th>
-        <th>Best Price</th>
-        <th>${tableHeaderWithTooltip(
-          "Market No-Vig %",
-          "Sportsbook consensus probability after removing the bookmaker margin."
-        )}</th>
-        <th>${tableHeaderWithTooltip(
-          "Stats-Adjusted %",
-          "Market probability after applying the full adjustment from starting pitchers, offense, bullpens, recent form, and home field."
-        )}</th>
-        <th>${tableHeaderWithTooltip(
-          "Final Model %",
-          "The conservative probability used for betting decisions. It blends the market consensus with the stats-adjusted estimate."
-        )}</th>
-        <th>${tableHeaderWithTooltip(
-          "Model Fair Odds",
-          "American odds corresponding to the Final Model probability."
-        )}</th>
-        <th>${tableHeaderWithTooltip(
-          "Estimated EV",
-          "Estimated return at the best available price. Positive EV means the offered odds are better than the model fair odds."
-        )}</th>
-        <th>${tableHeaderWithTooltip(
-          "Confidence",
-          "Data-quality rating based on starter history, recency, offense coverage, bullpen data, and available sportsbooks."
-        )}</th>
-        <th>${tableHeaderWithTooltip(
-          "Model Factors",
-          "Summary of the matchup inputs that moved the prediction. Click the row for the full explanation."
-        )}</th>
-        <th>${tableHeaderWithTooltip(
-          "Signal",
-          "Lean: 0.5%–1.99% EV. Value: 2%+ EV. Strong Value: 4%+ EV with high confidence."
-        )}</th>
-        <th>Add</th>
-      </tr>
-    </thead>
-    <tbody></tbody>`;
+  table.innerHTML = isNcaaf
+    ? `
+      <thead>
+        <tr>
+          <th>Game</th>
+          <th>Time</th>
+          <th>Market</th>
+          <th>Pick</th>
+          <th>Best Book</th>
+          <th>Best Price</th>
+          <th>${tableHeaderWithTooltip(
+            "Market Fair %",
+            "Multi-book no-vig consensus probability before Team Model adjustment."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Team Model %",
+            "Independent Team Model v2 probability for the exact spread selection. Moneylines and totals remain market-only."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "EV+ Fair %",
+            "Final probability used for the EV calculation."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Model Projection",
+            "Projected game favorite/spread and the model edge for this selection."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Fair Odds",
+            "American odds corresponding to the final EV+ fair probability."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Estimated EV",
+            "Estimated return at the best available price using EV+ fair probability."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Confidence",
+            "Combined market/model confidence for spreads; market confidence for moneyline and totals."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Model Basis",
+            "Spreads use Market + Team Model v2. Moneylines and totals remain market-only."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Signal",
+            "Lean: 1%+ EV with 3+ books. Value: 3%+ EV with 4+ books. Strong Value: 5%+ EV with 5+ books."
+          )}</th>
+          <th>Add</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `
+    : `
+      <thead>
+        <tr>
+          <th>Game</th>
+          <th>Time</th>
+          <th>Market</th>
+          <th>Pick</th>
+          <th>Best Book</th>
+          <th>Best Price</th>
+          <th>${tableHeaderWithTooltip(
+            "Market No-Vig %",
+            "Sportsbook consensus probability after removing the bookmaker margin."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Stats-Adjusted %",
+            "Market probability after applying the full adjustment from starting pitchers, offense, bullpens, recent form, and home field."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Final Model %",
+            "The conservative probability used for betting decisions. It blends the market consensus with the stats-adjusted estimate."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Model Fair Odds",
+            "American odds corresponding to the Final Model probability."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Estimated EV",
+            "Estimated return at the best available price. Positive EV means the offered odds are better than the model fair odds."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Confidence",
+            "Data-quality rating based on starter history, recency, offense coverage, bullpen data, and available sportsbooks."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Model Factors",
+            "Summary of the matchup inputs that moved the prediction. Click the row for the full explanation."
+          )}</th>
+          <th>${tableHeaderWithTooltip(
+            "Signal",
+            "Lean: 0.5%–1.99% EV. Value: 2%+ EV. Strong Value: 4%+ EV with high confidence."
+          )}</th>
+          <th>Add</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
 
   const tbody = table.querySelector("tbody");
 
@@ -3175,34 +4310,63 @@ function renderMlbValuePicks() {
       if (index === 0) tr.classList.add("game-start-row");
       if (index === picks.length - 1) tr.classList.add("game-end-row");
 
-      tr.innerHTML = `
-        <td>${index === 0 ? game.event_title : ""}</td>
-        <td>${index === 0 ? (game.game_time_display || "-") : ""}</td>
-        <td>${pick.market_label || pick.market}</td>
-        <td><strong>${pick.pick_label}</strong></td>
-        <td>${pick.best_book_name || pick.best_book || "-"}</td>
-        <td>${formatAmericanOdds(pick.best_price)}</td>
-        <td>${pick.market_probability != null
-          ? (Number(pick.market_probability) * 100).toFixed(1) + "%"
-          : "-"}</td>
-        <td>${pick.baseball_probability != null
-          ? (Number(pick.baseball_probability) * 100).toFixed(1) + "%"
-          : "-"}</td>
-        <td><strong>${pick.blended_probability != null
-          ? (Number(pick.blended_probability) * 100).toFixed(1) + "%"
-          : "-"}</strong></td>
-        <td>${formatAmericanOdds(pick.fair_price)}</td>
-        <td class="${evCellClass(pick.expected_value_pct)}">
-          ${mlbEvBadge(pick.expected_value_pct, pick.recommendation)}
-        </td>
-        <td>${pick.model_confidence || "-"}</td>
-        <td>${mlbModelFactorsHtml(pick)}</td>
-        <td>${recommendationLabel(pick.recommendation)}</td>
-        <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
+      tr.innerHTML = isNcaaf
+        ? `
+          <td>${index === 0 ? game.event_title : ""}</td>
+          <td>${index === 0 ? (game.game_time_display || "-") : ""}</td>
+          <td>${pick.market_label || pick.market}</td>
+          <td><strong>${pick.pick_label}</strong></td>
+          <td>${pick.best_book_name || pick.best_book || "-"}</td>
+          <td>${formatAmericanOdds(pick.best_price)}</td>
+          <td>${pick.market_probability != null
+            ? (Number(pick.market_probability) * 100).toFixed(1) + "%"
+            : "-"}</td>
+          <td>${pick.team_model_probability != null
+            ? (Number(pick.team_model_probability) * 100).toFixed(1) + "%"
+            : '<span class="edge-sub">Market-only</span>'}</td>
+          <td><strong>${pick.model_probability != null
+            ? (Number(pick.model_probability) * 100).toFixed(1) + "%"
+            : "-"}</strong></td>
+          <td>${ncaafTableProjectionHtml(game, pick)}</td>
+          <td>${formatAmericanOdds(pick.fair_price)}</td>
+          <td class="${evCellClass(pick.expected_value_pct)}">
+            ${mlbEvBadge(pick.expected_value_pct, pick.recommendation)}
+          </td>
+          <td>${pick.model_confidence || "-"}</td>
+          <td>${mlbModelFactorsHtml(pick)}</td>
+          <td>${recommendationLabel(pick.recommendation)}</td>
+          <td><button class="add-mlb-pick-btn">➕ Add</button></td>
+        `
+        : `
+          <td>${index === 0 ? game.event_title : ""}</td>
+          <td>${index === 0 ? (game.game_time_display || "-") : ""}</td>
+          <td>${pick.market_label || pick.market}</td>
+          <td><strong>${pick.pick_label}</strong></td>
+          <td>${pick.best_book_name || pick.best_book || "-"}</td>
+          <td>${formatAmericanOdds(pick.best_price)}</td>
+          <td>${pick.market_probability != null
+            ? (Number(pick.market_probability) * 100).toFixed(1) + "%"
+            : "-"}</td>
+          <td>${pick.baseball_probability != null
+            ? (Number(pick.baseball_probability) * 100).toFixed(1) + "%"
+            : "-"}</td>
+          <td><strong>${pick.blended_probability != null
+            ? (Number(pick.blended_probability) * 100).toFixed(1) + "%"
+            : "-"}</strong></td>
+          <td>${formatAmericanOdds(pick.fair_price)}</td>
+          <td class="${evCellClass(pick.expected_value_pct)}">
+            ${mlbEvBadge(pick.expected_value_pct, pick.recommendation)}
+          </td>
+          <td>${pick.model_confidence || "-"}</td>
+          <td>${mlbModelFactorsHtml(pick)}</td>
+          <td>${recommendationLabel(pick.recommendation)}</td>
+          <td><button class="add-mlb-pick-btn">➕ Add</button></td>
+        `;
 
       tr.classList.add("mlb-model-clickable-row");
-      tr.title = "Click to view why the model likes this pick";
-      tr.addEventListener("click", (event) => {
+      tr.title = `Click to view the ${sportLabel} market detail`;
+
+      tr.addEventListener("click", event => {
         if (
           event.target.closest("button")
           || event.target.closest("a")
@@ -3211,16 +4375,17 @@ function renderMlbValuePicks() {
           return;
         }
 
-        window.showMlbModelBreakdown(game, pick);
+        showMarketRowBreakdown(game, pick);
       });
 
       tr.querySelector(".mlb-detail-inline-btn")?.addEventListener(
         "click",
-        (event) => {
+        event => {
           event.stopPropagation();
-          window.showMlbModelBreakdown(game, pick);
+          showMarketRowBreakdown(game, pick);
         }
       );
+
       attachMlbAddHandler(tr, game, pick);
       tbody.appendChild(tr);
     });
@@ -3228,11 +4393,12 @@ function renderMlbValuePicks() {
 
   const wrapper = document.createElement("div");
   wrapper.className = "table-scroll-wrapper";
+
   if (!tbody.children.length) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td colspan="15" class="mlb-empty-opportunities">
-        No Lean, Value, or Strong Value selections currently qualify.
+      <td colspan="${isNcaaf ? 16 : 15}" class="mlb-empty-opportunities">
+        No Lean, Value, or Strong Value ${sportLabel} selections currently qualify.
       </td>`;
     tbody.appendChild(tr);
   }
@@ -3241,14 +4407,15 @@ function renderMlbValuePicks() {
   container.appendChild(wrapper);
 }
 
-
 function renderMlbLiveOdds() {
   const container = document.getElementById("gameLinesResults");
   if (!container) return;
 
+  const sportLabel = marketSportLabel();
+
   container.innerHTML = `
     <div class="live-refresh-note">
-      🔴 Live odds refresh automatically every 30 seconds. Prices can move quickly.
+      🔴 Live ${sportLabel} odds refresh automatically every 30 seconds. Prices can move quickly.
     </div>
   `;
 
@@ -3258,7 +4425,7 @@ function renderMlbLiveOdds() {
   if (!liveGames.length) {
     container.innerHTML += `
       <div style="padding:18px;">
-        No MLB games are currently live for the selected date.
+        No ${sportLabel} games are currently live for the selected date.
       </div>`;
     return;
   }
@@ -3328,9 +4495,12 @@ function renderMlbLiveOdds() {
 
       selectedBooks.forEach(book => {
         const bookPrice = row.prices?.[book]?.price;
-        const isBest = bookPrice != null &&
-          Number(bookPrice) === Number(row.best_price);
-        const cellClass = oddsCellClass(bookPrice, row.best_price);
+        const isBest =
+          bookPrice != null
+          && Number(bookPrice) === Number(row.best_price);
+
+        const cellClass =
+          oddsCellClass(bookPrice, row.best_price);
 
         rowHtml += `
           <td class="${cellClass}">
@@ -3348,7 +4518,9 @@ function renderMlbLiveOdds() {
           ? (Number(row.fair_probability) * 100).toFixed(1) + "%"
           : "-"}</td>
         <td class="${evCellClass(row.price_edge_pct)}">
-          ${row.price_edge_pct != null ? Number(row.price_edge_pct).toFixed(2) + "% price edge" : "-"}
+          ${row.price_edge_pct != null
+            ? Number(row.price_edge_pct).toFixed(2) + "% price edge"
+            : "-"}
         </td>
         <td><button class="add-mlb-pick-btn">➕ Add</button></td>`;
 
@@ -3365,28 +4537,42 @@ function renderMlbLiveOdds() {
 function attachMlbAddHandler(rowElement, game, pick) {
   rowElement
     .querySelector(".add-mlb-pick-btn")
-    ?.addEventListener("click", async (e) => {
+    ?.addEventListener("click", async e => {
       e.stopPropagation();
 
       const btn = e.currentTarget;
 
-      if (!window.supabase)
+      if (!window.supabase) {
         return alert("Supabase not initialized.");
+      }
 
-      const sessionResponse = await window.supabase.auth.getSession();
-      const session = sessionResponse?.data?.session;
+      const sessionResponse =
+        await window.supabase.auth.getSession();
 
-      if (!session?.access_token)
+      const session =
+        sessionResponse?.data?.session;
+
+      if (!session?.access_token) {
         return alert("Please log in first.");
+      }
+
+      const selectedSport =
+        game?.sport
+        || document.getElementById("sportSelect")?.value
+        || "baseball_mlb";
 
       const trackerPick = {
-        sport: "baseball_mlb",
+        sport: selectedSport,
         event: game.event_title,
         event_id: game.event_id,
         game_pk:
-          game.model_context?.probable_game_pk
-          ?? game.game_pk
-          ?? null,
+          selectedSport === "baseball_mlb"
+            ? (
+                game.model_context?.probable_game_pk
+                ?? game.game_pk
+                ?? null
+              )
+            : null,
         game_date: game.game_date,
         commence_time:
           game.game_timestamp
@@ -3399,38 +4585,47 @@ function attachMlbAddHandler(rowElement, game, pick) {
         outcome: pick.selection,
         line: pick.point ?? null,
         odds: pick.best_price,
-        sportsbook: pick.best_book_name || pick.best_book
+        sportsbook:
+          pick.best_book_name
+          || pick.best_book
       };
 
-      const res = await fetch(`${window.API_BASE}/api/slips/manual`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          slip_type: "regular",
-          platform: "sportsbook",
-          sport: "baseball_mlb",
-          title: `${pick.pick_label} — ${game.event_title}`,
-          picks: [trackerPick]
-        })
-      });
+      const res = await fetch(
+        `${window.API_BASE}/api/slips/manual`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            slip_type: "regular",
+            platform: "sportsbook",
+            sport: selectedSport,
+            title:
+              `${pick.pick_label} — ${game.event_title}`,
+            picks: [trackerPick]
+          })
+        }
+      );
 
       if (res.ok) {
         btn.innerText = "✅ Added";
         btn.disabled = true;
-      } else {
+      }
+      else {
         const body = await res.text();
-        console.error("Failed to add MLB pick:", body);
+
+        console.error(
+          `Failed to add ${selectedSport} pick:`,
+          body
+        );
+
         alert("Failed to add pick.");
       }
     });
 }
-
-// =====================================================
-// 📱 Mobile Card Renderer
-// =====================================================
 
 function renderGameCards() {
 
@@ -3439,14 +4634,8 @@ function renderGameCards() {
 
   container.innerHTML = "";
 
-  // =====================================================
-  // 🔎 Apply Search Filter (same logic as table view)
-  // =====================================================
-
   const filteredGames = currentGameLines.filter(game => {
-
-    if (!searchFilter)
-      return true;
+    if (!searchFilter) return true;
 
     const searchText = (
       (game.event_title || "") + " " +
@@ -3455,15 +4644,305 @@ function renderGameCards() {
     ).toLowerCase();
 
     return searchText.includes(searchFilter);
-
   });
-
-  // =====================================================
-  // Render filtered cards
-  // =====================================================
 
   filteredGames.forEach(game => {
 
+    // =====================================================
+    // ⚾ / 🏈 MARKET MODE — MODERN PROJECTED LINES CARD
+    // =====================================================
+    if (isMarketEvMode(game?.mode)) {
+
+      const context = game?.model_context || {};
+      const board = Array.isArray(game?.market_board)
+        ? game.market_board
+        : [];
+
+      const isNcaaf = game?.mode === "ncaaf_market";
+      const sportIcon = isNcaaf ? "🏈" : "⚾";
+
+      const projectedRows = board
+        .filter(row =>
+          row &&
+          row.pick_label &&
+          row.best_price != null
+        )
+        .sort((a, b) => {
+          const aEv = Number(a?.expected_value_pct);
+          const bEv = Number(b?.expected_value_pct);
+
+          if (Number.isFinite(aEv) || Number.isFinite(bEv)) {
+            return (Number.isFinite(bEv) ? bEv : -999)
+              - (Number.isFinite(aEv) ? aEv : -999);
+          }
+
+          const marketOrder = { spreads: 0, h2h: 1, totals: 2 };
+          return (
+            (marketOrder[a.market] ?? 9)
+            - (marketOrder[b.market] ?? 9)
+          );
+        })
+        .slice(0, 6);
+
+      const projectedFavorite = context?.projected_favorite;
+      const projectedFavoriteSpread = Number(
+        context?.projected_favorite_spread
+      );
+
+      const ncaafProjection =
+        isNcaaf &&
+        projectedFavorite &&
+        Number.isFinite(projectedFavoriteSpread)
+          ? `${projectedFavorite} ${projectedFavoriteSpread > 0 ? "+" : ""}${projectedFavoriteSpread.toFixed(2)}`
+          : null;
+
+      const marketSpread = Number(context?.market_home_spread);
+      const modelGap = Number(context?.model_vs_market_points);
+
+      const bestOpportunity = projectedRows
+        .filter(row => Number.isFinite(Number(row?.expected_value_pct)))
+        .sort(
+          (a, b) =>
+            Number(b.expected_value_pct)
+            - Number(a.expected_value_pct)
+        )[0];
+
+      const bestEv = Number(bestOpportunity?.expected_value_pct);
+      const bestTier = String(
+        bestOpportunity?.recommendation || ""
+      ).toUpperCase();
+
+      const cardSignalClass =
+        bestTier === "STRONG_VALUE"
+          ? "strong"
+          : bestTier === "VALUE"
+          ? "value"
+          : bestTier === "LEAN"
+          ? "lean"
+          : "neutral";
+
+      const cardSignalLabel =
+        bestTier === "STRONG_VALUE"
+          ? "🔥 Strong Value"
+          : bestTier === "VALUE"
+          ? "✅ Value"
+          : bestTier === "LEAN"
+          ? "👀 Lean"
+          : "Market Board";
+
+      const rowsHtml = projectedRows.length
+        ? projectedRows.map((row, rowIndex) => {
+            const marketProb = Number(row?.market_probability);
+            const modelProb = Number(row?.model_probability);
+            const teamModelProb = Number(row?.team_model_probability);
+            const ev = Number(row?.expected_value_pct);
+            const edgePts = Number(row?.model_edge_points);
+
+            const marketPct = Number.isFinite(marketProb)
+              ? `${(marketProb * 100).toFixed(1)}%`
+              : "-";
+
+            const modelPct = Number.isFinite(modelProb)
+              ? `${(modelProb * 100).toFixed(1)}%`
+              : "-";
+
+            const teamModelPct = Number.isFinite(teamModelProb)
+              ? `${(teamModelProb * 100).toFixed(1)}%`
+              : null;
+
+            const evText = Number.isFinite(ev)
+              ? `${ev >= 0 ? "+" : ""}${ev.toFixed(2)}%`
+              : "-";
+
+            const fairOdds =
+              row?.fair_price != null
+                ? formatAmericanOdds(row.fair_price)
+                : "-";
+
+            const bestPrice =
+              row?.best_price != null
+                ? formatAmericanOdds(row.best_price)
+                : "-";
+
+            const bestBook =
+              row?.best_book_name ||
+              row?.best_book ||
+              "-";
+
+            const tier = String(
+              row?.recommendation || ""
+            ).toUpperCase();
+
+            const signalClass =
+              tier === "STRONG_VALUE"
+                ? "strong"
+                : tier === "VALUE"
+                ? "value"
+                : tier === "LEAN"
+                ? "lean"
+                : Number.isFinite(ev) && ev > 0
+                ? "positive"
+                : "neutral";
+
+            const signalText =
+              tier === "STRONG_VALUE"
+                ? "STRONG"
+                : tier === "VALUE"
+                ? "VALUE"
+                : tier === "LEAN"
+                ? "LEAN"
+                : Number.isFinite(ev) && ev > 0
+                ? "+EV"
+                : "PASS";
+
+            const modelDetail =
+              isNcaaf && row?.ev_plus_active && Number.isFinite(edgePts)
+                ? `${edgePts >= 0 ? "+" : ""}${edgePts.toFixed(2)} pts model edge`
+                : isNcaaf
+                ? "Market-only"
+                : row?.model_status === "ready"
+                ? "Stats-adjusted"
+                : "Market fallback";
+
+            return `
+              <button
+                type="button"
+                class="market-card-line market-card-line-btn"
+                data-market-row="${rowIndex}"
+                aria-label="Open ${row.pick_label} detail"
+              >
+                <div class="market-card-line-top">
+                  <div class="market-card-line-main">
+                    <span>${row.market_label || row.market || "Market"}</span>
+                    <strong>${row.pick_label}</strong>
+                    <small>${modelDetail}</small>
+                  </div>
+
+                  <div class="market-card-signal ${signalClass}">
+                    ${signalText}
+                  </div>
+                </div>
+
+                <div class="market-card-metrics">
+                  <div class="market-card-metric">
+                    <span>Best Price</span>
+                    <strong>${bestPrice}</strong>
+                    <small>${bestBook}</small>
+                  </div>
+
+                  <div class="market-card-metric">
+                    <span>Fair Odds</span>
+                    <strong>${fairOdds}</strong>
+                    <small>${modelPct} fair</small>
+                  </div>
+
+                  <div class="market-card-metric">
+                    <span>${isNcaaf ? "Market / EV+" : "Market / Model"}</span>
+                    <strong>${marketPct} → ${modelPct}</strong>
+                    <small>${teamModelPct ? `Team ${teamModelPct}` : row?.model_confidence || ""}</small>
+                  </div>
+
+                  <div class="market-card-metric ${Number.isFinite(ev) && ev > 0 ? "positive" : Number.isFinite(ev) && ev < 0 ? "negative" : ""}">
+                    <span>Expected EV</span>
+                    <strong>${evText}</strong>
+                    <small>${row?.model_confidence || "—"} confidence</small>
+                  </div>
+                </div>
+
+                <div class="market-card-detail-link">
+                  Line detail <span>›</span>
+                </div>
+              </button>
+            `;
+          }).join("")
+        : `
+          <div class="market-card-empty">
+            No current projected lines available.
+          </div>
+        `;
+
+      const card = document.createElement("article");
+      card.className = `game-card market-projection-card ${cardSignalClass}`;
+
+      card.innerHTML = `
+        <div class="market-card-header">
+          <div class="market-card-title-wrap">
+            <div class="market-card-sport-icon">${sportIcon}</div>
+            <div>
+              <h3>${game.event_title}</h3>
+              <div class="market-card-time">${game.game_time_display || ""}</div>
+            </div>
+          </div>
+
+          <div class="market-card-best-signal ${cardSignalClass}">
+            <span>${cardSignalLabel}</span>
+            <strong>
+              ${Number.isFinite(bestEv)
+                ? `${bestEv >= 0 ? "+" : ""}${bestEv.toFixed(2)}% EV`
+                : "Pregame"}
+            </strong>
+          </div>
+        </div>
+
+        ${
+          ncaafProjection
+            ? `
+              <div class="market-card-projection-strip">
+                <div>
+                  <span>BTBT Projection</span>
+                  <strong>${ncaafProjection}</strong>
+                </div>
+
+                <div>
+                  <span>Market Spread</span>
+                  <strong>
+                    ${Number.isFinite(marketSpread)
+                      ? `${game.home_team} ${marketSpread > 0 ? "+" : ""}${marketSpread.toFixed(2)}`
+                      : "—"}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Model Gap</span>
+                  <strong>
+                    ${Number.isFinite(modelGap)
+                      ? `${modelGap >= 0 ? "+" : ""}${modelGap.toFixed(2)} pts`
+                      : "—"}
+                  </strong>
+                </div>
+              </div>
+            `
+            : ""
+        }
+
+        <div class="market-card-section-heading">
+          <span>Projected Lines</span>
+          <small>${projectedRows.length} markets</small>
+        </div>
+
+        <div class="market-card-lines">
+          ${rowsHtml}
+        </div>
+      `;
+
+      card.querySelectorAll("[data-market-row]").forEach(btn => {
+        btn.addEventListener("click", event => {
+          event.stopPropagation();
+          const rowIndex = Number(btn.dataset.marketRow);
+          showMarketRowBreakdown(
+            game,
+            projectedRows[rowIndex] || null
+          );
+        });
+      });
+
+      container.appendChild(card);
+      return;
+    }
+
+    // =====================================================
+    // 🏀 EXISTING NCAAB CARD MODE
+    // =====================================================
     const recommendation =
       game.recommended_team
         ? `Take ${game.recommended_team} ${game.recommended_spread ?? ""}`
@@ -3472,21 +4951,15 @@ function renderGameCards() {
     const card = document.createElement("div");
     card.className = "game-card";
 
-    // ========================================
-    // 📊 Build Vegas Lines Section
-    // ========================================
-
     let vegasLinesHTML = "";
 
     const booksToShow = [...visibleBooks].slice(0, 3);
 
     booksToShow.forEach(book => {
-
       const homeLine = game.books?.[game.home_team]?.[book];
       const awayLine = game.books?.[game.away_team]?.[book];
 
       if (homeLine != null || awayLine != null) {
-
         vegasLinesHTML += `
           <div class="card-line-row">
             <div class="card-book-name">
@@ -3527,111 +5000,10 @@ function renderGameCards() {
       </button>
     `;
 
-    // ========================================
-    // 🧠 Model Debug Click
-    // ========================================
-
-    card.addEventListener("click", () => {
-
-      if (!window.modelDebugMode) return;
-
-      window.showModelBreakdown(game);
-
-    });
-
-    // ========================================
-    // ➕ Add Button Handler
-    // ========================================
-
-    const addBtn = card.querySelector(".card-add-btn");
-
-    addBtn.addEventListener("click", async (e) => {
-
-      e.stopPropagation(); // prevents modal opening
-
-      const team = game.recommended_team;
-      if (!team) {
-        alert("No recommended side for this game.");
-        return;
-      }
-
-      const firstBook = [...visibleBooks][0];
-      const defaultSpread = game.books?.[team]?.[firstBook];
-
-      const userInput = prompt(
-        `Enter spread you bet for ${team}:`,
-        defaultSpread ?? ""
-      );
-
-      if (userInput === null) return;
-
-      const spread = Number(userInput);
-      if (isNaN(spread)) {
-        alert("Invalid line value.");
-        return;
-      }
-
-      const selectedSport =
-        document.getElementById("sportSelect")?.value ||
-        game?.sport ||
-        "basketball_ncaab";
-
-      const pick = {
-        sport: selectedSport,
-        event: game.event_title,
-        event_id: game.event_id,
-        game_date: game.game_date,
-        player: team,
-        market: "spread",
-        outcome: spread < 0 ? "favorite" : "underdog",
-        line: spread
-      };
-
-      if (!window.supabase) {
-        alert("Supabase not initialized.");
-        return;
-      }
-
-      const sessionResponse =
-        await window.supabase.auth.getSession();
-
-      const session = sessionResponse?.data?.session;
-
-      if (!session?.access_token) {
-        alert("Please log in first.");
-        return;
-      }
-
-      const res = await fetch(`${window.API_BASE}/api/slips/manual`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          slip_type: "regular",
-          platform: "sportsbook",
-          sport: selectedSport,
-          title: `${team} vs ${game.event_title}`,
-          picks: [pick]
-        })
-      });
-
-  
-      if (res.ok) {
-        addBtn.innerText = "✅ Added";
-        addBtn.disabled = true;
-      } else {
-        alert("Failed to add pick.");
-      }
-
-    });
-
     container.appendChild(card);
-
   });
-
 }
+
 // =====================================================
 // Close breakdown modal
 // =====================================================
