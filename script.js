@@ -5398,6 +5398,8 @@ activeColumns.forEach((c) => {
   if (c === "OverUnder") return;
 
   const th = document.createElement("th");
+  th.dataset.column = c;
+
   th.textContent = c
     .replace("Point", "")
     .replace("Difference", " Δ")
@@ -5887,6 +5889,8 @@ const sideUnavailable =
 // --- Render each cell ---
 activeColumns.forEach((col) => {
   const td = document.createElement("td");
+  td.dataset.column = col;
+
   let value = row[col];
 
   // ===================================================

@@ -9586,3 +9586,72 @@ body.auth-modal-open {
     grid-column: auto;
   }
 }
+/* ============================================================
+   📱 MOBILE TABLE — STABLE COLUMN VISIBILITY
+   Uses column names instead of fragile nth-child positions
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  /* Hide all table columns first */
+  #results .odds-table th,
+  #results .odds-table td {
+    display: none;
+  }
+
+  /* Core information */
+  #results .odds-table th[data-column="Event"],
+  #results .odds-table td[data-column="Event"],
+
+  #results .odds-table th[data-column="Market"],
+  #results .odds-table td[data-column="Market"],
+
+  #results .odds-table th[data-column="Description"],
+  #results .odds-table td[data-column="Description"],
+
+  /* DFS platform lines */
+  #results .odds-table th[data-column="PrizePickPoint"],
+  #results .odds-table td[data-column="PrizePickPoint"],
+
+  #results .odds-table th[data-column="UnderdogPoint"],
+  #results .odds-table td[data-column="UnderdogPoint"],
+
+  #results .odds-table th[data-column="BetrPoint"],
+  #results .odds-table td[data-column="BetrPoint"],
+
+  /* Consensus / model */
+  #results .odds-table th[data-column="ConsensusPoint"],
+  #results .odds-table td[data-column="ConsensusPoint"],
+
+  #results .odds-table th[data-column="BestNoVig"],
+  #results .odds-table td[data-column="BestNoVig"],
+
+  /* DFS differences */
+  #results .odds-table th[data-column="PrizePicksDifference"],
+  #results .odds-table td[data-column="PrizePicksDifference"],
+
+  #results .odds-table th[data-column="UnderdogDifference"],
+  #results .odds-table td[data-column="UnderdogDifference"],
+
+  #results .odds-table th[data-column="BetrDifference"],
+  #results .odds-table td[data-column="BetrDifference"] {
+    display: table-cell;
+  }
+
+  /* Keep horizontal scrolling usable */
+  #results {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #results .odds-table {
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+  }
+
+  #results .odds-table th,
+  #results .odds-table td {
+    white-space: nowrap;
+  }
+}
