@@ -2603,6 +2603,11 @@ updateOptimizerCounts();
 // VERIFY PREMIUM PAGE ACCESS
 // ===================================================
 
+// ===================================================
+// VERIFY DRAFTKINGS PAGE ACCESS
+// Premium OR universal 24-hour trial
+// ===================================================
+
 async function verifyOptimizerAccess() {
 
   optimizerAccessAllowed =
@@ -2613,7 +2618,7 @@ async function verifyOptimizerAccess() {
 
 
   setOptimizerStatus(
-    "Checking Premium access...",
+    "Checking access...",
     "loading"
   );
 
@@ -2686,9 +2691,7 @@ async function verifyOptimizerAccess() {
 
 
     // =================================================
-    // USE EXISTING BTBT SUBSCRIPTION CHECK
-    //
-    // Same shared system used by Game Lines.
+    // CHECK PAID SUBSCRIPTION
     // =================================================
 
     if (
@@ -2700,32 +2703,72 @@ async function verifyOptimizerAccess() {
         session.user.id
       );
 
-    } else {
+    }
 
-      // -----------------------------------------------
-      // Defensive fallback.
-      //
-      // The backend still verifies Premium on the
-      // /api/dk-optimizer/parse route.
-      // -----------------------------------------------
 
-      console.warn(
-        "⚠️ checkSubscriptionStatus() not available."
-      );
+    // =================================================
+    // IF NOT PREMIUM, REFRESH TRIAL STATE
+    // =================================================
+
+    if (
+      !window.hasPremiumAccess &&
+      typeof refreshFreePassStatus ===
+        "function"
+    ) {
+
+      await refreshFreePassStatus();
 
     }
 
 
     // =================================================
-    // PREMIUM REQUIRED
+    // UNIVERSAL TRIAL CHECK
+    // =================================================
+
+    const trialExpires =
+      window.freePassExpiresAt
+        ? new Date(
+            window.freePassExpiresAt
+          )
+        : null;
+
+
+    const hasTrialAccess =
+      Boolean(
+
+        window.hasActiveFreePass &&
+
+        String(
+          window.freePassSport ||
+          ""
+        )
+          .trim()
+          .toLowerCase() ===
+            "all_access" &&
+
+        trialExpires &&
+
+        !Number.isNaN(
+          trialExpires.getTime()
+        ) &&
+
+        trialExpires >
+          new Date()
+
+      );
+
+
+    // =================================================
+    // PREMIUM OR TRIAL REQUIRED
     // =================================================
 
     if (
-      !window.hasPremiumAccess
+      !window.hasPremiumAccess &&
+      !hasTrialAccess
     ) {
 
       setOptimizerStatus(
-        "The DraftKings Lineup Optimizer requires Premium access.",
+        "The DraftKings Lineup Optimizer requires Premium or an active 24-hour Full Access Trial.",
         "error"
       );
 
@@ -2742,14 +2785,37 @@ async function verifyOptimizerAccess() {
     updateOptimizerLoadButton();
 
 
+    // =================================================
+    // STATUS
+    // =================================================
+
     setOptimizerStatus(
-      "Premium access confirmed. Choose a DraftKings CSV.",
+
+      window.hasPremiumAccess
+
+        ? (
+            "Premium access confirmed. " +
+            "Choose a DraftKings CSV."
+          )
+
+        : (
+            "24-hour Full Access Trial active. " +
+            "Choose a DraftKings CSV."
+          ),
+
       "success"
     );
 
 
     console.log(
-      "✅ DK Optimizer Premium access confirmed"
+      "✅ DK Optimizer access confirmed",
+      {
+        premium:
+          window.hasPremiumAccess,
+
+        trial:
+          hasTrialAccess
+      }
     );
 
 
@@ -2773,7 +2839,7 @@ async function verifyOptimizerAccess() {
 
     setOptimizerStatus(
       error.message ||
-      "Unable to verify Premium access.",
+      "Unable to verify DraftKings access.",
       "error"
     );
 

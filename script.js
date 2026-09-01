@@ -686,55 +686,48 @@ document.addEventListener("DOMContentLoaded", () => {
   updatePickTrackerBarUI();
 
 // --------------------------------------------------
-// 🏀 March Madness Model Button — PREMIUM ONLY
+// 🏀 March Madness Model
+// Premium OR universal 24-hour trial
 // --------------------------------------------------
+
 const openMarchMadnessBtn =
-  document.getElementById("openMarchMadnessBtn");
+  document.getElementById(
+    "openMarchMadnessBtn"
+  );
+
 
 if (openMarchMadnessBtn) {
 
-  openMarchMadnessBtn.addEventListener("click", async () => {
+  openMarchMadnessBtn.addEventListener(
+    "click",
+    async () => {
 
-    const {
-      data: { session }
-    } = await supabase.auth.getSession();
+      const allowed =
+        await canUseTrialFeatures();
 
-    // Guest
-    if (!session?.user) {
 
-      openAuthModal("signup");
+      if (!allowed) {
 
-      return;
-    }
+        alert(
+          "🏀 The March Madness Model requires Premium or an active 24-hour Full Access Trial."
+        );
 
-    // Subscription state should normally already be loaded.
-    // Recheck if necessary.
-    if (!window.hasPremiumAccess) {
 
-      await checkSubscriptionStatus(
-        session.user.id
+        return;
+
+      }
+
+
+      console.log(
+        "🏀 Opening March Madness page"
       );
 
+
+      window.location.href =
+        "march-madness.html";
+
     }
-
-    if (!window.hasPremiumAccess) {
-
-      alert(
-        "🏀 The March Madness Model is a Premium feature. " +
-        "Your MLB Free Pass includes MLB features only."
-      );
-
-      return;
-    }
-
-    console.log(
-      "🏀 Opening March Madness page"
-    );
-
-    window.location.href =
-      "march-madness.html";
-
-  });
+  );
 
 }
 
@@ -791,39 +784,44 @@ if (openMarchMadnessBtn) {
 
 });
 
-const openGameLinesBtn = document.getElementById("openGameLinesBtn");
+// ===================================================
+// 📈 GAME LINES
+// Premium OR universal 24-hour trial
+// ===================================================
+
+const openGameLinesBtn =
+  document.getElementById(
+    "openGameLinesBtn"
+  );
+
 
 if (openGameLinesBtn) {
 
-  openGameLinesBtn.addEventListener("click", async () => {
+  openGameLinesBtn.addEventListener(
+    "click",
+    async () => {
 
-    const allowed =
-      await canUseMlbTrialFeatures();
+      const allowed =
+        await canUseTrialFeatures();
 
-    if (!allowed) {
 
-      alert(
-        "📈 Game Lines EV requires Premium or an active 24-hour MLB Free Pass."
-      );
+      if (!allowed) {
 
-      return;
-    }
+        alert(
+          "📈 Game Lines requires Premium or an active 24-hour Full Access Trial."
+        );
 
-    // Paid users enter normally.
-    // MLB trial users are marked so Game Lines can lock them to MLB.
-    if (window.hasPremiumAccess) {
+
+        return;
+
+      }
+
 
       window.location.href =
         "game-lines.html";
 
-    } else {
-
-      window.location.href =
-        "game-lines.html?trial=mlb";
-
     }
-
-  });
+  );
 
 }
 if (openGameLinesBtn) {
@@ -858,7 +856,8 @@ if (openGameLinesBtn) {
 
 }
 // ===================================================
-// 🏀 DRAFTKINGS OPTIMIZER — PREMIUM PAGE
+// 🧠 DRAFTKINGS OPTIMIZER
+// Premium OR universal 24-hour trial
 // ===================================================
 
 const openDkOptimizerBtn =
@@ -866,48 +865,29 @@ const openDkOptimizerBtn =
     "openDkOptimizerBtn"
   );
 
+
 if (openDkOptimizerBtn) {
 
   openDkOptimizerBtn.addEventListener(
     "click",
     async () => {
 
-      const {
-        data: { session }
-      } =
-        await supabase.auth.getSession();
+      const allowed =
+        await canUseTrialFeatures();
 
-      // Guest
-      if (!session?.user) {
 
-        openAuthModal(
-          "signup"
-        );
-
-        return;
-      }
-
-      // Refresh subscription state if needed
-      if (!window.hasPremiumAccess) {
-
-        await checkSubscriptionStatus(
-          session.user.id
-        );
-
-      }
-
-      // Premium only
-      if (!window.hasPremiumAccess) {
+      if (!allowed) {
 
         alert(
-          "🏀 The DraftKings Lineup Optimizer " +
-          "is a Premium feature."
+          "The DraftKings Lineup Optimizer " +
+          "requires Premium or an active " +
+          "24-hour Full Access Trial."
         );
 
         return;
       }
 
-      // Open dedicated optimizer page
+
       window.location.href =
         "dk-optimizer.html";
 
@@ -945,53 +925,83 @@ function updateSportAccessUI() {
       ".sport-buttons button[data-sport]"
     );
 
-  const hasMlbTrial =
+
+  const hasUniversalTrial =
+    !window.hasPremiumAccess &&
+    hasActiveSiteTrial();
+
+
+  const hasLegacyMlbTrial =
     !window.hasPremiumAccess &&
     window.hasActiveFreePass &&
-    window.freePassSport === "baseball_mlb" &&
-    isFreePassActiveForSport("baseball_mlb");
-
-  buttons.forEach(btn => {
-
-    const sport =
-      btn.dataset.sport;
-
-    // Reset
-    btn.classList.remove(
-      "trial-locked-sport"
+    window.freePassSport ===
+      "baseball_mlb" &&
+    isFreePassActiveForSport(
+      "baseball_mlb"
     );
 
-    btn.removeAttribute(
-      "aria-disabled"
-    );
 
-    btn.title = "";
+  buttons.forEach(
+    btn => {
 
-    // Premium gets normal buttons
-    if (window.hasPremiumAccess) {
-      return;
-    }
+      const sport =
+        btn.dataset.sport;
 
-    // Active MLB trial
-    if (
-      hasMlbTrial &&
-      sport !== "baseball_mlb"
-    ) {
 
-      btn.classList.add(
+      // Reset first
+      btn.classList.remove(
         "trial-locked-sport"
       );
 
-      btn.setAttribute(
-        "aria-disabled",
-        "true"
+      btn.removeAttribute(
+        "aria-disabled"
       );
 
       btn.title =
-        "Premium required — your Free Pass includes MLB";
-    }
+        "";
 
-  });
+
+      // Paid account
+      if (
+        window.hasPremiumAccess
+      ) {
+        return;
+      }
+
+
+      // Universal trial:
+      // everything unlocked.
+      if (
+        hasUniversalTrial
+      ) {
+        return;
+      }
+
+
+      // Existing legacy MLB pass:
+      // preserve old behavior until it expires.
+      if (
+        hasLegacyMlbTrial &&
+        sport !==
+          "baseball_mlb"
+      ) {
+
+        btn.classList.add(
+          "trial-locked-sport"
+        );
+
+        btn.setAttribute(
+          "aria-disabled",
+          "true"
+        );
+
+        btn.title =
+          "This legacy Free Pass includes MLB only.";
+
+      }
+
+    }
+  );
 
 }
 // 🎮 Game UI Elements
@@ -1187,40 +1197,107 @@ document.getElementById("manageBillingBtn")?.addEventListener("click", async () 
 // ===================================================
 // 🎁 Free Sport Pass — Frontend Status
 // ===================================================
-function isFreePassActiveForSport(sport) {
-
-  if (!window.hasActiveFreePass) {
-    return false;
-  }
-
-  if (!sport) {
-    return false;
-  }
-
-  if (window.freePassSport !== sport) {
-    return false;
-  }
-
-  if (!window.freePassExpiresAt) {
-    return false;
-  }
-
-  const expiresAt =
-    new Date(window.freePassExpiresAt);
+function isFreePassActiveForSport(
+  sport
+) {
 
   if (
-    Number.isNaN(expiresAt.getTime()) ||
+    !window.hasActiveFreePass
+  ) {
+    return false;
+  }
+
+  if (
+    !window.freePassExpiresAt
+  ) {
+    return false;
+  }
+
+
+  const expiresAt =
+    new Date(
+      window.freePassExpiresAt
+    );
+
+
+  if (
+    Number.isNaN(
+      expiresAt.getTime()
+    )
+    ||
     expiresAt <= new Date()
   ) {
 
-    window.hasActiveFreePass = false;
+    window.hasActiveFreePass =
+      false;
 
     return false;
   }
 
-  return true;
-}
 
+  const scope =
+    String(
+      window.freePassSport ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  const requestedSport =
+    String(
+      sport ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  // Universal trial
+  if (
+    scope ===
+    "all_access"
+  ) {
+    return true;
+  }
+
+
+  // Legacy sport-specific trial
+  return (
+    requestedSport &&
+    scope === requestedSport
+  );
+
+}
+function hasActiveSiteTrial() {
+
+  if (
+    !window.hasActiveFreePass ||
+    window.freePassSport !==
+      "all_access" ||
+    !window.freePassExpiresAt
+  ) {
+
+    return false;
+
+  }
+
+
+  const expires =
+    new Date(
+      window.freePassExpiresAt
+    );
+
+
+  return (
+    !Number.isNaN(
+      expires.getTime()
+    )
+    &&
+    expires > new Date()
+  );
+
+}
 
 // ===================================================
 // 🎁 Refresh Free Pass Status From Backend
@@ -1351,36 +1428,47 @@ async function refreshFreePassStatus() {
 // Premium = full access
 // Active MLB pass = MLB trial features
 // ===================================================
-async function canUseMlbTrialFeatures() {
+async function canUseTrialFeatures() {
 
   const {
     data: { session }
-  } = await supabase.auth.getSession();
+  } =
+    await supabase.auth.getSession();
 
-  // Not signed in
+
   if (!session?.user) {
-    openAuthModal("signup");
+
+    openAuthModal(
+      "signup"
+    );
+
     return false;
   }
 
-  // Paid subscriber
-  if (window.hasPremiumAccess) {
+
+  if (
+    window.hasPremiumAccess
+  ) {
+
     return true;
   }
 
-  // Make sure free-pass state is current
+
   await refreshFreePassStatus();
 
-  // Active MLB 24-hour pass
+
   return (
-    window.hasActiveFreePass &&
-    window.freePassSport === "baseball_mlb" &&
-    isFreePassActiveForSport("baseball_mlb")
+    hasActiveSiteTrial()
   );
+
 }
 // ===================================================
-// ⚾ MLB FREE PASS — CUSTOMER UI
+// 🎟️ FULL ACCESS TRIAL — CUSTOMER UI
+//
+// Function name retained for compatibility with
+// existing calls elsewhere in script.js.
 // ===================================================
+
 function updateMlbFreePassUI() {
 
   const freePassBtn =
@@ -1388,15 +1476,18 @@ function updateMlbFreePassUI() {
       "startMlbFreePassBtn"
     );
 
+
   const message =
     document.getElementById(
       "freePassMessage"
     );
 
+
   const banner =
     document.getElementById(
       "freePassBanner"
     );
+
 
   const bannerExpires =
     document.getElementById(
@@ -1409,9 +1500,12 @@ function updateMlbFreePassUI() {
   // ===================================================
 
   if (freePassBtn) {
+
     freePassBtn.style.display =
       "none";
+
   }
+
 
   if (message) {
 
@@ -1420,46 +1514,77 @@ function updateMlbFreePassUI() {
 
     message.innerHTML =
       "";
+
   }
+
 
   if (banner) {
 
     banner.style.display =
       "none";
+
   }
+
 
   if (bannerExpires) {
 
     bannerExpires.textContent =
       "";
+
   }
 
 
   // ===================================================
   // 💳 PREMIUM USER
-  // Paid users see NONE of the free-pass UI
-  // All sports remain unlocked
   // ===================================================
-  if (window.hasPremiumAccess) {
+
+  if (
+    window.hasPremiumAccess
+  ) {
 
     updateSportAccessUI();
 
+
     console.log(
-      "💳 Premium account — free pass UI hidden"
+      "💳 Premium account — trial UI hidden"
     );
 
+
     return;
+
   }
 
 
+  const scope =
+    String(
+      window.freePassSport ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  const isUniversalTrial =
+    scope ===
+      "all_access";
+
+
+  const isLegacyMlbTrial =
+    scope ===
+      "baseball_mlb";
+
+
   // ===================================================
-  // 🎁 ACTIVE MLB FREE PASS
+  // 🎟️ ACTIVE FREE PASS
   // ===================================================
+
   if (
     window.hasActiveFreePass &&
-    window.freePassSport ===
-      "baseball_mlb" &&
-    window.freePassExpiresAt
+    window.freePassExpiresAt &&
+    (
+      isUniversalTrial ||
+      isLegacyMlbTrial
+    )
   ) {
 
     const expires =
@@ -1472,6 +1597,7 @@ function updateMlbFreePassUI() {
       expires.toLocaleString(
         "en-US",
         {
+
           timeZone:
             "America/Chicago",
 
@@ -1486,93 +1612,108 @@ function updateMlbFreePassUI() {
 
           minute:
             "2-digit"
+
         }
       );
 
 
-    // -----------------------------------
-    // 🔵 Top dashboard banner
-    // -----------------------------------
     if (banner) {
 
       banner.style.display =
         "block";
+
     }
 
 
     if (bannerExpires) {
 
       bannerExpires.textContent =
-        `Free MLB access ends ${expiresText}.`;
+
+        isUniversalTrial
+
+          ? (
+              `Full Access Trial ends ${expiresText}.`
+            )
+
+          : (
+              `Legacy MLB Free Pass ends ${expiresText}.`
+            );
+
     }
 
 
-    // -----------------------------------
-    // 🔵 Subscription-area message
-    // -----------------------------------
     if (message) {
 
-      // Expiration already shown above
       message.innerHTML =
         "";
 
       message.style.display =
         "none";
+
     }
 
 
-    // -----------------------------------
-    // 🔒 Grey out Premium sports
-    // -----------------------------------
     updateSportAccessUI();
 
 
     console.log(
-      "⚾ Active MLB free-pass UI shown"
+      isUniversalTrial
+        ? "🎟️ Active Full Access Trial UI shown"
+        : "⚾ Active legacy MLB pass UI shown"
     );
 
+
     return;
+
   }
 
 
   // ===================================================
   // ⛔ PASS ALREADY USED / EXPIRED
   // ===================================================
-  if (window.freePassUsed) {
+
+  if (
+    window.freePassUsed
+  ) {
 
     if (message) {
 
       message.innerHTML = `
-        Your one-time MLB Free Pass
+        Your one-time 24-hour trial
         has expired.
         <br>
         Start your first month free
-        to unlock all sports.
+        to continue using the full platform.
       `;
+
 
       message.style.display =
         "block";
+
     }
 
 
-    // Remove trial styling after expiration
     updateSportAccessUI();
 
 
     return;
+
   }
 
 
   // ===================================================
   // ✅ NEW / ELIGIBLE FREE ACCOUNT
   // ===================================================
+
   if (freePassBtn) {
 
     freePassBtn.style.display =
       "inline-block";
 
+
     freePassBtn.textContent =
-      "⚾ Try MLB Free for 24 Hours";
+      "Try Full Access Free for 24 Hours";
+
   }
 
 
@@ -1581,11 +1722,13 @@ function updateMlbFreePassUI() {
     message.innerHTML = `
       No credit card required
       &bull;
-      One-time 24-hour MLB access
+      One-time 24-hour full-platform access
     `;
+
 
     message.style.display =
       "block";
+
   }
 
 
@@ -1633,8 +1776,9 @@ document
 
 
 // ===================================================
-// ⚾ ACTIVATE ONE-TIME MLB FREE PASS
+// 🎟️ ACTIVATE ONE-TIME 24-HOUR FULL ACCESS TRIAL
 // ===================================================
+
 document
   .getElementById(
     "startMlbFreePassBtn"
@@ -1648,12 +1792,15 @@ document
           "startMlbFreePassBtn"
         );
 
-      if (!btn) return;
+
+      if (!btn) {
+        return;
+      }
 
 
       const confirmed =
         confirm(
-          "Start your 24-hour MLB Free Pass now?\n\n" +
+          "Start your 24-hour Full Access Trial now?\n\n" +
           "The 24-hour clock starts immediately and " +
           "can only be activated once per account."
         );
@@ -1666,22 +1813,28 @@ document
 
       try {
 
-        btn.disabled = true;
+        btn.disabled =
+          true;
+
 
         btn.textContent =
-          "Activating MLB Pass...";
+          "Activating Trial...";
 
 
         const {
-          data: { session }
+          data: {
+            session
+          }
         } =
           await supabase.auth.getSession();
 
 
-        if (!session?.access_token) {
+        if (
+          !session?.access_token
+        ) {
 
           throw new Error(
-            "Please sign in before activating your MLB Free Pass."
+            "Please sign in before activating your Full Access Trial."
           );
 
         }
@@ -1691,8 +1844,10 @@ document
           await fetch(
             `${window.API_BASE}/api/activate-free-pass`,
             {
+
               method:
                 "POST",
+
 
               headers: {
 
@@ -1704,11 +1859,13 @@ document
 
               },
 
+
               body:
                 JSON.stringify({
                   sport:
-                    "baseball_mlb"
+                    "all_access"
                 })
+
             }
           );
 
@@ -1722,56 +1879,46 @@ document
           const detail =
             typeof data?.detail ===
               "string"
+
               ? data.detail
+
               : data?.detail?.message;
 
 
           throw new Error(
             detail ||
-            "Unable to activate MLB Free Pass."
+            "Unable to activate Full Access Trial."
           );
 
         }
 
 
         console.log(
-          "⚾ MLB Free Pass activated:",
+          "🎟️ Full Access Trial activated:",
           data
         );
 
 
-        // Get fresh pass data and redraw UI
+        // Get fresh pass state and redraw UI
         await refreshFreePassStatus();
 
 
-        // Automatically select MLB
-        const mlbBtn =
-          document.querySelector(
-            '.sport-buttons button[data-sport="baseball_mlb"]'
-          );
-
-
-        if (mlbBtn) {
-          mlbBtn.click();
-        }
-
-
         alert(
-          "⚾ Your MLB Free Pass is active for the next 24 hours!"
+          "✅ Your 24-hour Full Access Trial is active!"
         );
 
 
       } catch (err) {
 
         console.error(
-          "❌ MLB Free Pass activation failed:",
+          "❌ Full Access Trial activation failed:",
           err
         );
 
 
         alert(
           err.message ||
-          "Unable to activate your MLB Free Pass."
+          "Unable to activate your Full Access Trial."
         );
 
 
@@ -1787,7 +1934,7 @@ document
         ) {
 
           btn.textContent =
-            "⚾ Try MLB Free for 24 Hours";
+            "Try Full Access Free for 24 Hours";
 
         }
 
@@ -4431,39 +4578,60 @@ function getCentralTodayYMD() {
 
 
 // ✅ Reload when date changes
+
 safeAddEventListener(
   dateInput,
   "change",
   () => {
 
     // ===================================================
-    // 🎁 FREE MLB PASS
+    // 🎁 LEGACY SPORT-SPECIFIC PASS
     // Today's board ONLY
+    //
+    // New all_access trials DO NOT enter this block.
     // ===================================================
-    if (
+
+    const hasLegacySportPass =
       !window.hasPremiumAccess &&
-      window.hasActiveFreePass
+      window.hasActiveFreePass &&
+      window.freePassSport &&
+      window.freePassSport !==
+        "all_access";
+
+
+    if (
+      hasLegacySportPass
     ) {
 
       const centralToday =
         getCentralTodayYMD();
 
+
       if (
-        dateInput.value !== centralToday
+        dateInput.value !==
+          centralToday
       ) {
 
-        // Put them back on today's slate
         dateInput.value =
           centralToday;
 
-        // Clear any games from the wrong date
-        selectedGames = [];
 
-        if (gameButtonContainer) {
-          gameButtonContainer.innerHTML = "";
+        selectedGames =
+          [];
+
+
+        if (
+          gameButtonContainer
+        ) {
+
+          gameButtonContainer.innerHTML =
+            "";
+
         }
 
+
         if (resultsDiv) {
+
           resultsDiv.innerHTML = `
             <div
               style="
@@ -4475,34 +4643,43 @@ safeAddEventListener(
                 text-align:center;
               "
             >
-              ⚾ Your 24-hour MLB Free Pass includes
-              today's MLB board only.
+              Your legacy free sport pass includes
+              today's board only.
               <br>
-              Upgrade to Premium to view other dates
-              and all sports.
+              Upgrade to Premium for continued access.
             </div>
           `;
+
         }
 
+
         console.log(
-          "🎁 Free pass date restricted to:",
+          "🎁 Legacy free pass date restricted to:",
           centralToday
         );
 
-        // Reload today's games
-        if (selectedSport) {
+
+        if (
+          selectedSport
+        ) {
+
           loadGames();
+
         }
 
+
         return;
+
       }
+
     }
 
 
     // ===================================================
-    // 💳 PREMIUM USER
-    // Normal date behavior — past/today/future
+    // 💳 PREMIUM OR UNIVERSAL TRIAL
+    // Normal past / today / future behavior
     // ===================================================
+
     if (
       selectedSport &&
       dateInput.value
@@ -9095,42 +9272,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // ===================================================
-// PICK TRACKER LOGIC
-// Premium OR active MLB Free Pass
+// 📊 PICK TRACKER
+// Premium OR universal 24-hour trial
 // ===================================================
 
 const trackerBtn =
-  document.getElementById("openPickTrackerBtn");
+  document.getElementById(
+    "openPickTrackerBtn"
+  );
+
 
 if (trackerBtn) {
 
-  trackerBtn.addEventListener("click", async () => {
+  trackerBtn.addEventListener(
+    "click",
+    async () => {
 
-    const allowed =
-      await canUseMlbTrialFeatures();
+      const allowed =
+        await canUseTrialFeatures();
 
-    if (!allowed) {
 
-      alert(
-        "📊 Pick Tracker requires Premium or an active 24-hour MLB Free Pass."
-      );
+      if (!allowed) {
 
-      return;
-    }
+        alert(
+          "📊 Pick Tracker requires Premium or an active 24-hour Full Access Trial."
+        );
 
-    if (window.hasPremiumAccess) {
+
+        return;
+
+      }
+
 
       window.location.href =
         "pick-tracker.html";
 
-    } else {
-
-      window.location.href =
-        "pick-tracker.html?trial=mlb";
-
     }
-
-  });
+  );
 
 }
 

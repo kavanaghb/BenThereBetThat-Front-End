@@ -76,17 +76,21 @@ async function resolveGameLinesAccess() {
     } =
       await window.supabase.auth.getSession();
 
+
     // =====================================================
     // 🚫 MUST BE SIGNED IN
     // =====================================================
+
     if (!session?.user) {
 
       alert(
         "Please sign in to access Game Lines."
       );
 
+
       window.location.href =
         "index.html";
+
 
       return false;
     }
@@ -95,80 +99,151 @@ async function resolveGameLinesAccess() {
     // =====================================================
     // 💳 LOAD SUBSCRIPTION STATE ONCE
     // =====================================================
+
     if (
       !gameLinesSubscriptionChecked &&
-      typeof checkSubscriptionStatus === "function"
+      typeof checkSubscriptionStatus ===
+        "function"
     ) {
 
       await checkSubscriptionStatus(
         session.user.id
       );
 
-      gameLinesSubscriptionChecked = true;
+
+      gameLinesSubscriptionChecked =
+        true;
     }
 
 
     // =====================================================
-    // 🎁 REFRESH FREE PASS STATE
-    // Important: trial can expire while page is open
+    // 🎟️ REFRESH FREE TRIAL STATE
+    //
+    // Important:
+    // The trial can expire while this page is open.
     // =====================================================
+
     if (
       !window.hasPremiumAccess &&
-      typeof refreshFreePassStatus === "function"
+      typeof refreshFreePassStatus ===
+        "function"
     ) {
 
       await refreshFreePassStatus();
     }
 
 
-    const hasActiveMlbPass =
+    // =====================================================
+    // 🎟️ UNIVERSAL 24-HOUR TRIAL
+    // =====================================================
+
+    const hasUniversalTrial =
       Boolean(
+
         window.hasActiveFreePass &&
-        window.freePassSport === "baseball_mlb" &&
-        typeof isFreePassActiveForSport === "function" &&
+
+        String(
+          window.freePassSport ||
+          ""
+        )
+          .trim()
+          .toLowerCase() ===
+            "all_access" &&
+
+        window.freePassExpiresAt &&
+
+        new Date(
+          window.freePassExpiresAt
+        ) > new Date()
+
+      );
+
+
+    // =====================================================
+    // ⚾ LEGACY MLB PASS
+    //
+    // Keep this only so an old MLB-only trial that was
+    // activated before this update can finish normally.
+    // =====================================================
+
+    const hasLegacyMlbPass =
+      Boolean(
+
+        window.hasActiveFreePass &&
+
+        String(
+          window.freePassSport ||
+          ""
+        )
+          .trim()
+          .toLowerCase() ===
+            "baseball_mlb" &&
+
+        typeof isFreePassActiveForSport ===
+          "function" &&
+
         isFreePassActiveForSport(
           "baseball_mlb"
         )
+
       );
 
 
     // =====================================================
-    // ⚾ DETERMINE TRIAL MODE
+    // ⚾ LEGACY MLB MODE
+    //
+    // Universal trials are NOT MLB trial mode.
     // =====================================================
+
     gameLinesIsMlbTrial =
       !window.hasPremiumAccess &&
-      hasActiveMlbPass;
+      hasLegacyMlbPass &&
+      !hasUniversalTrial;
 
 
     // =====================================================
-    // 🔒 NO PREMIUM + NO ACTIVE PASS
+    // 🔒 ACCESS REQUIRED
     // =====================================================
-    if (
-      !window.hasPremiumAccess &&
-      !hasActiveMlbPass
-    ) {
+
+    const hasGameLinesAccess =
+      Boolean(
+        window.hasPremiumAccess ||
+        hasUniversalTrial ||
+        hasLegacyMlbPass
+      );
+
+
+    if (!hasGameLinesAccess) {
 
       alert(
-        "Your MLB Free Pass has ended. " +
+        "Your 24-hour Full Access Trial has ended. " +
         "Upgrade to Premium to continue using Game Lines."
       );
+
 
       window.location.href =
         "index.html";
 
+
       return false;
     }
 
+
+    // =====================================================
+    // 🎛️ CONTROLS
+    // =====================================================
 
     const sportSelect =
       document.getElementById(
         "sportSelect"
       );
 
+
     const dateInput =
       document.getElementById(
         "gameLinesDate"
       );
+
 
     const marchMadnessBtn =
       document.getElementById(
@@ -177,8 +252,11 @@ async function resolveGameLinesAccess() {
 
 
     // =====================================================
-    // ⚾ ACTIVE MLB TRIAL
+    // ⚾ LEGACY MLB-ONLY TRIAL
+    //
+    // Only old MLB passes get locked.
     // =====================================================
+
     if (gameLinesIsMlbTrial) {
 
       const today =
@@ -190,11 +268,13 @@ async function resolveGameLinesAccess() {
         sportSelect.value =
           "baseball_mlb";
 
+
         sportSelect.disabled =
           true;
 
+
         sportSelect.title =
-          "Your 24-hour Free Pass includes MLB.";
+          "Your legacy Free Pass includes MLB only.";
       }
 
 
@@ -203,21 +283,24 @@ async function resolveGameLinesAccess() {
         dateInput.value =
           today;
 
+
         dateInput.min =
           today;
+
 
         dateInput.max =
           today;
 
+
         dateInput.disabled =
           true;
 
+
         dateInput.title =
-          "Your MLB Free Pass includes today's slate.";
+          "Your legacy MLB Free Pass includes today's slate only.";
       }
 
 
-      // March Madness remains Premium only
       if (marchMadnessBtn) {
 
         marchMadnessBtn.style.display =
@@ -226,20 +309,25 @@ async function resolveGameLinesAccess() {
 
 
       console.log(
-        "⚾ Game Lines running in MLB Free Pass mode"
+        "⚾ Game Lines running in legacy MLB Free Pass mode"
       );
 
     }
 
+
     // =====================================================
-    // 💳 PREMIUM
+    // 💳 PREMIUM OR UNIVERSAL TRIAL
+    //
+    // Full normal Game Lines access.
     // =====================================================
+
     else {
 
       if (sportSelect) {
 
         sportSelect.disabled =
           false;
+
 
         sportSelect.title =
           "";
@@ -251,13 +339,16 @@ async function resolveGameLinesAccess() {
         dateInput.disabled =
           false;
 
+
         dateInput.removeAttribute(
           "min"
         );
 
+
         dateInput.removeAttribute(
           "max"
         );
+
 
         dateInput.title =
           "";
@@ -270,19 +361,26 @@ async function resolveGameLinesAccess() {
           "";
       }
 
+
+      console.log(
+        window.hasPremiumAccess
+          ? "💳 Game Lines Premium access confirmed"
+          : "🎟️ Game Lines Full Access Trial confirmed"
+      );
+
     }
 
 
     return true;
 
-  }
 
-  catch (err) {
+  } catch (err) {
 
     console.error(
       "❌ Game Lines access check failed:",
       err
     );
+
 
     return false;
   }
@@ -394,20 +492,31 @@ async function initGameLines() {
       "basketball_ncaab";
 
     // =====================================================
-    // ⚾ MLB FREE PASS
-    // Force MLB + today's Central date
-    // =====================================================
-    if (gameLinesIsMlbTrial) {
+// ⚾ LEGACY MLB-ONLY FREE PASS
+//
+// New all_access trials DO NOT enter this block.
+// This exists only for users who activated the old
+// MLB-specific pass before the universal trial update.
+// =====================================================
 
-      selectedSport = "baseball_mlb";
+if (gameLinesIsMlbTrial) {
 
-      const today =
-        getGameLinesCentralTodayYMD();
+  selectedSport =
+    "baseball_mlb";
 
-      if (dateInput) {
-        dateInput.value = today;
-      }
-    }
+
+  const today =
+    getGameLinesCentralTodayYMD();
+
+
+  if (dateInput) {
+
+    dateInput.value =
+      today;
+
+  }
+
+}
 
     // =====================================================
     // 🌐 BUILD GAME LINES URL
