@@ -2179,47 +2179,80 @@ case "canceled": {
 }
 
 
-
-// ===================================================
-// 📚 Global Bookmaker List (used across all modules)
-// ===================================================
-const BOOKMAKERS = [
-  "fanduel",
-  "draftkings",
-  "betmgm",
-  "fanatics",
-  "prizepicks",
-  "underdog",
-  "betr"
-];
-
 // ===================================================
 // 🔧 Utility: Safe Event Binding
 // ===================================================
-function safeAddEventListener(el, evt, fn) {
-  if (el && typeof el.addEventListener === "function") {
-    el.addEventListener(evt, fn);
+function safeAddEventListener(
+  el,
+  evt,
+  fn
+) {
+
+  if (
+    el &&
+    typeof el.addEventListener ===
+      "function"
+  ) {
+
+    el.addEventListener(
+      evt,
+      fn
+    );
+
   }
+
 }
 
-// ----------------------------
-// Global State
-// ----------------------------
-let selectedSport = null;
-let selectedMarkets = [];
-let selectedGames = [];
-let currentController = null;
-const eventCache = {}; // Cache for fetched games
+
+// ===================================================
+// 🌍 GLOBAL DASHBOARD STATE
+// ===================================================
+
+let selectedSport =
+  null;
+
+let selectedMarkets =
+  [];
+
+let selectedGames =
+  [];
+
+let currentController =
+  null;
+
+const eventCache =
+  {};
+// ===================================================
+// 📚 BTBT BOOKMAKER CONFIGURATION
+//
+// MODEL_SPORTSBOOKS:
+// Always used internally for:
+//   • sportsbook consensus
+//   • fair / no-vig probability
+//   • market median
+//   • Brain / Fire signals
+//
+// DEFAULT_DISPLAY_BOOKS:
+// Controls what the customer sees by default.
+// Extra sportsbooks remain optional table columns.
+// ===================================================
+
+const MODEL_SPORTSBOOKS = [
+  "fanduel",
+  "draftkings",
+  "betmgm",
+  "fanatics",
+  "caesars",
+  "betrivers",
+  "hardrock"
+];
 
 
 // ===================================================
-// 🎯 Persistent Bookmaker Filter Logic (CANONICAL SINGLE SOURCE)
+// 👁️ DEFAULT VISIBLE TABLE BOOKS
 // ===================================================
 
-
-
-// Full supported books list (must match checkbox values in HTML)
-const ALL_BOOKS = [
+const DEFAULT_DISPLAY_BOOKS = [
   "fanduel",
   "draftkings",
   "betmgm",
@@ -2230,57 +2263,113 @@ const ALL_BOOKS = [
 ];
 
 
+// ===================================================
+// 🌍 ALL SUPPORTED BOOKS
+// ===================================================
+
+const ALL_BOOKS = [
+  ...MODEL_SPORTSBOOKS,
+  "prizepicks",
+  "underdog",
+  "betr"
+];
 
 
 // ===================================================
-// 🧠 CONSENSUS BOOKS (sportsbooks only — exclude DFS)
+// 📚 Global Bookmaker List
 // ===================================================
+
+const BOOKMAKERS = [
+  ...ALL_BOOKS
+];
+
+
+// ===================================================
+// 🧠 BACKWARD-COMPATIBLE CONSENSUS NAME
+//
+// Existing functions throughout script.js still
+// reference CONSENSUS_BOOKS. It now means the full
+// BTBT model sportsbook set.
+// ===================================================
+
 const CONSENSUS_BOOKS = [
-  "fanduel",
-  "draftkings",
-  "betmgm",
-  "fanatics"
+  ...MODEL_SPORTSBOOKS
 ];
 
-// Core sportsbooks required for consensus calculations
+
+// ===================================================
+// Legacy compatibility only.
+// Display filters no longer control the model.
+// ===================================================
+
 const REQUIRED_CORE_BOOKS = [
-  "fanduel",
-  "draftkings",
-  "betmgm",
-  "fanatics"
+  ...MODEL_SPORTSBOOKS
 ];
-
 /** ===================================================
  * 🧮 Dynamic Consensus Price (SPORTSBOOKS ONLY, checkbox-aware)
  * =================================================== */
+// ===================================================
+// 🧮 MODEL CONSENSUS PRICE
+//
+// IMPORTANT:
+// Table visibility does NOT affect this calculation.
+// ===================================================
+
 function getConsensusPrice(row) {
 
-  if (!row || !window.selectedBooks || !(window.selectedBooks instanceof Set)) {
+  if (!row) {
     return null;
   }
 
-  const activeSportsbooks =
-    CONSENSUS_BOOKS.filter(book => window.selectedBooks.has(book));
 
   const prices = [];
 
-  for (const book of activeSportsbooks) {
 
-    const price = getSafePrice(row, book);
+  for (
+    const book
+    of MODEL_SPORTSBOOKS
+  ) {
 
-    if (price !== null && price !== undefined && Number.isFinite(price)) {
-      prices.push(price);
+    const price =
+      getSafePrice(
+        row,
+        book
+      );
+
+
+    if (
+      price !== null &&
+      price !== undefined &&
+      Number.isFinite(price)
+    ) {
+
+      prices.push(
+        price
+      );
+
     }
 
   }
 
-  // 🚨 CRITICAL FIX — prevent divide-by-zero
-  if (prices.length === 0) {
+
+  if (
+    prices.length === 0
+  ) {
+
     return null;
+
   }
 
+
   const avg =
-    prices.reduce((sum, p) => sum + p, 0) / prices.length;
+    prices.reduce(
+      (sum, price) =>
+        sum + price,
+      0
+    )
+    /
+    prices.length;
+
 
   return Number.isFinite(avg)
     ? Math.round(avg)
@@ -2328,18 +2417,27 @@ function showToast(message, type = "error") {
 // Helpers
 // ---------------------------------------------------
 function sanitizeSavedBooks(saved) {
-  if (!Array.isArray(saved)) return [];
 
-  // keep only valid
-  let cleaned = saved.filter(b => ALL_BOOKS.includes(b));
+  if (!Array.isArray(saved)) {
+    return [];
+  }
 
-  // ensure at least one CORE book remains selected
-  const coreCount = cleaned.filter(b => REQUIRED_CORE_BOOKS.includes(b)).length;
-  if (coreCount === 0) cleaned.push("fanduel");
 
-  // de-dupe
-  cleaned = [...new Set(cleaned)];
-  return cleaned;
+  const cleaned =
+    saved.filter(
+      book =>
+        ALL_BOOKS.includes(
+          String(book)
+            .toLowerCase()
+        )
+    );
+
+
+  return [
+    ...new Set(
+      cleaned
+    )
+  ];
 }
 
 function persistSelectedBooks() {
@@ -2361,9 +2459,26 @@ function syncBookmakerCheckboxes() {
 }
 
 function getSelectedBooksArray() {
-  const s = window.selectedBooks;
-  if (!(s instanceof Set) || s.size === 0) return ALL_BOOKS;
-  return [...s];
+
+  const selected =
+    window.selectedBooks;
+
+
+  if (
+    !(selected instanceof Set) ||
+    selected.size === 0
+  ) {
+
+    return [
+      ...DEFAULT_DISPLAY_BOOKS
+    ];
+
+  }
+
+
+  return [
+    ...selected
+  ];
 }
 
 // Expose helper (if other parts of script.js call it)
@@ -2423,9 +2538,16 @@ function initializeBookmakerState() {
   }
 
   // ✅ FORCE defaults if nothing valid
-  if (!Array.isArray(saved) || saved.length === 0) {
-    saved = [...ALL_BOOKS];
-  }
+  if (
+  !Array.isArray(saved) ||
+  saved.length === 0
+) {
+
+  saved = [
+    ...DEFAULT_DISPLAY_BOOKS
+  ];
+
+}
   // ===================================================
 // 🥊 UFC uses sportsbook books only
 // ===================================================
@@ -2446,9 +2568,17 @@ if (window.selectedSport === "mma_mixed_martial_arts") {
   // ✅ create global Set
   window.selectedBooks = new Set(saved);
 
-  if (window.selectedBooks.size === 0) {
-  window.selectedBooks = new Set(ALL_BOOKS);
+  if (
+  window.selectedBooks.size === 0
+) {
+
+  window.selectedBooks =
+    new Set(
+      DEFAULT_DISPLAY_BOOKS
+    );
+
   persistSelectedBooks();
+
 }
 
 
@@ -2460,104 +2590,246 @@ if (window.selectedSport === "mma_mixed_martial_arts") {
   // ✅ CRITICAL: sync checkboxes AFTER state exists
   setTimeout(syncBookmakerCheckboxes, 0);
 }
+// ===================================================
+// ➕ OPTIONAL EXPANDED SPORTSBOOK FILTERS
+//
+// Adds the new sportsbook display controls to the
+// existing bookmaker filter container.
+//
+// They start unchecked unless the user previously
+// selected them.
+//
+// IMPORTANT:
+// These control TABLE VISIBILITY ONLY.
+// BTBT always uses MODEL_SPORTSBOOKS internally.
+// ===================================================
 
+function ensureExpandedSportsbookFilters() {
+
+  const container =
+    document.getElementById(
+      "bookmaker-filters"
+    );
+
+
+  if (!container) {
+    return;
+  }
+
+
+  if (
+    document.getElementById(
+      "expandedSportsbookFilters"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const wrapper =
+    document.createElement(
+      "div"
+    );
+
+
+  wrapper.id =
+    "expandedSportsbookFilters";
+
+
+  wrapper.style.display =
+    "flex";
+
+  wrapper.style.flexWrap =
+    "wrap";
+
+  wrapper.style.alignItems =
+    "center";
+
+  wrapper.style.gap =
+    "8px";
+
+  wrapper.style.marginTop =
+    "8px";
+
+
+  wrapper.innerHTML = `
+
+    <span
+      style="
+        font-weight:700;
+        font-size:12px;
+        opacity:0.8;
+      "
+    >
+      More Sportsbooks:
+    </span>
+
+
+    <label>
+      <input
+        type="checkbox"
+        value="caesars"
+      >
+      Caesars
+    </label>
+
+
+    <label>
+      <input
+        type="checkbox"
+        value="betrivers"
+      >
+      BetRivers
+    </label>
+
+
+    <label>
+      <input
+        type="checkbox"
+        value="hardrock"
+      >
+      Hard Rock
+    </label>
+
+  `;
+
+
+  container.appendChild(
+    wrapper
+  );
+
+}
 // ---------------------------------------------------
 // Bind checkbox listeners (safe, single-bind)
 // ---------------------------------------------------
 // ---------------------------------------------------
 // Bind checkbox listeners (ENFORCE ≥1 CORE SPORTSBOOK)
 // ---------------------------------------------------
+// ===================================================
+// 👁️ BOOKMAKER DISPLAY FILTER LISTENERS
+//
+// These checkboxes now control TABLE DISPLAY ONLY.
+// They do NOT change BTBT consensus or no-vig logic.
+// ===================================================
+
 function attachBookmakerListeners() {
 
   const container =
-    document.getElementById("bookmaker-filters");
+    document.getElementById(
+      "bookmaker-filters"
+    );
 
-  if (!container) return;
+
+  if (!container) {
+    return;
+  }
+
 
   const checkboxes =
-    container.querySelectorAll("input[type='checkbox']");
-
-  checkboxes.forEach(cb => {
-
-    if (cb.dataset.bound === "1") return;
-    cb.dataset.bound = "1";
-
-    cb.addEventListener("change", () => {
-
-      const book = cb.value.toLowerCase();
-
-      // Update selectedBooks first
-      if (cb.checked)
-        window.selectedBooks.add(book);
-      else
-        window.selectedBooks.delete(book);
-
-      // ------------------------------------------------
-      // 🚨 CRITICAL SAFETY CHECK
-      // Ensure at least ONE CORE sportsbook remains
-      // ------------------------------------------------
-
-      const coreStillSelected =
-        CONSENSUS_BOOKS.some(core =>
-          window.selectedBooks.has(core)
-        );
-
-      if (!coreStillSelected) {
-
-        showToast(
-      "At least one sportsbook must remain selected. Filters reset.",
-      "error"
-      );
+    container.querySelectorAll(
+      "input[type='checkbox']"
+    );
 
 
-        // ✅ Reset EVERYTHING to defaults
-        window.selectedBooks =
-          new Set(ALL_BOOKS);
+  checkboxes.forEach(
+    checkbox => {
 
-        persistSelectedBooks();
-
-        syncBookmakerCheckboxes();
-
-        // Force rerender
-        if (window.lastRenderedData?.length)
-          rerenderConsensusTable(
-            window.lastRenderedData
-          );
+      if (
+        checkbox.dataset.bound ===
+        "1"
+      ) {
 
         return;
+
       }
 
-      // ------------------------------------------------
-      // Persist valid state
-      // ------------------------------------------------
-      persistSelectedBooks();
 
-      console.log(
-        "📚 Active bookmaker filters:",
-        [...window.selectedBooks]
+      checkbox.dataset.bound =
+        "1";
+
+
+      checkbox.addEventListener(
+        "change",
+        () => {
+
+          const book =
+            String(
+              checkbox.value ||
+              ""
+            )
+              .toLowerCase();
+
+
+          if (!book) {
+            return;
+          }
+
+
+          if (
+            checkbox.checked
+          ) {
+
+            window.selectedBooks.add(
+              book
+            );
+
+          } else {
+
+            window.selectedBooks.delete(
+              book
+            );
+
+          }
+
+
+          persistSelectedBooks();
+
+
+          console.log(
+            "👁️ Visible bookmaker columns:",
+            [
+              ...window.selectedBooks
+            ]
+          );
+
+
+          if (
+            window.lastRenderedData?.length
+          ) {
+
+            rerenderConsensusTable(
+              window.lastRenderedData
+            );
+
+          }
+
+        }
       );
 
-      // Rerender safely
-      if (window.lastRenderedData?.length)
-        rerenderConsensusTable(
-          window.lastRenderedData
-        );
-
-    });
-
-  });
+    }
+  );
 
 }
-
 
 // ---------------------------------------------------
 // Single DOMContentLoaded init for bookmaker filters
 // ---------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  initializeBookmakerState();
-  syncBookmakerCheckboxes();
-  attachBookmakerListeners();
-});
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    ensureExpandedSportsbookFilters();
+
+    initializeBookmakerState();
+
+    syncBookmakerCheckboxes();
+
+    attachBookmakerListeners();
+
+  }
+);
 
 
 
@@ -2756,15 +3028,8 @@ function getSortedCardRows(baseData) {
 // MUST match checkbox values and ALL_BOOKS
 // ===================================================
 window.BOOKMAKERS = [
-  "fanduel",
-  "draftkings",
-  "betmgm",
-  "fanatics",
-  "prizepicks",
-  "underdog",
-  "betr"
+  ...ALL_BOOKS
 ];
-
 
 /** Convert American odds → implied probability (0–1) */
 function americanToProb(odds) {
@@ -2782,14 +3047,36 @@ function getSafePrice(row, book) {
 
   // Convert lowercase book → proper field prefix
   const keyMap = {
-    fanduel: "Fanduel",
-    draftkings: "DraftKings",
-    betmgm: "BetMGM",
-    fanatics: "Fanatics",
-    prizepicks: "PrizePicks",
-    underdog: "Underdog",
-    betr: "Betr"
-  };
+  fanduel:
+    "Fanduel",
+
+  draftkings:
+    "DraftKings",
+
+  betmgm:
+    "BetMGM",
+
+  fanatics:
+    "Fanatics",
+
+  caesars:
+    "Caesars",
+
+  betrivers:
+    "BetRivers",
+
+  hardrock:
+    "HardRock",
+
+  prizepicks:
+    "PrizePicks",
+
+  underdog:
+    "Underdog",
+
+  betr:
+    "Betr"
+};
 
   const proper = keyMap[book.toLowerCase()];
   if (!proper) return null;
@@ -2809,92 +3096,137 @@ function getSafePrice(row, book) {
 // 🧮 Dynamic Consensus Point (sportsbooks only, checkbox-aware)
 // ===================================================
 // ===================================================
-// 🧮 SAFE Consensus Point (sportsbooks only, timing-safe)
+// 🧠 BTBT MODEL CONSENSUS POINT
+//
+// Prefer the backend ConsensusPoint because the
+// backend already calculates it from all available
+// MODEL_SPORTSBOOKS.
+//
+// Display checkboxes NEVER affect this.
 // ===================================================
-function getFilteredConsensusPoint(row, baseData) {
 
-  if (!row) return null;
+function getFilteredConsensusPoint(
+  row,
+  baseData
+) {
 
-  const keyMap = {
-    fanduel: "Fanduel",
-    draftkings: "DraftKings",
-    betmgm: "BetMGM",
-    fanatics: "Fanatics"
-  };
-
-  // 🚨 FALLBACK: use all consensus books if selectedBooks not ready
-  let activeBooks = CONSENSUS_BOOKS;
-
-  if (
-    window.selectedBooks &&
-    window.selectedBooks instanceof Set &&
-    window.selectedBooks.size > 0
-  ) {
-    activeBooks =
-      CONSENSUS_BOOKS.filter(book =>
-        window.selectedBooks.has(book)
-      );
-  }
-
-  const points = [];
-
-  for (const book of activeBooks) {
-
-    const proper = keyMap[book];
-    if (!proper) continue;
-
-    const rawValue = row?.[`${proper}Point`];
-    if (rawValue === null || rawValue === undefined || rawValue === "") continue;
-
-    const value = Number(rawValue);
-
-    if (Number.isFinite(value) && value > 0) {
-      points.push(value);
-    }
-
-  }
-
-  if (points.length === 0) {
+  if (!row) {
     return null;
   }
 
-  const avg =
-    points.reduce((sum, val) => sum + val, 0) / points.length;
 
-  return Math.round(avg * 100) / 100;
+  const backendConsensus =
+    Number(
+      row.ConsensusPoint
+    );
+
+
+  if (
+    Number.isFinite(
+      backendConsensus
+    )
+  ) {
+
+    return backendConsensus;
+
+  }
+
+
+  // ===================================================
+  // FALLBACK
+  // Rebuild from all model books if needed.
+  // ===================================================
+
+  const pointMap = {
+    fanduel:
+      "FanduelPoint",
+
+    draftkings:
+      "DraftKingsPoint",
+
+    betmgm:
+      "BetMGMPoint",
+
+    fanatics:
+      "FanaticsPoint",
+
+    caesars:
+      "CaesarsPoint",
+
+    betrivers:
+      "BetRiversPoint",
+
+    hardrock:
+      "HardRockPoint"
+  };
+
+
+  const points = [];
+
+
+  MODEL_SPORTSBOOKS.forEach(
+    book => {
+
+      const field =
+        pointMap[book];
+
+
+      const value =
+        Number(
+          row?.[field]
+        );
+
+
+      if (
+        Number.isFinite(value) &&
+        value > 0
+      ) {
+
+        points.push(
+          value
+        );
+
+      }
+
+    }
+  );
+
+
+  if (
+    points.length === 0
+  ) {
+
+    return null;
+
+  }
+
+
+  return (
+    points.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    )
+    /
+    points.length
+  );
+
 }
-
 
 // ===================================================
 // 🧠 TRUE CONSENSUS (IGNORES FILTERS — ALWAYS FULL MARKET)
 // ===================================================
+// ===================================================
+// 🧠 TRUE BTBT CONSENSUS
+// ===================================================
+
 function getTrueConsensusPoint(row) {
 
-  const books = ["fanduel", "draftkings", "betmgm", "fanatics"];
+  return getFilteredConsensusPoint(
+    row
+  );
 
-  const keyMap = {
-    fanduel: "Fanduel",
-    draftkings: "DraftKings",
-    betmgm: "BetMGM",
-    fanatics: "Fanatics"
-  };
-
-  const points = [];
-
-  for (const book of books) {
-    const proper = keyMap[book];
-    const value = Number(row?.[`${proper}Point`]);
-
-    if (Number.isFinite(value)) {
-      points.push(value);
-    }
-  }
-
-  if (points.length === 0) return null;
-
-  return points.reduce((a, b) => a + b, 0) / points.length;
 }
-
 // ===================================================
 // 🧠 FACT CHECK MODE — GLOBAL SAFE INIT
 // ===================================================
@@ -2953,26 +3285,40 @@ function openFactCheckModalLegacy(pick) {
 }
 
 
-/** ===================================================
- * 🔎 SAFE FACT CHECK HELPER (prevents overOdds crash)
- * =================================================== */
+// ===================================================
+// 🔎 SAFE FACT CHECK HELPER
+//
+// Uses ALL BTBT model sportsbooks regardless of
+// which columns the customer has visible.
+// ===================================================
+
 function getFactCheckOdds(row) {
 
-  const sportsbooks =
-    CONSENSUS_BOOKS.filter(book =>
-      window.selectedBooks?.has(book)
-    );
+  if (!row) {
+    return {
+      book: null,
+      odds: null
+    };
+  }
 
-  for (const book of sportsbooks) {
 
-    const overKey =
-      book.charAt(0).toUpperCase() +
-      book.slice(1) +
-      "Price";
+  for (
+    const book
+    of MODEL_SPORTSBOOKS
+  ) {
 
-    const odds = Number(row[overKey]);
+    const odds =
+      getSafePrice(
+        row,
+        book
+      );
 
-    if (Number.isFinite(odds)) {
+
+    if (
+      Number.isFinite(
+        odds
+      )
+    ) {
 
       return {
         book,
@@ -2983,12 +3329,12 @@ function getFactCheckOdds(row) {
 
   }
 
+
   return {
     book: null,
     odds: null
   };
 }
-
 
 /** ===================================================
  * 🕹️ Toggle Refresh Button State
@@ -3056,12 +3402,44 @@ function openFactCheckModal(row) {
     return odds > 0 ? `+${odds}` : `${odds}`;
   };
 
-  const books = [
-    ["FanDuel", "Fanduel"],
-    ["DraftKings", "DraftKings"],
-    ["BetMGM", "BetMGM"],
-    ["Fanatics", "Fanatics"]
-  ];
+const books = [
+
+  [
+    "FanDuel",
+    "Fanduel"
+  ],
+
+  [
+    "DraftKings",
+    "DraftKings"
+  ],
+
+  [
+    "BetMGM",
+    "BetMGM"
+  ],
+
+  [
+    "Fanatics",
+    "Fanatics"
+  ],
+
+  [
+    "Caesars",
+    "Caesars"
+  ],
+
+  [
+    "BetRivers",
+    "BetRivers"
+  ],
+
+  [
+    "Hard Rock",
+    "HardRock"
+  ]
+
+];
 
   const sportsbookLines = books.map(([label, prefix]) =>
     `${label.padEnd(12)} Line ${fmtLine(row[`${prefix}Point`])} | Odds ${fmtOdds(row[`${prefix}Price`])}`
@@ -3150,9 +3528,11 @@ const SPORTSBOOKS = [
   "Fanduel",
   "DraftKings",
   "BetMGM",
-  "Fanatics"
+  "Fanatics",
+  "Caesars",
+  "BetRivers",
+  "HardRock"
 ];
-
 /** ===================================================
  * 🧮 STEP 1: Compute true No-Vig fair probability (STRICT sportsbook-only)
  * — Requires BOTH Over and Under prices from same sportsbook
@@ -3527,106 +3907,20 @@ ${rowSideFairTxt}
 }
 
 // ===================================================
-// 🧮 Average No-Vig Probability (SPORTSBOOKS ONLY)
-//   - Uses only FanDuel / DraftKings / BetMGM / Fanatics
-//   - Requires BOTH sides from at least ONE sportsbook
+// 🧮 AVERAGE NO-VIG PROBABILITY
+//
+// Uses all BTBT model sportsbooks.
+// Display filters do NOT affect this calculation.
 // ===================================================
-function getAverageNoVigProb(row, data) {
 
-  const CONSENSUS_BOOKS = ["fanduel", "draftkings", "betmgm", "fanatics"];
+function getAverageNoVigProb(
+  row,
+  data
+) {
 
-  const selectedBooks =
-    window.selectedBooks instanceof Set
-      ? window.selectedBooks
-      : new Set(CONSENSUS_BOOKS);
-
-  const baseKey =
-    `${(row.Event || "").toLowerCase().trim()}|${(row.Market || "").toLowerCase().trim()}|${(row.Description || "").toLowerCase().trim()}`;
-
-  const side =
-    (row.Outcome || row.OverUnder || "").toLowerCase();
-
-  const isOver =
-    side.includes("over");
-
-  const oppSide =
-    isOver
-      ? "under"
-      : side.includes("under")
-      ? "over"
-      : null;
-
-  const opposite =
-    oppSide
-      ? data.find(
-          (r) =>
-            `${(r.Event || "").toLowerCase().trim()}|${(r.Market || "").toLowerCase().trim()}|${(r.Description || "").toLowerCase().trim()}` === baseKey &&
-            (r.Outcome || "").toLowerCase().includes(oppSide)
-        )
-      : null;
-
-  // convert American odds to implied prob (0..1)
-  const americanToProb = (odds) => {
-    const o = Number(odds);
-    if (!Number.isFinite(o) || o === 0) return null;
-    return o > 0
-      ? 100 / (o + 100)
-      : (-o) / ((-o) + 100);
-  };
-
-  const overProbs = [];
-  const underProbs = [];
-
-  // ===================================================
-  // 🚨 STRICT sportsbook-only calculation
-  // ===================================================
-  for (const book of CONSENSUS_BOOKS) {
-
-    if (selectedBooks.size && !selectedBooks.has(book))
-      continue;
-
-    const overOdds =
-      americanToProb(
-        isOver
-          ? getSafePrice(row, book)
-          : getSafePrice(opposite, book)
-      );
-
-    const underOdds =
-      americanToProb(
-        isOver
-          ? getSafePrice(opposite, book)
-          : getSafePrice(row, book)
-      );
-
-    // 🚨 REQUIRE BOTH SIDES
-    if (
-      overOdds == null ||
-      underOdds == null
-    ) {
-      continue;
-    }
-
-    const total =
-      overOdds + underOdds;
-
-    if (total <= 0)
-      continue;
-
-    overProbs.push(
-      (overOdds / total) * 100
-    );
-
-    underProbs.push(
-      (underOdds / total) * 100
-    );
-
-  }
-
-  // 🚨 CRITICAL: require at least ONE valid sportsbook pair
   if (
-    overProbs.length === 0 ||
-    underProbs.length === 0
+    !row ||
+    !Array.isArray(data)
   ) {
 
     return {
@@ -3637,34 +3931,265 @@ function getAverageNoVigProb(row, data) {
 
   }
 
+
+  const baseKey =
+    `${(row.Event || "")
+      .toLowerCase()
+      .trim()}|` +
+    `${(row.Market || "")
+      .toLowerCase()
+      .trim()}|` +
+    `${(row.Description || "")
+      .toLowerCase()
+      .trim()}`;
+
+
+  const side =
+    String(
+      row.Outcome ||
+      row.OverUnder ||
+      ""
+    )
+      .toLowerCase();
+
+
+  const isOver =
+    side.includes(
+      "over"
+    );
+
+
+  const isUnder =
+    side.includes(
+      "under"
+    );
+
+
+  if (
+    !isOver &&
+    !isUnder
+  ) {
+
+    return {
+      avgOver: null,
+      avgUnder: null,
+      details: []
+    };
+
+  }
+
+
+  const oppositeSide =
+    isOver
+      ? "under"
+      : "over";
+
+
+  const opposite =
+    data.find(
+      candidate => {
+
+        const candidateKey =
+          `${(candidate.Event || "")
+            .toLowerCase()
+            .trim()}|` +
+          `${(candidate.Market || "")
+            .toLowerCase()
+            .trim()}|` +
+          `${(candidate.Description || "")
+            .toLowerCase()
+            .trim()}`;
+
+
+        const candidateSide =
+          String(
+            candidate.Outcome ||
+            candidate.OverUnder ||
+            ""
+          )
+            .toLowerCase();
+
+
+        return (
+          candidateKey ===
+            baseKey
+          &&
+          candidateSide.includes(
+            oppositeSide
+          )
+        );
+
+      }
+    );
+
+
+  if (!opposite) {
+
+    return {
+      avgOver: null,
+      avgUnder: null,
+      details: []
+    };
+
+  }
+
+
+  const overValues = [];
+  const underValues = [];
+  const details = [];
+
+
+  for (
+    const book
+    of MODEL_SPORTSBOOKS
+  ) {
+
+    const rowOdds =
+      getSafePrice(
+        row,
+        book
+      );
+
+
+    const oppositeOdds =
+      getSafePrice(
+        opposite,
+        book
+      );
+
+
+    const overOdds =
+      isOver
+        ? rowOdds
+        : oppositeOdds;
+
+
+    const underOdds =
+      isOver
+        ? oppositeOdds
+        : rowOdds;
+
+
+    const overProb =
+      americanToProb(
+        overOdds
+      );
+
+
+    const underProb =
+      americanToProb(
+        underOdds
+      );
+
+
+    if (
+      !Number.isFinite(overProb) ||
+      !Number.isFinite(underProb)
+    ) {
+
+      continue;
+
+    }
+
+
+    const total =
+      overProb +
+      underProb;
+
+
+    if (
+      total <= 0
+    ) {
+
+      continue;
+
+    }
+
+
+    const fairOver =
+      (
+        overProb /
+        total
+      ) * 100;
+
+
+    const fairUnder =
+      (
+        underProb /
+        total
+      ) * 100;
+
+
+    overValues.push(
+      fairOver
+    );
+
+
+    underValues.push(
+      fairUnder
+    );
+
+
+    details.push({
+      book,
+      noVigOver:
+        fairOver,
+      noVigUnder:
+        fairUnder
+    });
+
+  }
+
+
+  if (
+    overValues.length === 0
+  ) {
+
+    return {
+      avgOver: null,
+      avgUnder: null,
+      details: []
+    };
+
+  }
+
+
   const avgOver =
-    overProbs.reduce((a, b) => a + b, 0) /
-    overProbs.length;
+    overValues.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    )
+    /
+    overValues.length;
+
 
   const avgUnder =
-    underProbs.reduce((a, b) => a + b, 0) /
-    underProbs.length;
+    underValues.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    )
+    /
+    underValues.length;
+
 
   return {
 
-    avgOver: Number.isFinite(avgOver)
-      ? avgOver
-      : null,
+    avgOver:
+      Number.isFinite(avgOver)
+        ? avgOver
+        : null,
 
-    avgUnder: Number.isFinite(avgUnder)
-      ? avgUnder
-      : null,
+    avgUnder:
+      Number.isFinite(avgUnder)
+        ? avgUnder
+        : null,
 
-    details: overProbs.map((v, i) => ({
-      book: CONSENSUS_BOOKS[i],
-      noVigOver: overProbs[i],
-      noVigUnder: underProbs[i]
-    }))
+    details
 
   };
-
 }
-
 
 
 
@@ -4071,16 +4596,7 @@ function resetAllMarkets() {
   );
   selectedMarkets = [];
 }
-// Selected books from UI (falls back to all)
-function getSelectedBooksArray() {
-  const fromUI = Array.from(
-    document.querySelectorAll('#bookmaker-filters input[type="checkbox"]:checked')
-  ).map(cb => cb.value);
-  if (fromUI.length) return fromUI;
-  const saved = JSON.parse(localStorage.getItem("selectedBooks") || "[]");
-  if (saved.length) return saved;
-  return window.BOOKMAKERS || ["Fanduel", "DraftKings", "BetMGM", "Fanatics"];
-}
+
 
 /** ===================================================
  * 🎯 FAIR-PROBABILITY ENGINE
@@ -4089,10 +4605,28 @@ function getSelectedBooksArray() {
  * =================================================== */
 
 const SPORTSBOOK_FIELD_PREFIX = {
-  fanduel: "Fanduel",
-  draftkings: "DraftKings",
-  betmgm: "BetMGM",
-  fanatics: "Fanatics"
+
+  fanduel:
+    "Fanduel",
+
+  draftkings:
+    "DraftKings",
+
+  betmgm:
+    "BetMGM",
+
+  fanatics:
+    "Fanatics",
+
+  caesars:
+    "Caesars",
+
+  betrivers:
+    "BetRivers",
+
+  hardrock:
+    "HardRock"
+
 };
 
 function normalizeMarketValue(value) {
@@ -4166,10 +4700,16 @@ function getMarketMedianPoint(row) {
 
 function buildNoVigCurve(data, row) {
   const marketRows = getMarketRows(data, row);
-  const selectedBooks =
-    window.selectedBooks instanceof Set && window.selectedBooks.size
-      ? CONSENSUS_BOOKS.filter(book => window.selectedBooks.has(book))
-      : [...CONSENSUS_BOOKS];
+  // ===================================================
+// 🧠 NO-VIG MODEL BOOKS
+//
+// ALWAYS use the full BTBT sportsbook set.
+// Table visibility has no impact on the model.
+// ===================================================
+
+const selectedBooks = [
+  ...MODEL_SPORTSBOOKS
+];
 
   const byLine = new Map();
 
@@ -4480,12 +5020,27 @@ sportButtons.forEach((btn) => {
     selectedSport =
       requestedSport;
 // ===================================================
-// 📚 Restore normal sportsbook comparison set
+// 👁️ PRESERVE USER DISPLAY PREFERENCES
+//
+// Switching sports must NOT change which columns
+// the customer chose to display.
 // ===================================================
-window.selectedBooks =
-  new Set(ALL_BOOKS);
+
+if (
+  !(window.selectedBooks instanceof Set) ||
+  window.selectedBooks.size === 0
+) {
+
+  window.selectedBooks =
+    new Set(
+      DEFAULT_DISPLAY_BOOKS
+    );
+
+}
+
 
 persistSelectedBooks();
+
 syncBookmakerCheckboxes();
 
     resultsDiv.innerHTML = "";
@@ -5336,20 +5891,53 @@ async function renderOddsTable(data, batchSize = 50, groupedFinal = {}, isFilter
   }
 // ---- helpers (place near top of renderOddsTable) ----
 const bookPointKeys = {
-  Fanduel: "FanduelPoint",
-  DraftKings: "DraftKingsPoint",
-  BetMGM: "BetMGMPoint",
-  Fanatics: "FanaticsPoint",
 
+  Fanduel:
+    "FanduelPoint",
+
+  DraftKings:
+    "DraftKingsPoint",
+
+  BetMGM:
+    "BetMGMPoint",
+
+  Fanatics:
+    "FanaticsPoint",
+
+  Caesars:
+    "CaesarsPoint",
+
+  BetRivers:
+    "BetRiversPoint",
+
+  HardRock:
+    "HardRockPoint"
 
 };
 
-const bookPriceKeys = {
-  Fanduel: "FanduelPrice",
-  DraftKings: "DraftKingsPrice",
-  BetMGM: "BetMGMPrice",
-  Fanatics: "FanaticsPrice",
 
+const bookPriceKeys = {
+
+  Fanduel:
+    "FanduelPrice",
+
+  DraftKings:
+    "DraftKingsPrice",
+
+  BetMGM:
+    "BetMGMPrice",
+
+  Fanatics:
+    "FanaticsPrice",
+
+  Caesars:
+    "CaesarsPrice",
+
+  BetRivers:
+    "BetRiversPrice",
+
+  HardRock:
+    "HardRockPrice"
 
 };
 
@@ -5367,8 +5955,15 @@ window.selectedBooks =
       );
 
 // fallback to all books if empty
-if (window.selectedBooks.size === 0) {
-  window.selectedBooks = new Set(Object.keys(bookPointKeys));
+if (
+  window.selectedBooks.size === 0
+) {
+
+  window.selectedBooks =
+    new Set(
+      DEFAULT_DISPLAY_BOOKS
+    );
+
 }
 
 // Use global everywhere
@@ -5389,69 +5984,24 @@ const avg = (arr) =>
 //     at least 1 core sportsbook is used
 // ===================================================
 
-const CONSENSUS_BOOKS = ["fanduel", "draftkings", "betmgm", "fanatics"];
+
 
 
 
 // ===================================================
-// 🧮 Consensus Point Calculator (checkbox-aware, sportsbook-only)
+// 🧠 BTBT CONSENSUS POINT
+//
+// Table visibility does NOT affect the model.
+// Uses the shared backend / 7-book consensus helper.
 // ===================================================
-const getConsensusPoint = (row) => {
 
-  if (!(window.selectedBooks instanceof Set))
-    return null;
+function getConsensusPoint(row) {
 
-  // Only sportsbooks AND only those selected
-  const activeBooks =
-    CONSENSUS_BOOKS.filter(book =>
-      window.selectedBooks.has(book)
-    );
+  return getFilteredConsensusPoint(
+    row
+  );
 
-  // 🚨 Correct behavior: NO FALLBACK — consensus invalid
-  if (activeBooks.length === 0) {
-
-    console.warn(
-      "⚠️ No sportsbooks selected — consensus point unavailable."
-    );
-
-    // Optional: show alert once
-    if (!window.consensusWarningShown) {
-
-      window.consensusWarningShown = true;
-
-      alert(
-        "⚠️ All sportsbooks are unchecked.\n\n" +
-        "Consensus values require at least one sportsbook:\n\n" +
-        "FanDuel, DraftKings, BetMGM, or Fanatics."
-      );
-
-    }
-
-    return null;
-  }
-
-  const vals = [];
-
-  activeBooks.forEach(book => {
-
-    const key =
-      book.charAt(0).toUpperCase() +
-      book.slice(1) +
-      "Point";
-
-    const val = Number(row[key]);
-
-    if (Number.isFinite(val))
-      vals.push(val);
-
-  });
-
-  if (!vals.length)
-    return null;
-
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
-};
-
+}
 
 
 
@@ -5500,11 +6050,19 @@ const columns = [
   "Description",
   "OverUnder",
 
-  // Sportsbooks
-  "FanduelPoint",
-  "DraftKingsPoint",
-  "BetMGMPoint",
-  "FanaticsPoint",
+  // ===================================================
+// SPORTSBOOKS
+// ===================================================
+
+"FanduelPoint",
+"DraftKingsPoint",
+"BetMGMPoint",
+"FanaticsPoint",
+
+// Optional expanded books
+"CaesarsPoint",
+"BetRiversPoint",
+"HardRockPoint",
 
   // DFS books ONLY for non-UFC
   ...(!isUFC ? [
@@ -5556,11 +6114,101 @@ const alwaysShow = [
 // ✅ Active Columns
 // ===================================================
 
-const activeColumns = columns.filter(
-  col =>
-    alwaysShow.includes(col) ||
-    data.some(r => r[col] != null && r[col] !== "")
-);
+// ===================================================
+// 👁️ SPORTSBOOK COLUMN VISIBILITY
+// ===================================================
+
+const sportsbookColumnToBook = {
+
+  FanduelPoint:
+    "fanduel",
+
+  DraftKingsPoint:
+    "draftkings",
+
+  BetMGMPoint:
+    "betmgm",
+
+  FanaticsPoint:
+    "fanatics",
+
+  CaesarsPoint:
+    "caesars",
+
+  BetRiversPoint:
+    "betrivers",
+
+  HardRockPoint:
+    "hardrock"
+
+};
+
+
+const activeColumns =
+  columns.filter(
+    col => {
+
+      const sportsbookBook =
+        sportsbookColumnToBook[
+          col
+        ];
+
+
+      // =================================================
+      // SPORTSBOOK COLUMN
+      // Must be selected for DISPLAY.
+      // =================================================
+
+      if (
+        sportsbookBook
+      ) {
+
+        if (
+          !window.selectedBooks?.has(
+            sportsbookBook
+          )
+        ) {
+
+          return false;
+
+        }
+
+
+        return (
+          alwaysShow.includes(
+            col
+          )
+          ||
+          data.some(
+            row =>
+              row[col] !== null &&
+              row[col] !== undefined &&
+              row[col] !== ""
+          )
+        );
+
+      }
+
+
+      // =================================================
+      // NORMAL COLUMN
+      // =================================================
+
+      return (
+        alwaysShow.includes(
+          col
+        )
+        ||
+        data.some(
+          row =>
+            row[col] !== null &&
+            row[col] !== undefined &&
+            row[col] !== ""
+        )
+      );
+
+    }
+  );
 
 
   // Create table
@@ -5784,17 +6432,38 @@ row._platformSignals = {};
       ? data
       : [];
 
-  const signalCurve = buildNoVigCurve(signalData, row);
+ const signalCurve = buildNoVigCurve(signalData, row);
 
-  let signalMarketLine =
+// ===================================================
+// 🎯 DFS CONDITIONAL FORMATTING REFERENCE LINE
+//
+// IMPORTANT:
+// Use the SAME full-market BTBT consensus that is
+// displayed in the Consensus column and used for
+// PrizePicks / Underdog / Betr Δ calculations.
+//
+// Order:
+//   1. Full BTBT consensus
+//   2. Backend ConsensusPoint
+//   3. Market median only as last-resort fallback
+// ===================================================
+
+let signalMarketLine =
   toValidLine(
-    getMarketMedianPoint(row)
+    getTrueConsensusPoint(row)
   );
 
 if (!Number.isFinite(signalMarketLine)) {
   signalMarketLine =
     toValidLine(
-      getTrueConsensusPoint(row)
+      row.ConsensusPoint
+    );
+}
+
+if (!Number.isFinite(signalMarketLine)) {
+  signalMarketLine =
+    toValidLine(
+      getMarketMedianPoint(row)
     );
 }
 
@@ -6308,7 +6977,10 @@ return;
   "FanduelPrice",
   "DraftKingsPrice",
   "BetMGMPrice",
-  "FanaticsPrice"
+  "FanaticsPrice",
+  "CaesarsPrice",
+  "BetRiversPrice",
+  "HardRockPrice"
 ];
 
 const validMarketPrices =
@@ -6586,7 +7258,17 @@ if (
   // ===================================================
   // 🎲 Sportsbook columns (line + price + favored arrow)
   // ===================================================
-  if (["FanduelPoint", "DraftKingsPoint", "BetMGMPoint", "FanaticsPoint"].includes(col)) {
+  if (
+  [
+    "FanduelPoint",
+    "DraftKingsPoint",
+    "BetMGMPoint",
+    "FanaticsPoint",
+    "CaesarsPoint",
+    "BetRiversPoint",
+    "HardRockPoint"
+  ].includes(col)
+) {
     const priceCol = col.replace("Point", "Price");
     const lineNum = Number(row[col]);
     const priceNum = Number(row[priceCol]);
@@ -6735,13 +7417,32 @@ if (col === "Description") {
       row.Market?.startsWith("batter_")
     );
 
-  const isNCAAFPlayerProp =
-    selectedSport === "americanfootball_ncaaf" &&
-    value &&
-    value !== "None" &&
-    row.Market?.startsWith("player_");
+ const isNCAAFPlayerProp =
+  selectedSport ===
+    "americanfootball_ncaaf" &&
+  value &&
+  value !== "None" &&
+  row.Market?.startsWith(
+    "player_"
+  );
 
-  const hasEdgeProfile = isMLBPlayerProp || isNCAAFPlayerProp;
+
+const isNFLPlayerProp =
+  selectedSport ===
+    "americanfootball_nfl" &&
+  value &&
+  value !== "None" &&
+  row.Market?.startsWith(
+    "player_"
+  ) &&
+  row.BTBTNFLMatched ===
+    true;
+
+
+const hasEdgeProfile =
+  isMLBPlayerProp ||
+  isNCAAFPlayerProp ||
+  isNFLPlayerProp;
 
   td.innerHTML = `
     <div class="player-cell-with-edge">
@@ -8830,21 +9531,32 @@ return `
   </button>
 
   ${
+  (
+    selectedSport ===
+      "baseball_mlb"
+    ||
+    selectedSport ===
+      "americanfootball_ncaaf"
+    ||
     (
-      selectedSport === "baseball_mlb" ||
-      selectedSport === "americanfootball_ncaaf"
+      selectedSport ===
+        "americanfootball_nfl"
+      &&
+      row.BTBTNFLMatched ===
+        true
     )
-      ? `
-        <button
-          type="button"
-          class="tap-ai-btn"
-          data-card-index="${cardIndex}"
-        >
-          🧠 AI Details
-        </button>
-      `
-      : ""
-  }
+  )
+    ? `
+      <button
+        type="button"
+        class="tap-ai-btn"
+        data-card-index="${cardIndex}"
+      >
+        🧠 AI Details
+      </button>
+    `
+    : ""
+}
 
 </div>
 
@@ -9596,17 +10308,1645 @@ function renderNcaafEdgeProfile({
   `;
 }
 
+// ===================================================
+// 🏈 NFL BTBT AI EDGE PROFILE
+//
+// NFL model data is already attached to the /api/data
+// row, so this does NOT make another backend request.
+// ===================================================
+function renderNflEdgeProfile({
+  rowData,
+  line,
+  outcome,
+  prettyMarket
+}) {
 
+    if (
+    selectedSport !==
+    "americanfootball_nfl"
+  ) {
+
+    console.warn(
+      "🏈 Blocked NFL renderer for:",
+      selectedSport
+    );
+
+    return;
+
+  }
+
+  // ===================================================
+  // HELPERS
+  // ===================================================
+
+  const numberOrNull = value => {
+
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return null;
+    }
+
+    const numeric =
+      Number(value);
+
+    return Number.isFinite(numeric)
+      ? numeric
+      : null;
+  };
+
+
+  const fmt = (
+    value,
+    digits = 2
+  ) => {
+
+    const numeric =
+      numberOrNull(
+        value
+      );
+
+    if (numeric === null) {
+      return "N/A";
+    }
+
+    return numeric
+      .toFixed(digits)
+      .replace(/\.00$/, "")
+      .replace(/(\.\d)0$/, "$1");
+  };
+
+
+  const fmtPct = value => {
+
+    const numeric =
+      numberOrNull(
+        value
+      );
+
+    return numeric === null
+      ? "N/A"
+      : `${numeric.toFixed(1)}%`;
+  };
+
+
+  const ordinalRank = value => {
+
+    const rank =
+      Number(value);
+
+    if (
+      !Number.isFinite(rank) ||
+      rank <= 0
+    ) {
+      return "N/A";
+    }
+
+
+    const mod100 =
+      rank % 100;
+
+    const mod10 =
+      rank % 10;
+
+
+    let suffix =
+      "th";
+
+
+    if (
+      mod100 < 11 ||
+      mod100 > 13
+    ) {
+
+      if (mod10 === 1) {
+        suffix = "st";
+      }
+      else if (mod10 === 2) {
+        suffix = "nd";
+      }
+      else if (mod10 === 3) {
+        suffix = "rd";
+      }
+
+    }
+
+
+    return `${rank}${suffix} of 32`;
+  };
+
+
+  // ===================================================
+  // CORE MODEL DATA
+  // ===================================================
+
+  const market =
+    String(
+      rowData.Market ||
+      ""
+    );
+
+
+  const projection =
+    numberOrNull(
+      rowData.BTBTProjection
+    );
+
+
+  const modelProjection =
+    numberOrNull(
+      rowData.BTBTModelProjection
+    );
+
+
+  const historical =
+    numberOrNull(
+      rowData.BTBTHistoricalBaseline
+    );
+
+
+  const matchupAdjustment =
+    numberOrNull(
+      rowData.BTBTMatchupAdjustmentPct
+    );
+
+
+  const consensus =
+    numberOrNull(
+      rowData.ConsensusPoint
+    );
+
+
+  const projectionEdge =
+    numberOrNull(
+      rowData.BTBTProjectionEdge
+    );
+
+
+  const sampleGames =
+    numberOrNull(
+      rowData.BTBTSampleGames
+    );
+
+
+  const offenseRank =
+    numberOrNull(
+      rowData.BTBTOffenseRank
+    );
+
+
+  const defenseRank =
+    numberOrNull(
+      rowData.BTBTOpponentDefenseRank
+    );
+
+
+  const playerTeam =
+    rowData.BTBTPlayerTeam ||
+    rowData.Team ||
+    rowData.team ||
+    "N/A";
+
+
+  const opponent =
+    rowData.BTBTOpponent ||
+    "N/A";
+
+
+  const previousTeam =
+    rowData.BTBTPreviousTeam ||
+    null;
+
+
+  const confidence =
+    rowData.BTBTConfidence ||
+    "N/A";
+
+
+  const availability =
+    rowData.BTBTAvailability ||
+    "UNKNOWN";
+
+
+  const rosterStatus =
+    rowData.BTBTRosterStatus ||
+    "UNKNOWN";
+
+
+  const availabilityNote =
+    rowData.BTBTAvailabilityNote ||
+    "";
+
+
+  const eligible =
+    rowData.BTBTRecommendationEligible
+    !== false;
+
+
+  const modelReason =
+    rowData.BTBTNFLReason ||
+    "UNKNOWN";
+
+// ===================================================
+// 📊 SPORTSBOOK MARKET QUALITY
+//
+// Uses backend market-quality fields when available.
+// Falls back to the actual sportsbook lines on the row.
+// ===================================================
+
+const modelBookPoints = [
+
+  numberOrNull(
+    rowData.FanduelPoint
+  ),
+
+  numberOrNull(
+    rowData.DraftKingsPoint
+  ),
+
+  numberOrNull(
+    rowData.BetMGMPoint
+  ),
+
+  numberOrNull(
+    rowData.FanaticsPoint
+  ),
+
+  numberOrNull(
+    rowData.CaesarsPoint
+  ),
+
+  numberOrNull(
+    rowData.BetRiversPoint
+  ),
+
+  numberOrNull(
+    rowData.HardRockPoint
+  )
+
+].filter(
+  value =>
+    value !== null &&
+    value > 0
+);
+
+
+const sportsbookBookCount =
+  numberOrNull(
+    rowData.SportsbookBookCount
+  )
+  ??
+  modelBookPoints.length;
+
+
+// ---------------------------------------------------
+// Median fallback
+// ---------------------------------------------------
+
+const sportsbookMedian =
+  numberOrNull(
+    rowData.SportsbookMedianPoint
+  )
+  ??
+  (
+    modelBookPoints.length
+      ? (() => {
+
+          const sorted =
+            [...modelBookPoints]
+              .sort(
+                (a, b) =>
+                  a - b
+              );
+
+
+          const middle =
+            Math.floor(
+              sorted.length / 2
+            );
+
+
+          return (
+            sorted.length % 2
+              ? sorted[middle]
+              : (
+                  sorted[middle - 1] +
+                  sorted[middle]
+                ) / 2
+          );
+
+        })()
+      : null
+  );
+
+
+// ---------------------------------------------------
+// Low / High
+// ---------------------------------------------------
+
+const sportsbookLow =
+  numberOrNull(
+    rowData.SportsbookLineLow
+  )
+  ??
+  (
+    modelBookPoints.length
+      ? Math.min(
+          ...modelBookPoints
+        )
+      : null
+  );
+
+
+const sportsbookHigh =
+  numberOrNull(
+    rowData.SportsbookLineHigh
+  )
+  ??
+  (
+    modelBookPoints.length
+      ? Math.max(
+          ...modelBookPoints
+        )
+      : null
+  );
+
+
+const sportsbookRange =
+  numberOrNull(
+    rowData.SportsbookLineRange
+  )
+  ??
+  (
+    sportsbookLow !== null &&
+    sportsbookHigh !== null
+      ? sportsbookHigh -
+        sportsbookLow
+      : null
+  );
+
+
+// ---------------------------------------------------
+// Relative disagreement
+// ---------------------------------------------------
+
+const sportsbookRangePct =
+  sportsbookMedian !== null &&
+  sportsbookMedian > 0 &&
+  sportsbookRange !== null
+
+    ? (
+        sportsbookRange /
+        sportsbookMedian
+      ) * 100
+
+    : null;
+
+// ===================================================
+// 📈 MARKET AGREEMENT CLASSIFICATION
+//
+// HIGH:
+// Market is well populated and tightly clustered.
+//
+// MEDIUM:
+// Enough information exists, but books disagree
+// somewhat or coverage is thin.
+//
+// LOW:
+// Very limited coverage or meaningful disagreement.
+// ===================================================
+
+const marketLower =
+  market.toLowerCase();
+
+
+const isReceptionCount =
+  marketLower ===
+    "player_receptions";
+
+
+const isTouchdownMarket =
+  marketLower.includes(
+    "_td"
+  )
+  ||
+  marketLower.includes(
+    "_tds"
+  );
+
+
+const isAttemptMarket =
+  marketLower.includes(
+    "rush_attempts"
+  );
+
+
+let marketAgreement =
+  "UNKNOWN";
+
+
+let marketAgreementReason =
+  "Sportsbook market data is limited.";
+
+
+// ===================================================
+// COVERAGE FIRST
+// ===================================================
+
+if (
+  sportsbookBookCount <= 1
+) {
+
+  marketAgreement =
+    "LOW";
+
+  marketAgreementReason =
+    "Only one sportsbook currently has a usable line.";
+
+}
+
+
+// ===================================================
+// RECEPTIONS / TD COUNTS
+// ===================================================
+
+else if (
+  isReceptionCount ||
+  isTouchdownMarket
+) {
+
+  if (
+    sportsbookRange !== null &&
+    sportsbookRange <= 0.01 &&
+    sportsbookBookCount >= 3
+  ) {
+
+    marketAgreement =
+      "HIGH";
+
+    marketAgreementReason =
+      "Multiple sportsbooks are posting essentially the same line.";
+
+  }
+
+  else if (
+    sportsbookRange !== null &&
+    sportsbookRange <= 0.5
+  ) {
+
+    marketAgreement =
+      "MEDIUM";
+
+    marketAgreementReason =
+      "Sportsbooks are reasonably close on this count-based market.";
+
+  }
+
+  else {
+
+    marketAgreement =
+      "LOW";
+
+    marketAgreementReason =
+      "Sportsbooks show meaningful disagreement on this count-based market.";
+
+  }
+
+}
+
+
+// ===================================================
+// RUSH ATTEMPTS
+// ===================================================
+
+else if (
+  isAttemptMarket
+) {
+
+  if (
+    sportsbookRange !== null &&
+    sportsbookRange <= 1 &&
+    sportsbookBookCount >= 3
+  ) {
+
+    marketAgreement =
+      "HIGH";
+
+    marketAgreementReason =
+      "Multiple sportsbooks are tightly grouped on expected volume.";
+
+  }
+
+  else if (
+    sportsbookRange !== null &&
+    sportsbookRange <= 2
+  ) {
+
+    marketAgreement =
+      "MEDIUM";
+
+    marketAgreementReason =
+      "Sportsbooks show moderate disagreement on expected volume.";
+
+  }
+
+  else {
+
+    marketAgreement =
+      "LOW";
+
+    marketAgreementReason =
+      "Sportsbooks disagree materially on expected rushing volume.";
+
+  }
+
+}
+
+
+// ===================================================
+// YARDAGE / COMBO MARKETS
+// ===================================================
+
+else if (
+  sportsbookRangePct !== null
+) {
+
+  if (
+    sportsbookBookCount >= 3 &&
+    sportsbookRangePct <= 3
+  ) {
+
+    marketAgreement =
+      "HIGH";
+
+    marketAgreementReason =
+      "Multiple sportsbooks are tightly clustered around the same projection.";
+
+  }
+
+  else if (
+    sportsbookRangePct <= 7
+  ) {
+
+    marketAgreement =
+      "MEDIUM";
+
+    marketAgreementReason =
+      "The market has usable agreement, with some sportsbook dispersion.";
+
+  }
+
+  else {
+
+    marketAgreement =
+      "LOW";
+
+    marketAgreementReason =
+      "Sportsbook lines are widely dispersed for this market.";
+
+  }
+
+}
+
+const marketAgreementIcon =
+  marketAgreement === "HIGH"
+    ? "🟢"
+    : marketAgreement === "MEDIUM"
+    ? "🟡"
+    : marketAgreement === "LOW"
+    ? "🔴"
+    : "⚪";
+
+
+const marketRangeText =
+  sportsbookLow !== null &&
+  sportsbookHigh !== null
+
+    ? (
+        sportsbookLow ===
+        sportsbookHigh
+
+          ? fmt(
+              sportsbookLow
+            )
+
+          : `${fmt(
+              sportsbookLow
+            )} – ${fmt(
+              sportsbookHigh
+            )}`
+      )
+
+    : "N/A";
+  // ===================================================
+  // PLATFORM DATA
+  // ===================================================
+
+  const platformRows = [
+
+    {
+      key:
+        "prizepicks",
+
+      label:
+        "PrizePicks",
+
+      line:
+        numberOrNull(
+          rowData.PrizePickPoint ??
+          rowData.PrizePicksPoint
+        ),
+
+      side:
+        rowData.BTBTPrizePicksSide ||
+        null,
+
+      probability:
+        numberOrNull(
+          rowData.BTBTPrizePicksProbability
+        ),
+
+      overProbability:
+        numberOrNull(
+          rowData.BTBTPrizePicksOverProbability
+        ),
+
+      edgeProbability:
+        numberOrNull(
+          rowData.BTBTPrizePicksEdgeProbability
+        ),
+
+      rating:
+        rowData.BTBTPrizePicksRating ||
+        null
+    },
+
+
+    {
+      key:
+        "underdog",
+
+      label:
+        "Underdog",
+
+      line:
+        numberOrNull(
+          rowData.UnderdogPoint
+        ),
+
+      side:
+        rowData.BTBTUnderdogSide ||
+        null,
+
+      probability:
+        numberOrNull(
+          rowData.BTBTUnderdogProbability
+        ),
+
+      overProbability:
+        numberOrNull(
+          rowData.BTBTUnderdogOverProbability
+        ),
+
+      edgeProbability:
+        numberOrNull(
+          rowData.BTBTUnderdogEdgeProbability
+        ),
+
+      rating:
+        rowData.BTBTUnderdogRating ||
+        null
+    },
+
+
+    {
+      key:
+        "betr",
+
+      label:
+        "Betr",
+
+      line:
+        numberOrNull(
+          rowData.BetrPoint
+        ),
+
+      side:
+        rowData.BTBTBetrSide ||
+        null,
+
+      probability:
+        numberOrNull(
+          rowData.BTBTBetrProbability
+        ),
+
+      overProbability:
+        numberOrNull(
+          rowData.BTBTBetrOverProbability
+        ),
+
+      edgeProbability:
+        numberOrNull(
+          rowData.BTBTBetrEdgeProbability
+        ),
+
+      rating:
+        rowData.BTBTBetrRating ||
+        null
+    }
+
+  ];
+// ===================================================
+// 🛡️ NFL MARKET-QUALITY RECOMMENDATION GUARDRAIL
+//
+// IMPORTANT:
+// • Does NOT alter projection
+// • Does NOT alter model probability
+// • Does NOT affect MLB / NCAAF
+// • Only controls how aggressively BTBT labels the play
+// ===================================================
+
+platformRows.forEach(
+  platform => {
+
+    const rawRating =
+      String(
+        platform.rating ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
+
+
+    platform.rawRating =
+      rawRating || null;
+
+
+    platform.guardrailApplied =
+      false;
+
+
+    platform.guardrailReason =
+      null;
+
+
+    // -----------------------------------------------
+    // Nothing to guard
+    // -----------------------------------------------
+
+    if (
+      platform.line === null ||
+      !platform.side
+    ) {
+
+      return;
+
+    }
+
+
+    // PASS already means no actionable recommendation
+    if (
+      platform.side === "PASS" ||
+      rawRating === "PASS"
+    ) {
+
+      return;
+
+    }
+
+
+    // -----------------------------------------------
+    // Player unavailable
+    // -----------------------------------------------
+
+    if (!eligible) {
+
+      platform.rating =
+        "NO ACTION";
+
+      platform.guardrailApplied =
+        true;
+
+      platform.guardrailReason =
+        "Player is not currently recommendation eligible.";
+
+      return;
+
+    }
+
+
+    // -----------------------------------------------
+    // NO ESTABLISHED SPORTSBOOK MARKET
+    //
+    // One book is not enough validation.
+    // Keep the model lean/probability visible,
+    // but don't advertise it as a strong play.
+    // -----------------------------------------------
+
+    if (
+      sportsbookBookCount < 2 ||
+      consensus === null
+    ) {
+
+      platform.rating =
+        "WAIT";
+
+      platform.guardrailApplied =
+        true;
+
+      platform.guardrailReason =
+        "Sportsbook market is not established yet.";
+
+      return;
+
+    }
+
+
+    // -----------------------------------------------
+    // 🔴 LOW MARKET AGREEMENT
+    //
+    // Maximum actionable label = LEAN
+    // -----------------------------------------------
+
+    if (
+      marketAgreement ===
+        "LOW"
+    ) {
+
+      if (
+        rawRating === "STRONG" ||
+        rawRating === "GOOD"
+      ) {
+
+        platform.rating =
+          "LEAN";
+
+        platform.guardrailApplied =
+          true;
+
+        platform.guardrailReason =
+          "Sportsbooks disagree materially on the market line.";
+
+      }
+
+
+      return;
+
+    }
+
+
+    // -----------------------------------------------
+    // 🟡 MEDIUM MARKET AGREEMENT
+    //
+    // STRONG gets capped at GOOD.
+    // -----------------------------------------------
+
+    if (
+      marketAgreement ===
+        "MEDIUM" &&
+      rawRating ===
+        "STRONG"
+    ) {
+
+      platform.rating =
+        "GOOD";
+
+      platform.guardrailApplied =
+        true;
+
+      platform.guardrailReason =
+        "Moderate sportsbook disagreement prevents a STRONG designation.";
+
+      return;
+
+    }
+
+
+    // -----------------------------------------------
+    // 🟢 HIGH MARKET AGREEMENT
+    //
+    // Leave original rating unchanged.
+    // -----------------------------------------------
+
+  }
+);
+
+  const activePlatform =
+    window.pickTracker?.platform ||
+    "prizepicks";
+
+
+  let primaryPlatform =
+    platformRows.find(
+      platform =>
+        platform.key ===
+          activePlatform &&
+        platform.line !== null
+    );
+
+
+  if (!primaryPlatform) {
+
+    primaryPlatform =
+      platformRows.find(
+        platform =>
+          platform.line !==
+          null
+      )
+      ||
+      platformRows[0];
+
+  }
+
+
+  // ===================================================
+  // MATCHUP TYPE
+  // ===================================================
+
+  const isRunMatchup =
+    market.includes(
+      "rush_reception"
+    )
+    ||
+    (
+      market.includes(
+        "rush"
+      )
+      &&
+      !market.includes(
+        "pass_rush"
+      )
+    );
+
+
+  const offenseLabel =
+    isRunMatchup
+      ? "Run Offense"
+      : "Pass Offense";
+
+
+  const defenseLabel =
+    isRunMatchup
+      ? "Opponent Run Defense"
+      : "Opponent Pass Defense";
+
+
+  // ===================================================
+  // PRIMARY RECOMMENDATION
+  // ===================================================
+
+  const primarySide =
+    primaryPlatform?.side ||
+    null;
+
+
+  const primaryProbability =
+    primaryPlatform?.probability ??
+    null;
+
+
+  const primaryRating =
+    primaryPlatform?.rating ||
+    null;
+
+
+  const primaryLine =
+    primaryPlatform?.line ??
+    numberOrNull(line);
+
+
+  // ===================================================
+  // FLAG
+  // ===================================================
+
+  let flagText =
+    `🏈 BTBT NFL • ${confidence}`;
+
+
+  if (!eligible) {
+
+    flagText =
+      "⛔ PLAYER NOT CURRENTLY ELIGIBLE";
+
+  }
+  else if (
+    primarySide &&
+    primarySide !== "PASS" &&
+    primaryProbability !== null
+  ) {
+
+    flagText =
+      `${primaryRating || "BTBT"} • ` +
+      `${primarySide} ` +
+      `${primaryProbability.toFixed(1)}%`;
+
+  }
+  else if (
+    primarySide ===
+    "PASS"
+  ) {
+
+    flagText =
+      `PASS • ${primaryProbability !== null
+        ? primaryProbability.toFixed(1) + "%"
+        : confidence}`;
+
+  }
+
+
+  document
+    .getElementById(
+      "edgeFlag"
+    )
+    .textContent =
+      flagText;
+
+
+  // ===================================================
+  // AI READ
+  // ===================================================
+
+  let aiRead = "";
+
+
+  if (!eligible) {
+
+    aiRead =
+      `BTBT is suppressing a recommendation because the player's ` +
+      `current roster availability is ${availability}.`;
+
+  }
+  else if (
+    modelReason ===
+    "NO_HISTORY_FOR_MARKET"
+    ||
+    projection === null
+  ) {
+
+    aiRead =
+      `BTBT matched the player, but there is not enough NFL history ` +
+      `for this market to create a reliable projection yet. ` +
+      `The market line remains visible, but no model pick is being forced.`;
+
+  }
+  else if (
+    primarySide ===
+    "PASS"
+  ) {
+
+    aiRead =
+      `The BTBT projection is too close to the ${primaryPlatform.label} ` +
+      `line to justify an actionable edge. The model recommends passing ` +
+      `rather than forcing an Over or Under.`;
+
+  }
+  else if (
+    primarySide &&
+    primaryProbability !== null
+  ) {
+
+    aiRead =
+      `BTBT projects ${fmt(projection)} for ${prettyMarket}. ` +
+      `${primaryPlatform.label} is offering ${fmt(primaryLine)}, ` +
+      `creating a ${primarySide} lean with an estimated ` +
+      `${primaryProbability.toFixed(1)}% model probability. ` +
+      `The matchup uses the ${ordinalRank(offenseRank)} ${offenseLabel.toLowerCase()} ` +
+      `against the ${ordinalRank(defenseRank)} opponent defense profile.`;
+
+  }
+  else {
+
+    aiRead =
+      `BTBT projects ${fmt(projection)} for this market using ` +
+      `historical production, current roster context, team strength, ` +
+      `opponent strength, and available sportsbook consensus data.`;
+
+  }
+
+
+  // ===================================================
+  // SUMMARY TAB
+  // ===================================================
+
+  const platformSummary =
+    platformRows
+      .filter(
+        platform =>
+          platform.line !==
+          null
+      )
+      .map(
+        platform => {
+
+          const recommendation =
+            platform.side
+              ? (
+                  platform.side === "PASS"
+                    ? "PASS"
+                    : `${platform.side}${
+                        platform.probability !== null
+                          ? ` ${platform.probability.toFixed(1)}%`
+                          : ""
+                      }`
+                )
+              : "Probability Pending";
+
+
+          const rating =
+            platform.rating
+              ? ` • ${platform.rating}`
+              : "";
+
+
+          return `
+            <div class="edge-line-row">
+              <span>${platform.label}</span>
+              <strong>
+                ${fmt(platform.line)}
+                •
+                ${recommendation}${rating}
+              </strong>
+            </div>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  document
+    .getElementById(
+      "edgeKeyPoints"
+    )
+    .innerHTML = `
+
+      <li>
+        <strong>BTBT Projection:</strong>
+        ${fmt(projection)}
+        ${
+          consensus !== null
+            ? `vs ${fmt(consensus)} sportsbook consensus`
+            : ""
+        }
+      </li>
+
+      <li>
+        <strong>Historical Baseline:</strong>
+        ${fmt(historical)}
+        ${
+          sampleGames !== null
+            ? `across ${fmt(sampleGames, 0)} games`
+            : ""
+        }
+      </li>
+
+      <li>
+        <strong>Matchup:</strong>
+        ${playerTeam} ${offenseLabel}
+        ${ordinalRank(offenseRank)}
+        vs
+        ${opponent} defense
+        ${ordinalRank(defenseRank)}
+      </li>
+
+      <li>
+        <strong>Availability:</strong>
+        ${availability}
+        (${rosterStatus})
+      </li>
+
+      ${
+        previousTeam &&
+        previousTeam !== playerTeam
+          ? `
+            <li>
+              <strong>Team Change:</strong>
+              ${previousTeam} → ${playerTeam}
+            </li>
+          `
+          : ""
+      }
+
+      ${
+        availabilityNote
+          ? `
+            <li>
+              <strong>Availability Note:</strong>
+              ${availabilityNote}
+            </li>
+          `
+          : ""
+      }
+
+    `;
+
+
+  const summaryPanel =
+    document.getElementById(
+      "edgeTab-summary"
+    );
+
+
+  if (summaryPanel) {
+
+    const oldNflSummary =
+      summaryPanel.querySelector(
+        ".nfl-edge-summary"
+      );
+
+
+    if (oldNflSummary) {
+      oldNflSummary.remove();
+    }
+
+
+    const nflSummary =
+      document.createElement(
+        "div"
+      );
+
+
+    nflSummary.className =
+      "nfl-edge-summary";
+
+
+    nflSummary.innerHTML = `
+
+      <div class="edge-summary-card edge-primary-card">
+
+        <h4>
+          🏈 BTBT Projection
+        </h4>
+
+        <div class="edge-line-row">
+          <span>Historical Baseline</span>
+          <strong>${fmt(historical)}</strong>
+        </div>
+
+        <div class="edge-line-row">
+          <span>Matchup Adjustment</span>
+          <strong>
+            ${
+              matchupAdjustment !== null
+                ? (
+                    `${matchupAdjustment > 0 ? "+" : ""}` +
+                    `${matchupAdjustment.toFixed(2)}%`
+                  )
+                : "N/A"
+            }
+          </strong>
+        </div>
+
+        <div class="edge-line-row">
+          <span>Raw BTBT Model</span>
+          <strong>${fmt(modelProjection)}</strong>
+        </div>
+
+        <div class="edge-line-row">
+          <span>Sportsbook Consensus</span>
+          <strong>${fmt(consensus)}</strong>
+        </div>
+
+        <div class="edge-line-row">
+          <span>Final BTBT Projection</span>
+          <strong>${fmt(projection)}</strong>
+        </div>
+
+        <div class="edge-line-row">
+          <span>Projection Edge</span>
+          <strong>
+            ${
+              projectionEdge !== null
+                ? (
+                    `${projectionEdge > 0 ? "+" : ""}` +
+                    `${projectionEdge.toFixed(2)}`
+                  )
+                : "N/A"
+            }
+          </strong>
+        </div>
+
+      </div>
+
+
+      <div class="edge-summary-card">
+
+        <h4>
+          🎯 Platform Recommendations
+        </h4>
+
+        ${
+          platformSummary ||
+          `
+            <div class="edge-line-row">
+              <span>DFS Platforms</span>
+              <strong>No lines available</strong>
+            </div>
+          `
+        }
+
+      </div>
+
+
+      <div class="edge-ai-read edge-ai-large">
+
+        🤖
+        <strong>
+          BTBT Analysis:
+        </strong>
+
+        <br>
+
+        ${aiRead}
+
+      </div>
+
+    `;
+
+
+    summaryPanel.appendChild(
+      nflSummary
+    );
+
+  }
+
+
+  // ===================================================
+  // GAME LOG TAB
+  //
+  // V1 /api/data rows currently contain historical
+  // aggregates rather than the individual weekly log.
+  // ===================================================
+
+  document
+    .getElementById(
+      "edgeGameLogChart"
+    )
+    .innerHTML =
+      "";
+
+
+  document
+    .getElementById(
+      "edgeGameLogTable"
+    )
+    .innerHTML = `
+
+      <tr>
+        <td>Historical Baseline</td>
+        <td>${fmt(historical)}</td>
+      </tr>
+
+      <tr>
+        <td>Historical Sample</td>
+        <td>
+          ${
+            sampleGames !== null
+              ? `${fmt(sampleGames, 0)} games`
+              : "N/A"
+          }
+        </td>
+      </tr>
+
+      <tr>
+        <td>Detailed Game Log</td>
+        <td>
+          Not attached to the NFL V1 row yet
+        </td>
+      </tr>
+
+    `;
+
+
+  // ===================================================
+  // MATCHUP TAB
+  // ===================================================
+
+  document
+    .getElementById(
+      "edgeMatchupTable"
+    )
+    .innerHTML = `
+
+      <tr>
+        <td>Player Team</td>
+        <td>${playerTeam}</td>
+      </tr>
+
+      <tr>
+        <td>Opponent</td>
+        <td>${opponent}</td>
+      </tr>
+
+      <tr>
+        <td>${offenseLabel}</td>
+        <td>${ordinalRank(offenseRank)}</td>
+      </tr>
+
+      <tr>
+        <td>${defenseLabel}</td>
+        <td>${ordinalRank(defenseRank)}</td>
+      </tr>
+
+      <tr>
+        <td>Matchup Adjustment</td>
+        <td>
+          ${
+            matchupAdjustment !== null
+              ? (
+                  `${matchupAdjustment > 0 ? "+" : ""}` +
+                  `${matchupAdjustment.toFixed(2)}%`
+                )
+              : "N/A"
+          }
+        </td>
+      </tr>
+
+    `;
+
+
+  // ===================================================
+  // MODEL TAB
+  // ===================================================
+
+  document
+    .getElementById(
+      "edgeDetailsTable"
+    )
+    .innerHTML = `
+
+      <tr>
+        <td>Projection Source</td>
+        <td>
+          ${rowData.BTBTProjectionSource || "N/A"}
+        </td>
+      </tr>
+
+      <tr>
+        <td>Historical Baseline</td>
+        <td>${fmt(historical)}</td>
+      </tr>
+
+      <tr>
+        <td>Raw Model Projection</td>
+        <td>${fmt(modelProjection)}</td>
+      </tr>
+
+      <tr>
+        <td>Final BTBT Projection</td>
+        <td>${fmt(projection)}</td>
+      </tr>
+
+      <tr>
+        <td>Sportsbook Consensus</td>
+        <td>${fmt(consensus)}</td>
+      </tr>
+      <tr>
+        <td>Sportsbooks Used</td>
+        <td>
+          ${sportsbookBookCount || "N/A"}
+          of 7
+        </td>
+      </tr>
+
+      <tr>
+        <td>Market Median</td>
+        <td>
+          ${fmt(
+            sportsbookMedian
+          )}
+        </td>
+      </tr>
+
+      <tr>
+        <td>Book Range</td>
+        <td>
+          ${marketRangeText}
+        </td>
+      </tr>
+
+      <tr>
+        <td>Market Agreement</td>
+        <td>
+          <strong>
+            ${marketAgreementIcon}
+            ${marketAgreement}
+          </strong>
+        </td>
+        </tr>
+      <tr>
+        <td>Consensus Model Over %</td>
+        <td>
+          ${fmtPct(
+            rowData.BTBTConsensusOverProbability
+          )}
+        </td>
+      </tr>
+
+      <tr>
+        <td>Confidence</td>
+        <td>${confidence}</td>
+      </tr>
+
+      <tr>
+        <td>Sample Games</td>
+        <td>
+          ${
+            sampleGames !== null
+              ? fmt(sampleGames, 0)
+              : "N/A"
+          }
+        </td>
+      </tr>
+
+      <tr>
+        <td>Roster Status</td>
+        <td>${rosterStatus}</td>
+      </tr>
+
+      <tr>
+        <td>Recommendation Eligible</td>
+        <td>
+          ${eligible ? "YES" : "NO"}
+        </td>
+      </tr>
+
+    `;
+
+
+  console.log(
+    "🏈 NFL AI profile rendered:",
+    {
+      player:
+        rowData.Description,
+
+      market:
+        rowData.Market,
+
+      projection:
+        rowData.BTBTProjection,
+
+      primaryPlatform:
+        primaryPlatform?.label,
+
+      side:
+        primarySide,
+
+      probability:
+        primaryProbability,
+
+      confidence:
+        confidence
+    }
+  );
+
+}
 async function openEdgeProfile(rowData) {
 
-  const modal = document.getElementById("edgeProfileModal");
-  const isNCAAF = selectedSport === "americanfootball_ncaaf";
+  const modal =
+    document.getElementById(
+      "edgeProfileModal"
+    );
+
+  const isNCAAF =
+    selectedSport ===
+    "americanfootball_ncaaf";
+
+  const isNFL =
+    selectedSport ===
+    "americanfootball_nfl";
+
+  // ===================================================
+  // 🧹 CLEAR SPORT-SPECIFIC PROFILE CONTENT
+  //
+  // NFL adds a custom summary section dynamically.
+  // Remove any previous NFL summary before rendering
+  // MLB, NCAAF, or another NFL player.
+  // ===================================================
+
+  const summaryPanel =
+    document.getElementById(
+      "edgeTab-summary"
+    );
+
+
+  summaryPanel
+    ?.querySelectorAll(
+      ".nfl-edge-summary"
+    )
+    .forEach(
+      element =>
+        element.remove()
+    );
 
 const eventName = rowData.Event || "";
 const [teamA, teamB] = extractTeams(eventName);
 const homeTeam = rowData.home_team || rowData.HomeTeam || "";
 const awayTeam = rowData.away_team || rowData.AwayTeam || "";
 const playerTeam =
+  rowData.BTBTPlayerTeam ||
   rowData.Team ||
   rowData.team ||
   rowData.PlayerTeam ||
@@ -9685,8 +12025,16 @@ logoWrap.innerHTML = `
   document.getElementById("edgeMarketLine").textContent =
   `${prettyMarket} • ${outcome} ${line}`;
 
-  document.getElementById("edgeFlag").textContent =
-    isNCAAF ? "Loading NCAAF AI profile..." : "Loading MLB profile...";
+  document
+  .getElementById(
+    "edgeFlag"
+  )
+  .textContent =
+    isNFL
+      ? "Loading NFL BTBT AI profile..."
+      : isNCAAF
+      ? "Loading NCAAF AI profile..."
+      : "Loading MLB profile...";
 
   document.getElementById("edgeKeyPoints").innerHTML = `
     <li>Loading edge report...</li>
@@ -9716,9 +12064,32 @@ logoWrap.innerHTML = `
     </tr>
   `;
 
-  modal.classList.remove("hidden");
+  modal.classList.remove(
+  "hidden"
+);
 
-  try {
+
+// ===================================================
+// 🏈 NFL
+//
+// All NFL BTBT model fields already exist on rowData.
+// Do NOT make another profile API request.
+// ===================================================
+
+if (isNFL) {
+
+  renderNflEdgeProfile({
+    rowData,
+    line,
+    outcome,
+    prettyMarket
+  });
+
+  return;
+}
+
+
+try {
 
     const params = new URLSearchParams();
 
