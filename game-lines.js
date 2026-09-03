@@ -1430,7 +1430,14 @@ wrapper.appendChild(table);
 
 container.appendChild(wrapper);
 
+// ↔️ Persistent horizontal scrollbar
+attachGameLinesHorizontalScrollbar(
+  wrapper
+);
+
 }
+
+
 
 function renderSportsbookFilters() {
 
@@ -1735,30 +1742,81 @@ mlbLiveOddsBtn?.addEventListener("click", () => {
 
 tableBtn?.addEventListener("click", () => {
 
-  currentViewMode = "table"; // ✅ ADD THIS
+  currentViewMode = "table";
 
-  document.querySelector(".table-scroll-wrapper").style.display = "block";
-  cardView.style.display = "none";
+  const tableWrapper =
+    document.querySelector(
+      ".table-scroll-wrapper"
+    );
 
-  tableBtn.classList.add("active");
-  cardBtn.classList.remove("active");
+  if (tableWrapper) {
+
+    tableWrapper.style.display =
+      "block";
+
+    attachGameLinesHorizontalScrollbar(
+      tableWrapper
+    );
+
+  }
+
+
+  cardView.style.display =
+    "none";
+
+
+  tableBtn.classList.add(
+    "active"
+  );
+
+  cardBtn.classList.remove(
+    "active"
+  );
 
 });
 
 cardBtn?.addEventListener("click", () => {
 
-  currentViewMode = "card"; // ✅ ADD THIS
+  currentViewMode = "card";
+
 
   renderGameCards();
 
-  document.querySelector(".table-scroll-wrapper").style.display = "none";
-  cardView.style.display = "block";
 
-  cardBtn.classList.add("active");
-  tableBtn.classList.remove("active");
+  const tableWrapper =
+    document.querySelector(
+      ".table-scroll-wrapper"
+    );
+
+
+  if (tableWrapper) {
+
+    tableWrapper.style.display =
+      "none";
+
+  }
+
+
+  document
+    .querySelectorAll(
+      ".game-lines-horizontal-scroll"
+    )
+    .forEach(el => el.remove());
+
+
+  cardView.style.display =
+    "block";
+
+
+  cardBtn.classList.add(
+    "active"
+  );
+
+  tableBtn.classList.remove(
+    "active"
+  );
 
 });
-
 
 // =====================================================
 // Initial load after controls are initialized
@@ -2301,20 +2359,38 @@ function probabilityDistancePct(price, bestPrice) {
 }
 
 function oddsCellClass(price, bestPrice) {
+
   if (price == null)
     return "odds-cell-missing";
 
-  const distance = probabilityDistancePct(price, bestPrice);
+
+  const distance =
+    probabilityDistancePct(
+      price,
+      bestPrice
+    );
+
 
   if (distance == null)
     return "";
 
+
+  // Exact best price
   if (distance < 0.001)
     return "odds-cell-best";
 
-  if (distance <= 0.5)
+
+  // Essentially same price
+  if (distance <= 0.50)
     return "odds-cell-near";
 
+
+  // Small difference — leave neutral
+  if (distance < 1.50)
+    return "";
+
+
+  // Clearly worse
   return "odds-cell-worse";
 }
 
@@ -2339,9 +2415,300 @@ function evCellClass(edge) {
   return "price-edge-strong";
 }
 
+// =====================================================
+// ↔️ PERSISTENT HORIZONTAL TABLE SCROLLBAR
+// =====================================================
+
+// =====================================================
+// ↔️ PERSISTENT HORIZONTAL TABLE SCROLLBAR
+// =====================================================
+
+function attachGameLinesHorizontalScrollbar(wrapper) {
+
+  if (!wrapper)
+    return;
 
 
+  // =====================================================
+  // 🧹 REMOVE PREVIOUS BAR
+  // =====================================================
 
+  document
+    .querySelectorAll(
+      ".game-lines-horizontal-scroll"
+    )
+    .forEach(el => el.remove());
+
+
+  // =====================================================
+  // 🧱 BUILD FIXED BOTTOM BAR
+  // =====================================================
+
+  const scrollbar =
+    document.createElement("div");
+
+
+  scrollbar.className =
+    "game-lines-horizontal-scroll";
+
+
+  const inner =
+    document.createElement("div");
+
+
+  inner.className =
+    "game-lines-horizontal-scroll-inner";
+
+
+  scrollbar.appendChild(inner);
+
+  document.body.appendChild(scrollbar);
+
+
+  // Prevent bar/table from fighting each other
+  let syncingScrollbar = false;
+  let syncingTable = false;
+
+
+  // =====================================================
+  // 📏 SIZE BAR USING ACTUAL WRAPPER SCROLL WIDTH
+  // =====================================================
+
+  function updateScrollbar() {
+
+    if (!document.body.contains(wrapper)) {
+
+      scrollbar.remove();
+
+      return;
+
+    }
+
+
+    const rect =
+      wrapper.getBoundingClientRect();
+
+
+    const totalWidth =
+      wrapper.scrollWidth;
+
+
+    const visibleWidth =
+      wrapper.clientWidth;
+
+
+    // Nothing to horizontally scroll
+    if (totalWidth <= visibleWidth + 2) {
+
+      scrollbar.style.display =
+        "none";
+
+      return;
+
+    }
+
+
+    // Only show while table is in viewport
+    const isVisible =
+      rect.bottom > 0 &&
+      rect.top < window.innerHeight;
+
+
+    if (!isVisible) {
+
+      scrollbar.style.display =
+        "none";
+
+      return;
+
+    }
+
+
+    scrollbar.style.display =
+      "block";
+
+
+    const left =
+      Math.max(
+        rect.left,
+        0
+      );
+
+
+    const right =
+      Math.min(
+        rect.right,
+        window.innerWidth
+      );
+
+
+    scrollbar.style.left =
+      `${left}px`;
+
+
+    scrollbar.style.width =
+      `${Math.max(
+        right - left,
+        100
+      )}px`;
+
+
+    // KEY FIX:
+    // use WRAPPER scrollWidth,
+    // not table.scrollWidth
+    inner.style.width =
+      `${totalWidth}px`;
+
+  }
+
+
+  // =====================================================
+  // ↔️ BOTTOM BAR → TABLE
+  // =====================================================
+
+  scrollbar.addEventListener(
+    "scroll",
+    () => {
+
+      if (syncingTable)
+        return;
+
+
+      const barMax =
+        scrollbar.scrollWidth -
+        scrollbar.clientWidth;
+
+
+      const tableMax =
+        wrapper.scrollWidth -
+        wrapper.clientWidth;
+
+
+      if (
+        barMax <= 0 ||
+        tableMax <= 0
+      ) {
+        return;
+      }
+
+
+      const ratio =
+        scrollbar.scrollLeft /
+        barMax;
+
+
+      syncingScrollbar =
+        true;
+
+
+      wrapper.scrollLeft =
+        ratio * tableMax;
+
+
+      requestAnimationFrame(
+        () => {
+
+          syncingScrollbar =
+            false;
+
+        }
+      );
+
+    }
+  );
+
+
+  // =====================================================
+  // ↔️ TABLE → BOTTOM BAR
+  // =====================================================
+
+  wrapper.addEventListener(
+    "scroll",
+    () => {
+
+      if (syncingScrollbar)
+        return;
+
+
+      const tableMax =
+        wrapper.scrollWidth -
+        wrapper.clientWidth;
+
+
+      const barMax =
+        scrollbar.scrollWidth -
+        scrollbar.clientWidth;
+
+
+      if (
+        tableMax <= 0 ||
+        barMax <= 0
+      ) {
+        return;
+      }
+
+
+      const ratio =
+        wrapper.scrollLeft /
+        tableMax;
+
+
+      syncingTable =
+        true;
+
+
+      scrollbar.scrollLeft =
+        ratio * barMax;
+
+
+      requestAnimationFrame(
+        () => {
+
+          syncingTable =
+            false;
+
+        }
+      );
+
+    }
+  );
+
+
+  // =====================================================
+  // 📐 UPDATE WHEN WINDOW/TABLE CHANGES
+  // =====================================================
+
+  window.addEventListener(
+    "resize",
+    updateScrollbar
+  );
+
+
+  window.addEventListener(
+    "scroll",
+    updateScrollbar,
+    true
+  );
+
+
+  // Initial sizing
+  requestAnimationFrame(
+    updateScrollbar
+  );
+
+
+  setTimeout(
+    updateScrollbar,
+    100
+  );
+
+
+  setTimeout(
+    updateScrollbar,
+    500
+  );
+
+}
 
 function tableHeaderWithTooltip(label, tooltip) {
   return `
@@ -3173,7 +3540,7 @@ window.showNcaafMarketBreakdown = function(game, pick = null) {
     && marketProbability < 0.10
   ) {
     readItems.push(
-      "Low-probability moneylines use stricter relative outlier filtering, and market-only longshots are capped at Lean until a separate football win-probability model validates the side."
+      "Low-probability moneylines remain market-only and are capped at Lean until a separate football win-probability model validates the side."
     );
   }
 
@@ -4232,7 +4599,14 @@ function renderMlbOddsScreen() {
   });
 
   wrapper.appendChild(table);
-  container.appendChild(wrapper);
+
+container.appendChild(wrapper);
+
+// ↔️ Persistent horizontal scrollbar
+attachGameLinesHorizontalScrollbar(
+  wrapper
+);
+
 }
 
 function renderMlbValuePicks() {
@@ -4500,8 +4874,10 @@ function renderMlbValuePicks() {
     });
   });
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "table-scroll-wrapper";
+ const wrapper = document.createElement("div");
+
+wrapper.className =
+  "table-scroll-wrapper ev-plus-scroll-wrapper";
 
   if (!tbody.children.length) {
     const tr = document.createElement("tr");
@@ -4513,7 +4889,14 @@ function renderMlbValuePicks() {
   }
 
   wrapper.appendChild(table);
-  container.appendChild(wrapper);
+
+container.appendChild(wrapper);
+
+// ↔️ Persistent horizontal scrollbar
+attachGameLinesHorizontalScrollbar(
+  wrapper
+);
+
 }
 
 function renderMlbLiveOdds() {
@@ -4639,10 +5022,16 @@ function renderMlbLiveOdds() {
     });
   });
 
-  wrapper.appendChild(table);
-  container.appendChild(wrapper);
-}
+ wrapper.appendChild(table);
 
+container.appendChild(wrapper);
+
+// ↔️ Persistent horizontal scrollbar
+attachGameLinesHorizontalScrollbar(
+  wrapper
+);
+
+}
 function attachMlbAddHandler(rowElement, game, pick) {
   rowElement
     .querySelector(".add-mlb-pick-btn")

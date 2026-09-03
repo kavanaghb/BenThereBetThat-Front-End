@@ -1,0 +1,1358 @@
+
+/* ============================================================
+   BenThereBetThat — Game Lines Premium Terminal UI
+   Visual-only override layer.
+   Load AFTER style.css and any inline page styles.
+   ============================================================ */
+
+:root {
+  --btbt-bg: #07101d;
+  --btbt-bg-2: #0a1423;
+  --btbt-panel: #0e1b2d;
+  --btbt-panel-2: #122238;
+  --btbt-panel-3: #162942;
+  --btbt-line: rgba(148, 163, 184, 0.16);
+  --btbt-line-strong: rgba(148, 163, 184, 0.28);
+  --btbt-text: #e8eef8;
+  --btbt-muted: #8da0ba;
+  --btbt-muted-2: #667a96;
+  --btbt-blue: #3b82f6;
+  --btbt-blue-2: #2563eb;
+  --btbt-green: #2dd47a;
+  --btbt-green-soft: rgba(45, 212, 122, 0.12);
+  --btbt-red: #f06464;
+  --btbt-red-soft: rgba(240, 100, 100, 0.12);
+  --btbt-amber: #f0b84b;
+  --btbt-amber-soft: rgba(240, 184, 75, 0.12);
+  --btbt-radius: 10px;
+  --btbt-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+}
+
+/* ---------- Page ---------- */
+
+html {
+  background: var(--btbt-bg);
+}
+
+body.btbt-terminal {
+  margin: 0 !important;
+  padding: 0 16px 28px !important;
+  min-height: 100vh;
+  color: var(--btbt-text);
+  background:
+    radial-gradient(circle at 82% -20%, rgba(37, 99, 235, 0.16), transparent 32%),
+    linear-gradient(180deg, #07101d 0%, #081321 36%, #091522 100%) !important;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* ---------- New product header ---------- */
+
+.btbt-game-lines-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 18px 2px 14px;
+  border-bottom: 1px solid var(--btbt-line);
+}
+
+.btbt-game-lines-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btbt-game-lines-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background:
+    linear-gradient(145deg, rgba(59,130,246,.28), rgba(45,212,122,.16));
+  border: 1px solid rgba(96, 165, 250, .35);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  font-size: 19px;
+}
+
+.btbt-game-lines-kicker {
+  margin: 0 0 2px;
+  color: #6ea8ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.btbt-game-lines-title {
+  margin: 0;
+  color: #f8fbff;
+  font-size: clamp(20px, 2vw, 27px);
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+.btbt-game-lines-subtitle {
+  margin: 4px 0 0;
+  color: var(--btbt-muted);
+  font-size: 12px;
+}
+
+.btbt-game-lines-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(45, 212, 122, .22);
+  border-radius: 999px;
+  background: rgba(45, 212, 122, .07);
+  color: #8bf0b6;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.btbt-game-lines-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--btbt-green);
+  box-shadow: 0 0 0 4px rgba(45, 212, 122, .08);
+}
+
+/* ---------- Top nav ---------- */
+
+body.btbt-terminal .tracker-button-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px !important;
+  max-width: 1800px;
+  margin: 12px auto 8px !important;
+  padding: 0 !important;
+}
+
+body.btbt-terminal .tracker-button-row button {
+  min-height: 34px !important;
+  padding: 7px 11px !important;
+  border: 1px solid var(--btbt-line-strong) !important;
+  border-radius: 8px !important;
+  background: rgba(14, 27, 45, .88) !important;
+  color: #cbd6e6 !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+body.btbt-terminal .tracker-button-row button:hover {
+  transform: none !important;
+  border-color: rgba(96, 165, 250, .45) !important;
+  background: #14253b !important;
+  color: #fff !important;
+}
+
+/* ---------- Book filters: compact professional strip ---------- */
+
+body.btbt-terminal #bookFilterActions {
+  display: flex !important;
+  align-items: center;
+  gap: 7px !important;
+  max-width: 1800px;
+  margin: 8px auto 0 !important;
+  padding: 9px 10px 6px !important;
+  background: var(--btbt-panel) !important;
+  border: 1px solid var(--btbt-line) !important;
+  border-bottom: 0 !important;
+  border-radius: var(--btbt-radius) var(--btbt-radius) 0 0 !important;
+}
+
+body.btbt-terminal #bookFilterActions button {
+  min-height: 30px !important;
+  padding: 5px 9px !important;
+  border: 1px solid var(--btbt-line-strong) !important;
+  border-radius: 7px !important;
+  background: #101f33 !important;
+  color: #aebed3 !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  box-shadow: none !important;
+}
+
+body.btbt-terminal #bookFilterActions button.active {
+  border-color: rgba(59,130,246,.7) !important;
+  background: var(--btbt-blue-2) !important;
+  color: #fff !important;
+}
+
+body.btbt-terminal #sportsbookFilters {
+  display: flex !important;
+  align-items: center;
+  gap: 7px 13px !important;
+  max-width: 1800px;
+  margin: 0 auto 10px !important;
+  padding: 7px 10px 10px !important;
+  background: var(--btbt-panel) !important;
+  border: 1px solid var(--btbt-line) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 var(--btbt-radius) var(--btbt-radius) !important;
+}
+
+body.btbt-terminal #sportsbookFilters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #9fb0c7 !important;
+  font-size: 10px !important;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+body.btbt-terminal #sportsbookFilters input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  accent-color: var(--btbt-blue);
+}
+
+/* ---------- Odds converter becomes compact utility ---------- */
+
+body.btbt-terminal .odds-converter-card {
+  max-width: 1800px;
+  margin: 8px auto !important;
+  padding: 9px 11px !important;
+  border: 1px solid var(--btbt-line) !important;
+  border-radius: var(--btbt-radius) !important;
+  background: rgba(14, 27, 45, .78) !important;
+  box-shadow: none !important;
+}
+
+body.btbt-terminal .odds-converter-heading {
+  align-items: center;
+  margin-bottom: 7px !important;
+}
+
+body.btbt-terminal .odds-converter-heading strong {
+  color: #dce6f4 !important;
+  font-size: 11px !important;
+}
+
+body.btbt-terminal .odds-converter-heading span {
+  color: var(--btbt-muted-2) !important;
+  font-size: 9px !important;
+}
+
+body.btbt-terminal .odds-converter-grid {
+  grid-template-columns: minmax(120px,.8fr) auto minmax(120px,.8fr) minmax(150px,1fr) !important;
+  gap: 7px !important;
+}
+
+body.btbt-terminal .odds-converter-field > span,
+body.btbt-terminal .odds-converter-result > span {
+  color: #7f93ae !important;
+  font-size: 9px !important;
+}
+
+body.btbt-terminal .odds-converter-field input {
+  min-height: 34px !important;
+  padding: 6px 9px !important;
+  border-color: var(--btbt-line-strong) !important;
+  border-radius: 7px !important;
+  background: #091727 !important;
+  color: #f5f8fd !important;
+  font-size: 13px !important;
+}
+
+body.btbt-terminal .odds-converter-result {
+  min-height: 34px !important;
+  padding: 6px 9px !important;
+  border-color: rgba(45,212,122,.18) !important;
+  background: rgba(45,212,122,.07) !important;
+}
+
+body.btbt-terminal .odds-converter-result strong {
+  color: #82e9ae !important;
+  font-size: 14px !important;
+}
+
+body.btbt-terminal .odds-converter-result small {
+  color: #7488a4 !important;
+}
+
+body.btbt-terminal .odds-converter-reset,
+body.btbt-terminal .btbt-converter-toggle {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid var(--btbt-line-strong) !important;
+  border-radius: 7px !important;
+  background: #0b1929 !important;
+  color: #9eb0c7 !important;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.btbt-terminal .odds-converter-card.is-collapsed .odds-converter-grid {
+  display: none !important;
+}
+
+body.btbt-terminal .odds-converter-card.is-collapsed {
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+}
+
+body.btbt-terminal .odds-converter-card.is-collapsed .odds-converter-heading {
+  margin-bottom: 0 !important;
+}
+
+/* ---------- Core controls ---------- */
+
+body.btbt-terminal .game-lines-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  max-width: 1800px;
+  margin: 9px auto !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--btbt-line) !important;
+  border-radius: var(--btbt-radius) !important;
+  background: var(--btbt-panel) !important;
+  box-shadow: none !important;
+}
+
+body.btbt-terminal .game-lines-controls label {
+  color: #788ca8 !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+body.btbt-terminal .game-lines-controls select,
+body.btbt-terminal .game-lines-controls input {
+  min-height: 34px !important;
+  border: 1px solid var(--btbt-line-strong) !important;
+  border-radius: 7px !important;
+  background: #091727 !important;
+  color: #edf3fb !important;
+  font-size: 11px !important;
+  outline: none;
+}
+
+body.btbt-terminal .game-lines-controls select:focus,
+body.btbt-terminal .game-lines-controls input:focus {
+  border-color: rgba(59,130,246,.75) !important;
+  box-shadow: 0 0 0 2px rgba(59,130,246,.10) !important;
+}
+
+body.btbt-terminal #loadGameLinesBtn {
+  min-height: 34px !important;
+  padding: 6px 12px !important;
+  border: 1px solid #3479ee !important;
+  border-radius: 7px !important;
+  background: #2464d8 !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+body.btbt-terminal #refreshGameLinesBtn,
+body.btbt-terminal #toggleModelDebug {
+  min-height: 34px !important;
+  padding: 6px 10px !important;
+  border: 1px solid var(--btbt-line-strong) !important;
+  border-radius: 7px !important;
+  background: #102039 !important;
+  color: #b9c7da !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  box-shadow: none !important;
+}
+
+body.btbt-terminal #gameSearchInput {
+  width: min(300px, 25vw) !important;
+  flex: 1 1 220px;
+}
+
+body.btbt-terminal #gameLinesTimestamp {
+  margin-left: auto;
+  color: #5f7491 !important;
+  font-size: 9px !important;
+}
+
+/* ---------- Model note ---------- */
+
+body.btbt-terminal #gameLinesModeNote {
+  max-width: 1800px;
+  margin: 8px auto !important;
+  padding: 7px 10px;
+  border-left: 2px solid #386fca;
+  border-radius: 0 6px 6px 0;
+  background: rgba(14, 27, 45, .62);
+  color: #8195b0 !important;
+  font-size: 9px !important;
+  line-height: 1.45;
+}
+
+/* ---------- Analytics snapshot ---------- */
+
+body.btbt-terminal .mlb-analytics-summary {
+  max-width: 1800px;
+  margin: 10px auto 12px !important;
+  padding: 14px !important;
+  border: 1px solid var(--btbt-line) !important;
+  border-radius: var(--btbt-radius) !important;
+  background:
+    linear-gradient(135deg, rgba(14,27,45,.98), rgba(11,23,39,.96)) !important;
+  box-shadow: var(--btbt-shadow) !important;
+}
+
+body.btbt-terminal .mlb-summary-heading {
+  margin-bottom: 10px !important;
+}
+
+body.btbt-terminal .mlb-summary-eyebrow {
+  color: #5f94ef !important;
+  font-size: 8px !important;
+  letter-spacing: .16em !important;
+}
+
+body.btbt-terminal .mlb-summary-title {
+  margin-top: 2px;
+  color: #edf4ff !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+body.btbt-terminal .mlb-model-pipeline {
+  color: #7489a5 !important;
+  font-size: 9px !important;
+}
+
+body.btbt-terminal .mlb-model-pipeline span {
+  color: #3f7edc !important;
+}
+
+body.btbt-terminal .mlb-summary-grid {
+  gap: 7px !important;
+}
+
+body.btbt-terminal .mlb-summary-card {
+  min-height: 61px !important;
+  padding: 9px 10px !important;
+  border: 1px solid var(--btbt-line) !important;
+  border-radius: 8px !important;
+  background: rgba(18,34,56,.72) !important;
+  box-shadow: none !important;
+}
+
+body.btbt-terminal .mlb-summary-card span {
+  color: #6e83a0 !important;
+  font-size: 8px !important;
+  font-weight: 800 !important;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+body.btbt-terminal .mlb-summary-card strong {
+  color: #f4f8ff !important;
+  font-size: 18px !important;
+  line-height: 1.15;
+}
+
+body.btbt-terminal .mlb-summary-card small {
+  color: #617590 !important;
+  font-size: 8px !important;
+}
+
+body.btbt-terminal .mlb-summary-card.featured,
+body.btbt-terminal .mlb-summary-card:last-child.featured {
+  border-color: rgba(45,212,122,.30) !important;
+  background: rgba(45,212,122,.07) !important;
+}
+
+body.btbt-terminal #summaryBestEv {
+  color: #57df91 !important;
+}
+
+/* ---------- View tabs ---------- */
+
+body.btbt-terminal #mlbViewTabs,
+body.btbt-terminal .view-toggle {
+  display: flex;
+  max-width: 1800px;
+  margin: 8px auto !important;
+  gap: 5px !important;
+}
+
+body.btbt-terminal #mlbViewTabs button,
+body.btbt-terminal .view-toggle button {
+  min-height: 32px !important;
+  padding: 6px 10px !important;
+  border: 1px solid var(--btbt-line) !important;
+  border-radius: 7px !important;
+  background: #0d1c30 !important;
+  color: #8295af !important;
+  box-shadow: none !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+}
+
+body.btbt-terminal #mlbViewTabs button.active,
+body.btbt-terminal .view-toggle button.active {
+  border-color: rgba(59,130,246,.60) !important;
+  background: #17345c !important;
+  color: #d9e8ff !important;
+}
+
+/* ---------- Results / wide table ---------- */
+
+body.btbt-terminal #gameLinesResults {
+  max-width: 1800px;
+  margin: 0 auto;
+  max-height: 68vh !important;
+  border-radius: var(--btbt-radius);
+  background: transparent !important;
+  scrollbar-color: #264361 #0a1524;
+  scrollbar-width: thin;
+}
+
+body.btbt-terminal .table-scroll-wrapper {
+  border: 1px solid var(--btbt-line) !important;
+  border-radius: var(--btbt-radius) !important;
+  background: #0a1626 !important;
+  box-shadow: var(--btbt-shadow) !important;
+}
+
+body.btbt-terminal .odds-table {
+  width: 100%;
+  color: #c7d2e2 !important;
+  background: #0a1626 !important;
+  font-size: 10px !important;
+}
+
+body.btbt-terminal .odds-table thead th {
+  padding: 8px 9px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(148,163,184,.08) !important;
+  border-bottom: 1px solid rgba(148,163,184,.20) !important;
+  background: #101f33 !important;
+  color: #8094af !important;
+  box-shadow: none !important;
+  font-size: 8px !important;
+  font-weight: 850 !important;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.btbt-terminal .odds-table td {
+  padding: 8px 9px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(148,163,184,.055) !important;
+  border-bottom: 1px solid rgba(148,163,184,.075) !important;
+  background: #0c192a !important;
+  color: #b8c5d7 !important;
+  vertical-align: middle !important;
+}
+
+body.btbt-terminal .odds-table tbody tr:nth-child(even) td {
+  background: #0d1b2d !important;
+}
+
+body.btbt-terminal .odds-table tbody tr:hover td {
+  background: #13243a !important;
+}
+
+body.btbt-terminal .odds-table .sticky-game,
+body.btbt-terminal .odds-table .sticky-market,
+body.btbt-terminal .odds-table .sticky-selection {
+  background: #0c192a !important;
+  box-shadow: 1px 0 0 rgba(148,163,184,.08);
+}
+
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-game,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-market,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-selection {
+  background: #0d1b2d !important;
+}
+
+body.btbt-terminal .odds-table thead .sticky-game,
+body.btbt-terminal .odds-table thead .sticky-market,
+body.btbt-terminal .odds-table thead .sticky-selection {
+  background: #101f33 !important;
+}
+
+/* Important values */
+
+body.btbt-terminal .odds-table strong {
+  color: #f2f6fc;
+}
+
+body.btbt-terminal .edge-sub {
+  color: #6e829f !important;
+  font-size: 8px !important;
+}
+
+body.btbt-terminal .mlb-detail-inline-btn {
+  margin-top: 4px !important;
+  padding: 3px 6px !important;
+  border-color: rgba(96,165,250,.22) !important;
+  background: rgba(59,130,246,.07) !important;
+  color: #7eb0ff !important;
+  font-size: 8px !important;
+}
+
+/* Price quality states — terminal style, not pastel */
+
+body.btbt-terminal .odds-cell-best {
+  background: rgba(45,212,122,.15) !important;
+  color: #83edb1 !important;
+  box-shadow: inset 0 0 0 1px rgba(45,212,122,.18);
+}
+
+body.btbt-terminal .odds-cell-near {
+  background: rgba(45,212,122,.07) !important;
+  color: #76dca3 !important;
+}
+
+body.btbt-terminal .odds-cell-worse {
+  background: rgba(240,100,100,.09) !important;
+  color: #ef9999 !important;
+}
+
+body.btbt-terminal .odds-cell-missing {
+  background: rgba(9,23,39,.55) !important;
+  color: #3e536f !important;
+}
+
+body.btbt-terminal .price-edge-negative {
+  background: var(--btbt-red-soft) !important;
+  color: #f29a9a !important;
+}
+
+body.btbt-terminal .price-edge-neutral {
+  color: #6e819d !important;
+}
+
+body.btbt-terminal .price-edge-shop {
+  background: var(--btbt-amber-soft) !important;
+  color: #eac46f !important;
+}
+
+body.btbt-terminal .price-edge-value {
+  background: rgba(45,212,122,.10) !important;
+  color: #70dfa0 !important;
+}
+
+body.btbt-terminal .price-edge-strong {
+  background: rgba(45,212,122,.18) !important;
+  color: #8bf1b7 !important;
+}
+
+/* Any generic EV/value status classes */
+
+body.btbt-terminal .edge-strong {
+  color: #6ae59d !important;
+  font-weight: 800 !important;
+}
+
+body.btbt-terminal .edge-moderate {
+  color: #7db4ff !important;
+  font-weight: 750 !important;
+}
+
+body.btbt-terminal .edge-weak {
+  color: #d6b66f !important;
+  font-weight: 700 !important;
+}
+
+/* ---------- Modal ---------- */
+
+body.btbt-terminal .analytics-modal {
+  background: rgba(1, 7, 15, .78) !important;
+  backdrop-filter: blur(5px);
+}
+
+body.btbt-terminal .analytics-modal-content {
+  border: 1px solid var(--btbt-line-strong) !important;
+  border-radius: 12px !important;
+  background: #0c192b !important;
+  color: var(--btbt-text) !important;
+  box-shadow: 0 28px 70px rgba(0,0,0,.42) !important;
+}
+
+body.btbt-terminal .analytics-header {
+  border-bottom: 1px solid var(--btbt-line) !important;
+  background: #101f33 !important;
+}
+
+body.btbt-terminal .analytics-header h2 {
+  color: #eef5ff !important;
+}
+
+body.btbt-terminal .analytics-close-btn {
+  color: #9fb0c7 !important;
+  background: transparent !important;
+}
+
+/* ---------- Cards / mobile ---------- */
+
+body.btbt-terminal .game-card {
+  border: 1px solid var(--btbt-line) !important;
+  background: var(--btbt-panel) !important;
+  color: var(--btbt-text) !important;
+  box-shadow: none !important;
+}
+
+body.btbt-terminal .card-row,
+body.btbt-terminal .card-line-values {
+  color: #aebed2 !important;
+}
+
+body.btbt-terminal .card-line-row {
+  background: #0a1728 !important;
+}
+
+body.btbt-terminal .card-book-name {
+  color: #75a9ff !important;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1000px) {
+  body.btbt-terminal {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .btbt-game-lines-hero {
+    padding-top: 12px;
+  }
+
+  body.btbt-terminal .game-lines-controls {
+    flex-wrap: wrap !important;
+  }
+
+  body.btbt-terminal #gameSearchInput {
+    width: auto !important;
+    flex: 1 1 180px;
+  }
+
+  body.btbt-terminal #gameLinesTimestamp {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .btbt-game-lines-hero {
+    align-items: flex-start;
+  }
+
+  .btbt-game-lines-status {
+    display: none;
+  }
+
+  .btbt-game-lines-subtitle {
+    display: none;
+  }
+
+  body.btbt-terminal .tracker-button-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  }
+
+  body.btbt-terminal #bookFilterActions {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+  }
+
+  body.btbt-terminal #sportsbookFilters {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 9px !important;
+  }
+
+  body.btbt-terminal .game-lines-controls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  body.btbt-terminal .game-lines-controls label {
+    display: none !important;
+  }
+
+  body.btbt-terminal #gameSearchInput,
+  body.btbt-terminal #gameLinesTimestamp {
+    grid-column: 1 / -1;
+    width: 100% !important;
+  }
+
+  body.btbt-terminal .odds-converter-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  body.btbt-terminal .odds-converter-result {
+    grid-column: 1 / -1 !important;
+  }
+
+  body.btbt-terminal .odds-converter-swap {
+    display: none !important;
+  }
+
+  body.btbt-terminal #mlbViewTabs,
+  body.btbt-terminal .view-toggle {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    padding: 6px 0;
+    background: rgba(7,16,29,.94) !important;
+    backdrop-filter: blur(7px);
+  }
+}
+/* ============================================================
+   PHASE 2 — READABILITY + CONDITIONAL FORMATTING IMPROVEMENTS
+   Add to bottom of game-lines-premium.css
+   ============================================================ */
+
+body.btbt-terminal .odds-table {
+  font-size: 11px !important;
+}
+
+body.btbt-terminal .odds-table thead th {
+  padding: 10px 10px !important;
+  font-size: 8.5px !important;
+  color: #9db2cf !important;
+  border-bottom: 1px solid rgba(148,163,184,.26) !important;
+}
+
+body.btbt-terminal .odds-table td {
+  padding: 12px 10px !important;
+  color: #d6e0ee !important;
+  border-bottom: 1px solid rgba(148,163,184,.11) !important;
+}
+
+body.btbt-terminal .odds-table tbody tr:nth-child(odd) td {
+  background: #0b1a2b !important;
+}
+
+body.btbt-terminal .odds-table tbody tr:nth-child(even) td {
+  background: #0e2034 !important;
+}
+
+body.btbt-terminal .odds-table tbody tr:hover td {
+  background: #18304d !important;
+}
+
+body.btbt-terminal .odds-table .sticky-game,
+body.btbt-terminal .odds-table .sticky-market,
+body.btbt-terminal .odds-table .sticky-selection {
+  background: #10243b !important;
+  color: #eef4fb !important;
+  font-weight: 600 !important;
+}
+
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-game,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-market,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-selection {
+  background: #122944 !important;
+}
+
+body.btbt-terminal .odds-table strong {
+  color: #ffffff !important;
+}
+
+body.btbt-terminal .edge-sub {
+  color: #9bb0cb !important;
+  font-size: 9px !important;
+}
+
+/* ----- Better sportsbook price formatting ----- */
+
+body.btbt-terminal .odds-cell-best {
+  background: #123a2a !important;
+  color: #b7ffd7 !important;
+  border: 1px solid rgba(45,212,122,.42) !important;
+  box-shadow: inset 0 0 0 1px rgba(45,212,122,.18);
+  font-weight: 800 !important;
+}
+
+body.btbt-terminal .odds-cell-near {
+  background: rgba(45,212,122,.10) !important;
+  color: #a6eec4 !important;
+  font-weight: 700 !important;
+}
+
+body.btbt-terminal .odds-cell-worse {
+  background: rgba(240,100,100,.14) !important;
+  color: #ffb1b1 !important;
+}
+
+body.btbt-terminal .odds-cell-missing {
+  background: rgba(12,22,34,.72) !important;
+  color: #50627d !important;
+}
+
+/* ----- EV intensity ----- */
+
+body.btbt-terminal .price-edge-strong {
+  background: #163f2d !important;
+  color: #89f3b8 !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(45,212,122,.35) !important;
+}
+
+body.btbt-terminal .price-edge-value {
+  background: rgba(45,212,122,.10) !important;
+  color: #92e8b8 !important;
+  font-weight: 750 !important;
+}
+
+body.btbt-terminal .price-edge-shop {
+  background: rgba(240,184,75,.14) !important;
+  color: #ffd98a !important;
+  font-weight: 700 !important;
+}
+
+body.btbt-terminal .price-edge-negative {
+  background: rgba(240,100,100,.12) !important;
+  color: #ffb0b0 !important;
+  font-weight: 700 !important;
+}
+
+body.btbt-terminal .price-edge-neutral {
+  color: #9baec8 !important;
+}
+
+/* ----- Simple pill styles for text cells ----- */
+
+.btbt-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btbt-pill-high {
+  background: rgba(45,212,122,.14);
+  color: #91f0b9;
+  border: 1px solid rgba(45,212,122,.30);
+}
+
+.btbt-pill-medium {
+  background: rgba(240,184,75,.14);
+  color: #ffd98a;
+  border: 1px solid rgba(240,184,75,.28);
+}
+
+.btbt-pill-low {
+  background: rgba(148,163,184,.12);
+  color: #c5d2e3;
+  border: 1px solid rgba(148,163,184,.22);
+}
+
+.btbt-pill-market {
+  background: rgba(59,130,246,.12);
+  color: #9fc4ff;
+  border: 1px solid rgba(59,130,246,.24);
+}
+
+.btbt-pill-model {
+  background: rgba(37,99,235,.14);
+  color: #9bbcff;
+  border: 1px solid rgba(37,99,235,.28);
+}
+
+.btbt-pill-warn {
+  background: rgba(240,100,100,.12);
+  color: #ffb1b1;
+  border: 1px solid rgba(240,100,100,.22);
+}
+
+/* ============================================================
+   BTBT GAME LINES — PHASE 2
+   STICKY HEADER + READABILITY + CLEANER CONDITIONAL FORMATTING
+   ADD THIS ENTIRE BLOCK TO THE VERY BOTTOM OF game-lines-premium.css
+   ============================================================ */
+
+/* ============================================================
+   1) ONE SCROLL CONTAINER ONLY
+   ------------------------------------------------------------
+   The old page lets #gameLinesResults scroll AND the inner
+   .table-scroll-wrapper creates another overflow context.
+   That can prevent position: sticky from behaving correctly.
+   The wrapper becomes the ONLY table scroll container.
+   ============================================================ */
+
+body.btbt-terminal #gameLinesResults {
+  max-width: 1800px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin: 0 auto !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper {
+  position: relative !important;
+  width: 100% !important;
+
+  /* Vertical + horizontal scrolling happen HERE */
+  max-height: 62vh !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 10px !important;
+  background: #0b192a !important;
+
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.20) !important;
+}
+
+/* ============================================================
+   2) TABLE BASE — BIGGER / BRIGHTER / EASIER TO SCAN
+   ============================================================ */
+
+body.btbt-terminal .table-scroll-wrapper .odds-table {
+  width: 100% !important;
+  min-width: max-content !important;
+
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+
+  margin: 0 !important;
+
+  background: #0b192a !important;
+  color: #dce7f5 !important;
+
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+/* ============================================================
+   3) ACTUALLY STICKY COLUMN HEADERS
+   ============================================================ */
+
+body.btbt-terminal .table-scroll-wrapper .odds-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 80 !important;
+
+  min-height: 42px !important;
+  padding: 11px 10px !important;
+
+  background: #172a43 !important;
+  color: #c3d3e8 !important;
+
+  border: 0 !important;
+  border-right: 1px solid rgba(148, 163, 184, 0.12) !important;
+  border-bottom: 2px solid rgba(96, 165, 250, 0.38) !important;
+
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.30) !important;
+
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.035em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+/* Sticky horizontal columns must sit ABOVE ordinary sticky header cells */
+body.btbt-terminal .table-scroll-wrapper .odds-table thead .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table thead .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table thead .sticky-selection {
+  z-index: 100 !important;
+  background: #1b304d !important;
+}
+
+/* ============================================================
+   4) ROW READABILITY
+   ============================================================ */
+
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody td {
+  min-height: 50px !important;
+  padding: 12px 10px !important;
+
+  background: #0c1b2d !important;
+  color: #d8e3f1 !important;
+
+  border: 0 !important;
+  border-right: 1px solid rgba(148, 163, 184, 0.075) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
+
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  vertical-align: middle !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) td {
+  background: #102239 !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover td {
+  background: #183452 !important;
+}
+
+/* Stronger separation between games */
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr.game-start-row td {
+  border-top: 1px solid rgba(96, 165, 250, 0.28) !important;
+}
+
+/* ============================================================
+   5) STICKY GAME / MARKET / SELECTION COLUMNS
+   ============================================================ */
+
+body.btbt-terminal .table-scroll-wrapper .odds-table .sticky-game {
+  min-width: 255px !important;
+  max-width: 255px !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper .odds-table .sticky-market {
+  min-width: 110px !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper .odds-table .sticky-selection {
+  min-width: 155px !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody .sticky-selection {
+  background: #10243b !important;
+  color: #f0f5fb !important;
+  font-weight: 600 !important;
+
+  box-shadow:
+    1px 0 0 rgba(148, 163, 184, 0.14) !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) .sticky-selection {
+  background: #142b47 !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover .sticky-selection {
+  background: #1b3a5c !important;
+}
+
+/* Selection is one of the most important cells */
+body.btbt-terminal .table-scroll-wrapper .odds-table .sticky-selection strong {
+  color: #ffffff !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+}
+
+/* ============================================================
+   6) SECONDARY TEXT — STILL MUTED, BUT READABLE
+   ============================================================ */
+
+body.btbt-terminal .edge-sub {
+  color: #9eb2cc !important;
+  font-size: 9.5px !important;
+  line-height: 1.35 !important;
+}
+
+body.btbt-terminal .mlb-detail-inline-btn {
+  margin-top: 5px !important;
+  padding: 4px 7px !important;
+
+  border: 1px solid rgba(96, 165, 250, 0.32) !important;
+  border-radius: 6px !important;
+
+  background: rgba(59, 130, 246, 0.11) !important;
+  color: #a8caff !important;
+
+  font-size: 9px !important;
+  font-weight: 750 !important;
+}
+
+/* ============================================================
+   7) SPORTSBOOK CONDITIONAL FORMATTING
+   ------------------------------------------------------------
+   Best = obvious green
+   Near-best = subtle green
+   Neutral = normal cell
+   Worse = muted red ONLY when materially worse
+   Missing = quiet
+   ============================================================ */
+
+body.btbt-terminal .odds-cell-best {
+  background: #17452f !important;
+  color: #c6ffe0 !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(52, 211, 153, 0.52) !important;
+
+  font-weight: 850 !important;
+}
+
+body.btbt-terminal .odds-cell-best .badge {
+  display: inline-block !important;
+  margin-top: 3px !important;
+  padding: 2px 5px !important;
+
+  border-radius: 999px !important;
+
+  background: #22c55e !important;
+  color: #062d18 !important;
+
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+}
+
+body.btbt-terminal .odds-cell-near {
+  background: rgba(45, 212, 122, 0.10) !important;
+  color: #b8efcf !important;
+  font-weight: 700 !important;
+}
+
+body.btbt-terminal .odds-cell-neutral {
+  background: inherit !important;
+  color: #d1ddec !important;
+}
+
+body.btbt-terminal .odds-cell-worse {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #ffc0c0 !important;
+}
+
+body.btbt-terminal .odds-cell-worse .badge {
+  display: inline-block !important;
+  margin-top: 3px !important;
+  padding: 2px 5px !important;
+
+  border-radius: 999px !important;
+
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #ffb4b4 !important;
+
+  font-size: 8px !important;
+  font-weight: 800 !important;
+}
+
+body.btbt-terminal .odds-cell-missing {
+  background: rgba(5, 14, 25, 0.38) !important;
+  color: #60738f !important;
+}
+
+/* ============================================================
+   8) EXPECTED EV — COLOR BY RECOMMENDATION QUALITY,
+      NOT JUST RAW LONGSHOT EV
+   ============================================================ */
+
+body.btbt-terminal .expected-ev-negative {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #ffb6b6 !important;
+  font-weight: 700 !important;
+}
+
+body.btbt-terminal .expected-ev-neutral {
+  background: transparent !important;
+  color: #a8b8cd !important;
+}
+
+body.btbt-terminal .expected-ev-lean {
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #ffd891 !important;
+  font-weight: 800 !important;
+}
+
+body.btbt-terminal .expected-ev-value {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #b8d4ff !important;
+  font-weight: 850 !important;
+}
+
+body.btbt-terminal .expected-ev-strong {
+  background: rgba(34, 197, 94, 0.18) !important;
+  color: #a9f7c7 !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(34, 197, 94, 0.30) !important;
+
+  font-weight: 900 !important;
+}
+
+/* ============================================================
+   9) MAKE NUMERIC / MODEL CELLS EASIER TO SEE
+   ============================================================ */
+
+body.btbt-terminal .table-scroll-wrapper .odds-table strong {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+body.btbt-terminal .ncaaf-table-projection strong {
+  color: #f8fbff !important;
+  font-size: 12px !important;
+}
+
+/* ============================================================
+   10) SCROLLBARS
+   ============================================================ */
+
+body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar {
+  width: 11px !important;
+  height: 11px !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar-track {
+  background: #071422 !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #345574 !important;
+  border-radius: 999px !important;
+  border: 2px solid #071422 !important;
+}
+
+body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #4a7198 !important;
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+  body.btbt-terminal .table-scroll-wrapper {
+    max-height: 67vh !important;
+  }
+
+  body.btbt-terminal .table-scroll-wrapper .odds-table {
+    font-size: 11px !important;
+  }
+
+  body.btbt-terminal .table-scroll-wrapper .odds-table thead th {
+    font-size: 9px !important;
+    padding: 9px 7px !important;
+  }
+
+  body.btbt-terminal .table-scroll-wrapper .odds-table tbody td {
+    font-size: 11px !important;
+    padding: 10px 7px !important;
+  }
+}

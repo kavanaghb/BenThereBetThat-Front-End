@@ -9655,3 +9655,135 @@ body.auth-modal-open {
     white-space: nowrap;
   }
 }
+
+/* ============================================================
+   🎨 GAME LINES — STRONGER CONDITIONAL FORMATTING
+   Keeps original light layout, improves readability
+   ============================================================ */
+
+/* Default table readability */
+.odds-table td {
+  color: #1f2937 !important;
+}
+
+.odds-table strong {
+  color: #111827 !important;
+  font-weight: 800 !important;
+}
+
+
+/* ============================================================
+   📚 SPORTSBOOK PRICE CELLS
+   ============================================================ */
+
+/* 🟢 BEST PRICE — obvious but still professional */
+.odds-cell-best {
+  background: #bdf4cd !important;
+  color: #064e2b !important;
+  font-weight: 800 !important;
+
+  box-shadow:
+    inset 0 0 0 2px #31c766 !important;
+}
+
+/* 🟢 Very close to best */
+.odds-cell-near {
+  background: #ddf7e5 !important;
+  color: #14532d !important;
+  font-weight: 700 !important;
+}
+
+/* 🔴 Meaningfully worse price */
+.odds-cell-worse {
+  background: #ffdada !important;
+  color: #7f1d1d !important;
+  font-weight: 650 !important;
+}
+
+/* ⚪ No line */
+.odds-cell-missing {
+  background: #eef2f7 !important;
+  color: #7b8798 !important;
+}
+
+
+/* ============================================================
+   💰 PRICE EDGE / EV CELLS
+   ============================================================ */
+
+/* Negative */
+.price-edge-negative {
+  background: #ffd6d6 !important;
+  color: #991b1b !important;
+  font-weight: 700 !important;
+}
+
+/* Basically neutral */
+.price-edge-neutral {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+/* Small shopping opportunity */
+.price-edge-shop {
+  background: #fff0b8 !important;
+  color: #713f12 !important;
+  font-weight: 750 !important;
+}
+
+/* Positive value */
+.price-edge-value {
+  background: #c9f4d6 !important;
+  color: #065f36 !important;
+  font-weight: 800 !important;
+}
+
+/* Strong positive value */
+.price-edge-strong {
+  background: #8fe3ac !important;
+  color: #064e2b !important;
+  font-weight: 900 !important;
+
+  box-shadow:
+    inset 0 0 0 2px #22a95a !important;
+}
+
+
+/* ============================================================
+   🧠 MODEL / MARKET SECONDARY TEXT
+   Stop it looking washed out
+   ============================================================ */
+
+.edge-sub {
+  color: #52647a !important;
+  font-weight: 600 !important;
+}
+
+.mlb-detail-inline-btn {
+  color: #1d4ed8 !important;
+  font-weight: 700 !important;
+}
+
+/* Market-only labels */
+.odds-table td small,
+.odds-table .market-only {
+  color: #5b6f8a !important;
+}
+
+
+/* ============================================================
+   📊 TABLE ROW CONTRAST
+   ============================================================ */
+
+.odds-table tbody tr:nth-child(odd) {
+  background: #ffffff !important;
+}
+
+.odds-table tbody tr:nth-child(even) {
+  background: #f3f7fb !important;
+}
+
+.odds-table tbody tr:hover {
+  background: #e4effc !important;
+}

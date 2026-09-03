@@ -93,53 +93,91 @@
   background: #f8fafc;
 }
 
+/* ============================================================
+   🎯 STRONGER CONDITIONAL FORMATTING
+   ============================================================ */
+
+/* 🟢 BEST SPORTSBOOK PRICE */
 .odds-cell-best {
-  background: #dcfce7 !important;
-  color: #166534;
-  font-weight: 700;
+  background: #7ee2a3 !important;
+  color: #052e16 !important;
+  font-weight: 900 !important;
+
+  box-shadow:
+    inset 0 0 0 2px #16a34a !important;
 }
 
+
+/* 🟢 CLOSE TO BEST */
 .odds-cell-near {
-  background: #f0fdf4 !important;
-  color: #166534;
+  background: #b7efc9 !important;
+  color: #14532d !important;
+  font-weight: 750 !important;
 }
 
+
+/* 🔴 MEANINGFULLY WORSE PRICE */
 .odds-cell-worse {
-  background: #fef2f2 !important;
-  color: #991b1b;
+  background: #f7a8a8 !important;
+  color: #651313 !important;
+  font-weight: 750 !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(185, 28, 28, 0.25) !important;
 }
 
+
+/* ⚪ MISSING PRICE */
 .odds-cell-missing {
-  background: #f8fafc !important;
-  color: #94a3b8;
+  background: #e5eaf0 !important;
+  color: #64748b !important;
 }
 
+
+/* ============================================================
+   💰 PRICE EDGE / EV
+   ============================================================ */
+
+/* 🔴 NEGATIVE */
 .price-edge-negative {
-  background: #fef2f2;
-  color: #991b1b;
-  font-weight: 600;
+  background: #f6aaaa !important;
+  color: #7f1d1d !important;
+  font-weight: 800 !important;
 }
 
+
+/* ⚪ NEUTRAL */
 .price-edge-neutral {
-  color: #64748b;
+  background: #e9eef5 !important;
+  color: #475569 !important;
+  font-weight: 650 !important;
 }
 
+
+/* 🟡 SMALL SHOPPING EDGE */
 .price-edge-shop {
-  background: #fef9c3;
-  color: #854d0e;
-  font-weight: 700;
+  background: #f7d36a !important;
+  color: #5b3b00 !important;
+  font-weight: 800 !important;
 }
 
+
+/* 🟢 VALUE */
 .price-edge-value {
-  background: #dcfce7;
-  color: #166534;
-  font-weight: 700;
+  background: #8fe0ab !important;
+  color: #064e2b !important;
+  font-weight: 850 !important;
 }
 
+
+/* 🟢 STRONG VALUE */
 .price-edge-strong {
-  background: #bbf7d0;
-  color: #14532d;
-  font-weight: 800;
+  background: #45c975 !important;
+  color: #062d18 !important;
+  font-weight: 900 !important;
+
+  box-shadow:
+    inset 0 0 0 2px #138a48 !important;
 }
 
 #bookFilterActions button.active {
@@ -898,7 +936,140 @@ body {
   }
 
 }
+/* ============================================================
+   ↔️ GAME LINES — PERSISTENT HORIZONTAL SCROLLBAR
+   ============================================================ */
 
+.game-lines-horizontal-scroll {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: 999;
+
+  display: none;
+
+  height: 18px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  background: #e2e8f0;
+
+  border-top: 1px solid #cbd5e1;
+  border-left: 1px solid #cbd5e1;
+  border-right: 1px solid #cbd5e1;
+
+  box-shadow:
+    0 -3px 10px rgba(15, 23, 42, 0.12);
+
+  scrollbar-color: #64748b #e2e8f0;
+  scrollbar-width: auto;
+}
+
+
+.game-lines-horizontal-scroll-inner {
+  height: 1px;
+}
+
+
+/* Chrome / Edge */
+.game-lines-horizontal-scroll::-webkit-scrollbar {
+  height: 16px;
+}
+
+
+.game-lines-horizontal-scroll::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+
+.game-lines-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #64748b;
+
+  border-radius: 999px;
+
+  border: 3px solid #e2e8f0;
+}
+
+
+.game-lines-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+
+/* ============================================================
+   📌 EV+ PICKS — STICKY TABLE HEADER
+   ============================================================ */
+
+.ev-plus-scroll-wrapper {
+
+  position: relative;
+
+  /* EV+ list scrolls inside this area */
+  max-height: 68vh;
+
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+
+  border: 1px solid #d7dee8;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* ============================================================
+   📌 LOCK EV+ COLUMN HEADERS
+   ============================================================ */
+
+.ev-plus-scroll-wrapper .odds-table thead th {
+
+  position: sticky !important;
+
+  top: 0 !important;
+
+  z-index: 80 !important;
+
+  background: #f3f6fa !important;
+
+  color: #1f2937 !important;
+
+  border-bottom:
+    2px solid #cbd5e1 !important;
+
+  box-shadow:
+    0 3px 6px rgba(15, 23, 42, 0.12) !important;
+
+  font-weight: 800 !important;
+
+  white-space: nowrap;
+}
+
+
+/* Prevent rows from showing through header */
+.ev-plus-scroll-wrapper .odds-table thead {
+  position: relative;
+  z-index: 80;
+}
+
+
+/* Slightly stronger header when scrolling */
+.ev-plus-scroll-wrapper .odds-table thead th::after {
+
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: -1px;
+
+  height: 1px;
+
+  background: #94a3b8;
+}
 
 </style>
 
