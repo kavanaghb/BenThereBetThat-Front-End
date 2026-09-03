@@ -1070,7 +1070,1462 @@ body {
 
   background: #94a3b8;
 }
+/* ============================================================
+   🎯 BTBT PROJECTED LINES SUMMARY
+   ============================================================ */
 
+.projected-lines-summary {
+  margin: 14px 0 18px;
+  padding: 16px;
+
+  border: 1px solid #d8e0ea;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 26px rgba(15, 23, 42, 0.07);
+}
+
+
+.projected-lines-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 14px;
+
+  margin-bottom: 13px;
+}
+
+
+.projected-lines-eyebrow {
+  color: #2563eb;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  letter-spacing: .12em;
+}
+
+
+.projected-lines-title {
+  margin-top: 2px;
+
+  color: #0f172a;
+
+  font-size: 19px;
+  font-weight: 900;
+}
+
+
+.projected-lines-subtitle {
+  margin-top: 3px;
+
+  color: #64748b;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.projected-lines-swipe-note {
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   CARD RAIL
+   ============================================================ */
+
+.projected-lines-grid {
+  display: grid;
+
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(315px, 360px);
+
+  gap: 12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 2px 2px 10px;
+
+  scroll-snap-type: x proximity;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+
+.projected-lines-grid::-webkit-scrollbar {
+  height: 9px;
+}
+
+
+.projected-lines-grid::-webkit-scrollbar-track {
+  background: #edf2f7;
+
+  border-radius: 999px;
+}
+
+
+.projected-lines-grid::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+
+  border-radius: 999px;
+}
+
+
+/* ============================================================
+   INDIVIDUAL GAME CARD
+   ============================================================ */
+
+.projected-line-card {
+  scroll-snap-align: start;
+
+  overflow: hidden;
+
+  border: 1px solid #d7dee8;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+
+.projected-line-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+
+  padding: 12px 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #172033,
+      #26364f
+    );
+
+  color: #ffffff;
+}
+
+
+.projected-line-matchup {
+  font-size: 13px;
+  font-weight: 900;
+
+  line-height: 1.25;
+}
+
+
+.projected-line-time {
+  margin-top: 3px;
+
+  color: #a8b5c8;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+.projected-line-confidence {
+  padding: 4px 7px;
+
+  border-radius: 999px;
+
+  background: rgba(255,255,255,.12);
+
+  color: #dbeafe;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   MARKET VS MODEL
+   ============================================================ */
+
+.projected-line-main {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 8px;
+
+  padding: 11px;
+}
+
+
+.projected-line-metric {
+  padding: 9px 10px;
+
+  border: 1px solid #e1e7ef;
+  border-radius: 9px;
+
+  background: #f8fafc;
+}
+
+
+.projected-line-metric span {
+  display: block;
+
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: .04em;
+}
+
+
+.projected-line-metric strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #172033;
+
+  font-size: 15px;
+  font-weight: 900;
+}
+
+
+/* Highlight BTBT projection */
+.projected-line-metric.model {
+  border-color: #8bc6ff;
+
+  background: #eaf4ff;
+}
+
+
+.projected-line-metric.model strong {
+  color: #174ea6;
+}
+
+
+/* ============================================================
+   SECONDARY MARKET ROW
+   ============================================================ */
+
+.projected-line-secondary {
+  padding: 0 11px 11px;
+}
+
+
+.projected-line-section-label {
+  margin-bottom: 6px;
+
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: .06em;
+
+  text-transform: uppercase;
+}
+
+
+.projected-line-price-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 7px;
+}
+
+
+.projected-line-price {
+  padding: 8px 9px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  background: #f8fafc;
+}
+
+
+.projected-line-price span {
+  display: block;
+
+  color: #475569;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+.projected-line-price strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #111827;
+
+  font-size: 14px;
+  font-weight: 900;
+}
+
+
+.projected-line-price small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #64748b;
+
+  font-size: 9px;
+}
+
+
+/* ============================================================
+   FOOTER / SIGNAL
+   ============================================================ */
+
+.projected-line-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+
+  padding: 9px 11px;
+
+  border-top: 1px solid #e2e8f0;
+
+  background: #f8fafc;
+}
+
+
+.projected-line-model-meta {
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+.projected-line-signal {
+  padding: 4px 7px;
+
+  border-radius: 999px;
+
+  background: #e2e8f0;
+
+  color: #475569;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  white-space: nowrap;
+}
+
+
+.projected-line-signal.lean {
+  background: #ffe8a3;
+
+  color: #744600;
+}
+
+
+.projected-line-signal.value {
+  background: #a9e9bf;
+
+  color: #07572c;
+}
+
+
+.projected-line-signal.strong {
+  background: #48ca78;
+
+  color: #052e16;
+}
+
+
+.projected-line-signal.negative {
+  background: #f5b2b2;
+
+  color: #7f1d1d;
+}
+
+
+/* ============================================================
+   MISSING MODEL DATA
+   ============================================================ */
+
+.projected-line-missing {
+  padding: 8px 10px;
+
+  border: 1px solid #f2c36b;
+  border-radius: 8px;
+
+  background: #fff7df;
+
+  color: #744600;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+  .projected-lines-summary {
+    padding: 12px;
+  }
+
+
+  .projected-lines-grid {
+    grid-auto-columns:
+      minmax(285px, 88vw);
+  }
+
+
+  .projected-lines-heading {
+    align-items: flex-start;
+  }
+
+
+  .projected-lines-title {
+    font-size: 17px;
+  }
+
+}
+
+/* ============================================================
+   🎯 PROJECTED LINES — RAIL / CARD VIEW TOGGLE
+   ============================================================ */
+
+.projected-lines-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
+.projected-lines-view-btn {
+  padding: 7px 10px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  background: #f8fafc;
+
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    color .15s ease;
+}
+
+
+.projected-lines-view-btn:hover {
+  background: #eef4ff;
+  border-color: #93b9ef;
+}
+
+
+.projected-lines-view-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+
+  color: #ffffff;
+}
+
+
+/* ============================================================
+   ▦ VERTICAL CARD VIEW
+   ============================================================ */
+
+.projected-lines-grid.card-view {
+  display: grid;
+
+  grid-auto-flow: row;
+  grid-auto-columns: unset;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  overflow-x: visible;
+  overflow-y: visible;
+
+  padding-bottom: 4px;
+
+  scroll-snap-type: none;
+}
+
+
+.projected-lines-grid.card-view
+.projected-line-card {
+  width: 100%;
+
+  min-width: 0;
+}
+
+
+/* ============================================================
+   📱 MOBILE — SINGLE COLUMN VERTICAL CARDS
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+  .projected-lines-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+
+  .projected-lines-view-toggle {
+    width: 100%;
+  }
+
+
+  .projected-lines-view-btn {
+    flex: 1 1 0;
+
+    min-height: 38px;
+  }
+
+
+  .projected-lines-grid.card-view {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+  }
+
+}
+/* ============================================================
+   🎯 PROJECTED LINES — TAP TO CARD LAUNCHER
+   ============================================================ */
+
+.projected-lines-launcher {
+  margin: 12px 0 14px;
+}
+
+
+.projected-lines-open-btn {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px 15px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f5f8fc
+    );
+
+  box-shadow:
+    0 5px 18px rgba(15, 23, 42, .06);
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease;
+}
+
+
+.projected-lines-open-btn:hover {
+  transform: translateY(-1px);
+
+  border-color: #7aa7e8;
+
+  box-shadow:
+    0 8px 22px rgba(15, 23, 42, .10);
+}
+
+
+#projectedLinesOpenIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  flex: 0 0 38px;
+
+  border-radius: 10px;
+
+  background: #eaf2ff;
+
+  font-size: 20px;
+}
+
+
+.projected-lines-open-copy {
+  flex: 1 1 auto;
+
+  min-width: 0;
+}
+
+
+.projected-lines-open-copy strong {
+  display: block;
+
+  color: #172033;
+
+  font-size: 14px;
+  font-weight: 900;
+}
+
+
+.projected-lines-open-copy small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+
+.projected-lines-open-count {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: #eaf2ff;
+
+  color: #1d4ed8;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  white-space: nowrap;
+}
+
+
+.projected-lines-open-arrow {
+  color: #64748b;
+
+  font-size: 28px;
+  font-weight: 500;
+
+  line-height: 1;
+}
+
+
+/* ============================================================
+   🪟 PROJECTED LINES MODAL
+   ============================================================ */
+
+.projected-lines-modal {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 10050;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 22px;
+
+  background:
+    rgba(15, 23, 42, .72);
+
+  backdrop-filter: blur(4px);
+}
+
+
+.projected-lines-modal.hidden {
+  display: none !important;
+}
+
+
+.projected-lines-modal-shell {
+  position: relative;
+
+  width: min(1500px, 96vw);
+
+  max-height: 92vh;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding: 14px;
+
+  border-radius: 16px;
+
+  background: #f8fafc;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, .30);
+}
+
+
+/* Remove the old page-level margin since it is now inside modal */
+.projected-lines-modal
+.projected-lines-summary {
+  margin: 0;
+
+  box-shadow: none;
+}
+
+
+/* ============================================================
+   ✕ FLOATING CLOSE BUTTON
+   ============================================================ */
+
+.projected-lines-modal-close {
+  position: sticky;
+
+  top: 0;
+
+  z-index: 200;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  margin-left: auto;
+  margin-bottom: -38px;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: #172033;
+
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 15px rgba(15, 23, 42, .25);
+}
+
+
+.projected-lines-modal-close:hover {
+  background: #dc2626;
+}
+
+
+/* ============================================================
+   📱 MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+  .projected-lines-modal {
+    padding: 0;
+  }
+
+
+  .projected-lines-modal-shell {
+    width: 100vw;
+
+    height: 100vh;
+    max-height: 100vh;
+
+    border-radius: 0;
+
+    padding: 10px;
+  }
+
+
+  .projected-lines-modal
+  .projected-lines-summary {
+    border: 0;
+
+    padding: 10px;
+  }
+
+
+  .projected-lines-open-btn {
+    padding: 10px 12px;
+  }
+
+
+  .projected-lines-open-copy strong {
+    font-size: 13px;
+  }
+
+
+  .projected-lines-open-count {
+    font-size: 9px;
+  }
+
+}
+
+/* ============================================================
+   🔎 PROJECTED LINES — GAME DETAIL BUTTON
+   ============================================================ */
+
+.projected-line-detail-btn {
+  padding: 5px 8px;
+
+  border: 1px solid #93b4e8;
+  border-radius: 7px;
+
+  background: #eef5ff;
+
+  color: #174ea6;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .15s ease;
+}
+
+
+.projected-line-detail-btn:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+
+  transform: translateY(-1px);
+}
+
+
+@media (max-width: 700px) {
+
+  .projected-line-footer {
+    align-items: flex-start;
+  }
+
+  .projected-line-detail-btn {
+    min-height: 30px;
+  }
+
+}
+/* ============================================================
+   📌 FINAL GAME LINES STICKY HEADER FIX
+   One scroll container for ALL Game Lines tables
+   ============================================================ */
+
+
+/* ============================================================
+   1. OUTER RESULTS CONTAINER MUST NOT SCROLL
+   ============================================================ */
+
+#gameLinesResults {
+  max-height: none !important;
+
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+
+/* ============================================================
+   2. TABLE WRAPPER IS THE ONLY SCROLL CONTAINER
+   Applies to:
+   - Pregame Odds
+   - EV+ Picks
+   - Live Odds
+   ============================================================ */
+
+#gameLinesResults .table-scroll-wrapper {
+  position: relative !important;
+
+  width: 100% !important;
+  max-width: 100% !important;
+
+  max-height: 68vh !important;
+
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-gutter: stable;
+}
+
+
+/* ============================================================
+   3. KEEP TABLE STRUCTURE STICKY-SAFE
+   ============================================================ */
+
+#gameLinesResults .table-scroll-wrapper .odds-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+
+  min-width: max-content;
+}
+
+
+/* ============================================================
+   4. EVERY HEADER CELL STAYS LOCKED TO TOP
+   ============================================================ */
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+thead
+th {
+  position: sticky !important;
+
+  top: 0 !important;
+
+  z-index: 80 !important;
+
+  background: #f8fafc !important;
+
+  border-bottom:
+    2px solid #cbd5e1 !important;
+
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.10) !important;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   5. CORNER CELLS
+   These are BOTH vertically sticky and horizontally sticky.
+   They must sit above every other header/cell.
+   ============================================================ */
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+thead
+.sticky-game,
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+thead
+.sticky-market,
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+thead
+.sticky-selection {
+  z-index: 100 !important;
+
+  background: #f8fafc !important;
+}
+
+
+/* ============================================================
+   6. LEFT STICKY COLUMNS
+   ============================================================ */
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+.sticky-game {
+  position: sticky !important;
+
+  left: 0 !important;
+}
+
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+.sticky-market {
+  position: sticky !important;
+
+  left: 250px !important;
+}
+
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+.sticky-selection {
+  position: sticky !important;
+
+  left: 355px !important;
+}
+
+
+/* ============================================================
+   7. KEEP STICKY BODY CELLS ABOVE NORMAL BODY CELLS
+   BUT BELOW HEADER
+   ============================================================ */
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+tbody
+.sticky-game,
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+tbody
+.sticky-market,
+
+#gameLinesResults
+.table-scroll-wrapper
+.odds-table
+tbody
+.sticky-selection {
+  z-index: 20 !important;
+}
+
+
+/* ============================================================
+   📱 MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+  #gameLinesResults .table-scroll-wrapper {
+    max-height: 65vh !important;
+  }
+
+}
+
+/* ============================================================
+   🧠 BTBT PROJECTED LINE — PLAIN ENGLISH UX
+   ============================================================ */
+
+.projected-line-call {
+  margin: 12px 11px 0;
+  padding: 11px 13px;
+
+  border: 1px solid #d7dee8;
+  border-radius: 10px;
+
+  background: #f8fafc;
+}
+
+
+.projected-line-call-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #172033;
+}
+
+
+.projected-line-call-copy {
+  margin-top: 4px;
+
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+
+.projected-line-call.pass {
+  border-color: #f3b3b3;
+  background: #fff1f2;
+}
+
+
+.projected-line-call.pass
+.projected-line-call-title {
+  color: #991b1b;
+}
+
+
+.projected-line-call.lean {
+  border-color: #f2cf73;
+  background: #fff8df;
+}
+
+
+.projected-line-call.lean
+.projected-line-call-title {
+  color: #854d0e;
+}
+
+
+.projected-line-call.value {
+  border-color: #86d5a4;
+  background: #ecfdf3;
+}
+
+
+.projected-line-call.value
+.projected-line-call-title {
+  color: #166534;
+}
+
+
+.projected-line-call.strong {
+  border-color: #22c55e;
+  background: #dcfce7;
+}
+
+
+.projected-line-call.strong
+.projected-line-call-title {
+  color: #14532d;
+}
+
+
+.projected-line-call.market-only {
+  border-color: #f0c56b;
+  background: #fff8e1;
+}
+
+
+.projected-line-call.market-only
+.projected-line-call-title {
+  color: #854d0e;
+}
+
+
+/* ============================================================
+   🧠 PLAIN ENGLISH BTBT READ
+   ============================================================ */
+
+.projected-line-read {
+  margin: 0 11px 12px;
+  padding: 10px 12px;
+
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+
+  background: #eff6ff;
+}
+
+
+.projected-line-read-label {
+  color: #1d4ed8;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: .08em;
+}
+
+
+.projected-line-read-copy {
+  margin-top: 4px;
+
+  color: #334155;
+
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+
+.projected-line-read-copy strong {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+
+/* ============================================================
+   SMALL TEXT UNDER BEST PRICE
+   ============================================================ */
+
+.projected-line-metric small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.projected-line-footer {
+  min-height: 44px;
+}
+
+
+.projected-line-detail-btn {
+  padding: 6px 9px;
+
+  border: 1px solid #93b4e8;
+  border-radius: 7px;
+
+  background: #eef5ff;
+
+  color: #174ea6;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+
+.projected-line-detail-btn:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+
+@media (max-width: 700px) {
+
+  .projected-line-call-copy,
+  .projected-line-read-copy {
+    font-size: 12px;
+  }
+
+}
+
+/* ============================================================
+   ⚾ MLB — THREE MARKET BTBT OUTLOOK
+   ============================================================ */
+
+.projected-market-outlook-heading {
+  padding: 12px 11px 5px;
+
+  color: #1d4ed8;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  letter-spacing: .08em;
+}
+
+
+.projected-market-outlook-heading small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  letter-spacing: 0;
+}
+
+
+/* ============================================================
+   THREE MODEL BOXES
+   ============================================================ */
+
+.projected-market-outlook-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 8px;
+
+  padding: 7px 11px 9px;
+}
+
+
+.projected-market-outlook-card {
+  min-width: 0;
+
+  padding: 10px;
+
+  border: 1px solid #dbe3ed;
+  border-radius: 9px;
+
+  background: #f8fafc;
+}
+
+
+.projected-market-outlook-label {
+  display: block;
+
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  text-transform: uppercase;
+
+  letter-spacing: .04em;
+}
+
+
+.projected-market-outlook-pick {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #172033;
+
+  font-size: 13px;
+  font-weight: 900;
+
+  line-height: 1.25;
+}
+
+
+.projected-market-outlook-probability {
+  margin-top: 4px;
+
+  color: #1d4ed8;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+
+/* ============================================================
+   SIGNAL BADGES
+   ============================================================ */
+
+.projected-market-outlook-call {
+  display: inline-block;
+
+  margin-top: 6px;
+
+  padding: 4px 7px;
+
+  border-radius: 999px;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+
+.projected-market-outlook-call.pass {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+
+.projected-market-outlook-call.lean {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+
+.projected-market-outlook-call.value {
+  background: #dcfce7;
+  color: #166534;
+}
+
+
+.projected-market-outlook-call.strong {
+  background: #22c55e;
+  color: #052e16;
+}
+
+
+/* ============================================================
+   BTBT % EXPLANATION
+   ============================================================ */
+
+.projected-market-outlook-note {
+  margin: 0 11px 12px;
+
+  padding: 7px 9px;
+
+  border-left: 3px solid #60a5fa;
+  border-radius: 6px;
+
+  background: #eff6ff;
+
+  color: #475569;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  line-height: 1.4;
+}
+
+
+.projected-market-outlook-note strong {
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+  .projected-market-outlook-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .projected-market-outlook-card {
+    display: grid;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+
+    align-items: center;
+
+    column-gap: 8px;
+  }
+
+
+  .projected-market-outlook-label,
+  .projected-market-outlook-probability {
+    grid-column: 1;
+  }
+
+
+  .projected-market-outlook-pick {
+    grid-column: 1;
+  }
+
+
+  .projected-market-outlook-call {
+    grid-column: 2;
+
+    grid-row: 1 / 4;
+
+    margin-top: 0;
+  }
+
+}
 </style>
 
 </head>
@@ -1310,29 +2765,174 @@ body {
   </div>
 
 </div>
-<!-- 📈 Market EV View Tabs -->
+<!-- ===================================================== -->
+<!-- 📈 MARKET EV VIEW TABS -->
+<!-- ===================================================== -->
+
 <div id="mlbViewTabs"
      style="display:none; margin:10px 0; gap:8px; flex-wrap:wrap;">
-  <button id="mlbOddsScreenBtn" class="toggle-btn active">📚 Pregame Odds</button>
-  <button id="mlbValuePicksBtn" class="toggle-btn">🧠 Value Picks</button>
-  <button id="mlbLiveOddsBtn" class="toggle-btn">🔴 Live Odds</button>
+
+  <button
+    id="mlbOddsScreenBtn"
+    class="toggle-btn active"
+  >
+    📚 Pregame Odds
+  </button>
+
+  <button
+    id="mlbValuePicksBtn"
+    class="toggle-btn"
+  >
+    🧠 Value Picks
+  </button>
+
+  <button
+    id="mlbLiveOddsBtn"
+    class="toggle-btn"
+  >
+    🔴 Live Odds
+  </button>
+
+  <button
+    type="button"
+    id="projectedLinesRailOpenBtn"
+    class="toggle-btn"
+  >
+    ↔ Projected Lines
+  </button>
+
+
+
 </div>
 
-<!-- 📱 Mobile View Toggle -->
+
+<!-- ===================================================== -->
+<!-- 📱 MAIN TABLE / CARD VIEW TOGGLE -->
+<!-- ===================================================== -->
+
 <div class="view-toggle">
-  <button id="tableViewBtn" class="toggle-btn active">📊 Table</button>
-  <button id="cardViewBtn" class="toggle-btn">📱 Card</button>
+
+  <button
+    id="tableViewBtn"
+    class="toggle-btn active"
+  >
+    📊 Table
+  </button>
+
+  <button
+    id="cardViewBtn"
+    class="toggle-btn"
+  >
+    📱 Card
+  </button>
+
 </div>
 
-<!-- Results -->
+
+<!-- ===================================================== -->
+<!-- 📊 GAME LINES RESULTS -->
+<!-- ===================================================== -->
+
 <div id="gameLinesResults">
   Loading game line edges...
 </div>
 
-<!-- 📱 Mobile Card View -->
-<div id="gameLinesCardView" class="card-view"></div>
+
+<!-- ===================================================== -->
+<!-- 📱 MAIN GAME LINES CARD VIEW -->
+<!-- ===================================================== -->
+
+<div
+  id="gameLinesCardView"
+  class="card-view">
+</div>
 
 
+<!-- ===================================================== -->
+<!-- 🎯 PROJECTED LINES MODAL -->
+<!-- ===================================================== -->
+
+<div
+  id="projectedLinesModal"
+  class="projected-lines-modal hidden"
+  aria-hidden="true"
+>
+
+  <div class="projected-lines-modal-shell">
+
+    <button
+      type="button"
+      id="projectedLinesCloseBtn"
+      class="projected-lines-modal-close"
+      aria-label="Close projected lines"
+    >
+      ✕
+    </button>
+
+
+    <div
+      id="projectedLinesSummary"
+      class="projected-lines-summary"
+    >
+
+      <div class="projected-lines-heading">
+
+        <div>
+
+          <div class="projected-lines-eyebrow">
+            BTBT GAME OUTLOOK
+          </div>
+
+          <div
+            id="projectedLinesTitle"
+            class="projected-lines-title"
+          >
+            Projected Lines
+          </div>
+
+          <div
+            id="projectedLinesSubtitle"
+            class="projected-lines-subtitle"
+          >
+          </div>
+
+        </div>
+
+
+        <div class="projected-lines-view-toggle">
+
+          <button
+            type="button"
+            id="projectedLinesRailBtn"
+            class="projected-lines-view-btn active"
+          >
+            ↔ Rail
+          </button>
+
+          <button
+            type="button"
+            id="projectedLinesCardBtn"
+            class="projected-lines-view-btn"
+          >
+            ▦ Card View
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="projectedLinesGrid"
+        class="projected-lines-grid"
+      >
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

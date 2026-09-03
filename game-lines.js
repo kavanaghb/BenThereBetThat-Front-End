@@ -587,10 +587,13 @@ if (gameLinesIsMlbTrial) {
     
 currentGameLines = games;
 
+
 // 📊 Update analytical market snapshot
 renderMarketAnalyticsSummary();
 
-const currentMode = games[0]?.mode || "";
+
+const currentMode =
+  games[0]?.mode || "";
 const isMarketMode = isMarketEvMode(currentMode);
 const isNcaafMode = currentMode === "ncaaf_market";
 
@@ -1501,14 +1504,285 @@ function renderSportsbookFilters() {
 // =====================================================
 // 📅 Date picker handler + initialization — CST SAFE FINAL
 // =====================================================
-
 document.addEventListener("DOMContentLoaded", () => {
+
   initializeFloatingTooltips();
   initializeOddsConverter();
+// =====================================================
+// 🎯 PROJECTED LINES — VIEW + MODAL CONTROLS
+// =====================================================
 
-  const modelBtn = document.getElementById("toggleModelDebug");
+// Inside-modal view buttons
+const projectedLinesRailBtn =
+  document.getElementById(
+    "projectedLinesRailBtn"
+  );
+
+const projectedLinesCardBtn =
+  document.getElementById(
+    "projectedLinesCardBtn"
+  );
+
+
+// Main-page Projected Lines button
+const projectedLinesRailOpenBtn =
+  document.getElementById(
+    "projectedLinesRailOpenBtn"
+  );
+
+
+// Modal
+const projectedLinesModal =
+  document.getElementById(
+    "projectedLinesModal"
+  );
+
+const projectedLinesCloseBtn =
+  document.getElementById(
+    "projectedLinesCloseBtn"
+  );
+
+
+// =====================================================
+// ↔ INSIDE MODAL — RAIL VIEW
+// =====================================================
+
+projectedLinesRailBtn
+  ?.addEventListener(
+    "click",
+    () => {
+
+      projectedLinesView =
+        "rail";
+
+      applyProjectedLinesView();
+
+    }
+  );
+
+
+// =====================================================
+// ▦ INSIDE MODAL — CARD VIEW
+// =====================================================
+
+projectedLinesCardBtn
+  ?.addEventListener(
+    "click",
+    () => {
+
+      projectedLinesView =
+        "card";
+
+      applyProjectedLinesView();
+
+    }
+  );
+
+
+// =====================================================
+// 🎯 MAIN PAGE — OPEN PROJECTED LINES
+//
+// Desktop = Rail
+// Mobile = Card View
+// =====================================================
+
+projectedLinesRailOpenBtn
+  ?.addEventListener(
+    "click",
+    () => {
+
+      projectedLinesView =
+        window.innerWidth <= 700
+          ? "card"
+          : "rail";
+
+      renderProjectedLinesSummary();
+
+      openProjectedLinesModal();
+
+    }
+  );
+
+// =====================================================
+// ✕ CLOSE WITH X
+// =====================================================
+
+projectedLinesCloseBtn
+  ?.addEventListener(
+    "click",
+    () => {
+
+      closeProjectedLinesModal();
+
+    }
+  );
+
+
+// =====================================================
+// CLICK BACKDROP TO CLOSE
+// =====================================================
+
+projectedLinesModal
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target ===
+        projectedLinesModal
+      ) {
+
+        closeProjectedLinesModal();
+
+      }
+
+    }
+  );
+
+
+// =====================================================
+// ESCAPE TO CLOSE
+// =====================================================
+
+window.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Escape"
+    ) {
+
+      closeProjectedLinesModal();
+
+    }
+
+  }
+);
+
+// =====================================================
+// 🔎 PROJECTED LINES — GAME DETAILS
+// =====================================================
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const detailBtn =
+      event.target.closest(
+        ".projected-line-detail-btn"
+      );
+
+
+    if (!detailBtn)
+      return;
+
+
+    event.preventDefault();
+    event.stopPropagation();
+
+
+    const eventId =
+      detailBtn.dataset
+        .projectedDetailEvent;
+
+
+    const game =
+      currentGameLines.find(
+        item =>
+          String(item?.event_id || "") ===
+          String(eventId || "")
+      );
+
+
+    if (!game) {
+
+      console.warn(
+        "Projected Lines game not found:",
+        eventId
+      );
+
+      return;
+
+    }
+
+
+    const rows =
+      Array.isArray(game.market_board)
+        ? game.market_board
+        : [];
+
+
+    let detailRow =
+      null;
+
+
+    // =====================================================
+    // 🏈 NCAAF — prefer spread detail
+    // =====================================================
+
+    if (
+      game.mode ===
+      "ncaaf_market"
+    ) {
+
+      const spreadRows =
+        rows.filter(
+          row =>
+            String(
+              row?.market || ""
+            ).toLowerCase() ===
+            "spreads"
+        );
+
+
+      detailRow =
+        projectedLineBestMarketRow(
+          spreadRows
+        );
+
+    }
+
+
+    // =====================================================
+    // ⚾ MLB — strongest available market
+    // =====================================================
+
+    else if (
+      game.mode ===
+      "mlb_market"
+    ) {
+
+      detailRow =
+        projectedLineBestMarketRow(
+          rows
+        );
+
+    }
+
+
+    returnToProjectedLinesAfterDetail = true;
+
+
+// Temporarily close Projected Lines.
+closeProjectedLinesModal();
+
+
+// Open the existing detailed game modal.
+showMarketRowBreakdown(
+  game,
+  detailRow
+);
+  }
+);
+
+const modelBtn =
+  document.getElementById(
+    "toggleModelDebug"
+  );
 
 if (modelBtn) {
+
+  
 
   modelBtn.addEventListener("click", () => {
 
@@ -3295,7 +3569,77 @@ window.showNcaafMarketBreakdown = function(game, pick = null) {
       ? Number(selectedPick.team_model_probability)
       : null;
 
-  const evPlusActive = selectedPick.ev_plus_active === true;
+  // =====================================================
+// 🏈 DETECT WHETHER TEAM MODEL ACTUALLY INFLUENCED SPREAD
+//
+// Primary signal = backend ev_plus_active.
+// The additional checks make the UI resilient to cached
+// or older payloads that contain the model adjustment but
+// not the boolean flag.
+// =====================================================
+
+const selectedMarket =
+  String(
+    selectedPick?.market || ""
+  )
+    .trim()
+    .toLowerCase();
+
+
+const returnedTeamModelProbability =
+  Number(
+    selectedPick
+      ?.team_model_probability
+  );
+
+
+const returnedTeamModelWeight =
+  Number(
+    selectedPick
+      ?.team_model_weight
+  );
+
+
+const returnedModelAdjustment =
+  Number(
+    selectedPick
+      ?.team_model_adjustment_pp
+  );
+
+
+const evPlusActive =
+  selectedMarket === "spreads" &&
+  (
+    selectedPick
+      ?.ev_plus_active === true
+    ||
+    String(
+      selectedPick
+        ?.model_status || ""
+    ).toLowerCase() === "ev_plus"
+    ||
+    (
+      Number.isFinite(
+        returnedTeamModelProbability
+      )
+      &&
+      Number.isFinite(
+        returnedTeamModelWeight
+      )
+      &&
+      returnedTeamModelWeight > 0
+    )
+    ||
+    (
+      Number.isFinite(
+        returnedModelAdjustment
+      )
+      &&
+      Math.abs(
+        returnedModelAdjustment
+      ) > 0.0001
+    )
+  );
 
   const modelEdgePoints =
     selectedPick.model_edge_points != null
@@ -3523,7 +3867,7 @@ window.showNcaafMarketBreakdown = function(game, pick = null) {
     const projectedFavorite = context.projected_favorite || "N/A";
 
     readItems.push(
-      `Team Model v2 projects ${projectedFavorite} ${formatSignedPts(context.projected_favorite_spread)} with ${context.power_source || "SP+"} as the power source${context.neutral_site ? " at a neutral site" : ""}.`
+      `BTBT projects ${projectedFavorite} ${formatSignedPts(context.projected_favorite_spread)} using opponent-adjusted team-strength ratings${context.neutral_site ? " at a neutral site" : ""}.`
     );
 
     if (Number.isFinite(Number(context?.model_vs_market_points))) {
@@ -3755,8 +4099,20 @@ window.showNcaafMarketBreakdown = function(game, pick = null) {
           <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Model Context</div>
 
           <div class="ncaaf-detail-row">
-            <span>Power Source</span>
-            <strong>${context.power_source || "N/A"}</strong>
+            <span>Power Rating Source</span>
+
+            <strong>
+            ${
+              String(
+                context.power_source || ""
+                ).toUpperCase() === "SP"
+                ? "SP+ team ratings"
+                : (
+                    context.power_source ||
+                    "N/A"
+                  )
+            }
+            </strong>
           </div>
 
           <div class="ncaaf-detail-row">
@@ -4068,6 +4424,2155 @@ function mlbModelFactorsHtml(row) {
       <button type="button" class="mlb-detail-inline-btn">View Detail</button>
     </div>`;
 }
+// =====================================================
+// 🎯 PROJECTED LINES SUMMARY
+//
+// NCAAF:
+//   Market Spread
+//   BTBT Projected Spread
+//   Away/Home Moneyline
+//
+// MLB:
+//   Market Total
+//   Best Over Price
+//   Best Under Price
+//   BTBT Model Lean
+// =====================================================
+
+
+function projectedLineSigned(value) {
+
+  const n = Number(value);
+
+  if (!Number.isFinite(n))
+    return "N/A";
+
+
+  if (n === 0)
+    return "PK";
+
+
+  return n > 0
+    ? `+${n.toFixed(1)}`
+    : n.toFixed(1);
+
+}
+
+
+
+function projectedLineAmerican(value) {
+
+  const n = Number(value);
+
+  if (!Number.isFinite(n))
+    return "—";
+
+
+  return n > 0
+    ? `+${Math.round(n)}`
+    : `${Math.round(n)}`;
+
+}
+
+
+
+function projectedLineRecommendationMeta(row) {
+
+  const tier =
+    String(
+      row?.recommendation || "PASS"
+    )
+      .trim()
+      .toUpperCase();
+
+
+  const ev =
+    Number(
+      row?.expected_value_pct
+    );
+
+
+  if (tier === "STRONG_VALUE") {
+
+    return {
+      className: "strong",
+      text:
+        `🔥 Strong ${
+          Number.isFinite(ev)
+            ? `${ev.toFixed(1)}% EV`
+            : ""
+        }`
+    };
+
+  }
+
+
+  if (tier === "VALUE") {
+
+    return {
+      className: "value",
+      text:
+        `✅ Value ${
+          Number.isFinite(ev)
+            ? `${ev.toFixed(1)}% EV`
+            : ""
+        }`
+    };
+
+  }
+
+
+  if (tier === "LEAN") {
+
+    return {
+      className: "lean",
+      text:
+        `👀 Lean ${
+          Number.isFinite(ev)
+            ? `${ev.toFixed(1)}% EV`
+            : ""
+        }`
+    };
+
+  }
+
+
+  if (
+    Number.isFinite(ev) &&
+    ev < 0
+  ) {
+
+    return {
+      className: "negative",
+      text: `${ev.toFixed(1)}% EV`
+    };
+
+  }
+
+
+  return {
+    className: "",
+    text: "Market aligned"
+  };
+
+}
+
+
+
+function projectedLineBestMarketRow(rows = []) {
+
+  const rank = {
+    STRONG_VALUE: 4,
+    VALUE: 3,
+    LEAN: 2,
+    PASS: 1
+  };
+
+
+  return [...rows]
+    .sort((a, b) => {
+
+      const aTier =
+        String(
+          a?.recommendation || "PASS"
+        )
+          .trim()
+          .toUpperCase();
+
+
+      const bTier =
+        String(
+          b?.recommendation || "PASS"
+        )
+          .trim()
+          .toUpperCase();
+
+
+      return (
+        (rank[bTier] || 0)
+        -
+        (rank[aTier] || 0)
+        ||
+        Number(
+          b?.expected_value_pct ?? -999
+        )
+        -
+        Number(
+          a?.expected_value_pct ?? -999
+        )
+      );
+
+    })[0] || null;
+
+}
+
+
+
+function projectedLineFindTeamRow(
+  rows,
+  team
+) {
+
+  if (!team)
+    return null;
+
+
+  const teamLower =
+    String(team)
+      .trim()
+      .toLowerCase();
+
+
+  return rows.find(row => {
+
+    const selection =
+      String(
+        row?.selection || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    const label =
+      String(
+        row?.pick_label || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    return (
+      selection === teamLower ||
+      label === teamLower ||
+      label.startsWith(
+        `${teamLower} `
+      )
+    );
+
+  }) || null;
+
+}
+
+
+// =====================================================
+// 🎯 FIND EXACT TEAM + SPREAD POINT
+//
+// Prevent projected cards from displaying a different
+// alternate spread than the market spread shown above.
+// =====================================================
+
+function projectedLineFindSpreadRow(
+  rows,
+  team,
+  targetPoint
+) {
+
+  if (
+    !Array.isArray(rows) ||
+    !team
+  ) {
+    return null;
+  }
+
+
+  const teamLower =
+    String(team)
+      .trim()
+      .toLowerCase();
+
+
+  const target =
+    Number(targetPoint);
+
+
+  // =====================================================
+  // 1. EXACT TEAM + POINT MATCH
+  // =====================================================
+
+  if (Number.isFinite(target)) {
+
+    const exact =
+      rows.find(row => {
+
+        const selection =
+          String(
+            row?.selection || ""
+          )
+            .trim()
+            .toLowerCase();
+
+
+        const point =
+          Number(row?.point);
+
+
+        return (
+          selection === teamLower &&
+          Number.isFinite(point) &&
+          Math.abs(point - target) < 0.001
+        );
+
+      });
+
+
+    if (exact) {
+      return exact;
+    }
+
+  }
+
+
+  // =====================================================
+  // 2. FALLBACK — CLOSEST AVAILABLE LINE
+  // =====================================================
+
+  const teamRows =
+    rows.filter(row => {
+
+      const selection =
+        String(
+          row?.selection || ""
+        )
+          .trim()
+          .toLowerCase();
+
+
+      return selection === teamLower;
+
+    });
+
+
+  if (!teamRows.length) {
+    return null;
+  }
+
+
+  if (!Number.isFinite(target)) {
+    return teamRows[0];
+  }
+
+
+  return [...teamRows]
+    .sort(
+      (a, b) =>
+        Math.abs(
+          Number(a?.point) - target
+        )
+        -
+        Math.abs(
+          Number(b?.point) - target
+        )
+    )[0] || null;
+
+}
+function projectedLineMarketSpread(
+  game,
+  spreadRows
+) {
+
+  const context =
+    game?.model_context || {};
+
+
+  let homeSpread =
+    Number(
+      context?.market_home_spread
+    );
+
+
+  // Backend context unavailable:
+  // fall back to home-team spread row.
+  if (!Number.isFinite(homeSpread)) {
+
+    const homeRow =
+      projectedLineFindTeamRow(
+        spreadRows,
+        game?.home_team
+      );
+
+
+    homeSpread =
+      Number(
+        homeRow?.point
+      );
+
+  }
+
+
+  if (!Number.isFinite(homeSpread))
+    return "N/A";
+
+
+  if (homeSpread === 0)
+    return "Pick'em";
+
+
+  if (homeSpread < 0) {
+
+    return (
+      `${game.home_team} ` +
+      projectedLineSigned(
+        homeSpread
+      )
+    );
+
+  }
+
+
+  // Positive HOME spread means the away
+  // team is the favorite.
+  return (
+    `${game.away_team} ` +
+    projectedLineSigned(
+      -homeSpread
+    )
+  );
+
+}
+
+function projectedLineNcaafCard(game) {
+
+  const context =
+    game?.model_context || {};
+
+
+  const rows =
+    Array.isArray(game?.market_board)
+      ? game.market_board
+      : [];
+
+
+  const spreadRows =
+    rows.filter(
+      row =>
+        String(
+          row?.market || ""
+        ).toLowerCase() ===
+        "spreads"
+    );
+
+
+  const moneylineRows =
+    rows.filter(
+      row =>
+        String(
+          row?.market || ""
+        ).toLowerCase() ===
+        "h2h"
+    );
+
+
+  // =====================================================
+  // 🎯 EXACT MARKET SPREAD
+  // =====================================================
+
+  const marketHomePoint =
+    Number(
+      context?.market_home_spread
+    );
+
+
+  const marketAwayPoint =
+    Number.isFinite(
+      marketHomePoint
+    )
+      ? -marketHomePoint
+      : null;
+
+
+  const homeSpread =
+    projectedLineFindSpreadRow(
+      spreadRows,
+      game?.home_team,
+      marketHomePoint
+    );
+
+
+  const awaySpread =
+    projectedLineFindSpreadRow(
+      spreadRows,
+      game?.away_team,
+      marketAwayPoint
+    );
+
+
+  // =====================================================
+  // 💰 MONEYLINE
+  // =====================================================
+
+  const awayMl =
+    projectedLineFindTeamRow(
+      moneylineRows,
+      game?.away_team
+    );
+
+
+  const homeMl =
+    projectedLineFindTeamRow(
+      moneylineRows,
+      game?.home_team
+    );
+
+
+  // =====================================================
+  // 📊 MARKET / MODEL
+  // =====================================================
+
+  const marketSpread =
+    projectedLineMarketSpread(
+      game,
+      spreadRows
+    );
+
+
+  const projectedFavorite =
+    context?.projected_favorite;
+
+
+  const projectedFavoriteSpread =
+    Number(
+      context?.projected_favorite_spread
+    );
+
+
+  const modelReady =
+    context?.model_status === "ready" &&
+    projectedFavorite &&
+    Number.isFinite(
+      projectedFavoriteSpread
+    );
+
+
+  const projectedSpread =
+    modelReady
+      ? (
+          `${projectedFavorite} ` +
+          projectedLineSigned(
+            projectedFavoriteSpread
+          )
+        )
+      : "N/A";
+
+
+  const modelGap =
+    Number(
+      context?.model_vs_market_points
+    );
+
+
+  // =====================================================
+  // 🎯 ONLY USE THE EXACT DISPLAYED SPREADS
+  // =====================================================
+
+  const exactSpreadRows =
+    [
+      awaySpread,
+      homeSpread
+    ].filter(Boolean);
+
+
+  const strongestSpread =
+    projectedLineBestMarketRow(
+      exactSpreadRows
+    );
+
+
+  const recommendation =
+    String(
+      strongestSpread
+        ?.recommendation || "PASS"
+    )
+      .trim()
+      .toUpperCase();
+
+
+  const ev =
+    Number(
+      strongestSpread
+        ?.expected_value_pct
+    );
+
+
+  const confidence =
+    context?.confidence_label ||
+    strongestSpread?.model_confidence ||
+    "N/A";
+
+
+  // =====================================================
+  // 🧠 WHICH SIDE DOES THE MODEL LIKE?
+  // =====================================================
+
+  let modelSide =
+    null;
+
+
+  if (
+    modelReady &&
+    Number.isFinite(modelGap)
+  ) {
+
+    if (modelGap > 0) {
+
+      modelSide =
+        game.home_team;
+
+    }
+
+    else if (modelGap < 0) {
+
+      modelSide =
+        game.away_team;
+
+    }
+
+  }
+
+
+  const modelEdge =
+    Number.isFinite(modelGap)
+      ? Math.abs(modelGap)
+      : null;
+
+
+  const modelEdgeText =
+    modelSide &&
+    modelEdge != null
+      ? `${modelSide} +${modelEdge.toFixed(1)} pts`
+      : "N/A";
+
+
+  // =====================================================
+  // 💵 BEST EXACT SPREAD PRICE
+  // =====================================================
+
+  const bestSelection =
+    strongestSpread?.selection ||
+    strongestSpread?.pick_label ||
+    null;
+
+
+  const bestPoint =
+    Number(
+      strongestSpread?.point
+    );
+
+
+  const bestPrice =
+    strongestSpread?.best_price;
+
+
+  const bestBook =
+    strongestSpread
+      ?.best_book_name ||
+    strongestSpread
+      ?.best_book ||
+    "—";
+
+
+  const bestPriceText =
+    bestSelection &&
+    Number.isFinite(bestPoint)
+      ? (
+          `${bestSelection} ` +
+          `${projectedLineSigned(bestPoint)} ` +
+          `${projectedLineAmerican(bestPrice)}`
+        )
+      : "N/A";
+
+
+  // =====================================================
+  // 📣 PLAIN-ENGLISH BTBT CALL
+  // =====================================================
+
+  let callClass =
+    "pass";
+
+
+  let callTitle =
+    "⛔ PASS";
+
+
+  let callCopy =
+    "BTBT does not see enough betting value at the current price.";
+
+
+  if (!modelReady) {
+
+    callClass =
+      "market-only";
+
+
+    callTitle =
+      "⚠ MARKET ONLY";
+
+
+    callCopy =
+      "BTBT does not have enough team data for an independent spread projection yet. Current sportsbook pricing is still shown.";
+
+  }
+
+  else if (
+    recommendation ===
+    "STRONG_VALUE"
+  ) {
+
+    callClass =
+      "strong";
+
+
+    callTitle =
+      `🔥 STRONG VALUE — ${bestSelection || modelSide || ""}`;
+
+
+    callCopy =
+      modelSide &&
+      modelEdge != null
+        ? (
+            `BTBT makes ${modelSide} about ` +
+            `${modelEdge.toFixed(1)} points stronger than the market. ` +
+            `${bestBook} is currently offering the best price` +
+            `${Number.isFinite(ev) ? `, creating +${ev.toFixed(1)}% EV.` : "."}`
+          )
+        : "This price creates one of the strongest betting edges on the slate.";
+
+  }
+
+  else if (
+    recommendation ===
+    "VALUE"
+  ) {
+
+    callClass =
+      "value";
+
+
+    callTitle =
+      `✅ VALUE — ${bestSelection || modelSide || ""}`;
+
+
+    callCopy =
+      modelSide &&
+      modelEdge != null
+        ? (
+            `BTBT makes ${modelSide} about ` +
+            `${modelEdge.toFixed(1)} points stronger than the market, ` +
+            `and the current price provides positive betting value` +
+            `${Number.isFinite(ev) ? ` at +${ev.toFixed(1)}% EV.` : "."}`
+          )
+        : "BTBT sees a meaningful pricing advantage at the current line.";
+
+  }
+
+  else if (
+    recommendation ===
+    "LEAN"
+  ) {
+
+    callClass =
+      "lean";
+
+
+    callTitle =
+      `👀 LEAN — ${bestSelection || modelSide || ""}`;
+
+
+    callCopy =
+      modelSide &&
+      modelEdge != null
+        ? (
+            `The model slightly favors ${modelSide} versus the market, ` +
+            `but the advantage is not large enough to qualify as a stronger play.`
+          )
+        : "There is a small positive edge, but not enough for a stronger recommendation.";
+
+  }
+
+  else if (
+    modelReady &&
+    modelSide &&
+    modelEdge != null &&
+    modelEdge >= 0.5
+  ) {
+
+    callClass =
+      "pass";
+
+
+    callTitle =
+      `⛔ PASS — Model likes ${modelSide}, price doesn't`;
+
+
+    callCopy =
+      (
+        `BTBT thinks ${modelSide} is about ` +
+        `${modelEdge.toFixed(1)} points stronger than the current market line, ` +
+        `but the available price does not provide enough value to bet.`
+      );
+
+  }
+
+  else if (modelReady) {
+
+    callClass =
+      "pass";
+
+
+    callTitle =
+      "⛔ PASS — Market and BTBT are close";
+
+
+    callCopy =
+      "BTBT does not see enough separation from the sportsbook market to justify a bet.";
+
+  }
+
+
+  // =====================================================
+  // 🎨 CARD
+  // =====================================================
+
+  return `
+    <article class="projected-line-card">
+
+      <div class="projected-line-card-header">
+
+        <div>
+
+          <div class="projected-line-matchup">
+            ${game.away_team}
+            @
+            ${game.home_team}
+          </div>
+
+          <div class="projected-line-time">
+            ${game.game_time_display || ""}
+          </div>
+
+        </div>
+
+
+        <div class="projected-line-confidence">
+          ${confidence}
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           📣 BETTING CALL
+           ================================================= -->
+
+      <div class="projected-line-call ${callClass}">
+
+        <div class="projected-line-call-title">
+          ${callTitle}
+        </div>
+
+        <div class="projected-line-call-copy">
+          ${callCopy}
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           📊 WHAT MARKET SAYS VS WHAT BTBT SAYS
+           ================================================= -->
+
+      <div class="projected-line-main">
+
+        <div class="projected-line-metric">
+
+          <span>Market Line</span>
+
+          <strong>
+            ${marketSpread}
+          </strong>
+
+        </div>
+
+
+        <div class="projected-line-metric model">
+
+          <span>BTBT Line</span>
+
+          <strong>
+            ${projectedSpread}
+          </strong>
+
+        </div>
+
+
+        <div class="projected-line-metric">
+
+          <span>Model Edge</span>
+
+          <strong>
+            ${modelEdgeText}
+          </strong>
+
+        </div>
+
+
+        <div class="projected-line-metric">
+
+          <span>Best Price</span>
+
+          <strong>
+            ${bestPriceText}
+          </strong>
+
+          <small>
+            ${bestBook}
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           🧠 PLAIN ENGLISH READ
+           ================================================= -->
+
+      ${
+        modelReady
+          ? `
+            <div class="projected-line-read">
+
+              <div class="projected-line-read-label">
+                🧠 BTBT READ
+              </div>
+
+              <div class="projected-line-read-copy">
+
+                ${
+                  modelSide &&
+                  modelEdge != null
+                    ? (
+                        `The sportsbook market has this game at ` +
+                        `<strong>${marketSpread}</strong>. ` +
+                        `BTBT projects <strong>${projectedSpread}</strong>, ` +
+                        `a ${modelEdge.toFixed(1)}-point difference toward ` +
+                        `<strong>${modelSide}</strong>.`
+                      )
+                    : (
+                        `BTBT's projection is currently close to the sportsbook market.`
+                      )
+                }
+
+              </div>
+
+            </div>
+          `
+          : ""
+      }
+
+
+      <!-- =================================================
+           💵 SPREAD SHOPPING
+           ================================================= -->
+
+      <div class="projected-line-secondary">
+
+        <div class="projected-line-section-label">
+          Best Spread Prices
+        </div>
+
+
+        <div class="projected-line-price-grid">
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.away_team}
+            </span>
+
+            <strong>
+              ${projectedLineSigned(
+                awaySpread?.point
+              )}
+              ·
+              ${projectedLineAmerican(
+                awaySpread?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                awaySpread?.best_book_name ||
+                awaySpread?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.home_team}
+            </span>
+
+            <strong>
+              ${projectedLineSigned(
+                homeSpread?.point
+              )}
+              ·
+              ${projectedLineAmerican(
+                homeSpread?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                homeSpread?.best_book_name ||
+                homeSpread?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           💰 MONEYLINE SHOPPING
+           ================================================= -->
+
+      <div class="projected-line-secondary">
+
+        <div class="projected-line-section-label">
+          Best Moneyline
+        </div>
+
+
+        <div class="projected-line-price-grid">
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.away_team}
+            </span>
+
+            <strong>
+              ${projectedLineAmerican(
+                awayMl?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                awayMl?.best_book_name ||
+                awayMl?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.home_team}
+            </span>
+
+            <strong>
+              ${projectedLineAmerican(
+                homeMl?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                homeMl?.best_book_name ||
+                homeMl?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FOOTER
+           ================================================= -->
+
+      <div class="projected-line-footer">
+
+        <div class="projected-line-model-meta">
+          BTBT College Football Model
+        </div>
+
+
+        <button
+          type="button"
+          class="projected-line-detail-btn"
+          data-projected-detail-event="${game.event_id || ""}"
+        >
+          🔎 Why? / Game Details
+        </button>
+
+      </div>
+
+    </article>
+  `;
+
+}
+
+
+function projectedLineMlbCard(game) {
+
+  const rows =
+    Array.isArray(game?.market_board)
+      ? game.market_board
+      : [];
+
+
+  // =====================================================
+  // 📚 MARKET GROUPS
+  // =====================================================
+
+  const moneylineRows =
+    rows.filter(
+      row =>
+        String(
+          row?.market || ""
+        ).toLowerCase() ===
+        "h2h"
+    );
+
+
+  const runLineRows =
+    rows.filter(
+      row =>
+        String(
+          row?.market || ""
+        ).toLowerCase() ===
+        "spreads"
+    );
+
+
+  const totalRows =
+    rows.filter(
+      row =>
+        String(
+          row?.market || ""
+        ).toLowerCase() ===
+        "totals"
+    );
+
+
+  // =====================================================
+  // 💰 BEST AVAILABLE PRICES
+  // =====================================================
+
+  const awayMl =
+    projectedLineFindTeamRow(
+      moneylineRows,
+      game?.away_team
+    );
+
+
+  const homeMl =
+    projectedLineFindTeamRow(
+      moneylineRows,
+      game?.home_team
+    );
+
+
+  const awayRunLine =
+    projectedLineFindTeamRow(
+      runLineRows,
+      game?.away_team
+    );
+
+
+  const homeRunLine =
+    projectedLineFindTeamRow(
+      runLineRows,
+      game?.home_team
+    );
+
+
+  const overRow =
+    totalRows.find(
+      row =>
+        String(
+          row?.selection || ""
+        )
+          .trim()
+          .toLowerCase() ===
+        "over"
+    ) || null;
+
+
+  const underRow =
+    totalRows.find(
+      row =>
+        String(
+          row?.selection || ""
+        )
+          .trim()
+          .toLowerCase() ===
+        "under"
+    ) || null;
+
+
+  const totalPoint =
+    Number(
+      overRow?.point ??
+      underRow?.point
+    );
+
+
+  // =====================================================
+  // 🧠 BEST BTBT OPPORTUNITY IN EACH MARKET
+  // =====================================================
+
+  const moneylineCall =
+    projectedLineBestMarketRow(
+      moneylineRows
+    );
+
+
+  const runLineCall =
+    projectedLineBestMarketRow(
+      runLineRows
+    );
+
+
+  const totalCall =
+    projectedLineBestMarketRow(
+      totalRows
+    );
+
+
+  // =====================================================
+  // 🧠 FINAL MODEL PROBABILITY
+  // =====================================================
+
+  const finalProbability =
+    row => {
+
+      if (!row)
+        return null;
+
+
+      const value =
+        Number(
+          row?.blended_probability ??
+          row?.model_probability ??
+          row?.fair_probability
+        );
+
+
+      return Number.isFinite(value)
+        ? value
+        : null;
+
+    };
+
+
+  // =====================================================
+  // 🎯 DISPLAY SELECTION
+  // =====================================================
+
+  const selectionText =
+    row => {
+
+      if (!row)
+        return "No data";
+
+
+      if (row?.pick_label) {
+        return row.pick_label;
+      }
+
+
+      const selection =
+        row?.selection || "";
+
+
+      const point =
+        Number(row?.point);
+
+
+      if (
+        Number.isFinite(point) &&
+        String(row?.market || "")
+          .toLowerCase() !== "h2h"
+      ) {
+
+        return (
+          `${selection} ` +
+          `${projectedLineSigned(point)}`
+        );
+
+      }
+
+
+      return selection || "No data";
+
+    };
+
+
+  // =====================================================
+  // 📣 RECOMMENDATION META
+  // =====================================================
+
+  const marketCallMeta =
+    row => {
+
+      if (!row) {
+
+        return {
+          className: "pass",
+          label: "No Data"
+        };
+
+      }
+
+
+      const tier =
+        String(
+          row?.recommendation || "PASS"
+        )
+          .trim()
+          .toUpperCase();
+
+
+      if (
+        tier === "STRONG_VALUE"
+      ) {
+
+        return {
+          className: "strong",
+          label: "🔥 Strong Value"
+        };
+
+      }
+
+
+      if (
+        tier === "VALUE"
+      ) {
+
+        return {
+          className: "value",
+          label: "✅ Value"
+        };
+
+      }
+
+
+      if (
+        tier === "LEAN"
+      ) {
+
+        return {
+          className: "lean",
+          label: "👀 Lean"
+        };
+
+      }
+
+
+      return {
+        className: "pass",
+        label: "⛔ Pass"
+      };
+
+    };
+
+
+  // =====================================================
+  // 🧱 ONE MODEL OUTLOOK BOX
+  // =====================================================
+
+  const modelOutlookBox =
+    (
+      label,
+      row
+    ) => {
+
+      const probability =
+        finalProbability(row);
+
+
+      const meta =
+        marketCallMeta(row);
+
+
+      return `
+        <div class="projected-market-outlook-card">
+
+          <span class="projected-market-outlook-label">
+            ${label}
+          </span>
+
+
+          <strong class="projected-market-outlook-pick">
+            ${selectionText(row)}
+          </strong>
+
+
+          <div class="projected-market-outlook-probability">
+
+            ${
+              probability != null
+                ? (
+                    `BTBT ` +
+                    `${(
+                      probability * 100
+                    ).toFixed(1)}%`
+                  )
+                : "BTBT N/A"
+            }
+
+          </div>
+
+
+          <div class="
+            projected-market-outlook-call
+            ${meta.className}
+          ">
+            ${meta.label}
+          </div>
+
+        </div>
+      `;
+
+    };
+
+
+  // =====================================================
+  // 🥇 STRONGEST MARKET FOR CARD FOOTER
+  // =====================================================
+
+  const strongestMarket =
+    projectedLineBestMarketRow(
+      rows
+    );
+
+
+  const strongestSignal =
+    projectedLineRecommendationMeta(
+      strongestMarket
+    );
+
+
+  const confidence =
+    strongestMarket?.model_confidence ||
+    game?.model_context?.confidence_label ||
+    "N/A";
+
+
+  // =====================================================
+  // 🎨 CARD
+  // =====================================================
+
+  return `
+    <article class="projected-line-card">
+
+
+      <!-- =================================================
+           HEADER
+           ================================================= -->
+
+      <div class="projected-line-card-header">
+
+        <div>
+
+          <div class="projected-line-matchup">
+            ${game.away_team}
+            @
+            ${game.home_team}
+          </div>
+
+          <div class="projected-line-time">
+            ${game.game_time_display || ""}
+          </div>
+
+        </div>
+
+
+        <div class="projected-line-confidence">
+          ${confidence}
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           🧠 BTBT THREE-MARKET OUTLOOK
+           ================================================= -->
+
+      <div class="projected-market-outlook-heading">
+
+        <div>
+          BTBT GAME OUTLOOK
+        </div>
+
+        <small>
+          What the model likes at the current market lines
+        </small>
+
+      </div>
+
+
+      <div class="projected-market-outlook-grid">
+
+        ${modelOutlookBox(
+          "Moneyline",
+          moneylineCall
+        )}
+
+
+        ${modelOutlookBox(
+          "Run Line",
+          runLineCall
+        )}
+
+
+        ${modelOutlookBox(
+          "Game Total",
+          totalCall
+        )}
+
+      </div>
+
+
+      <div class="projected-market-outlook-note">
+
+        <strong>BTBT %</strong>
+        is the model's estimated chance that this exact bet wins.
+        The Value / Lean / Pass signal also considers the sportsbook price.
+
+      </div>
+
+
+      <!-- =================================================
+           💰 BEST MONEYLINE
+           ================================================= -->
+
+      <div class="projected-line-secondary">
+
+        <div class="projected-line-section-label">
+          Best Moneyline
+        </div>
+
+
+        <div class="projected-line-price-grid">
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.away_team}
+            </span>
+
+            <strong>
+              ${projectedLineAmerican(
+                awayMl?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                awayMl?.best_book_name ||
+                awayMl?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.home_team}
+            </span>
+
+            <strong>
+              ${projectedLineAmerican(
+                homeMl?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                homeMl?.best_book_name ||
+                homeMl?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           ⚾ BEST RUN LINE
+           ================================================= -->
+
+      <div class="projected-line-secondary">
+
+        <div class="projected-line-section-label">
+          Best Run Line
+        </div>
+
+
+        <div class="projected-line-price-grid">
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.away_team}
+            </span>
+
+            <strong>
+              ${projectedLineSigned(
+                awayRunLine?.point
+              )}
+              ·
+              ${projectedLineAmerican(
+                awayRunLine?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                awayRunLine?.best_book_name ||
+                awayRunLine?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+
+          <div class="projected-line-price">
+
+            <span>
+              ${game.home_team}
+            </span>
+
+            <strong>
+              ${projectedLineSigned(
+                homeRunLine?.point
+              )}
+              ·
+              ${projectedLineAmerican(
+                homeRunLine?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                homeRunLine?.best_book_name ||
+                homeRunLine?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           📊 BEST TOTAL
+           ================================================= -->
+
+      <div class="projected-line-secondary">
+
+        <div class="projected-line-section-label">
+          Best Over / Under Prices
+        </div>
+
+
+        <div class="projected-line-price-grid">
+
+          <div class="projected-line-price">
+
+            <span>
+              Over ${
+                Number.isFinite(totalPoint)
+                  ? totalPoint
+                  : ""
+              }
+            </span>
+
+            <strong>
+              ${projectedLineAmerican(
+                overRow?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                overRow?.best_book_name ||
+                overRow?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+
+          <div class="projected-line-price">
+
+            <span>
+              Under ${
+                Number.isFinite(totalPoint)
+                  ? totalPoint
+                  : ""
+              }
+            </span>
+
+            <strong>
+              ${projectedLineAmerican(
+                underRow?.best_price
+              )}
+            </strong>
+
+            <small>
+              ${
+                underRow?.best_book_name ||
+                underRow?.best_book ||
+                "—"
+              }
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FOOTER
+           ================================================= -->
+
+      <div class="projected-line-footer">
+
+        <div class="projected-line-model-meta">
+          BTBT MLB Model
+        </div>
+
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:7px;
+        ">
+
+          <button
+            type="button"
+            class="projected-line-detail-btn"
+            data-projected-detail-event="${game.event_id || ""}"
+          >
+            🔎 Why? / Game Details
+          </button>
+
+
+          <div class="
+            projected-line-signal
+            ${strongestSignal.className}
+          ">
+            ${strongestSignal.text}
+          </div>
+
+        </div>
+
+      </div>
+
+    </article>
+  `;
+
+}
+
+
+
+function renderProjectedLinesSummary() {
+
+  const container =
+    document.getElementById(
+      "projectedLinesSummary"
+    );
+
+  const launcher =
+  document.getElementById(
+    "projectedLinesLauncher"
+  );
+
+
+const openTitle =
+  document.getElementById(
+    "projectedLinesOpenTitle"
+  );
+
+
+const openSubtitle =
+  document.getElementById(
+    "projectedLinesOpenSubtitle"
+  );
+
+
+const openCount =
+  document.getElementById(
+    "projectedLinesOpenCount"
+  );
+
+
+const openIcon =
+  document.getElementById(
+    "projectedLinesOpenIcon"
+  );
+  const grid =
+    document.getElementById(
+      "projectedLinesGrid"
+    );
+
+
+  const title =
+    document.getElementById(
+      "projectedLinesTitle"
+    );
+
+
+  const subtitle =
+    document.getElementById(
+      "projectedLinesSubtitle"
+    );
+
+
+  if (
+    !container ||
+    !grid
+  ) {
+    return;
+  }
+
+
+  const mode =
+    currentGameLines?.[0]?.mode || "";
+
+
+  // Basketball stays hidden for now.
+  if (
+  mode !== "ncaaf_market" &&
+  mode !== "mlb_market"
+) {
+
+  if (launcher) {
+    launcher.style.display =
+      "none";
+  }
+
+
+  grid.innerHTML =
+    "";
+
+
+  return;
+
+}
+
+
+  const games =
+    currentGameLines
+      .filter(
+        game =>
+          !game?.is_live
+      )
+      .sort(
+        (a, b) =>
+          Number(
+            a?.game_timestamp || 0
+          )
+          -
+          Number(
+            b?.game_timestamp || 0
+          )
+      );
+
+
+  if (!games.length) {
+
+  if (launcher) {
+    launcher.style.display =
+      "none";
+  }
+
+
+  return;
+
+}
+if (launcher) {
+
+  launcher.style.display =
+    "block";
+
+}
+
+
+if (openCount) {
+
+  openCount.textContent =
+    `${games.length} ${
+      games.length === 1
+        ? "Game"
+        : "Games"
+    }`;
+
+}
+
+
+
+  container.style.display =
+    "block";
+
+
+  // =====================================================
+  // 🏈 NCAAF
+  // =====================================================
+
+  if (mode === "ncaaf_market") {
+
+    if (openIcon) {
+  openIcon.textContent =
+    "🏈";
+}
+
+
+if (openTitle) {
+  openTitle.textContent =
+    "Tap to View Projected Lines";
+}
+
+
+if (openSubtitle) {
+  openSubtitle.textContent =
+    "Spread projections + best moneylines";
+}
+
+    if (title) {
+      title.textContent =
+        "🏈 College Football Projected Lines";
+    }
+
+
+    if (subtitle) {
+      subtitle.textContent =
+        "Market spread vs BTBT Team Model v2, plus the best available moneyline for each team.";
+    }
+
+
+    grid.innerHTML =
+  games
+    .map(
+      projectedLineNcaafCard
+    )
+    .join("");
+
+
+applyProjectedLinesView();
+
+return;
+
+  }
+
+
+// =====================================================
+// ⚾ MLB
+// =====================================================
+
+if (openIcon) {
+  openIcon.textContent =
+    "⚾";
+}
+
+
+if (openTitle) {
+  openTitle.textContent =
+    "Tap to View MLB Game Outlook";
+}
+
+if (openSubtitle) {
+  openSubtitle.textContent =
+    "Moneyline + run line + total";
+}
+
+if (title) {
+  title.textContent =
+    "⚾ MLB Game Outlook";
+}
+
+
+if (subtitle) {
+  subtitle.textContent =
+    "BTBT model outlook for moneyline, run line and game total, with the best available sportsbook prices.";
+}
+
+
+grid.innerHTML =
+  games
+    .map(
+      projectedLineMlbCard
+    )
+    .join("");
+
+
+applyProjectedLinesView();
+
+}
+
+// =====================================================
+// 🎯 PROJECTED LINES — TAP TO CARD MODAL
+// =====================================================
+
+function openProjectedLinesModal() {
+
+  const modal =
+    document.getElementById(
+      "projectedLinesModal"
+    );
+
+
+  if (!modal)
+    return;
+
+
+
+
+
+  // Apply current Rail / Card preference
+  applyProjectedLinesView();
+
+
+  // Open modal
+  modal.classList.remove(
+    "hidden"
+  );
+
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+
+  // Stop background page from scrolling
+  document.body.style.overflow =
+    "hidden";
+
+}
+
+
+function closeProjectedLinesModal() {
+
+  const modal =
+    document.getElementById(
+      "projectedLinesModal"
+    );
+
+
+  if (!modal)
+    return;
+
+
+  modal.classList.add(
+    "hidden"
+  );
+
+
+  modal.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+
+  // Restore page scrolling
+  document.body.style.overflow =
+    "";
+
+}
+
+// =====================================================
+// 🎯 PROJECTED LINES — RAIL / CARD VIEW
+// =====================================================
+
+let projectedLinesView =
+  window.innerWidth <= 700
+    ? "card"
+    : "rail";
+let returnToProjectedLinesAfterDetail = false;
+
+function applyProjectedLinesView() {
+
+  const grid =
+    document.getElementById(
+      "projectedLinesGrid"
+    );
+
+
+  const railBtn =
+    document.getElementById(
+      "projectedLinesRailBtn"
+    );
+
+
+  const cardBtn =
+    document.getElementById(
+      "projectedLinesCardBtn"
+    );
+
+
+  if (!grid)
+    return;
+
+
+  const isCard =
+    projectedLinesView === "card";
+
+
+  grid.classList.toggle(
+    "card-view",
+    isCard
+  );
+
+
+  railBtn?.classList.toggle(
+    "active",
+    !isCard
+  );
+
+
+  cardBtn?.classList.toggle(
+    "active",
+    isCard
+  );
+
+}
+
 // =====================================================
 // 📊 MLB MARKET INTELLIGENCE SUMMARY
 // =====================================================
@@ -5505,23 +8010,67 @@ function renderGameCards() {
 // =====================================================
 // Close breakdown modal
 // =====================================================
-document.addEventListener("click", function(e){
 
-  if (e.target?.id === "closeModelBreakdownBtn") {
+document.addEventListener(
+  "click",
+  function(e) {
 
-    const modal =
-      document.getElementById("modelBreakdownModal");
+    if (
+      e.target?.id ===
+      "closeModelBreakdownBtn"
+    ) {
 
-    modal?.classList.add("hidden");
+      const modal =
+        document.getElementById(
+          "modelBreakdownModal"
+        );
 
-    if (modal) {
-      modal.style.display = "";
-      modal.setAttribute("aria-hidden", "true");
+
+      modal?.classList.add(
+        "hidden"
+      );
+
+
+      if (modal) {
+
+        modal.style.display =
+          "";
+
+        modal.setAttribute(
+          "aria-hidden",
+          "true"
+        );
+
+      }
+
+
+      // =====================================================
+      // 🔙 RETURN TO PROJECTED LINES
+      // Only if Game Details was opened from there.
+      // =====================================================
+
+      if (
+        returnToProjectedLinesAfterDetail
+      ) {
+
+        returnToProjectedLinesAfterDetail =
+          false;
+
+
+        // Rebuild in case data changed.
+        renderProjectedLinesSummary();
+
+
+        // Restore the same Rail/Card layout.
+        applyProjectedLinesView();
+
+
+        // Reopen Projected Lines.
+        openProjectedLinesModal();
+
+      }
+
     }
 
   }
-
-
-
-});
-
+);
