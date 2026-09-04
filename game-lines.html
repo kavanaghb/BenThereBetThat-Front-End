@@ -2526,6 +2526,84 @@ tbody
   }
 
 }
+
+/* ============================================================
+   ☑ PROJECTED CARDS — LEAN+ FILTER
+   ============================================================ */
+
+.projected-lines-qualified-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 10px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #334155;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+
+.projected-lines-qualified-filter input {
+  width: 15px;
+  height: 15px;
+
+  cursor: pointer;
+}
+
+
+.projected-lines-filter-empty {
+  grid-column: 1 / -1;
+
+  padding: 30px;
+
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+
+  background: #f8fafc;
+
+  color: #64748b;
+
+  text-align: center;
+}
+
+
+.projected-lines-filter-empty strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #334155;
+
+  font-size: 14px;
+}
+
+
+.projected-lines-filter-empty span {
+  display: block;
+
+  font-size: 11px;
+}
+
+
+@media (max-width: 700px) {
+
+  .projected-lines-qualified-filter {
+    width: 100%;
+    justify-content: center;
+  }
+
+}
 </style>
 
 </head>
@@ -2897,27 +2975,15 @@ tbody
           </div>
 
         </div>
-
-
-        <div class="projected-lines-view-toggle">
-
-          <button
-            type="button"
-            id="projectedLinesRailBtn"
-            class="projected-lines-view-btn active"
+        <label class="projected-lines-qualified-filter">
+          <input
+            type="checkbox"
+            id="projectedLinesQualifiedOnly"
           >
-            ↔ Rail
-          </button>
+          <span>Lean+ only</span>
+        </label>
 
-          <button
-            type="button"
-            id="projectedLinesCardBtn"
-            class="projected-lines-view-btn"
-          >
-            ▦ Card View
-          </button>
-
-        </div>
+        
 
       </div>
 

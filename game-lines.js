@@ -1512,17 +1512,21 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🎯 PROJECTED LINES — VIEW + MODAL CONTROLS
 // =====================================================
 
-// Inside-modal view buttons
-const projectedLinesRailBtn =
+const projectedLinesQualifiedOnly =
   document.getElementById(
-    "projectedLinesRailBtn"
+    "projectedLinesQualifiedOnly"
   );
 
-const projectedLinesCardBtn =
-  document.getElementById(
-    "projectedLinesCardBtn"
-  );
 
+projectedLinesQualifiedOnly
+  ?.addEventListener(
+    "change",
+    () => {
+
+      renderProjectedLinesSummary();
+
+    }
+  );
 
 // Main-page Projected Lines button
 const projectedLinesRailOpenBtn =
@@ -1543,40 +1547,8 @@ const projectedLinesCloseBtn =
   );
 
 
-// =====================================================
-// ↔ INSIDE MODAL — RAIL VIEW
-// =====================================================
-
-projectedLinesRailBtn
-  ?.addEventListener(
-    "click",
-    () => {
-
-      projectedLinesView =
-        "rail";
-
-      applyProjectedLinesView();
-
-    }
-  );
 
 
-// =====================================================
-// ▦ INSIDE MODAL — CARD VIEW
-// =====================================================
-
-projectedLinesCardBtn
-  ?.addEventListener(
-    "click",
-    () => {
-
-      projectedLinesView =
-        "card";
-
-      applyProjectedLinesView();
-
-    }
-  );
 
 
 // =====================================================
@@ -1592,9 +1564,7 @@ projectedLinesRailOpenBtn
     () => {
 
       projectedLinesView =
-        window.innerWidth <= 700
-          ? "card"
-          : "rail";
+        "card";
 
       renderProjectedLinesSummary();
 
@@ -4606,7 +4576,96 @@ function projectedLineBestMarketRow(rows = []) {
 
 }
 
+// =====================================================
+// 🏆 PROJECTED CARDS — BEST GAME SIGNAL
+//
+// NCAAF:
+//   Rank the game using spread EV+.
+//
+// MLB:
+//   Rank using the best ML / Run Line / Total signal.
+// =====================================================
 
+function projectedLineGameSignalMeta(game) {
+
+  const rows =
+    Array.isArray(game?.market_board)
+      ? game.market_board
+      : [];
+
+
+  let relevantRows =
+    rows;
+
+
+  // NCAAF projected card is primarily
+  // a spread-model card.
+  if (
+    game?.mode ===
+    "ncaaf_market"
+  ) {
+
+    relevantRows =
+      rows.filter(
+        row =>
+          String(
+            row?.market || ""
+          )
+            .trim()
+            .toLowerCase() ===
+          "spreads"
+      );
+
+  }
+
+
+  const bestRow =
+    projectedLineBestMarketRow(
+      relevantRows
+    );
+
+
+  const tier =
+    String(
+      bestRow?.recommendation ||
+      "PASS"
+    )
+      .trim()
+      .toUpperCase();
+
+
+  const tierRank = {
+
+    STRONG_VALUE: 3,
+    VALUE: 2,
+    LEAN: 1,
+    PASS: 0
+
+  }[tier] ?? 0;
+
+
+  const ev =
+    Number(
+      bestRow?.expected_value_pct
+    );
+
+
+  return {
+
+    row: bestRow,
+
+    tier,
+
+    tierRank,
+
+    ev:
+      Number.isFinite(ev)
+        ? ev
+        : -999
+
+  };
+
+}
 
 function projectedLineFindTeamRow(
   rows,
@@ -6297,30 +6356,114 @@ const openIcon =
 }
 
 
-  const games =
-    currentGameLines
-      .filter(
-        game =>
-          !game?.is_live
+  // =====================================================
+// 🏆 PROJECTED CARDS — FILTER + BEST-FIRST SORT
+// =====================================================
+
+const qualifiedOnly =
+  document.getElementById(
+    "projectedLinesQualifiedOnly"
+  )?.checked === true;
+
+
+let games =
+  currentGameLines
+    .filter(
+      game =>
+        !game?.is_live
+    );
+
+
+// =====================================================
+// ☑ LEAN+ ONLY
+// =====================================================
+
+if (qualifiedOnly) {
+
+  games =
+    games.filter(
+      game => {
+
+        const meta =
+          projectedLineGameSignalMeta(
+            game
+          );
+
+
+        return (
+          meta.tierRank >= 1
+        );
+
+      }
+    );
+
+}
+
+
+// =====================================================
+// 🔥 SORT BEST PICKS FIRST
+//
+// Strong Value
+// Value
+// Lean
+// Pass
+//
+// Then highest EV inside each tier.
+// =====================================================
+
+games.sort(
+  (a, b) => {
+
+    const aMeta =
+      projectedLineGameSignalMeta(a);
+
+
+    const bMeta =
+      projectedLineGameSignalMeta(b);
+
+
+    return (
+
+      bMeta.tierRank -
+      aMeta.tierRank
+
+      ||
+
+      bMeta.ev -
+      aMeta.ev
+
+      ||
+
+      Number(
+        a?.game_timestamp || 0
       )
-      .sort(
-        (a, b) =>
-          Number(
-            a?.game_timestamp || 0
-          )
-          -
-          Number(
-            b?.game_timestamp || 0
-          )
-      );
+      -
+      Number(
+        b?.game_timestamp || 0
+      )
+
+    );
+
+  }
+);
 
 
   if (!games.length) {
 
-  if (launcher) {
-    launcher.style.display =
-      "none";
-  }
+  grid.innerHTML = qualifiedOnly
+    ? `
+      <div class="projected-lines-filter-empty">
+        <strong>No Lean+ plays right now.</strong>
+        <span>
+          BTBT is not finding enough value at the current prices.
+        </span>
+      </div>
+    `
+    : `
+      <div class="projected-lines-filter-empty">
+        No projected games available.
+      </div>
+    `;
 
 
   return;
@@ -6521,9 +6664,7 @@ function closeProjectedLinesModal() {
 // =====================================================
 
 let projectedLinesView =
-  window.innerWidth <= 700
-    ? "card"
-    : "rail";
+  "card";
 let returnToProjectedLinesAfterDetail = false;
 
 function applyProjectedLinesView() {
@@ -6533,42 +6674,11 @@ function applyProjectedLinesView() {
       "projectedLinesGrid"
     );
 
-
-  const railBtn =
-    document.getElementById(
-      "projectedLinesRailBtn"
-    );
-
-
-  const cardBtn =
-    document.getElementById(
-      "projectedLinesCardBtn"
-    );
-
-
   if (!grid)
     return;
 
-
-  const isCard =
-    projectedLinesView === "card";
-
-
-  grid.classList.toggle(
-    "card-view",
-    isCard
-  );
-
-
-  railBtn?.classList.toggle(
-    "active",
-    !isCard
-  );
-
-
-  cardBtn?.classList.toggle(
-    "active",
-    isCard
+  grid.classList.add(
+    "card-view"
   );
 
 }
