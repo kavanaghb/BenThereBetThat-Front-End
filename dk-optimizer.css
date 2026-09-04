@@ -1564,3 +1564,19 @@ body {
   color: #64748b;
 }
 
+
+
+/* ===================================================
+   DK INJURY STATUS BADGES — NCAAF / MULTI-SPORT
+   Preserve DraftKings Q / D / P details.
+=================================================== */
+
+.dk-status-d {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.dk-status-p {
+  background: #dbeafe;
+  color: #1d4ed8;
+}

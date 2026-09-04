@@ -899,7 +899,10 @@ function updateOptimizerCounts() {
 
 
           if (
-            status === "Q" &&
+            (
+              status === "Q" ||
+              status === "D"
+            ) &&
             !allowQ
           ) {
 
@@ -1162,21 +1165,29 @@ if (lineupResults) {
 // ===================================================
 
 function getOptimizerStatusBadge(
-  status
+  status,
+  rawStatus = ""
 ) {
 
   const normalized =
     String(
       status ||
+      rawStatus ||
       "ACTIVE"
     )
       .trim()
       .toUpperCase();
 
+  const raw =
+    String(
+      rawStatus ||
+      ""
+    )
+      .trim()
+      .toUpperCase();
 
   if (
-    normalized ===
-    "OUT"
+    normalized === "OUT"
   ) {
 
     return `
@@ -1185,6 +1196,7 @@ function getOptimizerStatusBadge(
           dk-status
           dk-status-out
         "
+        title="DraftKings status: ${escapeOptimizerHtml(raw || "OUT")}"
       >
         OUT
       </span>
@@ -1192,10 +1204,8 @@ function getOptimizerStatusBadge(
 
   }
 
-
   if (
-    normalized ===
-    "Q"
+    normalized === "Q"
   ) {
 
     return `
@@ -1204,6 +1214,7 @@ function getOptimizerStatusBadge(
           dk-status
           dk-status-q
         "
+        title="DraftKings status: ${escapeOptimizerHtml(raw || "Q")}"
       >
         Q
       </span>
@@ -1211,6 +1222,41 @@ function getOptimizerStatusBadge(
 
   }
 
+  if (
+    normalized === "D"
+  ) {
+
+    return `
+      <span
+        class="
+          dk-status
+          dk-status-d
+        "
+        title="DraftKings status: ${escapeOptimizerHtml(raw || "D")}"
+      >
+        D
+      </span>
+    `;
+
+  }
+
+  if (
+    normalized === "P"
+  ) {
+
+    return `
+      <span
+        class="
+          dk-status
+          dk-status-p
+        "
+        title="DraftKings status: ${escapeOptimizerHtml(raw || "P")}"
+      >
+        P
+      </span>
+    `;
+
+  }
 
   return `
     <span
@@ -1985,7 +2031,8 @@ function renderOptimizerClassicPlayers(
 
               <td>
                 ${getOptimizerStatusBadge(
-                  player.status
+                  player.status,
+                  player.raw_status
                 )}
               </td>
 
@@ -2334,7 +2381,8 @@ function renderOptimizerShowdownPlayers(
 
               <td>
                 ${getOptimizerStatusBadge(
-                  player.status
+                  player.status,
+                  player.raw_status
                 )}
               </td>
 
@@ -5125,8 +5173,9 @@ function renderOptimizerLineups(
 
                               <td>
                                 ${getOptimizerStatusBadge(
-                                  player.status
-                                )}
+                  player.status,
+                  player.raw_status
+                )}
                               </td>
 
                             </tr>
