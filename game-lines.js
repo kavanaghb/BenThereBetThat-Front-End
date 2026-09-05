@@ -3465,6 +3465,263 @@ window.showNcaafMarketBreakdown = function(game, pick = null) {
       .ncaaf-detail-subheading:first-of-type {
         margin-top: 4px;
       }
+
+
+      .ncaaf-friendly-projection-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .ncaaf-friendly-projection-grid > div {
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid rgba(148,163,184,.18);
+        border-radius: 10px;
+        background: rgba(8,18,34,.48);
+      }
+
+      .ncaaf-friendly-projection-grid > div.featured {
+        border-color: rgba(45,212,122,.35);
+        background: rgba(45,212,122,.08);
+      }
+
+      .ncaaf-friendly-projection-grid span,
+      .ncaaf-friendly-projection-grid strong {
+        display: block;
+      }
+
+      .ncaaf-friendly-projection-grid span {
+        color: #8ea2bd;
+        font-size: .76rem;
+      }
+
+      .ncaaf-friendly-projection-grid strong {
+        margin-top: 5px;
+        color: #fff;
+        font-size: .98rem;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+      }
+
+      .ncaaf-driver-heading {
+        margin-top: 16px;
+      }
+
+      .ncaaf-friendly-driver-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .ncaaf-friendly-driver {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 10px 12px;
+        border: 1px solid rgba(148,163,184,.14);
+        border-radius: 9px;
+        background: rgba(8,18,34,.42);
+      }
+
+      .ncaaf-friendly-driver > div:first-child {
+        min-width: 0;
+      }
+
+      .ncaaf-friendly-driver strong,
+      .ncaaf-friendly-driver small,
+      .ncaaf-friendly-driver-value b,
+      .ncaaf-friendly-driver-value small {
+        display: block;
+      }
+
+      .ncaaf-friendly-driver small,
+      .ncaaf-friendly-driver-value small {
+        margin-top: 3px;
+        color: #7f93ae;
+        font-size: .72rem;
+      }
+
+      .ncaaf-friendly-driver-value {
+        min-width: 105px;
+        text-align: right;
+      }
+
+      .ncaaf-friendly-driver-value b {
+        color: #fff;
+      }
+
+      @media (max-width: 700px) {
+        .ncaaf-friendly-projection-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .ncaaf-advanced-toggle .ncaaf-detail-grid {
+          grid-template-columns: 1fr !important;
+        }
+
+        .ncaaf-friendly-driver {
+          align-items: flex-start;
+        }
+      }
+
+      .ncaaf-user-summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(220px, .55fr);
+        gap: 12px;
+        margin: 14px 0;
+      }
+
+      .ncaaf-user-card {
+        padding: 15px 16px;
+        border: 1px solid rgba(148, 163, 184, .22);
+        border-radius: 12px;
+        background: rgba(15, 23, 42, .34);
+      }
+
+      .ncaaf-user-card h3 {
+        margin: 0 0 7px;
+        font-size: 15px;
+      }
+
+      .ncaaf-user-card p {
+        margin: 0;
+        line-height: 1.5;
+        color: #cbd5e1;
+      }
+
+      .ncaaf-simple-kpis {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin: 12px 0 16px;
+      }
+
+      .ncaaf-simple-kpi {
+        padding: 13px 14px;
+        border: 1px solid rgba(148, 163, 184, .2);
+        border-radius: 11px;
+        background: rgba(15, 23, 42, .34);
+      }
+
+      .ncaaf-simple-kpi span,
+      .ncaaf-simple-kpi small {
+        display: block;
+      }
+
+      .ncaaf-simple-kpi span {
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+
+      .ncaaf-simple-kpi strong {
+        display: block;
+        margin: 5px 0 3px;
+        font-size: 23px;
+      }
+
+      .ncaaf-simple-kpi small {
+        color: #94a3b8;
+        font-size: 11px;
+      }
+
+      .ncaaf-driver-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+        margin-top: 10px;
+      }
+
+      .ncaaf-driver {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 11px 12px;
+        border-radius: 9px;
+        background: rgba(15, 23, 42, .3);
+        border: 1px solid rgba(148, 163, 184, .16);
+      }
+
+      .ncaaf-driver span { color: #aab8ca; }
+      .ncaaf-driver strong { text-align: right; }
+
+      .ncaaf-matchup-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .ncaaf-matchup-team {
+        padding: 13px 14px;
+        border: 1px solid rgba(148, 163, 184, .18);
+        border-radius: 10px;
+        background: rgba(15, 23, 42, .3);
+      }
+
+      .ncaaf-matchup-team h4 {
+        margin: 0 0 9px;
+        font-size: 14px;
+      }
+
+      .ncaaf-strength-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 7px 0;
+        border-top: 1px solid rgba(148, 163, 184, .10);
+      }
+
+      .ncaaf-strength-row:first-of-type { border-top: 0; }
+      .ncaaf-strength-row span { color: #9fb0c7; font-size: 12px; }
+      .ncaaf-strength-row strong { font-size: 12px; text-align: right; }
+
+      .ncaaf-matchup-edge {
+        margin-top: 10px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(59, 130, 246, .22);
+        background: rgba(59, 130, 246, .08);
+        line-height: 1.5;
+      }
+
+      .ncaaf-advanced-toggle {
+        margin-top: 12px;
+        border: 1px solid rgba(148, 163, 184, .2);
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgba(15, 23, 42, .22);
+      }
+
+      .ncaaf-advanced-toggle > summary {
+        cursor: pointer;
+        padding: 12px 14px;
+        font-weight: 800;
+        color: #dbeafe;
+        list-style: none;
+      }
+
+      .ncaaf-advanced-toggle > summary::-webkit-details-marker { display: none; }
+      .ncaaf-advanced-toggle[open] > summary {
+        border-bottom: 1px solid rgba(148, 163, 184, .16);
+      }
+
+      .ncaaf-advanced-body { padding: 12px; }
+
+      @media (max-width: 720px) {
+        .ncaaf-user-summary,
+        .ncaaf-simple-kpis,
+        .ncaaf-driver-grid,
+        .ncaaf-matchup-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     `;
     document.head.appendChild(style);
   }
@@ -3476,7 +3733,7 @@ window.showNcaafMarketBreakdown = function(game, pick = null) {
   if (!modal || !content) return;
 
   if (title) {
-    title.textContent = "🏈 NCAAF EV+ · Detail v6";
+    title.textContent = "🏈 College Football Pick Breakdown";
   }
 
   const selectedPick =
@@ -3705,22 +3962,22 @@ const evPlusActive =
     STRONG_VALUE: {
       label: "🔥 Strong Value",
       className: "ncaaf-signal-strong",
-      message: "The best available price is materially better than the market's fair probability."
+      message: "BTBT sees one of the strongest current pricing edges on this selection."
     },
     VALUE: {
       label: "✅ Value",
       className: "ncaaf-signal-value",
-      message: "The best available price clears the market-implied break-even threshold."
+      message: "The current price gives this pick a meaningful positive edge."
     },
     LEAN: {
       label: "👀 Lean",
       className: "ncaaf-signal-lean",
-      message: "There is a small positive pricing edge, but it is below the stronger value threshold."
+      message: "BTBT sees a smaller positive edge here — worth a look, but not a top-tier signal."
     },
     PASS: {
       label: "⛔ Pass",
       className: "ncaaf-signal-pass",
-      message: "The best available price is not good enough versus the broader market right now."
+      message: "BTBT does not see enough value at the current price."
     }
   }[recommendation] || {
     label: recommendation || "Pass",
@@ -3794,23 +4051,23 @@ const evPlusActive =
   ) {
     if (evPlusActive && Number.isFinite(teamModelProbability)) {
       readItems.push(
-        `Market no-vig is ${marketFairPct}; Team Model v2 prices this exact spread side at ${teamModelPct}. EV+ blends them to ${modelFairPct} with ${(teamModelWeight * 100).toFixed(1)}% model weight.`
+        `Sportsbooks price this side at ${marketFairPct}. BTBT’s independent team model is at ${teamModelPct}, and the final conservative BTBT probability is ${modelFairPct}.`
       );
 
       if (Number.isFinite(modelEdgePoints)) {
         readItems.push(
-          `The independent spread model shows ${modelEdgePoints >= 0 ? "+" : ""}${modelEdgePoints.toFixed(2)} points of edge toward this selection.`
+          `BTBT’s projected spread is ${Math.abs(modelEdgePoints).toFixed(2)} points better for this selection than the current market line.`
         );
       }
     } else {
       readItems.push(
-        `This ${marketLabel.toLowerCase()} remains market-only: the no-vig consensus is ${marketFairPct}.`
+        `This ${marketLabel.toLowerCase()} is currently market-driven. The sportsbook consensus is ${marketFairPct}.`
       );
     }
 
     if (priceEdge > 0) {
       readItems.push(
-        `The best price only needs ${breakEvenPct} to break even, producing a ${edgeText} EV+ pricing advantage at ${bestBook}.`
+        `At ${bestBook}, the current price needs ${breakEvenPct} to break even versus BTBT’s ${modelFairPct} estimate.`
       );
     } else if (priceEdge < 0) {
       readItems.push(
@@ -3825,7 +4082,7 @@ const evPlusActive =
 
   if (validBooks > 0) {
     readItems.push(
-      `${validBooks} non-outlier books are contributing to the consensus${totalBooks ? ` out of ${totalBooks} comparable prices` : ""}.`
+      `${validBooks} sportsbooks are contributing clean prices to the consensus${totalBooks ? ` out of ${totalBooks} comparable prices` : ""}.`
     );
   }
 
@@ -3938,6 +4195,101 @@ const evPlusActive =
           </tr>
         `;
 
+  const projectedFavorite = context?.projected_favorite || "N/A";
+  const projectedFavoriteSpread = Number(context?.projected_favorite_spread);
+  const projectionText =
+    projectedFavorite !== "N/A" && Number.isFinite(projectedFavoriteSpread)
+      ? `${projectedFavorite} ${formatSignedPts(projectedFavoriteSpread, 1)}`
+      : "N/A";
+
+  const marketHomeSpread = Number(context?.market_home_spread);
+  const modelVsMarket = Number(context?.model_vs_market_points);
+
+  const friendlyModelDirection = value => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || Math.abs(n) < 0.05) return "Essentially aligned";
+
+    const side = n > 0
+      ? (game?.home_team || "home team")
+      : (game?.away_team || "away team");
+
+    return `${Math.abs(n).toFixed(1)} pts toward ${side}`;
+  };
+
+  const driverRow = (label, value, note) => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || Math.abs(n) < 0.05) return "";
+
+    const side = n > 0
+      ? (game?.home_team || "Home")
+      : (game?.away_team || "Away");
+
+    return `
+      <div class="ncaaf-friendly-driver">
+        <div>
+          <strong>${label}</strong>
+          <small>${note}</small>
+        </div>
+        <div class="ncaaf-friendly-driver-value">
+          <b>${Math.abs(n).toFixed(1)} pts</b>
+          <small>toward ${side}</small>
+        </div>
+      </div>
+    `;
+  };
+
+  const driverDirection = value => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || Math.abs(n) < 0.05) return "Neutral";
+    return n > 0
+      ? `${game?.home_team || "Home"} +${Math.abs(n).toFixed(2)} pts`
+      : `${game?.away_team || "Away"} +${Math.abs(n).toFixed(2)} pts`;
+  };
+
+  const strengthLabel = (homeValue, awayValue, side, lowerIsBetter = false) => {
+    const home = Number(homeValue);
+    const away = Number(awayValue);
+    if (!Number.isFinite(home) || !Number.isFinite(away)) return "N/A";
+
+    const rawDiff = lowerIsBetter ? (away - home) : (home - away);
+    const teamDiff = side === "home" ? rawDiff : -rawDiff;
+    const abs = Math.abs(teamDiff);
+
+    if (abs < 1) return "Even";
+    if (teamDiff > 0) {
+      if (abs >= 7) return "🟢 Clear advantage";
+      if (abs >= 3) return "🟢 Advantage";
+      return "🟡 Slight advantage";
+    }
+
+    if (abs >= 7) return "🔴 Clear disadvantage";
+    if (abs >= 3) return "🔴 Disadvantage";
+    return "🟡 Slight disadvantage";
+  };
+
+  const overallDiff = Number(homeRating.sp) - Number(awayRating.sp);
+  const offenseDiff = Number(homeRating.sp_offense) - Number(awayRating.sp_offense);
+  const defenseDiff = Number(awayRating.sp_defense) - Number(homeRating.sp_defense);
+
+  const matchupLeader = (() => {
+    if (!Number.isFinite(overallDiff) || Math.abs(overallDiff) < 1) return "Overall team strength is close.";
+    const leader = overallDiff > 0 ? (game?.home_team || "Home") : (game?.away_team || "Away");
+    return `${leader} has the stronger overall SP+ team profile in this matchup.`;
+  })();
+
+  const matchupDetail = (() => {
+    const pieces = [];
+    if (Number.isFinite(offenseDiff) && Math.abs(offenseDiff) >= 1) {
+      pieces.push(`${offenseDiff > 0 ? (game?.home_team || "Home") : (game?.away_team || "Away")} has the stronger offense`);
+    }
+    if (Number.isFinite(defenseDiff) && Math.abs(defenseDiff) >= 1) {
+      pieces.push(`${defenseDiff > 0 ? (game?.home_team || "Home") : (game?.away_team || "Away")} has the stronger defense`);
+    }
+    return pieces.length ? pieces.join("; ") + "." : "The offense and defense profiles are relatively close.";
+  })();
+
+  const whyItems = readItems.slice(0, 4);
+
   content.innerHTML = `
     <div class="ncaaf-ev-panel">
 
@@ -3946,16 +4298,13 @@ const evPlusActive =
           <div class="ncaaf-ev-teams">
             ${game?.away_team || ""} @ ${game?.home_team || ""}
           </div>
-
           <div class="ncaaf-ev-market">
-            ${marketLabel}
-            <span>•</span>
-            <strong>${selectionText}</strong>
+            ${marketLabel} <span>•</span> <strong>${selectionText}</strong>
           </div>
         </div>
 
         <div class="ncaaf-confidence-pill">
-          ${confidence} Market Confidence
+          ${confidence} Confidence
         </div>
       </div>
 
@@ -3966,302 +4315,261 @@ const evPlusActive =
         </div>
 
         <div class="ncaaf-best-price-block">
-          <span>Best available</span>
+          <span>Best line</span>
           <strong>${formatAmericanOdds(selectedPick.best_price)}</strong>
           <small>${bestBook}</small>
         </div>
       </div>
 
-      <div class="ncaaf-kpi-grid">
-        <div class="ncaaf-kpi-card">
-          <span>Market Fair</span>
+      <div class="ncaaf-simple-kpis">
+        <div class="ncaaf-simple-kpi">
+          <span>Sportsbook Consensus</span>
           <strong>${marketFairPct}</strong>
-          <small>Multi-book no-vig anchor</small>
+          <small>${validBooks || totalBooks || 0} clean book${(validBooks || totalBooks) === 1 ? "" : "s"} in the market read</small>
         </div>
 
-        <div class="ncaaf-kpi-card">
-          <span>${evPlusActive ? "Team Model" : "Team Model"}</span>
-          <strong>${evPlusActive ? teamModelPct : "Market-only"}</strong>
-          <small>${evPlusActive
-            ? `${Number.isFinite(modelEdgePoints) ? `${modelEdgePoints >= 0 ? "+" : ""}${modelEdgePoints.toFixed(2)} pts` : "SP+ spread model"}`
-            : "Not applied to this market"}</small>
-        </div>
-
-        <div class="ncaaf-kpi-card featured">
-          <span>${evPlusActive ? "EV+ Fair" : "Market Fair"}</span>
+        <div class="ncaaf-simple-kpi featured">
+          <span>BTBT Win Probability</span>
           <strong>${modelFairPct}</strong>
-          <small>${evPlusActive ? "Market + Team Model v2" : "No model adjustment"}</small>
+          <small>${evPlusActive ? "Conservative market + team-model blend" : "Market-driven for this bet type"}</small>
         </div>
 
-        <div class="ncaaf-kpi-card">
-          <span>Break-Even</span>
-          <strong>${breakEvenPct}</strong>
-          <small>Needed at best price</small>
-        </div>
-
-        <div class="ncaaf-kpi-card ${edgeClass}">
-          <span>Price Edge</span>
-          <strong>${edgeText}</strong>
-          <small>EV+ fair % minus break-even %</small>
-        </div>
-
-        <div class="ncaaf-kpi-card ${evClass}">
-          <span>Expected Value</span>
+        <div class="ncaaf-simple-kpi ${evClass}">
+          <span>Estimated EV</span>
           <strong>${evText}</strong>
-          <small>At the current best price</small>
+          <small>At ${formatAmericanOdds(selectedPick.best_price)} on ${bestBook}</small>
         </div>
       </div>
 
-      <div class="ncaaf-detail-grid">
-        <div class="ncaaf-detail-card">
-          <div class="ncaaf-section-heading">🏈 ${game?.away_team || "Away"} Team Profile</div>
-
-          ${ratingRow("SP+ Rating", awayRating.sp, 1, awayRating.sp_rank)}
-          ${ratingRow("SP+ Offense", awayRating.sp_offense, 1, awayRating.sp_offense_rank)}
-          ${ratingRow("SP+ Defense", awayRating.sp_defense, 1, awayRating.sp_defense_rank)}
-          ${ratingRow("Pass Offense", awayRating.sp_offense_passing, 2)}
-          ${ratingRow("Rush Offense", awayRating.sp_offense_rushing, 2)}
-          ${ratingRow("Pass Defense", awayRating.sp_defense_passing, 2)}
-          ${ratingRow("Rush Defense", awayRating.sp_defense_rushing, 2)}
-          ${ratingRow("Defensive Havoc", awayRating.sp_defense_havoc, 3)}
-        </div>
-
-        <div class="ncaaf-detail-card">
-          <div class="ncaaf-section-heading">🏠 ${game?.home_team || "Home"} Team Profile</div>
-
-          ${ratingRow("SP+ Rating", homeRating.sp, 1, homeRating.sp_rank)}
-          ${ratingRow("SP+ Offense", homeRating.sp_offense, 1, homeRating.sp_offense_rank)}
-          ${ratingRow("SP+ Defense", homeRating.sp_defense, 1, homeRating.sp_defense_rank)}
-          ${ratingRow("Pass Offense", homeRating.sp_offense_passing, 2)}
-          ${ratingRow("Rush Offense", homeRating.sp_offense_rushing, 2)}
-          ${ratingRow("Pass Defense", homeRating.sp_defense_passing, 2)}
-          ${ratingRow("Rush Defense", homeRating.sp_defense_rushing, 2)}
-          ${ratingRow("Defensive Havoc", homeRating.sp_defense_havoc, 3)}
-        </div>
-      </div>
-
-      <div class="ncaaf-detail-grid">
-        <div class="ncaaf-detail-card">
-          <div class="ncaaf-section-heading">🧠 Team Model v2</div>
-
-          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Projection</div>
-
-          <div class="ncaaf-detail-row">
-            <span>Projected Favorite</span>
-            <strong>${context.projected_favorite || "N/A"} ${context.projected_favorite_spread != null ? formatSignedPts(context.projected_favorite_spread) : ""}</strong>
+      ${evPlusActive ? `
+        <div class="ncaaf-user-summary">
+          <div class="ncaaf-user-card">
+            <h3>🏈 BTBT projects ${projectionText}</h3>
+            <p>
+              The current market has ${game?.home_team || "the home team"}
+              ${Number.isFinite(marketHomeSpread) ? formatSignedPts(marketHomeSpread, 1) : "N/A"}.
+              ${Number.isFinite(modelEdgePoints)
+                ? `For this exact pick, BTBT sees about <strong>${Math.abs(modelEdgePoints).toFixed(2)} points</strong> of spread value.`
+                : "The team model supports this spread, but a direct point edge was not returned."}
+            </p>
           </div>
 
-          <div class="ncaaf-detail-row">
-            <span>Projected Home Spread</span>
-            <strong>${context.projected_home_spread != null ? formatSignedPts(context.projected_home_spread) : "N/A"}</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Market Home Spread</span>
-            <strong>${context.market_home_spread != null ? formatSignedPts(context.market_home_spread) : "N/A"}</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Model vs Market</span>
-            <strong>${context.model_vs_market_points != null ? `${formatSignedPts(context.model_vs_market_points)} pts` : "N/A"}</strong>
-          </div>
-
-          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Model Context</div>
-
-          <div class="ncaaf-detail-row">
-            <span>Power Rating Source</span>
-
-            <strong>
-            ${
-              String(
-                context.power_source || ""
-                ).toUpperCase() === "SP"
-                ? "SP+ team ratings"
-                : (
-                    context.power_source ||
-                    "N/A"
-                  )
-            }
-            </strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Model Confidence</span>
-            <strong>${context.confidence_label || "N/A"}${context.data_confidence != null ? ` · ${(Number(context.data_confidence) * 100).toFixed(0)}%` : ""}</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Neutral Site</span>
-            <strong>${context.neutral_site ? "Yes" : "No"}${context?.neutral_site_meta?.venue ? ` · ${context.neutral_site_meta.venue}` : ""}</strong>
+          <div class="ncaaf-user-card">
+            <h3>Price to beat</h3>
+            <p>
+              This price needs <strong>${breakEvenPct}</strong> to break even.
+              BTBT is at <strong>${modelFairPct}</strong>.
+            </p>
           </div>
         </div>
-
-        <div class="ncaaf-detail-card">
-          <div class="ncaaf-section-heading">⚙️ Projection Components</div>
-
-          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Base Rating</div>
-
-          <div class="ncaaf-detail-row">
-            <span>Base Power Margin</span>
-            <strong>${formatSignedPts(components.base_power_margin_home)} pts</strong>
+      ` : `
+        <div class="ncaaf-user-summary">
+          <div class="ncaaf-user-card">
+            <h3>📊 Market signal + independent model context</h3>
+            <p>
+              This ${recommendationLabel(recommendation)} signal qualifies from sportsbook pricing.
+              The independent college-football team model is <strong>not included in this EV calculation</strong>,
+              ${projectionText !== "N/A"
+                ? `but it currently projects <strong>${projectionText}</strong> as additional matchup context.`
+                : "so the recommendation remains based on the broader no-vig market and current price."}
+            </p>
           </div>
 
-          <div class="ncaaf-detail-row">
-            <span>SP+ Margin</span>
-            <strong>${components.sp_plus_margin_home != null ? `${formatSignedPts(components.sp_plus_margin_home)} pts` : "N/A"}</strong>
+          <div class="ncaaf-user-card">
+            <h3>Price to beat</h3>
+            <p>
+              This price needs <strong>${breakEvenPct}</strong> to break even versus a
+              <strong>${marketFairPct}</strong> sportsbook consensus.
+            </p>
           </div>
+        </div>
+      `}
 
-          <div class="ncaaf-detail-subheading" style="margin:14px 0 8px;padding:6px 8px;border-radius:7px;background:rgba(59,130,246,.10);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;">Adjustments</div>
-
-          <div class="ncaaf-detail-row">
-            <span>Current Form</span>
-            <strong>${formatSignedPts(components.current_form_adjustment_home)} pts</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Pass Matchup</span>
-            <strong>${formatSignedPts(components.pass_matchup_adjustment_home)} pts</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Rush Matchup</span>
-            <strong>${formatSignedPts(components.rush_matchup_adjustment_home)} pts</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Home Field</span>
-            <strong>${formatSignedPts(components.home_field_adjustment)} pts</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>2026 Games in Profile</span>
-            <strong>${context?.profile_snapshot?.away_2026_games ?? 0} away · ${context?.profile_snapshot?.home_2026_games ?? 0} home</strong>
-          </div>
+      <div class="ncaaf-detail-card">
+        <div class="ncaaf-section-heading">Why BTBT Likes This Pick</div>
+        <div class="ncaaf-market-read-grid">
+          ${whyItems.map((item, index) => `
+            <div class="ncaaf-market-read-item">
+              <div class="ncaaf-market-read-icon">${["🎯", "💵", "📚", "🏈"][index] || "✓"}</div>
+              <div class="ncaaf-market-read-text">${item}</div>
+            </div>
+          `).join("")}
         </div>
       </div>
 
-      <div class="ncaaf-detail-grid">
-        <div class="ncaaf-detail-card">
-          <div class="ncaaf-section-heading">Market Pricing</div>
-
-          <div class="ncaaf-detail-row">
-            <span>Selection</span>
-            <strong>${selectionText}</strong>
+      <div class="ncaaf-detail-card" style="margin-top:12px;">
+        <div class="ncaaf-section-heading">🏈 Team Matchup</div>
+        <div class="ncaaf-matchup-grid">
+          <div class="ncaaf-matchup-team">
+            <h4>${game?.away_team || "Away"}</h4>
+            <div class="ncaaf-strength-row"><span>Overall</span><strong>${strengthLabel(homeRating.sp, awayRating.sp, "away")}</strong></div>
+            <div class="ncaaf-strength-row"><span>Offense</span><strong>${strengthLabel(homeRating.sp_offense, awayRating.sp_offense, "away")}</strong></div>
+            <div class="ncaaf-strength-row"><span>Defense</span><strong>${strengthLabel(homeRating.sp_defense, awayRating.sp_defense, "away", true)}</strong></div>
           </div>
 
-          <div class="ncaaf-detail-row">
-            <span>Best sportsbook</span>
-            <strong>${bestBook}</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Best price</span>
-            <strong>${formatAmericanOdds(selectedPick.best_price)}</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>EV+ fair odds</span>
-            <strong>${formatAmericanOdds(selectedPick.fair_price)}</strong>
-          </div>
-
-          <div class="ncaaf-detail-row">
-            <span>Books used</span>
-            <strong>${validBooks} / ${totalBooks}</strong>
+          <div class="ncaaf-matchup-team">
+            <h4>${game?.home_team || "Home"}</h4>
+            <div class="ncaaf-strength-row"><span>Overall</span><strong>${strengthLabel(homeRating.sp, awayRating.sp, "home")}</strong></div>
+            <div class="ncaaf-strength-row"><span>Offense</span><strong>${strengthLabel(homeRating.sp_offense, awayRating.sp_offense, "home")}</strong></div>
+            <div class="ncaaf-strength-row"><span>Defense</span><strong>${strengthLabel(homeRating.sp_defense, awayRating.sp_defense, "home", true)}</strong></div>
           </div>
         </div>
-
-        <div class="ncaaf-detail-card">
-          <div class="ncaaf-section-heading">AI + Market Read</div>
-
-          <div
-            class="ncaaf-market-read-grid"
-            style="
-              display:grid;
-              grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-              gap:12px;
-              margin-top:12px;
-            "
-          >
-            ${readItems.map((item, index) => `
-              <div
-                class="ncaaf-market-read-item"
-                style="
-                  display:grid;
-                  grid-template-columns:38px 1fr;
-                  gap:12px;
-                  align-items:start;
-                  padding:14px 16px;
-                  border:1px solid rgba(148,163,184,.28);
-                  border-radius:12px;
-                  background:rgba(15,23,42,.42);
-                  min-height:82px;
-                "
-              >
-                <div
-                  class="ncaaf-market-read-icon"
-                  style="
-                    width:34px;
-                    height:34px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    border-radius:10px;
-                    background:rgba(59,130,246,.12);
-                    font-size:19px;
-                  "
-                >
-                  ${index === 0 ? "MARKET" : index === 1 ? "PRICE" : index === 2 ? "BOOKS" : index === 3 ? "MODEL" : index === 4 ? "EDGE" : "CALL"}
-                </div>
-                <div
-                  class="ncaaf-market-read-text"
-                  style="
-                    line-height:1.5;
-                    font-size:.94rem;
-                  "
-                >${item}</div>
-              </div>
-            `).join("")}
-          </div>
+        <div class="ncaaf-matchup-edge">
+          <strong>Matchup edge:</strong> ${matchupLeader} ${matchupDetail}
+          ${projectionText !== "N/A"
+            ? ` BTBT's independent team model projects <strong>${projectionText}</strong>${Number.isFinite(marketHomeSpread) ? ` versus a market home spread of <strong>${formatSignedPts(marketHomeSpread, 1)}</strong>` : ""}.`
+            : ""}
         </div>
       </div>
 
-      <div class="ncaaf-market-only-note">
-        <span>${evPlusActive ? "EV+ spread model" : "Market-only market"}</span>
-        ${evPlusActive
-          ? `NCAAF EV+ v2 keeps Vegas as the anchor and applies a conservative Team Model v2/SP+ adjustment. Current model weight: ${(teamModelWeight * 100).toFixed(1)}%.`
-          : `Moneyline and totals remain multi-book no-vig market models until those conversions are separately validated.`}
-      </div>
+      ${evPlusActive ? `
+        <div class="ncaaf-detail-card ncaaf-friendly-card" style="margin-top:12px;">
+          <div class="ncaaf-section-heading">📈 BTBT Projection</div>
 
-      <div class="ncaaf-book-section">
-        <div class="ncaaf-section-heading-row">
-          <div>
-            <div class="ncaaf-section-heading">Sportsbook Comparison</div>
-            <div class="ncaaf-section-subtitle">
-              Sorted by best available price for this exact market and line.
+          <div class="ncaaf-friendly-projection-grid">
+            <div>
+              <span>Market Line</span>
+              <strong>
+                ${Number.isFinite(marketHomeSpread)
+                  ? `${game?.home_team || "Home"} ${formatSignedPts(marketHomeSpread, 1)}`
+                  : "N/A"}
+              </strong>
+            </div>
+
+            <div class="featured">
+              <span>BTBT Projected Line</span>
+              <strong>${projectionText}</strong>
+            </div>
+
+            <div>
+              <span>Difference</span>
+              <strong>${friendlyModelDirection(modelVsMarket)}</strong>
+            </div>
+
+            <div>
+              <span>Model Confidence</span>
+              <strong>
+                ${context.confidence_label || confidence}
+                ${context.data_confidence != null
+                  ? ` · ${(Number(context.data_confidence) * 100).toFixed(0)}%`
+                  : ""}
+              </strong>
+            </div>
+          </div>
+
+          <div class="ncaaf-section-heading ncaaf-driver-heading">
+            What moved the projection?
+          </div>
+
+          <div class="ncaaf-friendly-driver-list">
+            ${driverRow(
+              "Team Strength",
+              components.base_power_margin_home,
+              "Primary opponent-adjusted team-strength edge"
+            )}
+
+            ${driverRow(
+              "Passing Matchup",
+              components.pass_matchup_adjustment_home,
+              "Passing matchup adjustment"
+            )}
+
+            ${driverRow(
+              "Rushing Matchup",
+              components.rush_matchup_adjustment_home,
+              "Rushing matchup adjustment"
+            )}
+
+            ${driverRow(
+              "Home Field",
+              components.home_field_adjustment,
+              context.neutral_site ? "Neutral site" : "Home-field adjustment"
+            )}
+          </div>
+        </div>
+      ` : ""}
+
+      <details class="ncaaf-advanced-toggle">
+        <summary>View raw model inputs</summary>
+        <div class="ncaaf-advanced-body">
+          <div class="ncaaf-detail-grid">
+            <div class="ncaaf-detail-card">
+              <div class="ncaaf-section-heading">🏈 ${game?.away_team || "Away"} Team Profile</div>
+              ${ratingRow("SP+ Rating", awayRating.sp, 1, awayRating.sp_rank)}
+              ${ratingRow("SP+ Offense", awayRating.sp_offense, 1, awayRating.sp_offense_rank)}
+              ${ratingRow("SP+ Defense", awayRating.sp_defense, 1, awayRating.sp_defense_rank)}
+              ${ratingRow("Pass Offense", awayRating.sp_offense_passing, 2)}
+              ${ratingRow("Rush Offense", awayRating.sp_offense_rushing, 2)}
+              ${ratingRow("Pass Defense", awayRating.sp_defense_passing, 2)}
+              ${ratingRow("Rush Defense", awayRating.sp_defense_rushing, 2)}
+              ${ratingRow("Defensive Havoc", awayRating.sp_defense_havoc, 3)}
+            </div>
+
+            <div class="ncaaf-detail-card">
+              <div class="ncaaf-section-heading">🏠 ${game?.home_team || "Home"} Team Profile</div>
+              ${ratingRow("SP+ Rating", homeRating.sp, 1, homeRating.sp_rank)}
+              ${ratingRow("SP+ Offense", homeRating.sp_offense, 1, homeRating.sp_offense_rank)}
+              ${ratingRow("SP+ Defense", homeRating.sp_defense, 1, homeRating.sp_defense_rank)}
+              ${ratingRow("Pass Offense", homeRating.sp_offense_passing, 2)}
+              ${ratingRow("Rush Offense", homeRating.sp_offense_rushing, 2)}
+              ${ratingRow("Pass Defense", homeRating.sp_defense_passing, 2)}
+              ${ratingRow("Rush Defense", homeRating.sp_defense_rushing, 2)}
+              ${ratingRow("Defensive Havoc", homeRating.sp_defense_havoc, 3)}
+            </div>
+          </div>
+
+          <div class="ncaaf-detail-grid" style="margin-top:12px;">
+            <div class="ncaaf-detail-card">
+              <div class="ncaaf-section-heading">Team Model Details</div>
+              <div class="ncaaf-detail-row"><span>BTBT Projection</span><strong>${projectionText}</strong></div>
+              <div class="ncaaf-detail-row"><span>Market Home Spread</span><strong>${Number.isFinite(marketHomeSpread) ? formatSignedPts(marketHomeSpread) : "N/A"}</strong></div>
+              <div class="ncaaf-detail-row"><span>Model vs Market</span><strong>${Number.isFinite(modelVsMarket) ? `${formatSignedPts(modelVsMarket)} pts` : "N/A"}</strong></div>
+              <div class="ncaaf-detail-row"><span>Power Rating Source</span><strong>${String(context.power_source || "").toUpperCase() === "SP" ? "SP+ team ratings" : (context.power_source || "N/A")}</strong></div>
+              <div class="ncaaf-detail-row"><span>Model Confidence</span><strong>${context.confidence_label || "N/A"}${context.data_confidence != null ? ` · ${(Number(context.data_confidence) * 100).toFixed(0)}%` : ""}</strong></div>
+              <div class="ncaaf-detail-row"><span>Neutral Site</span><strong>${context.neutral_site ? "Yes" : "No"}${context?.neutral_site_meta?.venue ? ` · ${context.neutral_site_meta.venue}` : ""}</strong></div>
+            </div>
+
+            <div class="ncaaf-detail-card">
+              <div class="ncaaf-section-heading">Projection Components</div>
+              <div class="ncaaf-detail-row"><span>Base Power Margin</span><strong>${formatSignedPts(components.base_power_margin_home)} pts</strong></div>
+              <div class="ncaaf-detail-row"><span>SP+ Margin</span><strong>${components.sp_plus_margin_home != null ? `${formatSignedPts(components.sp_plus_margin_home)} pts` : "N/A"}</strong></div>
+              <div class="ncaaf-detail-row"><span>Current Form</span><strong>${formatSignedPts(components.current_form_adjustment_home)} pts</strong></div>
+              <div class="ncaaf-detail-row"><span>Pass Matchup</span><strong>${formatSignedPts(components.pass_matchup_adjustment_home)} pts</strong></div>
+              <div class="ncaaf-detail-row"><span>Rush Matchup</span><strong>${formatSignedPts(components.rush_matchup_adjustment_home)} pts</strong></div>
+              <div class="ncaaf-detail-row"><span>Home Field</span><strong>${formatSignedPts(components.home_field_adjustment)} pts</strong></div>
+              <div class="ncaaf-detail-row"><span>2026 Games in Profile</span><strong>${context?.profile_snapshot?.away_2026_games ?? 0} away · ${context?.profile_snapshot?.home_2026_games ?? 0} home</strong></div>
             </div>
           </div>
         </div>
+      </details>
 
-        <div class="ncaaf-book-wrap">
-          <table class="ncaaf-book-table">
-            <thead>
-              <tr>
-                <th>Book</th>
-                <th>Price</th>
-                <th>Break-Even</th>
-                <th>No-Vig</th>
-                <th>Price Edge</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              ${priceRows}
-            </tbody>
-          </table>
+      <details class="ncaaf-advanced-toggle">
+        <summary>Sportsbook Comparison · ${validBooks || totalBooks || 0} Books</summary>
+        <div class="ncaaf-advanced-body">
+          <div class="ncaaf-book-wrap">
+            <table class="ncaaf-book-table">
+              <thead>
+                <tr>
+                  <th>Book</th>
+                  <th>Price</th>
+                  <th>Break-Even</th>
+                  <th>No-Vig</th>
+                  <th>Probability Edge</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>${priceRows}</tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </details>
 
+      <div class="ncaaf-market-only-note">
+        <span>${evPlusActive ? "How this spread is built" : "How this market is built"}</span>
+        ${evPlusActive
+          ? `Sportsbook consensus stays the anchor. BTBT adds a conservative team-strength adjustment rather than replacing the market.`
+          : `Moneylines and totals stay market-driven until BTBT separately validates those football conversions.`}
+      </div>
     </div>
   `;
 
