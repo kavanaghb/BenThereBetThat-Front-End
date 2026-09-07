@@ -77,6 +77,18 @@ const allowQuestionable =
   );
 
 
+const correlationMode =
+  document.getElementById(
+    "dkCorrelationMode"
+  );
+
+
+const correlationModeWrap =
+  document.getElementById(
+    "dkCorrelationModeWrap"
+  );
+
+
 const playerSearch =
   document.getElementById(
     "dkPlayerSearch"
@@ -814,6 +826,63 @@ function getOptimizerSportLabel() {
 
 
 // ===================================================
+// FOOTBALL TOURNAMENT CORRELATION CONTROL
+//
+// Checked   = tournament / GPP correlation mode
+// Unchecked = projection-first / 50-50 mode
+//
+// Available for:
+//   • College Football
+//   • NFL
+// ===================================================
+
+function updateOptimizerCorrelationControl() {
+
+  const selectedSport =
+    String(
+      currentSlate?.sport
+      ||
+      sportSelect?.value
+      ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  const isFootball =
+    (
+      selectedSport ===
+        "americanfootball_ncaaf"
+      ||
+      selectedSport ===
+        "americanfootball_nfl"
+    );
+
+
+  correlationModeWrap
+    ?.classList
+    .toggle(
+      "hidden",
+      !isFootball
+    );
+
+
+  if (
+    !isFootball
+    &&
+    correlationMode
+  ) {
+
+    correlationMode.checked =
+      false;
+
+  }
+
+}
+
+
+// ===================================================
 // UPDATE LOAD BUTTON STATE
 // ===================================================
 
@@ -1035,6 +1104,17 @@ if (allowQuestionable) {
     true;
 
 }
+
+
+if (correlationMode) {
+
+  correlationMode.checked =
+    false;
+
+}
+
+
+updateOptimizerCorrelationControl();
 
 
 if (optimizationContainer) {
@@ -1706,6 +1786,17 @@ function renderOptimizerClassicPlayers(
     "americanfootball_ncaaf";
 
 
+  const isNfl =
+    currentSlate?.sport ===
+    "americanfootball_nfl";
+
+
+  const isFootball =
+    isNcaaf
+    ||
+    isNfl;
+
+
   head.innerHTML = `
     <tr>
       <th>Player</th>
@@ -1718,7 +1809,7 @@ function renderOptimizerClassicPlayers(
       <th>Source</th>
       <th>$ Value</th>
       <th>vs DK Avg</th>
-      <th>${isMlb ? "Lineup" : (isNcaaf ? "History" : "Min")}</th>
+      <th>${isMlb ? "Lineup" : (isFootball ? "History" : "Min")}</th>
       <th>Conf</th>
       <th>Status</th>
       <th>Controls</th>
@@ -2000,7 +2091,7 @@ function renderOptimizerClassicPlayers(
                         )
                       )
                     : (
-                        isNcaaf
+                        isFootball
                           ? escapeOptimizerHtml(
                               `${player.history_games ?? 0} gm${Number(player.history_games ?? 0) === 1 ? "" : "s"}`
                             )
@@ -2085,11 +2176,21 @@ function renderOptimizerShowdownPlayers(
   }
 
 
+  const isFootball =
+    (
+      currentSlate?.sport ===
+        "americanfootball_ncaaf"
+      ||
+      currentSlate?.sport ===
+        "americanfootball_nfl"
+    );
+
+
   head.innerHTML = `
     <tr>
       <th>Player</th>
       <th>Team</th>
-      <th>UTIL</th>
+      <th>${isFootball ? "FLEX" : "UTIL"}</th>
       <th>CPT</th>
       <th>DK Avg</th>
       <th>BTBT Proj</th>
@@ -3809,8 +3910,11 @@ async function loadOptimizerSlate() {
       currentSlate;
 
 
+    updateOptimizerCorrelationControl();
+
+
     console.log(
-      `${selectedSport === "baseball_mlb" ? "⚾" : (selectedSport === "americanfootball_ncaaf" ? "🏈" : "🏀")} DK slate loaded:`,
+      `${selectedSport === "baseball_mlb" ? "⚾" : ((selectedSport === "americanfootball_ncaaf" || selectedSport === "americanfootball_nfl") ? "🏈" : "🏀")} DK slate loaded:`,
       currentSlate
     );
 
@@ -4065,6 +4169,9 @@ sportSelect
     () => {
 
       clearOptimizerSlateDisplay();
+
+
+      updateOptimizerCorrelationControl();
 
 
       if (
@@ -4715,6 +4822,9 @@ function getClassicLineupDisplayPlayers(
     ||
     currentSlate?.sport ===
     "americanfootball_ncaaf"
+    ||
+    currentSlate?.sport ===
+    "americanfootball_nfl"
   ) {
 
     return players.map(
@@ -4820,6 +4930,22 @@ function renderOptimizerLineups(
     lineupSport === "americanfootball_ncaaf";
 
 
+  const isNfl =
+    lineupSport === "americanfootball_nfl";
+
+
+  const isFootball =
+    isNcaaf
+    ||
+    isNfl;
+
+
+  const isCorrelated =
+    Boolean(
+      data?.correlated
+    );
+
+
   if (!lineups.length) {
 
     topOptimalLineupPlayerKeys.clear();
@@ -4901,16 +5027,19 @@ function renderOptimizerLineups(
       <div>
 
         <span class="dk-results-eyebrow">
-          BTBT OPTIMIZED
+          ${isCorrelated ? "BTBT TOURNAMENT" : "BTBT OPTIMIZED"}
         </span>
 
         <h3>
-          Optimal Lineups
+          ${isCorrelated ? "Correlated Tournament Lineups" : "Optimal Lineups"}
         </h3>
 
         <p>
-          Ranked by projected DraftKings points using the
-          currently loaded BTBT projections.
+          ${
+            isCorrelated
+              ? "Ranked with football correlation for tournament / GPP play. Displayed projected points are unchanged."
+              : "Ranked by projected DraftKings points for projection-first / 50-50 play."
+          }
         </p>
 
       </div>
@@ -4971,7 +5100,11 @@ function renderOptimizerLineups(
 
           const lineupTitle =
             isTopLineup
-              ? "Top Projected"
+              ? (
+                  isCorrelated
+                    ? "Top Correlated"
+                    : "Top Projected"
+                )
               : `Lineup #${rank || ""}`;
 
 
@@ -5003,7 +5136,7 @@ function renderOptimizerLineups(
                         isTopLineup
                           ? `
                             <span class="dk-top-projected-badge">
-                              TOP PROJECTED
+                              ${isCorrelated ? "TOP CORRELATED" : "TOP PROJECTED"}
                             </span>
                           `
                           : ""
@@ -5032,6 +5165,22 @@ function renderOptimizerLineups(
                     </strong>
                   </span>
 
+                  ${
+                    isCorrelated
+                      ? `
+                        <span class="dk-summary-chip dk-summary-correlation">
+                          <small>Correlation</small>
+                          <strong>
+                            ${Number(lineup.correlation_score || 0) >= 0 ? "+" : ""}${formatOptimizerNumber(
+                              lineup.correlation_score || 0,
+                              2
+                            )}
+                          </strong>
+                        </span>
+                      `
+                      : ""
+                  }
+
                   <span class="dk-summary-chip">
                     <small>Salary</small>
                     <strong>
@@ -5055,6 +5204,25 @@ function renderOptimizerLineups(
               </div>
 
 
+              ${
+                isCorrelated
+                &&
+                Array.isArray(
+                  lineup.correlation_notes
+                )
+                &&
+                lineup.correlation_notes.length
+                  ? `
+                    <p class="dk-correlation-notes">
+                      ${lineup.correlation_notes
+                        .map(escapeOptimizerHtml)
+                        .join(" • ")}
+                    </p>
+                  `
+                  : ""
+              }
+
+
               <div class="dk-table-wrap">
 
                 <table class="dk-lineup-table">
@@ -5066,7 +5234,7 @@ function renderOptimizerLineups(
                       <th>Team</th>
                       <th>Salary</th>
                       <th>Proj</th>
-                      <th>${isMlb || isNcaaf ? "Pos" : "Min"}</th>
+                      <th>${isMlb || isFootball ? "Pos" : "Min"}</th>
                       <th>Conf</th>
                       <th>Status</th>
                     </tr>
@@ -5145,7 +5313,7 @@ function renderOptimizerLineups(
 
                               <td>
                                 ${
-                                  isMlb || isNcaaf
+                                  isMlb || isFootball
                                     ? escapeOptimizerHtml(
                                         player.position ||
                                         player.roster_position ||
@@ -5300,6 +5468,36 @@ async function generateOptimizerLineups() {
       allowQuestionable
         ?.checked !== false,
 
+    correlated:
+      (
+        (
+          currentSlate.sport
+          ||
+          sportSelect?.value
+        )
+        &&
+        (
+          (
+            currentSlate.sport
+            ||
+            sportSelect?.value
+          )
+          ===
+          "americanfootball_ncaaf"
+          ||
+          (
+            currentSlate.sport
+            ||
+            sportSelect?.value
+          )
+          ===
+          "americanfootball_nfl"
+        )
+        &&
+        correlationMode
+          ?.checked === true
+      ),
+
     top_n:
       requestedCount,
 
@@ -5314,8 +5512,14 @@ async function generateOptimizerLineups() {
   }
 
 
+  const runningCorrelated =
+    payload.correlated === true;
+
+
   setGenerateStatus(
-    "Generating optimal lineup...",
+    runningCorrelated
+      ? "Generating correlated tournament lineup..."
+      : "Generating projection-first lineup...",
     "loading"
   );
 
@@ -5337,7 +5541,7 @@ async function generateOptimizerLineups() {
         ></span>
 
         <span>
-          Optimizing lineup...
+          ${runningCorrelated ? "Optimizing tournament correlation..." : "Optimizing projection-first lineup..."}
         </span>
       </div>
     `;
@@ -5437,7 +5641,9 @@ async function generateOptimizerLineups() {
 
 
     setGenerateStatus(
-      `✅ Generated ${data.lineup_count} optimal lineup${data.lineup_count === 1 ? "" : "s"}.`,
+      data.correlated
+        ? `✅ Generated ${data.lineup_count} correlated tournament lineup${data.lineup_count === 1 ? "" : "s"}.`
+        : `✅ Generated ${data.lineup_count} projection-first lineup${data.lineup_count === 1 ? "" : "s"}.`,
       "success"
     );
 
@@ -5490,6 +5696,46 @@ generateLineupBtn
 
 
 // ===================================================
+// FOOTBALL TOURNAMENT CORRELATION TOGGLE
+// ===================================================
+
+correlationMode
+  ?.addEventListener(
+    "change",
+    () => {
+
+      clearOptimizerTopLineupHighlight();
+
+
+      const results =
+        getOptimizerLineupResultsContainer();
+
+
+      if (results) {
+
+        results.innerHTML =
+          "";
+
+      }
+
+
+      setGenerateStatus(
+        correlationMode.checked
+          ? "Tournament correlation enabled. Generate again for a GPP-oriented build."
+          : "Projection-first mode enabled for 50/50 play. Generate again to refresh results."
+      );
+
+
+      console.log(
+        "🏈 Tournament correlation:",
+        correlationMode.checked
+      );
+
+    }
+  );
+
+
+// ===================================================
 // QUESTIONABLE PLAYER TOGGLE
 // ===================================================
 
@@ -5535,6 +5781,9 @@ allowQuestionable
 async function initializeOptimizerPage() {
 
   ensureOptimizerDynamicStyles();
+
+
+  updateOptimizerCorrelationControl();
 
 
   console.log(

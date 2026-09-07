@@ -204,15 +204,19 @@
             </option>
 
             <option value="americanfootball_ncaaf">
-            College Football
+              College Football
+            </option>
+
+            <option value="americanfootball_nfl">
+              NFL
             </option>
 
           </select>
 
 
           <small>
-            WNBA and MLB are supported. Classic and
-            Captain / Showdown files are detected automatically.
+            WNBA, MLB, College Football, and NFL are supported.
+            Classic and Captain / Showdown files are detected automatically.
           </small>
 
 
@@ -534,6 +538,32 @@
 
       <span>
         Allow Questionable Players
+      </span>
+
+    </label>
+
+
+    <!-- FOOTBALL TOURNAMENT CORRELATION -->
+
+    <label
+      id="dkCorrelationModeWrap"
+      class="optimizer-checkbox optimizer-correlation hidden"
+      title="Check for tournament / GPP lineup correlation. Leave unchecked for projection-first 50/50 builds."
+    >
+
+      <input
+        id="dkCorrelationMode"
+        type="checkbox"
+      >
+
+      <span class="optimizer-correlation-copy">
+        <strong>
+          🏈 Tournament Correlation
+        </strong>
+
+        <small>
+          GPP mode • leave off for 50/50
+        </small>
       </span>
 
     </label>

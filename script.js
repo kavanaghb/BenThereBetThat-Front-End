@@ -10314,6 +10314,551 @@ function renderNcaafEdgeProfile({
 // NFL model data is already attached to the /api/data
 // row, so this does NOT make another backend request.
 // ===================================================
+
+// ===================================================
+// 🏈 NFL GAME LOG BAR GRAPH
+//
+// Uses the same edge-log-row / edge-log-bar classes as the
+// other BTBT sport profiles. The backend returns up to 20
+// recent NFL regular-season games, newest first.
+// ===================================================
+
+function renderNflGameLogBars({
+  gameLog,
+  line,
+  outcome,
+  historical,
+  sampleGames
+}) {
+
+  const chart =
+    document.getElementById(
+      "edgeGameLogChart"
+    );
+
+  const table =
+    document.getElementById(
+      "edgeGameLogTable"
+    );
+
+  if (!chart || !table) {
+    return;
+  }
+
+
+  const numericLine =
+    Number(line);
+
+  const hasLine =
+    Number.isFinite(
+      numericLine
+    );
+
+  const side =
+    String(
+      outcome ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  const isUnder =
+    side === "under";
+
+
+  const rows =
+    Array.isArray(gameLog)
+      ? gameLog.filter(
+          game =>
+            Number.isFinite(
+              Number(
+                game?.value
+              )
+            )
+        )
+      : [];
+
+
+  const fmtValue = value => {
+
+    const number =
+      Number(value);
+
+    if (!Number.isFinite(number)) {
+      return "N/A";
+    }
+
+    return Number.isInteger(number)
+      ? String(number)
+      : number
+          .toFixed(1)
+          .replace(/\.0$/, "");
+  };
+
+
+  const renderWindow = count => {
+
+    const windowRows =
+      rows.slice(
+        0,
+        count
+      );
+
+
+    const heading =
+      chart
+        .closest(
+          ".edge-section"
+        )
+        ?.querySelector(
+          "h3"
+        );
+
+    if (heading) {
+      heading.textContent =
+        `Last ${Math.min(count, rows.length || count)} Games`;
+    }
+
+
+    if (!windowRows.length) {
+
+      chart.innerHTML = `
+        <p>
+          No detailed NFL game log found for this market yet.
+        </p>
+      `;
+
+      table.innerHTML = `
+        <tr>
+          <td>Historical Baseline</td>
+          <td>${fmtValue(historical)}</td>
+        </tr>
+        <tr>
+          <td>Historical Sample</td>
+          <td>
+            ${
+              Number.isFinite(Number(sampleGames))
+                ? `${Number(sampleGames)} games`
+                : "N/A"
+            }
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+
+    const values =
+      windowRows.map(
+        game =>
+          Number(game.value)
+      );
+
+
+    const chartMax =
+      Math.max(
+        1,
+        ...values,
+        (
+          hasLine
+            ? numericLine * 1.15
+            : 0
+        )
+      );
+
+
+    const bars =
+      windowRows
+        .map(
+          game => {
+
+            const value =
+              Number(
+                game.value
+              );
+
+            const hit =
+              hasLine
+                ? (
+                    isUnder
+                      ? value < numericLine
+                      : value > numericLine
+                  )
+                : false;
+
+
+            const hitClass =
+              hasLine
+                ? (
+                    hit
+                      ? "hit"
+                      : "miss"
+                  )
+                : "";
+
+
+            const width =
+              Math.max(
+                2,
+                Math.min(
+                  100,
+                  (
+                    value /
+                    chartMax
+                  ) * 100
+                )
+              );
+
+
+            const opponent =
+              game.opponent
+                ? ` vs ${game.opponent}`
+                : "";
+
+
+            const season =
+              game.season
+                ? String(game.season).slice(-2)
+                : "";
+
+
+            const week =
+              game.week !== null &&
+              game.week !== undefined
+                ? `W${game.week}`
+                : "Game";
+
+
+            const label =
+              season
+                ? `${season} ${week}${opponent}`
+                : `${week}${opponent}`;
+
+
+            return `
+              <div
+                class="edge-log-row"
+                title="${label}: ${fmtValue(value)}"
+              >
+                <span>${label}</span>
+
+                <div class="edge-log-bar-track">
+                  <div
+                    class="edge-log-bar ${hitClass}"
+                    style="width:${width}%"
+                  ></div>
+                </div>
+
+                <strong>${fmtValue(value)}</strong>
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    const average =
+      values.reduce(
+        (sum, value) =>
+          sum + value,
+        0
+      )
+      /
+      values.length;
+
+
+    const hits =
+      hasLine
+        ? values.filter(
+            value =>
+              isUnder
+                ? value < numericLine
+                : value > numericLine
+          ).length
+        : null;
+
+
+    const hitRate =
+      hits !== null
+        ? (
+            (
+              hits /
+              values.length
+            ) * 100
+          ).toFixed(0)
+        : null;
+
+
+    chart.innerHTML = `
+
+      <div
+        class="nfl-log-window-controls"
+        style="
+          display:flex;
+          align-items:center;
+          justify-content:flex-end;
+          gap:8px;
+          margin:0 0 12px;
+        "
+      >
+        <label
+          for="nflGameLogCount"
+          style="
+            font-size:12px;
+            font-weight:700;
+            opacity:.8;
+          "
+        >
+          Show
+        </label>
+
+        <select
+          id="nflGameLogCount"
+          style="
+            background:#1f2937;
+            color:#fff;
+            border:1px solid #475569;
+            border-radius:6px;
+            padding:5px 8px;
+          "
+        >
+          <option value="5" ${count === 5 ? "selected" : ""}>
+            Last 5
+          </option>
+
+          <option value="10" ${count === 10 ? "selected" : ""}>
+            Last 10
+          </option>
+
+          <option value="17" ${count === 17 ? "selected" : ""}>
+            Last 17
+          </option>
+        </select>
+      </div>
+
+      ${bars}
+
+    `;
+
+
+    table.innerHTML = `
+
+      <tr>
+        <td>Line</td>
+        <td>
+          ${hasLine ? fmtValue(numericLine) : "N/A"}
+        </td>
+      </tr>
+
+      <tr>
+        <td>Last ${values.length} Average</td>
+        <td>${fmtValue(average)}</td>
+      </tr>
+
+      <tr>
+        <td>Last ${values.length} Hit Rate</td>
+        <td>
+          ${
+            hitRate !== null
+              ? `${hits}/${values.length} (${hitRate}%)`
+              : "N/A"
+          }
+        </td>
+      </tr>
+
+      <tr>
+        <td>Historical Baseline</td>
+        <td>${fmtValue(historical)}</td>
+      </tr>
+
+      <tr>
+        <td>Historical Sample</td>
+        <td>
+          ${
+            Number.isFinite(Number(sampleGames))
+              ? `${Number(sampleGames)} games`
+              : "N/A"
+          }
+        </td>
+      </tr>
+
+    `;
+
+
+    document
+      .getElementById(
+        "nflGameLogCount"
+      )
+      ?.addEventListener(
+        "change",
+        event => {
+
+          const next =
+            Number(
+              event.target.value
+            );
+
+          renderWindow(
+            Number.isFinite(next)
+              ? next
+              : 10
+          );
+
+        }
+      );
+
+  };
+
+
+  renderWindow(
+    rows.length >= 10
+      ? 10
+      : rows.length
+      ? Math.min(10, rows.length)
+      : 10
+  );
+
+}
+
+
+async function loadNflGameLogForEdge({
+  player,
+  team,
+  market,
+  line,
+  outcome,
+  historical,
+  sampleGames
+}) {
+
+  const chart =
+    document.getElementById(
+      "edgeGameLogChart"
+    );
+
+  const table =
+    document.getElementById(
+      "edgeGameLogTable"
+    );
+
+
+  if (chart) {
+    chart.innerHTML = `
+      <p>
+        Loading NFL game log...
+      </p>
+    `;
+  }
+
+
+  try {
+
+    const params =
+      new URLSearchParams();
+
+    params.set(
+      "player",
+      player
+    );
+
+    params.set(
+      "market",
+      market
+    );
+
+    params.set(
+      "limit",
+      "20"
+    );
+
+    if (
+      team &&
+      team !== "N/A"
+    ) {
+      params.set(
+        "team",
+        team
+      );
+    }
+
+
+    const response =
+      await fetch(
+        `${window.API_BASE}/api/nfl/player-game-log?${params.toString()}`
+      );
+
+
+    if (!response.ok) {
+      throw new Error(
+        `NFL game log failed: ${response.status}`
+      );
+    }
+
+
+    const data =
+      await response.json();
+
+
+    renderNflGameLogBars({
+      gameLog:
+        data?.game_log || [],
+
+      line,
+      outcome,
+      historical,
+      sampleGames
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      "🏈 NFL game log error:",
+      error
+    );
+
+
+    if (chart) {
+      chart.innerHTML = `
+        <p>
+          NFL game log is temporarily unavailable.
+        </p>
+      `;
+    }
+
+
+    if (table) {
+      table.innerHTML = `
+        <tr>
+          <td>Historical Baseline</td>
+          <td>
+            ${
+              Number.isFinite(Number(historical))
+                ? Number(historical).toFixed(2)
+                : "N/A"
+            }
+          </td>
+        </tr>
+        <tr>
+          <td>Historical Sample</td>
+          <td>
+            ${
+              Number.isFinite(Number(sampleGames))
+                ? `${Number(sampleGames)} games`
+                : "N/A"
+            }
+          </td>
+        </tr>
+      `;
+    }
+
+  }
+
+}
+
+
 function renderNflEdgeProfile({
   rowData,
   line,
@@ -11676,48 +12221,23 @@ platformRows.forEach(
   // ===================================================
   // GAME LOG TAB
   //
-  // V1 /api/data rows currently contain historical
-  // aggregates rather than the individual weekly log.
+  // Pull the actual nfl_player_game_logs rows lazily only when
+  // this player profile opens. This keeps /api/data lightweight.
   // ===================================================
 
-  document
-    .getElementById(
-      "edgeGameLogChart"
-    )
-    .innerHTML =
-      "";
+  loadNflGameLogForEdge({
+    player:
+      rowData.Description || "",
 
+    team:
+      playerTeam,
 
-  document
-    .getElementById(
-      "edgeGameLogTable"
-    )
-    .innerHTML = `
-
-      <tr>
-        <td>Historical Baseline</td>
-        <td>${fmt(historical)}</td>
-      </tr>
-
-      <tr>
-        <td>Historical Sample</td>
-        <td>
-          ${
-            sampleGames !== null
-              ? `${fmt(sampleGames, 0)} games`
-              : "N/A"
-          }
-        </td>
-      </tr>
-
-      <tr>
-        <td>Detailed Game Log</td>
-        <td>
-          Not attached to the NFL V1 row yet
-        </td>
-      </tr>
-
-    `;
+    market,
+    line,
+    outcome,
+    historical,
+    sampleGames
+  });
 
 
   // ===================================================
