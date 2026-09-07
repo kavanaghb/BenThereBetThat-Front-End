@@ -826,12 +826,13 @@ function getOptimizerSportLabel() {
 
 
 // ===================================================
-// FOOTBALL TOURNAMENT CORRELATION CONTROL
+// TOURNAMENT CORRELATION CONTROL
 //
 // Checked   = tournament / GPP correlation mode
 // Unchecked = projection-first / 50-50 mode
 //
 // Available for:
+//   • MLB
 //   • College Football
 //   • NFL
 // ===================================================
@@ -850,8 +851,11 @@ function updateOptimizerCorrelationControl() {
       .toLowerCase();
 
 
-  const isFootball =
+  const supportsCorrelation =
     (
+      selectedSport ===
+        "baseball_mlb"
+      ||
       selectedSport ===
         "americanfootball_ncaaf"
       ||
@@ -864,12 +868,12 @@ function updateOptimizerCorrelationControl() {
     ?.classList
     .toggle(
       "hidden",
-      !isFootball
+      !supportsCorrelation
     );
 
 
   if (
-    !isFootball
+    !supportsCorrelation
     &&
     correlationMode
   ) {
@@ -5037,7 +5041,7 @@ function renderOptimizerLineups(
         <p>
           ${
             isCorrelated
-              ? "Ranked with football correlation for tournament / GPP play. Displayed projected points are unchanged."
+              ? "Ranked with sport-specific correlation for tournament / GPP play. Displayed projected points are unchanged."
               : "Ranked by projected DraftKings points for projection-first / 50-50 play."
           }
         </p>
@@ -5483,6 +5487,14 @@ async function generateOptimizerLineups() {
             sportSelect?.value
           )
           ===
+          "baseball_mlb"
+          ||
+          (
+            currentSlate.sport
+            ||
+            sportSelect?.value
+          )
+          ===
           "americanfootball_ncaaf"
           ||
           (
@@ -5727,7 +5739,7 @@ correlationMode
 
 
       console.log(
-        "🏈 Tournament correlation:",
+        "🧠 Tournament correlation:",
         correlationMode.checked
       );
 
