@@ -172,17 +172,75 @@ function resetPickTrackerUI() {
 /**
  * Determine outcome (over / under) from model best no-vig side
  */
-function getOutcomeFromRow(row) {
-  if (row.BestNoVigSide) {
-    return row.BestNoVigSide.toLowerCase(); // "over" | "under"
+function getOutcomeFromRow(row, platform = null) {
+  const activePlatform =
+    platform ||
+    window.pickTracker?.platform ||
+    null;
+
+  const ppVariant =
+    String(
+      row?.PrizePicksVariant ||
+      "standard"
+    ).toLowerCase();
+
+  // PrizePicks Goblin/Demon rows represent one specific offered side.
+  // Use the actual offered side instead of the generic row-level Vegas side.
+  if (
+    activePlatform === "prizepicks" &&
+    (
+      ppVariant === "goblin" ||
+      ppVariant === "demon"
+    )
+  ) {
+    const offered =
+      String(
+        row?.PrizePicksOutcome ||
+        row?.Outcome ||
+        ""
+      ).toLowerCase();
+
+    if (
+      offered.includes("under") ||
+      offered.includes("less")
+    ) {
+      return "under";
+    }
+
+    if (
+      offered.includes("over") ||
+      offered.includes("more")
+    ) {
+      return "over";
+    }
   }
 
-  // Fallback: try older fields if present
-  if (row.Outcome) {
-    return row.Outcome.toLowerCase();
+  if (row?.BestNoVigSide) {
+    return String(
+      row.BestNoVigSide
+    ).toLowerCase();
   }
 
-  // Final fallback (should be rare)
+  if (row?.Outcome) {
+    const outcome =
+      String(row.Outcome)
+        .toLowerCase();
+
+    if (
+      outcome.includes("under") ||
+      outcome.includes("less")
+    ) {
+      return "under";
+    }
+
+    if (
+      outcome.includes("over") ||
+      outcome.includes("more")
+    ) {
+      return "over";
+    }
+  }
+
   return "over";
 }
 
@@ -300,7 +358,7 @@ function clearPickTrackerSelections() {
  * (does NOT affect filters or analytics)
  */
 function setPickTrackerPlatform(platform) {
-  if (!["prizepicks", "underdog", "betr"].includes(platform)) return;
+  if (!["prizepicks", "underdog", "dabble"].includes(platform)) return;
 
 
   window.pickTracker.platform = platform;
@@ -308,7 +366,7 @@ function setPickTrackerPlatform(platform) {
 
   const prizeBtn = document.getElementById("pickTrackerPrizePicksBtn");
   const dogBtn = document.getElementById("pickTrackerUnderdogBtn");
-  const betrBtn = document.getElementById("pickTrackerBetrBtn");
+  const dabbleBtn = document.getElementById("pickTrackerDabbleBtn");
 
 
   if (!prizeBtn || !dogBtn) return;
@@ -316,7 +374,7 @@ function setPickTrackerPlatform(platform) {
   // 🔴 RESET BOTH (neutral)
 
 
-  [prizeBtn, dogBtn, betrBtn].forEach(btn => {
+  [prizeBtn, dogBtn, dabbleBtn].forEach(btn => {
   if (!btn) return;
   btn.style.background = "#e0e0e0";
   btn.style.color = "#333";
@@ -338,12 +396,12 @@ function setPickTrackerPlatform(platform) {
   dogBtn.style.color = "#fff";
   dogBtn.style.boxShadow = "0 0 10px rgba(0,123,255,0.6)";
 
-} else if (platform === "betr") {
+} else if (platform === "dabble") {
 
-  betrBtn.style.background =
+  dabbleBtn.style.background =
     "linear-gradient(135deg, #ff6600, #cc5200)";
-  betrBtn.style.color = "#fff";
-  betrBtn.style.boxShadow = "0 0 10px rgba(255,102,0,0.6)";
+  dabbleBtn.style.color = "#fff";
+  dabbleBtn.style.boxShadow = "0 0 10px rgba(255,102,0,0.6)";
 }
 
 
@@ -425,8 +483,8 @@ function updatePickTrackerBarUI() {
   platformEl.textContent =
   platform === "underdog"
     ? "Underdog"
-    : platform === "betr"
-    ? "Betr"
+    : platform === "dabble"
+    ? "Dabble"
     : "PrizePicks";
 
 
@@ -462,7 +520,7 @@ async function savePickTrackerSlip() {
     const platformNameMap = {
   prizepicks: "PrizePicks",
   underdog: "Underdog",
-  betr: "Betr"
+  dabble: "Dabble"
 };
 
 const platform = window.pickTracker.platform;
@@ -680,7 +738,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const prizeBtn = document.getElementById("pickTrackerPrizePicksBtn");
   const dogBtn = document.getElementById("pickTrackerUnderdogBtn");
-  const betrBtn = document.getElementById("pickTrackerBetrBtn");
+  const dabbleBtn = document.getElementById("pickTrackerDabbleBtn");
 
   // Initialize default platform UI
   updatePickTrackerBarUI();
@@ -772,9 +830,9 @@ if (openMarchMadnessBtn) {
     });
   }
 
-  if (betrBtn) {
-    betrBtn.addEventListener("click", () => {
-      setPickTrackerPlatform("betr");
+  if (dabbleBtn) {
+    dabbleBtn.addEventListener("click", () => {
+      setPickTrackerPlatform("dabble");
     });
   }
 
@@ -2259,7 +2317,7 @@ const DEFAULT_DISPLAY_BOOKS = [
   "fanatics",
   "prizepicks",
   "underdog",
-  "betr"
+  "dabble"
 ];
 
 
@@ -2271,7 +2329,7 @@ const ALL_BOOKS = [
   ...MODEL_SPORTSBOOKS,
   "prizepicks",
   "underdog",
-  "betr"
+  "dabble"
 ];
 
 
@@ -3074,17 +3132,35 @@ function getSafePrice(row, book) {
   underdog:
     "Underdog",
 
-  betr:
-    "Betr"
+  dabble:
+    "Dabble"
 };
 
   const proper = keyMap[book.toLowerCase()];
   if (!proper) return null;
 
- const val = row?.[`${proper}Price`] ?? null;
+ const val =
+    row?.[`${proper}Price`];
+
+  // Missing sportsbook prices must stay missing.
+  // Number(null) and Number("") both equal 0 in JavaScript.
+  if (
+    val === null ||
+    val === undefined ||
+    val === ""
+  ) {
+    return null;
+  }
 
   const num = Number(val);
-  return Number.isFinite(num) ? num : null;
+
+  // 0 is not a valid American sportsbook price.
+  return (
+    Number.isFinite(num) &&
+    num !== 0
+  )
+    ? num
+    : null;
 }
 
 
@@ -3115,16 +3191,26 @@ function getFilteredConsensusPoint(
   }
 
 
+  const rawBackendConsensus =
+    row.ConsensusPoint;
+
   const backendConsensus =
-    Number(
-      row.ConsensusPoint
-    );
+    (
+      rawBackendConsensus === null ||
+      rawBackendConsensus === undefined ||
+      rawBackendConsensus === ""
+    )
+      ? null
+      : Number(
+          rawBackendConsensus
+        );
 
 
   if (
     Number.isFinite(
       backendConsensus
-    )
+    ) &&
+    backendConsensus > 0
   ) {
 
     return backendConsensus;
@@ -3810,7 +3896,13 @@ if (!row) {
 
       const nv =
         computeNoVigBothSides(
-          window.lastRenderedData || data,
+          Array.isArray(window.fullDataset) &&
+          window.fullDataset.length
+            ? window.fullDataset
+            : (
+                window.lastRenderedData ||
+                data
+              ),
           row
         );
 
@@ -4205,7 +4297,26 @@ function dedupeMarkets(data) {
   const grouped = {};
 
   for (const row of data) {
-    const key = `${row.Event}|${row.Market}|${row.Description}|${(row.Outcome || "").toLowerCase()}`;
+    const isAlt =
+      row.IsAlternateMarket === true ||
+      row.PrizePicksIsAlternate === true;
+
+    const altLine = isAlt
+      ? (
+          row.SourceLinePoint ??
+          row.PrizePickPoint ??
+          row.ConsensusPoint ??
+          ""
+        )
+      : "standard";
+
+    const variant = isAlt
+      ? (row.PrizePicksVariant || "alternate")
+      : "standard";
+
+    const key =
+      `${row.Event}|${row.Market}|${row.Description}|` +
+      `${(row.Outcome || "").toLowerCase()}|${altLine}|${variant}`;
 
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(row);
@@ -4849,11 +4960,50 @@ function toValidLine(value) {
   return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
 }
 
+// ===================================================
+// 🛡️ VALID FAIR-PROBABILITY HELPER
+//
+// IMPORTANT:
+// Number(null) and Number("") both equal 0 in JavaScript.
+// Missing sportsbook data must remain missing instead of
+// becoming a fake 0.00% Over/Under recommendation.
+// ===================================================
+function toValidProbabilityPct(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const numeric = Number(value);
+
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+
+  // Support either 0-1 probability format or 0-100 percentage format.
+  const pct =
+    numeric > 0 &&
+    numeric <= 1
+      ? numeric * 100
+      : numeric;
+
+  return (
+    Number.isFinite(pct) &&
+    pct > 0 &&
+    pct < 100
+  )
+    ? pct
+    : null;
+}
+
 function getPrimaryDfsTarget(row) {
   const candidates = [
     { platform: "PrizePicks", line: toValidLine(row?.PrizePickPoint ?? row?.PrizePicksPoint) },
     { platform: "Underdog", line: toValidLine(row?.UnderdogPoint) },
-    { platform: "Betr", line: toValidLine(row?.BetrPoint) }
+    { platform: "Dabble", line: toValidLine(row?.DabblePoint) }
   ].filter(item => Number.isFinite(item.line) && item.line > 0);
 
   return candidates[0] || null;
@@ -4905,7 +5055,7 @@ function getDfsFairEstimates(data, row) {
   const platforms = [
     ["PrizePicks", row?.PrizePickPoint ?? row?.PrizePicksPoint],
     ["Underdog", row?.UnderdogPoint],
-    ["Betr", row?.BetrPoint]
+    ["Dabble", row?.DabblePoint]
   ];
 
   return platforms
@@ -5457,10 +5607,21 @@ if (!hasPropsAccess) {
         // ✅ Deduplicate + Render
     let cleanedData = dedupeMarkets(allData);
 
+    // Keep sportsbook-only alternate rows in fullDataset so the no-vig
+    // engine can price PrizePicks Goblin/Demon lines. CurveOnly rows
+    // are calculation helpers and must never appear as user-facing picks.
+    window.fullDataset =
+      JSON.parse(JSON.stringify(cleanedData));
+
+    let visibleData =
+      cleanedData.filter(
+        row => row.CurveOnly !== true
+      );
+
     // ⚾ MLB: Only show player props
     if (selectedSport === "baseball_mlb") {
 
-      cleanedData = cleanedData.filter(row => {
+      visibleData = visibleData.filter(row => {
 
         const market =
           String(row.Market || "").toLowerCase();
@@ -5474,17 +5635,27 @@ if (!hasPropsAccess) {
 
     }
 
-    console.log(`🧹 Deduped from ${allData.length} → ${cleanedData.length} rows`);
-    console.log("📦 Sample row:", cleanedData[0]);
+    console.log(
+      `🧹 Deduped from ${allData.length} → ` +
+      `${cleanedData.length} rows (${visibleData.length} visible)`
+    );
+    console.log("📦 Sample row:", visibleData[0]);
 
-    window.fullDataset = JSON.parse(JSON.stringify(cleanedData));
-    window.lastRenderedData = cleanedData;
+    // Keep the SAME row objects used by the renderer.
+    // renderTableInBatches hydrates _brainPlay / _fireLevel / platform signals
+    // onto these objects. A deep clone here caused Ben's Picks to read stale
+    // rows until a second interaction.
+    window.visibleDataset = visibleData;
+    window.lastRenderedData = visibleData;
 
     progressText.textContent = "Rendering table...";
-    await renderTableInBatches(cleanedData, 50, false);
+    await renderTableInBatches(
+      visibleData,
+      50,
+      false
+    );
 
-    window.fullDataset = JSON.parse(JSON.stringify(cleanedData));
-    window.lastRenderedData = cleanedData;
+    window.lastRenderedData = visibleData;
     progressText.textContent = "";
 
     if (typeof setRefreshEnabled === "function") {
@@ -5530,11 +5701,49 @@ safeAddEventListener(stopBtn, "click", () => currentController?.abort());
 // 🎯 Consensus Display Helper (with 55%+ highlight)
 // ===================================================
 function getConsensusDisplay(row) {
-  const point = row.ConsensusPoint ?? null;
-  const price = row.ConsensusPrice ?? null;
+  const rawPoint =
+    row.ConsensusPoint;
+
+  const rawPrice =
+    row.ConsensusPrice;
+
+  const point =
+    (
+      rawPoint === null ||
+      rawPoint === undefined ||
+      rawPoint === ""
+    )
+      ? null
+      : Number(rawPoint);
+
+  const price =
+    (
+      rawPrice === null ||
+      rawPrice === undefined ||
+      rawPrice === ""
+    )
+      ? null
+      : Number(rawPrice);
+
+  const validPoint =
+    Number.isFinite(point) &&
+    point > 0
+      ? point
+      : null;
+
+  const validPrice =
+    Number.isFinite(price) &&
+    price !== 0
+      ? price
+      : null;
 
   // Gracefully handle missing data
-  if (point == null && price == null) return "";
+  if (
+    validPoint === null &&
+    validPrice === null
+  ) {
+    return "";
+  }
 
   // 🧮 Format helper: 2 decimals max, trim .00 and trailing zero
   const formatNum = n =>
@@ -5545,23 +5754,23 @@ function getConsensusDisplay(row) {
 
   // 🎯 Convert American odds → implied win probability (no-vig estimate)
   const impliedProb =
-    price != null
-      ? price > 0
-        ? 100 / (price + 100)
-        : -price / (-price + 100)
+    validPrice != null
+      ? validPrice > 0
+        ? 100 / (validPrice + 100)
+        : -validPrice / (-validPrice + 100)
       : null;
 
   // 📊 Build display string
   let display = "";
-  if (point != null && price != null) {
+  if (validPoint != null && validPrice != null) {
     const probText =
       impliedProb != null
         ? ` • <span class="probability ${impliedProb * 100 >= 55 ? "highlight-green" : ""}">
             ${formatNum(impliedProb * 100)}%</span>`
         : "";
-    display = `${formatNum(point)} (${price > 0 ? `+${formatNum(price)}` : formatNum(price)})${probText}`;
-  } else if (point != null) {
-    display = `${formatNum(point)}`;
+    display = `${formatNum(validPoint)} (${validPrice > 0 ? `+${formatNum(validPrice)}` : formatNum(validPrice)})${probText}`;
+  } else if (validPoint != null) {
+    display = `${formatNum(validPoint)}`;
   }
 
   return display;
@@ -5595,6 +5804,52 @@ function rerenderConsensusTable(data) {
 
 
 
+// ===================================================
+// 👺😈 PrizePicks Goblin / Demon badge helper
+// GLOBAL: used by main table, legend, and Tap-to-Card.
+// ===================================================
+function getPrizePicksVariantBadgeHtml(variant, mode = "compact") {
+
+  const normalized =
+    String(variant || "")
+      .toLowerCase();
+
+  if (
+    normalized !== "goblin" &&
+    normalized !== "demon"
+  ) {
+    return "";
+  }
+
+  const label =
+    normalized === "goblin"
+      ? "Goblin"
+      : "Demon";
+
+  const iconSrc =
+    normalized === "goblin"
+      ? "goblin.png"
+      : "demon.png";
+
+  return `
+    <span
+      class="pp-variant-badge ${normalized}"
+      title="${label}"
+    >
+      <img
+        src="${iconSrc}"
+        alt="${label}"
+        class="pp-variant-icon"
+      />
+
+      <span class="pp-variant-text">
+        ${label}
+      </span>
+    </span>
+  `;
+}
+
+
 async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
 
   // 🧹 Clear previous results and cache dataset pointer
@@ -5621,11 +5876,30 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
       row.no_vig_prob
     ];
 
-    let backendPct = backendCandidates.map(Number).find(Number.isFinite);
+    let backendPct =
+      backendCandidates
+        .map(toValidProbabilityPct)
+        .find(value => value !== null);
 
-    if (!Number.isFinite(backendPct) && typeof row.BestNoVig === "string") {
-      const match = row.BestNoVig.match(/(\d+(?:\.\d+)?)%/);
-      if (match) backendPct = Number(match[1]);
+    if (
+      backendPct === undefined &&
+      typeof row.BestNoVig === "string"
+    ) {
+      const match =
+        row.BestNoVig.match(
+          /(\d+(?:\.\d+)?)%/
+        );
+
+      if (match) {
+        backendPct =
+          toValidProbabilityPct(
+            match[1]
+          );
+      }
+    }
+
+    if (backendPct === undefined) {
+      backendPct = null;
     }
 
     const backendSideSource =
@@ -5636,7 +5910,17 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
       ? "Over"
       : null;
 
-    const nv = computeNoVigBothSides(window.lastRenderedData, row);
+    const noVigSource =
+      Array.isArray(window.fullDataset) &&
+      window.fullDataset.length
+        ? window.fullDataset
+        : window.lastRenderedData;
+
+    const nv =
+      computeNoVigBothSides(
+        noVigSource,
+        row
+      );
 
     let pct = null;
     let side = null;
@@ -5649,7 +5933,7 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
       side = overIsBest ? "Over" : "Under";
       method = nv.method || "exact";
       confidence = nv.confidence || "low";
-    } else if (Number.isFinite(backendPct) && backendSide) {
+    } else if (backendPct !== null && backendSide) {
       pct = backendPct;
       side = backendSide;
       method = "backend";
@@ -5670,7 +5954,10 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
   // ===================================================
   // Refresh the raw market dataset on every unfiltered load. Filtered renders
   // keep the original full set so opposite-side rows remain available.
-  if (!isFiltered || !Array.isArray(window.fullDataset) || !window.fullDataset.length) {
+  if (
+    !Array.isArray(window.fullDataset) ||
+    !window.fullDataset.length
+  ) {
     window.fullDataset = data;
   }
 
@@ -5714,7 +6001,7 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
             "Fanatics",
             "PrizePicks",
             "Underdog",
-            "Betr"
+            "Dabble"
           ]
     );
 
@@ -5766,8 +6053,11 @@ data.forEach((row) => {
 // 🧮 Compute fair "no-vig" probability (SPORTBOOK ONLY)
 // ===================================================
 
-let prob = Number(row.NoVigWinProb ?? row.NoVigProb);
-if (!Number.isFinite(prob)) prob = null;
+let prob =
+  toValidProbabilityPct(
+    row.NoVigWinProb ??
+    row.NoVigProb
+  );
 
 // ===================================================
 // 🧮 Legacy fallback only when no fair probability exists
@@ -6068,7 +6358,7 @@ const columns = [
   ...(!isUFC ? [
     "PrizePickPoint",
     "UnderdogPoint",
-    "BetrPoint"
+    "DabblePoint"
   ] : []),
 
   "ConsensusPoint",
@@ -6078,7 +6368,7 @@ const columns = [
   ...(!isUFC ? [
     "PrizePicksDifference",
     "UnderdogDifference",
-    "BetrDifference"
+    "DabbleDifference"
   ] : [])
 ];
 
@@ -6106,7 +6396,7 @@ const alwaysShow = [
   ...(!isUFC ? [
     "PrizePicksDifference",
     "UnderdogDifference",
-    "BetrDifference"
+    "DabbleDifference"
   ] : [])
 ];
 
@@ -6283,30 +6573,98 @@ const legend = document.createElement("div");
 legend.className = "picks-legend";
 
 legend.innerHTML = `
-  <div class="legend-item" data-tooltip="
-High win probability (54%+).
-These are safer plays where the model expects consistent outcomes.
-Usually close to consensus with less edge but higher hit rate.
-  ">
+  <div class="legend-item" data-tooltip="High win probability (54%+). These are safer plays where the model expects more consistent outcomes. Usually close to consensus with less line edge but a higher hit rate.">
     🧠 High win %
   </div>
 
-  <div class="legend-item" data-tooltip="
-Strong edge vs the betting market.
-Triggered when your line is better than consensus AND probability supports it.
-More fire = bigger edge (🔥🔥🔥 = elite value).
-  ">
+  <div class="legend-item" data-tooltip="Strong edge vs the betting market. Triggered when the DFS line is better than consensus and the no-vig probability supports the side. More fire means a stronger line edge.">
     🔥 Strong edge
   </div>
 
-  <div class="legend-item" data-tooltip="
-Mismatch between platform line and sharp market direction.
-Indicates a potential pricing error or soft line.
-Often one of the best value opportunities.
-  ">
+  <div class="legend-item" data-tooltip="Mismatch between the platform line and the sharp market direction. This can signal a soft or stale line and is often one of the best value opportunities.">
     ⚡ Line mismatch
   </div>
+
+  <div class="legend-item" data-tooltip="PrizePicks special alternate lines. Goblin lines are softer alternate lines that usually carry a higher Vegas hit rate. Demon lines are more aggressive alternate lines. A VALUE tag means Vegas no-vig win probability is 54% or better at that exact PrizePicks line.">
+    ${getPrizePicksVariantBadgeHtml("goblin")}
+    ${getPrizePicksVariantBadgeHtml("demon")}
+  </div>
 `;
+
+// One shared helper panel prevents duplicate/clipped pseudo-tooltips.
+// Desktop: hover/focus. Mobile: tap/focus.
+const legendHelper =
+  document.createElement("div");
+
+legendHelper.className =
+  "legend-helper";
+
+legendHelper.setAttribute(
+  "aria-live",
+  "polite"
+);
+
+legend.appendChild(
+  legendHelper
+);
+
+const showLegendHelp = (item) => {
+  const text =
+    String(
+      item?.dataset?.tooltip ||
+      ""
+    ).trim();
+
+  if (!text) return;
+
+  legendHelper.textContent =
+    text;
+
+  legendHelper.classList.add(
+    "show"
+  );
+};
+
+const hideLegendHelp = () => {
+  legendHelper.classList.remove(
+    "show"
+  );
+};
+
+legend
+  .querySelectorAll(
+    ".legend-item"
+  )
+  .forEach(item => {
+
+    item.tabIndex = 0;
+
+    item.addEventListener(
+      "mouseenter",
+      () => showLegendHelp(item)
+    );
+
+    item.addEventListener(
+      "focus",
+      () => showLegendHelp(item)
+    );
+
+    item.addEventListener(
+      "click",
+      () => showLegendHelp(item)
+    );
+
+    item.addEventListener(
+      "mouseleave",
+      hideLegendHelp
+    );
+
+    item.addEventListener(
+      "blur",
+      hideLegendHelp
+    );
+
+  });
 
 // ✅ CLEAR OLD CONTENT (prevents duplicates)
 resultsDiv.innerHTML = "";
@@ -6335,7 +6693,7 @@ const platform = window.pickTracker.platform;
 const lineMap = {
   prizepicks: row.PrizePickPoint,
   underdog: row.UnderdogPoint,
-  betr: row.BetrPoint
+  dabble: row.DabblePoint
 };
 
 const pick = {
@@ -6344,13 +6702,13 @@ const pick = {
   game_date: dateInput?.value || null,
   player: row.Description,
   market: row.Market,
-  outcome: getOutcomeFromRow(row),
+  outcome: getOutcomeFromRow(row, platform),
 
   line: Number(
     lineMap[platform]
     ?? row.PrizePickPoint
     ?? row.UnderdogPoint
-    ?? row.BetrPoint
+    ?? row.DabblePoint
     ?? row.ConsensusPoint
   ),
 
@@ -6440,7 +6798,7 @@ row._platformSignals = {};
 // IMPORTANT:
 // Use the SAME full-market BTBT consensus that is
 // displayed in the Consensus column and used for
-// PrizePicks / Underdog / Betr Δ calculations.
+// PrizePicks / Underdog / Dabble Δ calculations.
 //
 // Order:
 //   1. Full BTBT consensus
@@ -6474,10 +6832,42 @@ if (!Number.isFinite(signalMarketLine)) {
     );
 }
 
+// PrizePicks alternate rows may not carry an exact sportsbook
+// consensus in their own merged row. Use the standard sibling
+// row as the baseline, while fullDataset supplies the alternate
+// sportsbook curve used for the Vegas win probability.
+if (
+  !Number.isFinite(signalMarketLine) &&
+  Array.isArray(signalData)
+) {
+  const sibling =
+    signalData.find(candidate =>
+      candidate !== row &&
+      candidate.CurveOnly !== true &&
+      candidate.PrizePicksIsAlternate !== true &&
+      String(candidate.Event || "") ===
+        String(row.Event || "") &&
+      String(candidate.Market || "") ===
+        String(row.Market || "") &&
+      String(candidate.Description || "") ===
+        String(row.Description || "") &&
+      Number.isFinite(
+        toValidLine(candidate.ConsensusPoint)
+      )
+    );
+
+  if (sibling) {
+    signalMarketLine =
+      toValidLine(
+        sibling.ConsensusPoint
+      );
+  }
+}
+
   const platformDefinitions = [
     ["PrizePickPoint", "PrizePicks", row.PrizePickPoint ?? row.PrizePicksPoint],
     ["UnderdogPoint", "Underdog", row.UnderdogPoint],
-    ["BetrPoint", "Betr", row.BetrPoint]
+    ["DabblePoint", "Dabble", row.DabblePoint]
   ];
 
   // Calculate ONE canonical no-vig recommendation for the row. Every DFS
@@ -6552,14 +6942,34 @@ const rowEstimate =
 
   // Hydrated/backend fallback only when the curve cannot produce a side.
   if (!sharedBestSide) {
-    const existingSide = String(row.BestNoVigSide || row.BestNoVig || row.Outcome || "").toLowerCase();
+    const existingSide =
+      String(
+        row.BestNoVigSide ||
+        row.BestNoVig ||
+        ""
+      ).toLowerCase();
     if (existingSide.includes("over")) sharedBestSide = "over";
     else if (existingSide.includes("under")) sharedBestSide = "under";
   }
 
   if (!Number.isFinite(sharedBestPct)) {
-    const backendPct = Number(row.NoVigWinProb ?? row.NoVigProb ?? row.BestNoVigProb ?? row.FairWinProb);
-    if (Number.isFinite(backendPct)) sharedBestPct = backendPct > 1 ? backendPct : backendPct * 100;
+    const backendPct =
+      [
+        row.NoVigWinProb,
+        row.NoVigProb,
+        row.BestNoVigProb,
+        row.FairWinProb
+      ]
+        .map(toValidProbabilityPct)
+        .find(value => value !== null);
+
+    if (
+      backendPct !== undefined &&
+      backendPct !== null
+    ) {
+      sharedBestPct =
+        backendPct;
+    }
   }
 
   if (sharedBestSide) row.BestNoVigSide = sharedBestSide === "over" ? "Over" : "Under";
@@ -6570,7 +6980,10 @@ const rowEstimate =
   for (const [column, platform, rawLine] of platformDefinitions) {
     const dfsLine = Number(rawLine);
 
-    if (!Number.isFinite(dfsLine) || dfsLine <= 0 || !Number.isFinite(signalMarketLine)) {
+    if (
+      !Number.isFinite(dfsLine) ||
+      dfsLine <= 0
+    ) {
       row._platformSignals[column] = {
         platform,
         available: false
@@ -6578,11 +6991,44 @@ const rowEstimate =
       continue;
     }
 
-    const estimate = estimateFairAtLine(signalCurve, dfsLine);
+    const estimate =
+      estimateFairAtLine(
+        signalCurve,
+        dfsLine
+      );
 
-    // IMPORTANT: each DFS cell must use the fair side at ITS OWN line.
-    // Previously the cell inherited one shared row side, which could be stale
-    // or could differ from BestNoVig after interpolation/fallback completed.
+    // Goblin/Demon probability must describe the ACTUAL PrizePicks
+    // offered side (More/Over or Less/Under), not merely the side
+    // that happens to be above 50% at that alternate line.
+    const offeredOutcome =
+      String(row.Outcome || "")
+        .trim()
+        .toLowerCase();
+
+    const ppVariant =
+      String(
+        row.PrizePicksVariant ||
+        "standard"
+      )
+        .trim()
+        .toLowerCase();
+
+    const isPrizePicksSpecial =
+      platform === "PrizePicks" &&
+      (
+        ppVariant === "goblin" ||
+        ppVariant === "demon"
+      );
+
+    const probabilitySide =
+      isPrizePicksSpecial &&
+      (
+        offeredOutcome === "over" ||
+        offeredOutcome === "under"
+      )
+        ? offeredOutcome
+        : sharedBestSide;
+
     let platformBestSide = null;
     let sideProbPct = null;
     let confidence = "unavailable";
@@ -6590,32 +7036,81 @@ const rowEstimate =
 
     if (
       estimate &&
-      sharedBestSide &&
-      Number.isFinite(Number(estimate.over)) &&
-      Number.isFinite(Number(estimate.under))
+      probabilitySide &&
+      Number.isFinite(
+        Number(estimate.over)
+      ) &&
+      Number.isFinite(
+        Number(estimate.under)
+      )
     ) {
-      // The side is canonical for the entire row; only the probability changes
-      // by platform line. This prevents contradictory Over/Under labels.
-      platformBestSide = sharedBestSide;
-      sideProbPct = Number(estimate[sharedBestSide]);
-      confidence = estimate.confidence || "unavailable";
-      booksUsed = Number(estimate.booksUsed || 0);
+      platformBestSide =
+        probabilitySide;
+
+      sideProbPct =
+        Number(
+          estimate[probabilitySide]
+        );
+
+      confidence =
+        estimate.confidence ||
+        "unavailable";
+
+      booksUsed =
+        Number(
+          estimate.booksUsed || 0
+        );
     }
 
-    if (!platformBestSide) platformBestSide = sharedBestSide;
+    if (!platformBestSide) {
+      platformBestSide =
+        probabilitySide ||
+        sharedBestSide;
+    }
 
-    const isEqual = Math.abs(dfsLine - signalMarketLine) <= EPSILON;
-    const isBetter =
-      platformBestSide === "over"
-        ? dfsLine < signalMarketLine - EPSILON
-        : platformBestSide === "under"
-        ? dfsLine > signalMarketLine + EPSILON
+    const hasMarketBaseline =
+      Number.isFinite(
+        signalMarketLine
+      );
+
+    const isEqual =
+      hasMarketBaseline
+        ? Math.abs(
+            dfsLine -
+            signalMarketLine
+          ) <= EPSILON
         : false;
+
+    const isBetter =
+      hasMarketBaseline
+        ? (
+            platformBestSide === "over"
+              ? dfsLine <
+                signalMarketLine -
+                EPSILON
+              : platformBestSide ===
+                "under"
+              ? dfsLine >
+                signalMarketLine +
+                EPSILON
+              : false
+          )
+        : false;
+
     const isWorse =
-      platformBestSide === "over"
-        ? dfsLine > signalMarketLine + EPSILON
-        : platformBestSide === "under"
-        ? dfsLine < signalMarketLine - EPSILON
+      hasMarketBaseline
+        ? (
+            platformBestSide === "over"
+              ? dfsLine >
+                signalMarketLine +
+                EPSILON
+              : platformBestSide ===
+                "under"
+              ? dfsLine <
+                signalMarketLine -
+                EPSILON
+              : false
+          )
         : false;
 
     const availableOutcome =
@@ -6624,10 +7119,10 @@ const rowEstimate =
 const recommendedOutcome =
   String(platformBestSide || "").trim().toLowerCase();
 
-// Betr frequently exposes only one playable side.
+// Dabble frequently exposes only one playable side.
 // Do not award Brain/Fire unless that offered side matches the Vegas best side.
 const playableSideMatches =
-  platform !== "Betr" ||
+  platform !== "Dabble" ||
   (
     availableOutcome &&
     recommendedOutcome &&
@@ -6635,27 +7130,46 @@ const playableSideMatches =
   );
 
 // ===================================================
-// 🎯 Confirm the recommended Betr side is playable
+// 🎯 Confirm the recommended Dabble side is playable
 // ===================================================
 const normalizedBestSide =
   String(platformBestSide || "")
     .trim()
     .toLowerCase();
 
-const betrAvailableSides =
-  Array.isArray(row.BetrAvailableSides)
-    ? row.BetrAvailableSides.map(side =>
+const dabbleAvailableSides =
+  Array.isArray(row.DabbleAvailableSides)
+    ? row.DabbleAvailableSides.map(side =>
         String(side).trim().toLowerCase()
       )
     : [];
 
 // PrizePicks and Underdog continue using existing logic.
-// Betr must explicitly contain the recommended side.
+// Dabble must explicitly contain the recommended side.
 const platformSideIsAvailable =
-  platform !== "Betr" ||
-  betrAvailableSides.includes(normalizedBestSide);
+  platform !== "Dabble" ||
+  dabbleAvailableSides.includes(normalizedBestSide);
+
+// ===================================================
+// 🎯 STANDARD DFS SIGNALS vs PRIZEPICKS SPECIAL LINES
+//
+// Goblins/Demons must NOT use the normal 54% Brain rule.
+// A Goblin is intentionally an easier line, so 54% is expected
+// and would label nearly every Goblin as a Brain play.
+//
+// Special-line thresholds below are QUALITY HEURISTICS only.
+// They are not payout-adjusted mathematical EV because the
+// actual PrizePicks payout depends on the final lineup mix.
+// ===================================================
+const isPrizePicksSpecialLine =
+  platform === "PrizePicks" &&
+  (
+    ppVariant === "goblin" ||
+    ppVariant === "demon"
+  );
 
 const brain =
+  !isPrizePicksSpecialLine &&
   platformSideIsAvailable &&
   Number.isFinite(sideProbPct) &&
   sideProbPct >= 54 &&
@@ -6664,6 +7178,7 @@ const brain =
 let fireLevel = 0;
 
 if (
+  !isPrizePicksSpecialLine &&
   platformSideIsAvailable &&
   isBetter &&
   Number.isFinite(sideProbPct)
@@ -6687,8 +7202,66 @@ if (
     fireLevel = 1;
   }
 }
+
+// PrizePicks special-line quality bands.
+// Goblin: easier line -> require a much higher hit-rate threshold.
+// Demon: harder line -> a mid-40s fair rate can still be notable,
+// but we label it as a special-line signal rather than normal Brain/Fire.
+let specialLineLabel = "";
+let specialLineQualified = false;
+let specialLineBenPick = false;
+
+if (
+  isPrizePicksSpecialLine &&
+  Number.isFinite(sideProbPct) &&
+  confidence !== "unavailable"
+) {
+  if (ppVariant === "goblin") {
+    if (
+      sideProbPct >= 70 &&
+      booksUsed >= 2
+    ) {
+      specialLineLabel =
+        "ELITE HIT";
+      specialLineQualified =
+        true;
+      specialLineBenPick =
+        true;
+    } else if (
+      sideProbPct >= 65 &&
+      booksUsed >= 2
+    ) {
+      specialLineLabel =
+        "HIGH HIT";
+      specialLineQualified =
+        true;
+    }
+  } else if (
+    ppVariant === "demon"
+  ) {
+    if (
+      sideProbPct >= 47 &&
+      booksUsed >= 2
+    ) {
+      specialLineLabel =
+        "ELITE DEMON";
+      specialLineQualified =
+        true;
+      specialLineBenPick =
+        true;
+    } else if (
+      sideProbPct >= 45 &&
+      booksUsed >= 2
+    ) {
+      specialLineLabel =
+        "DEMON VALUE";
+      specialLineQualified =
+        true;
+    }
+  }
+}
 const sideUnavailable =
-  platform === "Betr" &&
+  platform === "Dabble" &&
   !playableSideMatches;
 
   row._platformSignals[column] = {
@@ -6706,15 +7279,29 @@ const sideUnavailable =
   brain,
   fireLevel,
 
-  // Betr availability information
+  prizePicksVariant:
+    platform === "PrizePicks"
+      ? ppVariant
+      : "standard",
+
+  specialLineLabel,
+  specialLineQualified,
+  specialLineBenPick,
+
+  // Kept for compatibility with any existing card code.
+  // Special lines now use their own quality thresholds above.
+  vegasValue:
+    specialLineQualified,
+
+  // Dabble availability information
   platformSideIsAvailable,
   availableSides:
-    platform === "Betr"
-      ? betrAvailableSides
+    platform === "Dabble"
+      ? dabbleAvailableSides
       : [],
   offeredOutcome:
-    platform === "Betr"
-      ? String(row.BetrOutcome || row.Outcome || "")
+    platform === "Dabble"
+      ? String(row.DabbleOutcome || row.Outcome || "")
           .trim()
           .toLowerCase()
       : null
@@ -6803,12 +7390,14 @@ td.textContent = `${pct >= 50 ? "▲" : "▼"} 🧮 ${row.Description} ${pct.toF
 td.dataset.sort = pct.toFixed(2);
 
 if (pct >= 60) {
-  td.style.background = "#0b3d0b";
-  td.style.color = "#ffffff";
+  td.classList.add("best-novig-elite");
+  td.style.setProperty("background", "#0b3d0b", "important");
+  td.style.setProperty("color", "#ffffff", "important");
   td.style.fontWeight = "800";
 } else if (pct >= 54) {
+  td.classList.remove("best-novig-elite");
   td.style.background = "#d8f8df";
-  td.style.color = "#0b5f22";
+  td.style.color = "#1f2937";
   td.style.fontWeight = "700";
 } else {
   td.style.background = "#fff3cd";
@@ -6839,12 +7428,14 @@ return;
       // 🎨 Re-apply color on cached render
       if (Number.isFinite(cached.pct)) {
         if (cached.pct >= 60) {
-          td.style.background = "#0b3d0b";
-          td.style.color = "#ffffff";
+          td.classList.add("best-novig-elite");
+          td.style.setProperty("background", "#0b3d0b", "important");
+          td.style.setProperty("color", "#ffffff", "important");
           td.style.fontWeight = "800";
         } else if (cached.pct >= 54) {
+          td.classList.remove("best-novig-elite");
           td.style.background = "#d8f8df";
-          td.style.color = "#0b5f22";
+          td.style.color = "#1f2937";
           td.style.fontWeight = "700";
         } else {
           td.style.background = "#fff3cd";
@@ -6919,7 +7510,11 @@ return;
   // If the browser cannot rebuild the pair, use the value preserved during
   // hydration instead of blanking the table cell.
   if (!Number.isFinite(pct)) {
-    const hydratedPct = Number(row.NoVigWinProb ?? row.NoVigProb);
+    const hydratedPct =
+      toValidProbabilityPct(
+        row.NoVigWinProb ??
+        row.NoVigProb
+      );
     const hydratedSideRaw = String(row.BestNoVigSide || "");
     const hydratedSide = /under/i.test(hydratedSideRaw)
       ? "Under"
@@ -6927,7 +7522,7 @@ return;
       ? "Over"
       : null;
 
-    if (Number.isFinite(hydratedPct) && hydratedSide) {
+    if (hydratedPct !== null && hydratedSide) {
       pct = hydratedPct;
       side = hydratedSide;
       text = `${side === "Over" ? "▲" : "▼"} 🧮 ${side} ${pct.toFixed(2)}%`;
@@ -6937,12 +7532,14 @@ return;
   // 🎨 COLOR TIERING (UPDATED — adds background)
   if (Number.isFinite(pct)) {
     if (pct >= 60) {
-      td.style.background = "#0b3d0b";
-      td.style.color = "#ffffff";
+      td.classList.add("best-novig-elite");
+      td.style.setProperty("background", "#0b3d0b", "important");
+      td.style.setProperty("color", "#ffffff", "important");
       td.style.fontWeight = "800";
     } else if (pct >= 54) {
+      td.classList.remove("best-novig-elite");
       td.style.background = "#d8f8df";
-      td.style.color = "#0b5f22";
+      td.style.color = "#1f2937";
       td.style.fontWeight = "700";
     } else {
       td.style.background = "#fff3cd";
@@ -7053,19 +7650,19 @@ const marketFavored =
   // ===================================================
   if (col === "PrizePickPoint") value = row.PrizePickPoint ?? row.PrizePicksPoint ?? null;
   else if (col === "UnderdogPoint") value = row.UnderdogPoint ?? null;
-  else if (col === "BetrPoint") value = row.BetrPoint ?? null;
+  else if (col === "DabblePoint") value = row.DabblePoint ?? null;
 
   // ===================================================
   // 🎯 DFS PLATFORM CELL — SINGLE SOURCE OF TRUTH
   // ===================================================
-  if (col === "PrizePickPoint" || col === "UnderdogPoint" || col === "BetrPoint") {
+  if (col === "PrizePickPoint" || col === "UnderdogPoint" || col === "DabblePoint") {
     const signal = row._platformSignals?.[col];
 
     if (signal?.sideUnavailable) {
   td.innerHTML = `
     <div class="dfs-line-main">${signal.dfsLine.toFixed(2)}</div>
     <div class="dfs-fair-prob">
-      Betr offers ${signal.availableOutcome || "opposite side"} only
+      Dabble offers ${signal.availableOutcome || "opposite side"} only
     </div>
   `;
 
@@ -7078,10 +7675,10 @@ const marketFavored =
 }
 
 // ===================================================
-// 🚫 Betr does not offer the recommended Vegas side
+// 🚫 Dabble does not offer the recommended Vegas side
 // ===================================================
 if (
-  col === "BetrPoint" &&
+  col === "DabblePoint" &&
   signal.platformSideIsAvailable === false
 ) {
   const offeredSides =
@@ -7124,7 +7721,7 @@ if (
   td.style.fontWeight = "700";
   td.title =
     `Vegas prefers ${signal.bestSide || "the opposite side"}, ` +
-    `but Betr offers ${offeredText}.`;
+    `but Dabble offers ${offeredText}.`;
 
   const unavailableText =
     td.querySelector(".dfs-fair-prob");
@@ -7153,7 +7750,7 @@ if (
           row.UnderdogPoint
         )
       : toValidLine(
-          row.BetrPoint
+          row.DabblePoint
         );
 
   // DFS has posted a line but sportsbooks have not.
@@ -7212,7 +7809,7 @@ if (
       td.style.setProperty("color", "#856404", "important");
     } else if (signal.isBetter) {
       td.style.setProperty("background", "#d8f8df", "important");
-      td.style.setProperty("color", "#0b5f22", "important");
+      td.style.setProperty("color", "#1f2937", "important");
     } else if (signal.isWorse) {
       td.style.setProperty("background", "#f8dada", "important");
       td.style.setProperty("color", "#c0392b", "important");
@@ -7227,16 +7824,43 @@ if (
     else if (signal.fireLevel === 2) icons.push("🔥🔥");
     else if (signal.fireLevel === 3) icons.push("🔥🔥🔥");
 
-    td.style.fontWeight = icons.length || signal.isWorse ? "700" : "600";
+    const variantBadgeHtml =
+      getPrizePicksVariantBadgeHtml(
+        signal.prizePicksVariant
+      );
 
-    const topLine = icons.length
-      ? `${icons.join(" ")} ${signal.dfsLine.toFixed(2)}`
-      : signal.dfsLine.toFixed(2);
+    td.style.fontWeight =
+      icons.length ||
+      signal.isWorse ||
+      variantBadgeHtml
+        ? "700"
+        : "600";
 
-    const sideArrow = signal.bestSide === "under" ? "▼" : "▲";
-    const probabilityLine = Number.isFinite(signal.probability)
-      ? `${sideArrow} ${signal.probability.toFixed(1)}%`
-      : "";
+    const iconText =
+      icons.length
+        ? `${icons.join(" ")} `
+        : "";
+
+    const topLine =
+      `${variantBadgeHtml}${iconText}${signal.dfsLine.toFixed(2)}`;
+
+    const sideArrow =
+      signal.bestSide === "under"
+        ? "▼"
+        : "▲";
+
+    const specialTag =
+      signal.specialLineQualified &&
+      signal.specialLineLabel
+        ? ` • ${signal.specialLineLabel}`
+        : "";
+
+    const probabilityLine =
+      Number.isFinite(
+        signal.probability
+      )
+        ? `${sideArrow} Vegas ${signal.probability.toFixed(1)}%${specialTag}`
+        : "";
 
     td.innerHTML = probabilityLine
       ? `<div class="dfs-line-main">${topLine}</div><div class="dfs-fair-prob">${probabilityLine}</div>`
@@ -7355,19 +7979,19 @@ if (col === "ConsensusPoint") {
 
 
   // ===================================================
-  // 🎯 Difference columns (PrizePicks / Underdog / Betr)
-  //   - Adds side markers for filters: _PrizePicksSide, _UnderdogSide, _BetrSide
+  // 🎯 Difference columns (PrizePicks / Underdog / Dabble)
+  //   - Adds side markers for filters: _PrizePicksSide, _UnderdogSide, _DabbleSide
   // ===================================================
   // ===================================================
-// 🎯 Difference columns (PrizePicks / Underdog / Betr)
+// 🎯 Difference columns (PrizePicks / Underdog / Dabble)
 // ===================================================
-if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "BetrDifference") {
+if (col === "PrizePicksDifference" || col === "UnderdogDifference" || col === "DabbleDifference") {
 
   const dfsLine = col === "PrizePicksDifference"
     ? toValidLine(row.PrizePickPoint ?? row.PrizePicksPoint)
     : col === "UnderdogDifference"
     ? toValidLine(row.UnderdogPoint)
-    : toValidLine(row.BetrPoint);
+    : toValidLine(row.DabblePoint);
 
   // Difference columns use the displayed book average/consensus, matching the
   // table label and the historical meaning of these columns.
@@ -7574,9 +8198,13 @@ function getBestSideStrict(row) {
   }
 
   // 2) Fallback: compute on the fly from the currently rendered dataset
-  const dataForCompute = Array.isArray(window.lastRenderedData) && window.lastRenderedData.length
-    ? window.lastRenderedData
-    : Array.isArray(window.fullDataset) ? window.fullDataset : [];
+  const dataForCompute =
+    Array.isArray(window.fullDataset) &&
+    window.fullDataset.length
+      ? window.fullDataset
+      : Array.isArray(window.lastRenderedData)
+      ? window.lastRenderedData
+      : [];
 
   const nv = computeNoVigBothSides(dataForCompute, row);
   if (nv && (nv.avgOver != null || nv.avgUnder != null)) {
@@ -7633,8 +8261,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // 🔹 Choose best available dataset
     const base =
-      Array.isArray(window.fullDataset) && window.fullDataset.length
-        ? window.fullDataset
+      Array.isArray(window.visibleDataset) &&
+      window.visibleDataset.length
+        ? window.visibleDataset
         : Array.isArray(window.lastRenderedData)
         ? window.lastRenderedData
         : [];
@@ -7670,8 +8299,44 @@ function filterPrizePicksOptimal(data) {
   const seen = new Set();
 
   const result = data.filter((row) => {
-    const key = `${row.Event}|${row.Market}|${row.Description}`;
+    const variant =
+      String(
+        row.PrizePicksVariant ||
+        "standard"
+      ).toLowerCase();
+
+    const isSpecial =
+      variant === "goblin" ||
+      variant === "demon";
+
+    const key =
+      isSpecial
+        ? (
+            `${row.Event}|${row.Market}|${row.Description}|` +
+            `${row.Outcome}|${row.PrizePickPoint}|${variant}`
+          )
+        : (
+            `${row.Event}|${row.Market}|${row.Description}`
+          );
+
     if (seen.has(key)) return false;
+
+    if (isSpecial) {
+      const ppSignal =
+        row._platformSignals
+          ?.PrizePickPoint;
+
+      if (
+        ppSignal
+          ?.specialLineQualified ===
+        true
+      ) {
+        seen.add(key);
+        return true;
+      }
+
+      return false;
+    }
 
     const bestSide = (row.BestNoVigSide || "").toLowerCase();
     const noVig = Number(row.NoVigWinProb) || 0;
@@ -7789,9 +8454,9 @@ function filterUnderdogOptimal(data) {
 }
 
  // ===========================================
-// ✅ Betr +EV (DYNAMIC — CROSS-SPORT SAFE)
+// ✅ Dabble +EV (DYNAMIC — CROSS-SPORT SAFE)
 // ===========================================
-function filterBetrOptimal(data) {
+function filterDabbleOptimal(data) {
   if (!Array.isArray(data)) return [];
 
   const seen = new Set();
@@ -7803,18 +8468,18 @@ function filterBetrOptimal(data) {
     const bestSide = (row.BestNoVigSide || "").toLowerCase();
     const noVig = Number(row.NoVigWinProb) || 0;
 
-    const line = Number(row.BetrPoint);
+    const line = Number(row.DabblePoint);
     const cons = Number(row.ConsensusPoint);
 
-    const betrAvailableSides =
-  Array.isArray(row.BetrAvailableSides)
-    ? row.BetrAvailableSides.map(side =>
+    const dabbleAvailableSides =
+  Array.isArray(row.DabbleAvailableSides)
+    ? row.DabbleAvailableSides.map(side =>
         String(side).trim().toLowerCase()
       )
     : [];
 
 const recommendedSideIsAvailable =
-  betrAvailableSides.includes(bestSide);
+  dabbleAvailableSides.includes(bestSide);
 
     // Must have valid data
     if (
@@ -7868,7 +8533,7 @@ if (!availableSide || availableSide !== bestSide) {
     return false;
   });
 
-  console.log(`🎯 Betr +EV (dynamic): ${result.length}/${data.length} rows`);
+  console.log(`🎯 Dabble +EV (dynamic): ${result.length}/${data.length} rows`);
   return result;
 }
 
@@ -7889,13 +8554,26 @@ function filterBensPicks(data) {
     const hasFire =
       Number(row._fireLevel || 0) >= 1;
 
+    // 👺😈 Premium PrizePicks special line
+    // Value-filter thresholds are intentionally looser than Ben's Picks.
+    const hasQualifiedSpecial =
+      row._platformSignals
+        ?.PrizePickPoint
+        ?.specialLineBenPick ===
+      true;
+
     // ⚡ Mismatch
     const hasMismatch =
       String(row.BestNoVig || "")
         .toLowerCase()
         .includes("mismatch");
 
-    return hasBrain || hasFire || hasMismatch;
+    return (
+      hasBrain ||
+      hasFire ||
+      hasQualifiedSpecial ||
+      hasMismatch
+    );
   });
 
   console.log(`🔥 Ben's Picks: ${out.length}/${data.length} match`);
@@ -7936,10 +8614,10 @@ function filterDfsDifference(data) {
   const filtered = data.filter((row) => {
     const ppVal = Number(row.PrizePickPoint || row.PrizePicksPoint);
     const udVal = Number(row.UnderdogPoint);
-    const betrVal = Number(row.BetrPoint);
+    const dabbleVal = Number(row.DabblePoint);
 
     // Collect valid values
-    const values = [ppVal, udVal, betrVal].filter(Number.isFinite);
+    const values = [ppVal, udVal, dabbleVal].filter(Number.isFinite);
 
     // Need at least 2 platforms to compare
     if (values.length < 2) return false;
@@ -7960,7 +8638,7 @@ function filterDfsDifference(data) {
 const filterBtns = {
   prize: document.getElementById("filterPrizePicksOptimalBtn"),
   underdog: document.getElementById("filterUnderdogOptimalBtn"),
-  betr: document.getElementById("filterBetrOptimalBtn"),   // ✅ ADD THIS
+  dabble: document.getElementById("filterDabbleOptimalBtn"),   // ✅ ADD THIS
   benspicks: document.getElementById("filterBensPicksBtn"),
   dfs: document.getElementById("filterDfsDifferenceBtn"),
   high: document.getElementById("filterHighNoVigBtn"),
@@ -7982,8 +8660,9 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
   btn.addEventListener("click", () => {
       // 🔑 Base must reflect what is currently shown in the table
     const base =
-  Array.isArray(window.fullDataset) && window.fullDataset.length
-    ? window.fullDataset
+  Array.isArray(window.visibleDataset) &&
+  window.visibleDataset.length
+    ? window.visibleDataset
     : Array.isArray(window.lastRenderedData)
     ? window.lastRenderedData
     : [];
@@ -8016,9 +8695,9 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
         window.activeOptimalFilter = "underdog"; // ← NEW
         break;
 
-      case "betr":
-        filtered = filterBetrOptimal(base);
-        window.activeOptimalFilter = "betr";
+      case "dabble":
+        filtered = filterDabbleOptimal(base);
+        window.activeOptimalFilter = "dabble";
         break;
 
 
@@ -8296,6 +8975,7 @@ function resetAccountScopedState() {
   // ===================================================
   window.lastRenderedData = [];
   window.fullDataset = [];
+  window.visibleDataset = [];
   window.baseNoVigCache = {};
   window.groupedFinal = {};
 
@@ -9129,11 +9809,11 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🎯 Pick Tracker — Platform Buttons (NEW)
 // ===================================================
 // ===================================================
-// 🎯 Pick Tracker — Platform Buttons (UPDATED: PrizePicks, Underdog, Betr)
+// 🎯 Pick Tracker — Platform Buttons (UPDATED: PrizePicks, Underdog, Dabble)
 // ===================================================
 const ppTrackerBtn = document.getElementById("pickTrackerPrizePicksBtn");
 const udTrackerBtn = document.getElementById("pickTrackerUnderdogBtn");
-const betrTrackerBtn = document.getElementById("pickTrackerBetrBtn");
+const dabbleTrackerBtn = document.getElementById("pickTrackerDabbleBtn");
 
 function setActiveTrackerButton(activePlatform) {
 
@@ -9149,10 +9829,10 @@ function setActiveTrackerButton(activePlatform) {
       activePlatform === "underdog"
     );
 
-  if (betrTrackerBtn)
-    betrTrackerBtn.classList.toggle(
+  if (dabbleTrackerBtn)
+    dabbleTrackerBtn.classList.toggle(
       "active",
-      activePlatform === "betr"
+      activePlatform === "dabble"
     );
 
 }
@@ -9181,14 +9861,14 @@ if (udTrackerBtn) {
   });
 }
 
-if (betrTrackerBtn) {
-  betrTrackerBtn.addEventListener("click", () => {
+if (dabbleTrackerBtn) {
+  dabbleTrackerBtn.addEventListener("click", () => {
 
-    setPickTrackerPlatform("betr");
+    setPickTrackerPlatform("dabble");
 
-    setActiveTrackerButton("betr");
+    setActiveTrackerButton("dabble");
 
-    console.log("🎯 Pick Tracker platform → Betr");
+    console.log("🎯 Pick Tracker platform → Dabble");
 
   });
 }
@@ -9278,23 +9958,104 @@ if (hasMismatch) {
   // ====================================
   // 🔢 Data values
   // ====================================
-  const cons = Number(row.ConsensusPoint);
-  const ppLine = Number(row.PrizePickPoint);
-  const udLine = Number(row.UnderdogPoint);
-  const betrLine = Number(row.BetrPoint);
-  const ppDiff = Number(row.PrizePicksDifference);
-  const udDiff = Number(row.UnderdogDifference);
-  const betrDiff = Number(row.BetrDifference);
-  const noVig = Number(row.NoVigWinProb);
+  const optionalNumber = value => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return null;
+    }
+
+    const numeric =
+      Number(value);
+
+    return Number.isFinite(numeric)
+      ? numeric
+      : null;
+  };
+
+  const cons =
+    optionalNumber(
+      row.ConsensusPoint
+    );
+
+  const ppLine =
+    optionalNumber(
+      row.PrizePickPoint
+    );
+
+  const udLine =
+    optionalNumber(
+      row.UnderdogPoint
+    );
+
+  const dabbleLine =
+    optionalNumber(
+      row.DabblePoint
+    );
+
+  const ppDiff =
+    optionalNumber(
+      row.PrizePicksDifference
+    );
+
+  const udDiff =
+    optionalNumber(
+      row.UnderdogDifference
+    );
+
+  const dabbleDiff =
+    optionalNumber(
+      row.DabbleDifference
+    );
+
+  const noVig =
+    toValidProbabilityPct(
+      row.NoVigWinProb
+    );
+
+  const ppVariant =
+    String(
+      row.PrizePicksVariant ||
+      "standard"
+    ).toLowerCase();
+
+  const ppVariantBadgeHtml =
+    getPrizePicksVariantBadgeHtml(
+      ppVariant
+    );
+
+  const ppVegasPct =
+    toValidProbabilityPct(
+      row._platformSignals
+        ?.PrizePickPoint
+        ?.probability
+    );
+
+  const ppSignal =
+    row._platformSignals
+      ?.PrizePickPoint ||
+    {};
+
+  const ppSpecialLabel =
+    String(
+      ppSignal.specialLineLabel ||
+      ""
+    );
+
+  const ppVegasValue =
+    ppSignal.specialLineQualified ===
+    true;
 
   const consStr = Number.isFinite(cons) ? cons.toFixed(2) : "—";
   const ppLineStr = Number.isFinite(ppLine) ? ppLine.toFixed(2) : "—";
   const udLineStr = Number.isFinite(udLine) ? udLine.toFixed(2) : "—";
-  const betrLineStr = Number.isFinite(betrLine) ? betrLine.toFixed(2) : "—";
+  const dabbleLineStr = Number.isFinite(dabbleLine) ? dabbleLine.toFixed(2) : "—";
 
   const ppDiffStr = Number.isFinite(ppDiff) ? `${ppDiff.toFixed(2)} pts` : "—";
   const udDiffStr = Number.isFinite(udDiff) ? `${udDiff.toFixed(2)} pts` : "—";
-  const betrDiffStr = Number.isFinite(betrDiff) ? `${betrDiff.toFixed(2)} pts` : "—";
+  const dabbleDiffStr = Number.isFinite(dabbleDiff) ? `${dabbleDiff.toFixed(2)} pts` : "—";
 
   // ====================================
   // 🎯 EV Strength classification
@@ -9339,10 +10100,10 @@ if (
 
 if (
   row.BestNoVigSide &&
-  row._BetrSide &&
-  row._BetrSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()
+  row._DabbleSide &&
+  row._DabbleSide.toLowerCase() !== row.BestNoVigSide.toLowerCase()
 ) {
-  mismatchPlatforms.push("Betr");
+  mismatchPlatforms.push("Dabble");
 }
 
 // Build final message
@@ -9381,9 +10142,9 @@ else if (mismatchPlatforms.length > 1) {
       ? (bestSide === "over" ? "pos" : "neg")
       : (bestSide === "under" ? "pos" : "neg");
 
-  const betrDeltaClass = !Number.isFinite(betrDiff)
+  const dabbleDeltaClass = !Number.isFinite(dabbleDiff)
   ? "neutral"
-  : betrDiff < 0
+  : dabbleDiff < 0
     ? (bestSide === "over" ? "pos" : "neg")
     : (bestSide === "under" ? "pos" : "neg");
 
@@ -9410,10 +10171,10 @@ else if (mismatchPlatforms.length > 1) {
       ? " 🔥"
       : "";
 
-  const betrBadge =
-    row._brainPlay && Math.abs(betrDiff) <= 0.5
+  const dabbleBadge =
+    row._brainPlay && Math.abs(dabbleDiff) <= 0.5
       ? " 🧠"
-      : row._fireLevel >= 1 && Math.abs(betrDiff) >= 0.33
+      : row._fireLevel >= 1 && Math.abs(dabbleDiff) >= 0.33
       ? " 🔥"
       : "";
 // ====================================
@@ -9485,10 +10246,17 @@ return `
         data-platform="prizepicks"
       >
         <span class="pro-metric-label">
-          PrizePicks${ppBadge}
+          PrizePicks${ppVariantBadgeHtml ? ` ${ppVariantBadgeHtml}` : ""}${ppBadge}
         </span>
         <span class="pro-metric-value">${ppLineStr}</span>
-        <span class="pro-metric-delta ${ppDeltaClass}">${ppDiffStr}</span>
+        <span class="pro-metric-delta ${ppDeltaClass}">
+          ${
+            ppVariantBadgeHtml &&
+            Number.isFinite(ppVegasPct)
+              ? `Vegas ${ppVegasPct.toFixed(1)}%${ppVegasValue && ppSpecialLabel ? ` • ${ppSpecialLabel}` : ""}`
+              : ppDiffStr
+          }
+        </span>
       </div>
 
       <!-- Underdog -->
@@ -9503,16 +10271,16 @@ return `
         <span class="pro-metric-delta ${udDeltaClass}">${udDiffStr}</span>
       </div>
       
-      <!-- Betr -->
+      <!-- Dabble -->
       <div
-        class="pro-card-metric-row platform-row betr"
-        data-platform="betr"
+        class="pro-card-metric-row platform-row dabble"
+        data-platform="dabble"
       >     
         <span class="pro-metric-label">
-          Betr${betrBadge}
+          Dabble${dabbleBadge}
         </span>
-        <span class="pro-metric-value">${betrLineStr}</span>
-        <span class="pro-metric-delta ${betrDeltaClass}">${betrDiffStr}</span>
+        <span class="pro-metric-value">${dabbleLineStr}</span>
+        <span class="pro-metric-delta ${dabbleDeltaClass}">${dabbleDiffStr}</span>
       </div>
 
       
@@ -9571,11 +10339,27 @@ function dedupeCardRowsPreferModel(rows) {
   const map = new Map();
 
   rows.forEach(row => {
-    const key = [
+    const keyParts = [
       row.Event,
       row.Description,
       row.Market
-    ].join("|").toLowerCase();
+    ];
+
+    if (
+      row.PrizePicksIsAlternate === true
+    ) {
+      keyParts.push(
+        row.Outcome || "",
+        row.PrizePickPoint ?? "",
+        row.PrizePicksVariant ||
+          "alternate"
+      );
+    }
+
+    const key =
+      keyParts
+        .join("|")
+        .toLowerCase();
 
     const hasModelLean =
       row.BestNoVigSide &&
@@ -9674,8 +10458,22 @@ const topN = dedupedRows.slice(0, 40);
 
 
   content.innerHTML = topN
-  .map((row, index) => buildPickCardHtml(row, index))
-  .join("");
+    .map((row, index) => {
+      try {
+        return buildPickCardHtml(
+          row,
+          index
+        );
+      } catch (error) {
+        console.error(
+          "❌ Tap-to-Card row render failed:",
+          row,
+          error
+        );
+        return "";
+      }
+    })
+    .join("");
 
   bindCardPlatformToggles();
   updateCardPlatformHighlights(); // ⭐ default PrizePicks highlight
@@ -9747,7 +10545,10 @@ aiButtons.forEach(btn => {
     }
 
     closeCardViewModal();
-    openEdgeProfile(row);
+    openEdgeProfile(
+      row,
+      { returnToCardView: true }
+    );
   });
 });
 
@@ -9769,7 +10570,7 @@ pickButtons.forEach(btn => {
     selectedLine =
       row.PrizePickPoint ??
       row.UnderdogPoint ??
-      row.BetrPoint ??
+      row.DabblePoint ??
       row.ConsensusPoint;
 
   }
@@ -9778,14 +10579,14 @@ pickButtons.forEach(btn => {
     selectedLine =
       row.UnderdogPoint ??
       row.PrizePickPoint ??
-      row.BetrPoint ??
+      row.DabblePoint ??
       row.ConsensusPoint;
 
   }
-  else if (platform === "betr") {
+  else if (platform === "dabble") {
 
     selectedLine =
-      row.BetrPoint ??
+      row.DabblePoint ??
       row.PrizePickPoint ??
       row.UnderdogPoint ??
       row.ConsensusPoint;
@@ -9796,7 +10597,7 @@ pickButtons.forEach(btn => {
     selectedLine =
       row.PrizePickPoint ??
       row.UnderdogPoint ??
-      row.BetrPoint ??
+      row.DabblePoint ??
       row.ConsensusPoint;
 
   }
@@ -9808,7 +10609,7 @@ pickButtons.forEach(btn => {
     game_date: dateInput?.value || null,
     player: row.Description,
     market: row.Market,
-    outcome: getOutcomeFromRow(row),
+    outcome: getOutcomeFromRow(row, platform),
 
     line: Number(selectedLine),
 
@@ -9881,41 +10682,137 @@ function closeCardViewModal() {
 }
 
 // ===================================================
-// ⭐ Register floating close button — SINGLE listener
+// 🎛 Tap-to-Card Event Wiring — ROBUST / IDEMPOTENT
+//
+// This initializer can safely run more than once. It works whether
+// script.js executes before or after DOMContentLoaded and prevents
+// duplicate listeners with data attributes / a window flag.
 // ===================================================
-const cardCloseBtn = document.getElementById("cardCloseBtn");
-if (cardCloseBtn) {
-  cardCloseBtn.addEventListener("click", closeCardViewModal);
+function initTapToCardView() {
+  const tapBtn =
+    document.getElementById(
+      "tapToCardBtn"
+    );
+
+  const modal =
+    document.getElementById(
+      "cardViewModal"
+    );
+
+  const closeBtn =
+    document.getElementById(
+      "cardCloseBtn"
+    );
+
+  if (
+    tapBtn &&
+    tapBtn.dataset.cardViewBound !==
+      "true"
+  ) {
+    tapBtn.addEventListener(
+      "click",
+      event => {
+        event.preventDefault();
+        event.stopPropagation();
+        renderCardViewModal();
+      }
+    );
+
+    tapBtn.dataset.cardViewBound =
+      "true";
+  }
+
+  if (
+    closeBtn &&
+    closeBtn.dataset.cardViewBound !==
+      "true"
+  ) {
+    closeBtn.addEventListener(
+      "click",
+      event => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeCardViewModal();
+      }
+    );
+
+    closeBtn.dataset.cardViewBound =
+      "true";
+  }
+
+  if (
+    modal &&
+    modal.dataset.cardViewBound !==
+      "true"
+  ) {
+    modal.addEventListener(
+      "click",
+      event => {
+        if (
+          event.target === modal
+        ) {
+          closeCardViewModal();
+        }
+      }
+    );
+
+    modal.dataset.cardViewBound =
+      "true";
+  }
+
+  if (
+    window._btbtCardEscapeBound !==
+      true
+  ) {
+    window.addEventListener(
+      "keydown",
+      event => {
+        if (
+          event.key === "Escape"
+        ) {
+          closeCardViewModal();
+        }
+      }
+    );
+
+    window._btbtCardEscapeBound =
+      true;
+  }
 }
 
-// ===================================================
-// 🎛 Event Wiring + Initial Load
-// ===================================================
-document.addEventListener("DOMContentLoaded", () => {
-
-  // Load team logos (team_logos.json) and player photos if enabled
-  loadMetaMaps();
-
-  // Tap-to-card modal button
-  const tapBtn = document.getElementById("tapToCardBtn");
-  const modal = document.getElementById("cardViewModal");
-
-  if (tapBtn) {
-    tapBtn.addEventListener("click", () => renderCardViewModal());
-  }
-
-  // Close modal when clicking outside content
-  if (modal) {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeCardViewModal();
+function initDashboardMetaAndCards() {
+  // loadMetaMaps is async; don't let a metadata problem prevent
+  // the Tap-to-Card button itself from being wired.
+  try {
+    Promise.resolve(
+      loadMetaMaps()
+    ).catch(error => {
+      console.warn(
+        "⚠️ Metadata maps failed to load:",
+        error
+      );
     });
+  } catch (error) {
+    console.warn(
+      "⚠️ Metadata maps failed to initialize:",
+      error
+    );
   }
 
-  // Escape key closes modal
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeCardViewModal();
-  });
-});
+  initTapToCardView();
+}
+
+if (
+  document.readyState === "loading"
+) {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initDashboardMetaAndCards,
+    { once: true }
+  );
+} else {
+  initDashboardMetaAndCards();
+}
 
 
 
@@ -11568,37 +12465,37 @@ const marketRangeText =
 
     {
       key:
-        "betr",
+        "dabble",
 
       label:
-        "Betr",
+        "Dabble",
 
       line:
         numberOrNull(
-          rowData.BetrPoint
+          rowData.DabblePoint
         ),
 
       side:
-        rowData.BTBTBetrSide ||
+        rowData.BTBTDabbleSide ||
         null,
 
       probability:
         numberOrNull(
-          rowData.BTBTBetrProbability
+          rowData.BTBTDabbleProbability
         ),
 
       overProbability:
         numberOrNull(
-          rowData.BTBTBetrOverProbability
+          rowData.BTBTDabbleOverProbability
         ),
 
       edgeProbability:
         numberOrNull(
-          rowData.BTBTBetrEdgeProbability
+          rowData.BTBTDabbleEdgeProbability
         ),
 
       rating:
-        rowData.BTBTBetrRating ||
+        rowData.BTBTDabbleRating ||
         null
     }
 
@@ -12423,7 +13320,13 @@ platformRows.forEach(
   );
 
 }
-async function openEdgeProfile(rowData) {
+async function openEdgeProfile(
+  rowData,
+  options = {}
+) {
+
+  window.edgeProfileReturnToCardView =
+    options.returnToCardView === true;
 
   const modal =
     document.getElementById(
@@ -12525,7 +13428,7 @@ logoWrap.innerHTML = `
   const line =
     rowData.PrizePickPoint ||
     rowData.UnderdogPoint ||
-    rowData.BetrPoint ||
+    rowData.DabblePoint ||
     rowData.ConsensusPoint ||
     "";
 
@@ -12708,7 +13611,7 @@ try {
 // ===================================================
 const ppLine = rowData.PrizePickPoint ?? rowData.PrizePicksPoint ?? null;
 const udLine = rowData.UnderdogPoint ?? null;
-const betrLine = rowData.BetrPoint ?? null;
+const dabbleLine = rowData.DabblePoint ?? null;
 const vegasLine = rowData.ConsensusPoint ?? null;
 
 const matchup = profile.matchup || {};
@@ -12742,12 +13645,12 @@ const getPlatformBadge = (diff) => {
 
 const ppBadge = getPlatformBadge(rowData.PrizePicksDifference);
 const udBadge = getPlatformBadge(rowData.UnderdogDifference);
-const betrBadge = getPlatformBadge(rowData.BetrDifference);
+const dabbleBadge = getPlatformBadge(rowData.DabbleDifference);
 
 const lineRows = [
   { label: `${ppBadge} PrizePicks`, value: ppLine },
   { label: `${udBadge} Underdog`, value: udLine },
-  { label: `${betrBadge} Betr`, value: betrLine },
+  { label: `${dabbleBadge} Dabble`, value: dabbleLine },
   { label: "Vegas Consensus", value: vegasLine }
 ];
 
@@ -12763,7 +13666,7 @@ const availableLines = lineRows
 
 
 
-const dfsLines = [ppLine, udLine, betrLine]
+const dfsLines = [ppLine, udLine, dabbleLine]
   .filter(v => v !== null && v !== undefined && v !== "")
   .map(Number)
   .filter(Number.isFinite);
@@ -13336,8 +14239,20 @@ document
   ?.addEventListener("click", () => {
 
     document
-      .getElementById("edgeProfileModal")
-      .classList.add("hidden");
+      .getElementById(
+        "edgeProfileModal"
+      )
+      ?.classList.add("hidden");
+
+    if (
+      window.edgeProfileReturnToCardView ===
+      true
+    ) {
+      window.edgeProfileReturnToCardView =
+        false;
+
+      renderCardViewModal();
+    }
 
   });
 

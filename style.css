@@ -166,8 +166,8 @@ td.green {
 }
 
 td.huntergreen {
-  background-color: #196f3d;
-  color: white;
+  background-color: #d8f8df;
+  color: #1f2937;
 }
 
 td.darkyellow {
@@ -272,7 +272,7 @@ td.white {
 }
 
 /* Optional: For future use if you prefer custom styled tooltips */
-[data-tooltip]:hover::after {
+[data-tooltip]:not(.legend-item):hover::after {
   content: attr(data-tooltip);
   position: absolute;
   background: #333;
@@ -6304,61 +6304,119 @@ tr.debug-enabled:hover {
   background: #f3f4f6;
   border-radius: 8px;
   font-size: 13px;
+  overflow: visible;
+  position: relative;
 }
 
 .legend-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: #374151;
-}
-
-/* =========================
-   🧠 Legend Tooltip System
-========================= */
-
-.picks-legend {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.legend-item {
   position: relative;
   cursor: help;
-  padding: 4px 6px;
+  padding: 6px 8px;
   border-radius: 6px;
   transition: background 0.2s ease;
+  z-index: 2;
 }
 
 .legend-item:hover {
   background: rgba(0,0,0,0.05);
 }
 
-/* Tooltip bubble */
+/* Legend helper is rendered as one shared panel below the legend.
+   This avoids duplicate tooltips and clipping inside scroll containers. */
 .legend-item::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  transform: translateY(100%);
-  background: #1f2937;
-  color: #fff;
-  padding: 10px 12px;
-  border-radius: 6px;
-  width: 260px;
-  font-size: 12px;
-  line-height: 1.4;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  z-index: 999;
+  display: none !important;
+  content: none !important;
 }
 
-/* Show on hover */
-.legend-item:hover::after {
-  opacity: 1;
+.legend-helper {
+  display: none;
+  flex-basis: 100%;
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 11px;
+  border-radius: 7px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.45;
+  box-sizing: border-box;
+  white-space: normal;
+}
+
+.legend-helper.show {
+  display: block;
+}
+.pp-variant-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+/* PrizePicks Goblin / Demon badges */
+.pp-variant-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+  vertical-align: middle;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.pp-variant-badge .pp-variant-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pp-variant-badge.goblin {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.pp-variant-badge.goblin .pp-variant-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+}
+
+.pp-variant-badge.demon {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.pp-variant-badge.demon .pp-variant-dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
+}
+
+.pp-variant-badge .pp-variant-text {
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .picks-legend {
+    gap: 10px;
+  }
+
+
+  .pp-variant-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
 }
 
 
@@ -6426,7 +6484,7 @@ tr.debug-enabled:hover {
 .odds-table th:nth-child(11),
 .odds-table td:nth-child(11),
 
-/* Betr diff */
+/* Dabble diff */
 .odds-table th:nth-child(12),
 .odds-table td:nth-child(12) {
   display: table-cell;
@@ -9616,8 +9674,8 @@ body.auth-modal-open {
   #results .odds-table th[data-column="UnderdogPoint"],
   #results .odds-table td[data-column="UnderdogPoint"],
 
-  #results .odds-table th[data-column="BetrPoint"],
-  #results .odds-table td[data-column="BetrPoint"],
+  #results .odds-table th[data-column="DabblePoint"],
+  #results .odds-table td[data-column="DabblePoint"],
 
   /* Consensus / model */
   #results .odds-table th[data-column="ConsensusPoint"],
@@ -9633,8 +9691,8 @@ body.auth-modal-open {
   #results .odds-table th[data-column="UnderdogDifference"],
   #results .odds-table td[data-column="UnderdogDifference"],
 
-  #results .odds-table th[data-column="BetrDifference"],
-  #results .odds-table td[data-column="BetrDifference"] {
+  #results .odds-table th[data-column="DabbleDifference"],
+  #results .odds-table td[data-column="DabbleDifference"] {
     display: table-cell;
   }
 
@@ -9669,6 +9727,13 @@ body.auth-modal-open {
 .odds-table strong {
   color: #111827 !important;
   font-weight: 800 !important;
+}
+
+/* BestNoVig 60%+ cell: white text must beat the global table color rules. */
+#results .odds-table td.best-novig-elite,
+#results .odds-table td.best-novig-elite *,
+#results .odds-table td.best-novig-elite strong {
+  color: #ffffff !important;
 }
 
 

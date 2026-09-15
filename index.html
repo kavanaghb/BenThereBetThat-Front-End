@@ -181,7 +181,7 @@
       <div>
         <strong>DFS Props</strong>
         <small>
-          PrizePicks • Underdog • Betr
+          PrizePicks • Underdog • Dabble
         </small>
       </div>
     </div>
@@ -374,7 +374,7 @@
                 </strong>
 
                 <p>
-                  PrizePicks, Underdog & Betr against
+                  PrizePicks, Underdog & Dabble against
                   sportsbook consensus and no-vig probability.
                 </p>
 
@@ -1099,7 +1099,7 @@
         <label><input type="checkbox" value="Fanatics" checked> Fanatics</label>
         <label><input type="checkbox" value="PrizePicks"checked> PrizePicks</label>
         <label><input type="checkbox" value="Underdog" checked> Underdog</label>
-        <label><input type="checkbox" value="Betr" checked> Betr</label>
+        <label><input type="checkbox" value="Dabble" checked> Dabble</label>
 
       </div>
 
@@ -1121,8 +1121,8 @@
     🧩 Underdog +EV
   </button>
 
-  <button id="filterBetrOptimalBtn" class="filter-btn">
-    Betr +EV
+  <button id="filterDabbleOptimalBtn" class="filter-btn">
+    Dabble +EV
   </button>
 
   <button id="filterBensPicksBtn" class="filter-btn"
@@ -1136,7 +1136,7 @@
   </button>
 
   <button id="filterDfsDifferenceBtn" class="filter-btn"
-          title="Show props where PrizePicks,  Underdog and Betr lines differ">
+          title="Show props where PrizePicks,  Underdog and Dabble lines differ">
     ⚔️ DFS Line Difference
   </button>
 
@@ -1168,11 +1168,11 @@
   </button>
 
   <button
-    id="pickTrackerBetrBtn"
+    id="pickTrackerDabbleBtn"
     class="tracker-platform-btn"
-    data-platform="betr"
+    data-platform="dabble"
   >
-    Betr
+    Dabble
   </button>
 
 </div>
@@ -1384,7 +1384,7 @@ Fair Under % = (P_under / (P_over + P_under)) × 100
 
     <!-- 4️⃣ DFS Lines -->
 <section class="tutorial-step">
-  <h3>🎮 4. DFS Lines (PrizePicks / Underdog / Betr)</h3>
+  <h3>🎮 4. DFS Lines (PrizePicks / Underdog / Dabble)</h3>
 
   <p>
     DFS lines are compared against the <strong>Consensus</strong> line and the
@@ -1418,18 +1418,33 @@ Fair Under % = (P_under / (P_over + P_under)) × 100
 
     <li>
       🔥 <strong>Strong Edge</strong> — triggered when the DFS line gives a
-      stronger advantage versus consensus. More flames means stronger value.
+      stronger advantage versus consensus. More flames means a stronger
+      line edge, not a higher payout.
     </li>
 
     <li>
       ⚡ <strong>Line Mismatch</strong> — triggered when a DFS platform disagrees
       with the sharp market direction, which may signal a pricing inefficiency.
     </li>
+
+    <li>
+      <strong>PrizePicks Goblin / Demon</strong> — Goblin and Demon rows are
+      alternate PrizePicks lines and use their <strong>own signal logic</strong>.
+      They do not receive the normal 54% Brain badge. Goblins are intentionally
+      easier lines, so BTBT labels them <strong>HIGH HIT</strong> at 65%+ and
+      <strong>ELITE HIT</strong> at 70%+ when at least two sportsbook lines support
+      the estimate. Demons are harder lines and are labeled
+      <strong>DEMON VALUE</strong> at 45%+ and <strong>ELITE DEMON</strong> at
+      47%+, again with at least two supporting books. DEMON VALUE rows can
+      appear in the PrizePicks value filter, while only ELITE DEMON rows are
+      promoted into Ben's Picks. These are quality signals,
+      not payout-adjusted mathematical EV.
+    </li>
   </ul>
 
   <p class="signal-tip">
     💡 <strong>Tip:</strong> First check the <strong>Best No-Vig</strong> side,
-    then look for green, 🧠, 🔥, or ⚡ signals on the DFS platforms.
+    then look for green, 🧠, 🔥, ⚡, or Goblin/Demon VALUE tags on the DFS platforms.
   </p>
 </section>
 <!-- 5️⃣ Filter Buttons -->
@@ -1460,10 +1475,19 @@ Fair Under % = (P_under / (P_over + P_under)) × 100
     </li>
 
     <li>
-      🎯 <strong>Betr +EV</strong> — identifies props where
-      <em>Betr is mispriced relative to the broader market</em>.
+      🎯 <strong>Dabble +EV</strong> — identifies props where
+      <em>Dabble is mispriced relative to the broader market</em>.
       Particularly useful for spotting softer or slower-moving lines
       before they adjust.
+    </li>
+
+    <li>
+      👺😈 <strong>PrizePicks Goblin / Demon Signals</strong> — special
+      alternate PrizePicks lines are evaluated using the exact Vegas
+      no-vig probability at that line, but they do <strong>not</strong> use
+      the normal 54% Brain threshold. Goblins use HIGH HIT / ELITE HIT bands; Demons use DEMON VALUE /
+      ELITE DEMON bands. The value filter uses 65%+ Goblin / 45%+ Demon,
+      while Ben's Picks is stricter at 70%+ Goblin / 47%+ Demon.
     </li>
 
     <li>
