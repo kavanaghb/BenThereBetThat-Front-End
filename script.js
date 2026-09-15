@@ -5648,6 +5648,9 @@ if (!hasPropsAccess) {
     window.visibleDataset = visibleData;
     window.lastRenderedData = visibleData;
 
+    // A new board/date/sport needs a fresh stable filter base.
+    window.filterDataset = [];
+
     progressText.textContent = "Rendering table...";
     await renderTableInBatches(
       visibleData,
@@ -6164,6 +6167,22 @@ const finalData = deduped.length > 0 ? deduped : data;
 
 // ✅ Make groupedFinal globally available for Fact Check
 window.groupedFinal = groupedFinal;
+
+// ===================================================
+// 🎯 STABLE FILTER DATASET
+//
+// Store the exact deduped row objects used by the INITIAL full render.
+// renderOddsTable() hydrates Brain / Fire / platform signals onto THESE
+// same objects. Filtered re-renders must NOT replace this base dataset.
+// This makes Ben's Picks deterministic regardless of click order.
+// ===================================================
+if (
+  !isFiltered ||
+  !Array.isArray(window.filterDataset) ||
+  window.filterDataset.length === 0
+) {
+  window.filterDataset = finalData;
+}
 
 // ✅ Render table (call your rendering function)
 await renderOddsTable(finalData, batchSize, groupedFinal, isFiltered);
@@ -7114,15 +7133,33 @@ const rowEstimate =
         : false;
 
     const availableOutcome =
-  String(row.Outcome || "").trim().toLowerCase();
+  String(
+    platform === "Dabble"
+      ? (
+          row.DabbleOutcome ||
+          row.Outcome ||
+          ""
+        )
+      : (
+          row.Outcome ||
+          ""
+        )
+  )
+    .trim()
+    .toLowerCase();
 
 const recommendedOutcome =
-  String(platformBestSide || "").trim().toLowerCase();
+  String(
+    platformBestSide || ""
+  )
+    .trim()
+    .toLowerCase();
 
-// Dabble frequently exposes only one playable side.
-// Do not award Brain/Fire unless that offered side matches the Vegas best side.
+// If Dabble supplies an explicit one-side outcome, it must match.
+// When Dabble supplies both sides, DabbleAvailableSides below is authoritative.
 const playableSideMatches =
   platform !== "Dabble" ||
+  row.DabbleOffersBothSides === true ||
   (
     availableOutcome &&
     recommendedOutcome &&
@@ -7304,7 +7341,9 @@ const sideUnavailable =
       ? String(row.DabbleOutcome || row.Outcome || "")
           .trim()
           .toLowerCase()
-      : null
+      : null,
+
+  sideUnavailable
 };
     row[`_${platform}Side`] = platformBestSide;
 
@@ -8261,8 +8300,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // 🔹 Choose best available dataset
     const base =
-      Array.isArray(window.visibleDataset) &&
-      window.visibleDataset.length
+      Array.isArray(window.filterDataset) &&
+      window.filterDataset.length
+        ? window.filterDataset
+        : Array.isArray(window.visibleDataset) &&
+          window.visibleDataset.length
         ? window.visibleDataset
         : Array.isArray(window.lastRenderedData)
         ? window.lastRenderedData
@@ -8289,6 +8331,99 @@ window.addEventListener("DOMContentLoaded", () => {
   window.clearAllOptimalFilters = clearAllOptimalFilters;
 });
 
+
+// ===================================================
+// 🎯 PLATFORM-SPECIFIC +EV FILTER HELPER
+//
+// IMPORTANT:
+// Platform signal probability is stored as percentage points (59.7),
+// while the edge formula expects a decimal probability (0.597).
+// Also, each DFS platform must use the probability at ITS OWN line.
+// ===================================================
+function platformSignalPassesValueFilter(row, column) {
+  const signal =
+    row?._platformSignals?.[column];
+
+  if (
+    !signal ||
+    signal.available !== true ||
+    signal.platformSideIsAvailable === false
+  ) {
+    return false;
+  }
+
+  const line =
+    Number(signal.dfsLine);
+
+  const marketLine =
+    Number(signal.marketLine);
+
+  const probabilityPct =
+    toValidProbabilityPct(
+      signal.probability
+    );
+
+  const bestSide =
+    String(
+      signal.bestSide || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  if (
+    !Number.isFinite(line) ||
+    !Number.isFinite(marketLine) ||
+    marketLine <= 0 ||
+    probabilityPct === null ||
+    !(
+      bestSide === "over" ||
+      bestSide === "under"
+    )
+  ) {
+    return false;
+  }
+
+  const isFavorable =
+    signal.isBetter === true ||
+    (
+      bestSide === "over" &&
+      line < marketLine
+    ) ||
+    (
+      bestSide === "under" &&
+      line > marketLine
+    );
+
+  if (!isFavorable) {
+    return false;
+  }
+
+  const normalizedEdge =
+    Math.abs(
+      line - marketLine
+    ) / marketLine;
+
+  const probabilityDecimal =
+    probabilityPct / 100;
+
+  const edgeScore =
+    normalizedEdge +
+    (
+      probabilityDecimal - 0.5
+    ) * 0.6;
+
+  const passesEdge =
+    edgeScore >= 0.02;
+
+  const passesQuality =
+    probabilityPct >= 51 ||
+    row._isMismatch === true;
+
+  return (
+    passesEdge &&
+    passesQuality
+  );
+}
 
   // ===========================================
 // ✅ PrizePicks +EV (DYNAMIC — CROSS-SPORT SAFE)
@@ -8338,47 +8473,12 @@ function filterPrizePicksOptimal(data) {
       return false;
     }
 
-    const bestSide = (row.BestNoVigSide || "").toLowerCase();
-    const noVig = Number(row.NoVigWinProb) || 0;
-
-    const line = Number(row.PrizePickPoint);
-    const cons = Number(row.ConsensusPoint);
-
-    // Must have valid data
-    if (!bestSide || !Number.isFinite(line) || !Number.isFinite(cons)) {
-      return false;
-    }
-
-    // ================================
-    // 📏 EDGE CALCULATION
-    // ================================
-    const edge = Math.abs(line - cons);
-    const normalizedEdge = cons > 0 ? edge / cons : 0;
-
-    // ================================
-    // 🎯 FAVORABLE DIRECTION
-    // ================================
-    const isFavorable =
-      (bestSide === "over" && line < cons) ||
-      (bestSide === "under" && line > cons);
-
-    if (!isFavorable) return false;
-
-    // ================================
-    // 🧠 EDGE SCORE (TUNED FOR NBA + ALL SPORTS)
-    // ================================
-    const edgeScore =
-      normalizedEdge +
-      (noVig - 0.5) * 0.6;
-
-    // 🔑 KEY FIX: lowered threshold (NBA-friendly)
-    const passesEdge = edgeScore >= 0.02;
-
-    // Quality gate (prevents junk)
-    const passesQuality =
-      noVig >= 0.51 || row._isMismatch;
-
-    if (passesEdge && passesQuality) {
+    if (
+      platformSignalPassesValueFilter(
+        row,
+        "PrizePickPoint"
+      )
+    ) {
       seen.add(key);
       return true;
     }
@@ -8398,50 +8498,19 @@ function filterUnderdogOptimal(data) {
   const seen = new Set();
 
   const result = data.filter((row) => {
-    const key = `${row.Event}|${row.Market}|${row.Description}`;
-    if (seen.has(key)) return false;
+    const key =
+      `${row.Event}|${row.Market}|${row.Description}`;
 
-    const bestSide = (row.BestNoVigSide || "").toLowerCase();
-    const noVig = Number(row.NoVigWinProb) || 0;
-
-    const line = Number(row.UnderdogPoint);
-    const cons = Number(row.ConsensusPoint);
-
-    // Must have valid data
-    if (!bestSide || !Number.isFinite(line) || !Number.isFinite(cons)) {
+    if (seen.has(key)) {
       return false;
     }
 
-    // ================================
-    // 📏 EDGE CALCULATION
-    // ================================
-    const edge = Math.abs(line - cons);
-    const normalizedEdge = cons > 0 ? edge / cons : 0;
-
-    // ================================
-    // 🎯 FAVORABLE DIRECTION
-    // ================================
-    const isFavorable =
-      (bestSide === "over" && line < cons) ||
-      (bestSide === "under" && line > cons);
-
-    if (!isFavorable) return false;
-
-    // ================================
-    // 🧠 EDGE SCORE (NBA + ALL SPORTS SAFE)
-    // ================================
-    const edgeScore =
-      normalizedEdge +
-      (noVig - 0.5) * 0.6;
-
-    // 🔑 tuned threshold (NBA-friendly)
-    const passesEdge = edgeScore >= 0.02;
-
-    // Quality gate (prevents junk)
-    const passesQuality =
-      noVig >= 0.51 || row._isMismatch;
-
-    if (passesEdge && passesQuality) {
+    if (
+      platformSignalPassesValueFilter(
+        row,
+        "UnderdogPoint"
+      )
+    ) {
       seen.add(key);
       return true;
     }
@@ -8449,7 +8518,10 @@ function filterUnderdogOptimal(data) {
     return false;
   });
 
-  console.log(`🎯 Underdog +EV (dynamic): ${result.length}/${data.length} rows`);
+  console.log(
+    `🎯 Underdog +EV (platform fair %): ${result.length}/${data.length} rows`
+  );
+
   return result;
 }
 
@@ -8462,70 +8534,31 @@ function filterDabbleOptimal(data) {
   const seen = new Set();
 
   const result = data.filter((row) => {
-    const key = `${row.Event}|${row.Market}|${row.Description}`;
-    if (seen.has(key)) return false;
+    const key =
+      `${row.Event}|${row.Market}|${row.Description}`;
 
-    const bestSide = (row.BestNoVigSide || "").toLowerCase();
-    const noVig = Number(row.NoVigWinProb) || 0;
+    if (seen.has(key)) {
+      return false;
+    }
 
-    const line = Number(row.DabblePoint);
-    const cons = Number(row.ConsensusPoint);
+    const signal =
+      row?._platformSignals
+        ?.DabblePoint;
 
-    const dabbleAvailableSides =
-  Array.isArray(row.DabbleAvailableSides)
-    ? row.DabbleAvailableSides.map(side =>
-        String(side).trim().toLowerCase()
-      )
-    : [];
-
-const recommendedSideIsAvailable =
-  dabbleAvailableSides.includes(bestSide);
-
-    // Must have valid data
+    // Dabble must actually offer the recommended side.
     if (
-  !bestSide ||
-  !Number.isFinite(line) ||
-  !Number.isFinite(cons) ||
-  !recommendedSideIsAvailable
-) {
-  return false;
-}
-const availableSide =
-  String(row.Outcome || "").trim().toLowerCase();
+      !signal ||
+      signal.platformSideIsAvailable === false
+    ) {
+      return false;
+    }
 
-if (!availableSide || availableSide !== bestSide) {
-  return false;
-}
-    // ================================
-    // 📏 EDGE CALCULATION
-    // ================================
-    const edge = Math.abs(line - cons);
-    const normalizedEdge = cons > 0 ? edge / cons : 0;
-
-    // ================================
-    // 🎯 FAVORABLE DIRECTION
-    // ================================
-    const isFavorable =
-      (bestSide === "over" && line < cons) ||
-      (bestSide === "under" && line > cons);
-
-    if (!isFavorable) return false;
-
-    // ================================
-    // 🧠 EDGE SCORE (NBA + ALL SPORTS SAFE)
-    // ================================
-    const edgeScore =
-      normalizedEdge +
-      (noVig - 0.5) * 0.6;
-
-    // 🔑 tuned threshold (NBA-friendly)
-    const passesEdge = edgeScore >= 0.02;
-
-    // Quality gate (prevents junk)
-    const passesQuality =
-      noVig >= 0.51 || row._isMismatch;
-
-    if (passesEdge && passesQuality) {
+    if (
+      platformSignalPassesValueFilter(
+        row,
+        "DabblePoint"
+      )
+    ) {
       seen.add(key);
       return true;
     }
@@ -8533,7 +8566,10 @@ if (!availableSide || availableSide !== bestSide) {
     return false;
   });
 
-  console.log(`🎯 Dabble +EV (dynamic): ${result.length}/${data.length} rows`);
+  console.log(
+    `🎯 Dabble +EV (Dabble fair %): ${result.length}/${data.length} rows`
+  );
+
   return result;
 }
 
@@ -8546,13 +8582,30 @@ function filterBensPicks(data) {
 
   const out = data.filter((row) => {
 
-    // 🧠 Brain plays
-    const hasBrain =
-      row._brainPlay === true;
+    const platformSignals =
+      Object.values(
+        row._platformSignals || {}
+      );
 
-    // 🔥 Fire plays
+    // 🧠 Brain plays — inspect hydrated platform signals directly.
+    const hasBrain =
+      row._brainPlay === true ||
+      platformSignals.some(
+        signal =>
+          signal?.brain === true
+      );
+
+    // 🔥 Fire plays — inspect hydrated platform signals directly.
     const hasFire =
-      Number(row._fireLevel || 0) >= 1;
+      Number(
+        row._fireLevel || 0
+      ) >= 1 ||
+      platformSignals.some(
+        signal =>
+          Number(
+            signal?.fireLevel || 0
+          ) >= 1
+      );
 
     // 👺😈 Premium PrizePicks special line
     // Value-filter thresholds are intentionally looser than Ben's Picks.
@@ -8660,8 +8713,11 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
   btn.addEventListener("click", () => {
       // 🔑 Base must reflect what is currently shown in the table
     const base =
-  Array.isArray(window.visibleDataset) &&
-  window.visibleDataset.length
+  Array.isArray(window.filterDataset) &&
+  window.filterDataset.length
+    ? window.filterDataset
+    : Array.isArray(window.visibleDataset) &&
+      window.visibleDataset.length
     ? window.visibleDataset
     : Array.isArray(window.lastRenderedData)
     ? window.lastRenderedData
