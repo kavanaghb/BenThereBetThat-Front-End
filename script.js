@@ -8498,8 +8498,155 @@ function filterUnderdogOptimal(data) {
   const seen = new Set();
 
   const result = data.filter((row) => {
+    const underdogLine = toValidLine(row?.UnderdogPoint);
+
+    // The row must actually contain an Underdog offering.
+    if (!Number.isFinite(underdogLine)) {
+      return false;
+    }
+
+    let signal =
+      row?._platformSignals
+        ?.UnderdogPoint || null;
+
+    // Underdog can be sparse. If its hydrated signal is missing or did not
+    // receive a fair probability during the first table render, rebuild the
+    // probability at the ACTUAL Underdog line from the full sportsbook curve.
+    const existingProbability =
+      toValidProbabilityPct(
+        signal?.probability
+      );
+
+    if (
+      !signal ||
+      existingProbability === null
+    ) {
+      const signalData =
+        Array.isArray(window.fullDataset) &&
+        window.fullDataset.length
+          ? window.fullDataset
+          : data;
+
+      const curve =
+        buildNoVigCurve(
+          signalData,
+          row
+        );
+
+      const estimate =
+        estimateFairAtLine(
+          curve,
+          underdogLine
+        );
+
+      const marketLine =
+        toValidLine(
+          getTrueConsensusPoint(row)
+        ) ??
+        toValidLine(
+          row?.ConsensusPoint
+        ) ??
+        toValidLine(
+          getMarketMedianPoint(row)
+        );
+
+      let bestSide =
+        String(
+          row?.BestNoVigSide ||
+          row?._canonicalNoVig?.side ||
+          ""
+        )
+          .trim()
+          .toLowerCase();
+
+      if (
+        bestSide !== "over" &&
+        bestSide !== "under"
+      ) {
+        if (
+          Number.isFinite(estimate?.over) &&
+          Number.isFinite(estimate?.under)
+        ) {
+          bestSide =
+            Number(estimate.over) >=
+            Number(estimate.under)
+              ? "over"
+              : "under";
+        }
+      }
+
+      const probability =
+        bestSide === "over" ||
+        bestSide === "under"
+          ? toValidProbabilityPct(
+              estimate?.[bestSide]
+            )
+          : null;
+
+      const isBetter =
+        Number.isFinite(marketLine) &&
+        (
+          (
+            bestSide === "over" &&
+            underdogLine < marketLine
+          ) ||
+          (
+            bestSide === "under" &&
+            underdogLine > marketLine
+          )
+        );
+
+      signal = {
+        ...(signal || {}),
+        platform: "Underdog",
+        available: true,
+        dfsLine: underdogLine,
+        marketLine,
+        bestSide,
+        probability,
+        confidence:
+          estimate?.confidence ||
+          signal?.confidence ||
+          "unavailable",
+        booksUsed:
+          Number(
+            estimate?.booksUsed ||
+            signal?.booksUsed ||
+            0
+          ),
+        isBetter,
+        isEqual:
+          Number.isFinite(marketLine) &&
+          Math.abs(
+            underdogLine - marketLine
+          ) <= 0.001,
+        isWorse:
+          Number.isFinite(marketLine) &&
+          !isBetter &&
+          Math.abs(
+            underdogLine - marketLine
+          ) > 0.001,
+        platformSideIsAvailable: true
+      };
+
+      row._platformSignals =
+        row._platformSignals || {};
+
+      row._platformSignals.UnderdogPoint =
+        signal;
+    }
+
+    // Underdog must have a usable signal for its own line.
+    if (
+      !signal ||
+      signal.available === false ||
+      signal.platformSideIsAvailable === false
+    ) {
+      return false;
+    }
+
     const key =
-      `${row.Event}|${row.Market}|${row.Description}`;
+      `${row.Event}|${row.Market}|${row.Description}|${underdogLine}`;
 
     if (seen.has(key)) {
       return false;
@@ -8519,7 +8666,7 @@ function filterUnderdogOptimal(data) {
   });
 
   console.log(
-    `🎯 Underdog +EV (platform fair %): ${result.length}/${data.length} rows`
+    `🎯 Underdog +EV (actual Underdog line): ${result.length}/${data.length} rows`
   );
 
   return result;
