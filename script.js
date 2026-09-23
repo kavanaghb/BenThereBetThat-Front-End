@@ -215,6 +215,32 @@ function getOutcomeFromRow(row, platform = null) {
     }
   }
 
+  // Standard DFS platforms can legitimately prefer different sides when
+  // their posted lines differ. Use the hydrated signal for the ACTIVE
+  // platform before falling back to the row-level BestNoVig summary.
+  const platformSignalColumn = {
+    prizepicks: "PrizePickPoint",
+    underdog: "UnderdogPoint",
+    dabble: "DabblePoint"
+  }[activePlatform];
+
+  const platformSignalSide =
+    platformSignalColumn
+      ? String(
+          row?._platformSignals?.[platformSignalColumn]?.bestSide ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+      : "";
+
+  if (
+    platformSignalSide === "over" ||
+    platformSignalSide === "under"
+  ) {
+    return platformSignalSide;
+  }
+
   if (row?.BestNoVigSide) {
     return String(
       row.BestNoVigSide
@@ -6022,159 +6048,379 @@ async function renderTableInBatches(data, batchSize = 50, isFiltered = false) {
 
   // ===================================================
 // ===================================================
-// 🧩 Group & Deduplicate Rows (Final Cleaned Version)
+// 🧩 Group & Deduplicate Rows — STANDARD + PP SPECIAL SAFE
+//
+// CRITICAL RULES:
+//   1. Standard rows are deduped exactly as before.
+//   2. PrizePicks Goblin/Demon rows NEVER compete with a standard row.
+//   3. Each special line keeps its own identity by line + variant + side.
+//   4. groupedFinal remains STANDARD-only so existing O/U / Fact Check
+//      behavior cannot be polluted by alternate PrizePicks rows.
+//   5. Qualified special rows are injected immediately after the
+//      standard player/market row. Qualification is applied later in
+//      renderOddsTable(), after the exact-line fair-probability signal
+//      has been hydrated from window.fullDataset.
+// ===================================================
+
+const normalizeRenderToken = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .trim();
+
+const getRenderBaseKey = (row) =>
+  `${normalizeRenderToken(row?.Event)}|` +
+  `${normalizeRenderToken(row?.Market)}|` +
+  `${normalizeRenderToken(row?.Description)}`;
+
+const isPrizePicksSpecialRow = (row) => {
+  const variant = normalizeRenderToken(
+    row?.PrizePicksVariant || "standard"
+  );
+
+  return (
+    row?.PrizePicksIsAlternate === true &&
+    (variant === "goblin" || variant === "demon")
+  );
+};
+
+const standardRows =
+  data.filter(row => !isPrizePicksSpecialRow(row));
+
+const prizePicksSpecialRows =
+  data.filter(row => isPrizePicksSpecialRow(row));
+
+// ===================================================
+// STANDARD rows: preserve the historical one-row-per-player/market behavior.
 // ===================================================
 const groupedBySide = {};
 
-data.forEach((row) => {
-  const key = `${(row.Event || "").toLowerCase().trim()}|${(row.Market || "").toLowerCase().trim()}|${(row.Description || "").toLowerCase().trim()}|${(row.Outcome || "").toLowerCase().trim()}`;
+standardRows.forEach((row) => {
+  const key =
+    `${getRenderBaseKey(row)}|` +
+    `${normalizeRenderToken(row?.Outcome || row?.OverUnder)}`;
 
-  const outcomeText = (row.Outcome || row.OverUnder || "").toLowerCase();
-  const oppSide = outcomeText.includes("over")
-    ? "under"
-    : outcomeText.includes("under")
-    ? "over"
-    : null;
+  let prob =
+    toValidProbabilityPct(
+      row.NoVigWinProb ??
+      row.NoVigProb
+    );
 
-  const opp = oppSide
-    ? data.find(
-        (r) =>
-          (r.Event || "").toLowerCase().trim() === (row.Event || "").toLowerCase().trim() &&
-          (r.Market || "").toLowerCase().trim() === (row.Market || "").toLowerCase().trim() &&
-          (r.Description || "").toLowerCase().trim() === (row.Description || "").toLowerCase().trim() &&
-          (r.Outcome || "").toLowerCase().includes(oppSide)
-      )
-    : null;
-
-  const thisP = getConsensusPrice(row);
-  const oppP = opp ? getConsensusPrice(opp) : null;
-
-  // ===================================================
-  // 🧮 Compute fair "no-vig" probability for this outcome
-  // ===================================================
-  // ===================================================
-// 🧮 Compute fair "no-vig" probability (SPORTBOOK ONLY)
-// ===================================================
-
-let prob =
-  toValidProbabilityPct(
-    row.NoVigWinProb ??
-    row.NoVigProb
+  // Legacy fallback only when no fair probability exists.
+  const sportsbookPrices = [
+    row.FanduelPrice,
+    row.DraftKingsPrice,
+    row.BetMGMPrice,
+    row.FanaticsPrice
+  ].filter(
+    p => p != null && Number.isFinite(Number(p))
   );
 
-// ===================================================
-// 🧮 Legacy fallback only when no fair probability exists
-// ===================================================
+  if (
+    !Number.isFinite(prob) &&
+    sportsbookPrices.length >= 2
+  ) {
+    const probs =
+      sportsbookPrices
+        .map(p => americanToProb(Number(p)))
+        .filter(p => p != null);
 
-const sportsbookPrices = [
-  row.FanduelPrice,
-  row.DraftKingsPrice,
-  row.BetMGMPrice,
-  row.FanaticsPrice
-].filter(p => p != null && Number.isFinite(Number(p)));
-
-if (!Number.isFinite(prob) && sportsbookPrices.length >= 2) {
-
-  // convert all sportsbook odds to probabilities
-  const probs = sportsbookPrices
-    .map(p => americanToProb(Number(p)))
-    .filter(p => p != null);
-
-  if (probs.length >= 2) {
-
-    const avgProb = probs.reduce((a, b) => a + b, 0) / probs.length;
-
-    prob = avgProb * 100;
-
+    if (probs.length >= 2) {
+      prob =
+        (
+          probs.reduce((a, b) => a + b, 0) /
+          probs.length
+        ) * 100;
+    }
   }
 
-}
+  if (!groupedBySide[key]) {
+    groupedBySide[key] = [];
+  }
 
-// prob remains NULL if no sportsbook data exists
-
-
-
-
-
-  if (!groupedBySide[key]) groupedBySide[key] = [];
   groupedBySide[key].push({ row, prob });
 });
 
-// Collapse duplicates by strongest probability
-const collapsed = Object.values(groupedBySide).map((rows) =>
-  rows.length === 1
-    ? rows[0]
-    : rows.reduce((best, curr) =>
-        (curr.prob ?? 0) > (best.prob ?? 0) ? curr : best
-      )
-);
+// Collapse true STANDARD duplicates by strongest probability.
+const collapsed =
+  Object.values(groupedBySide).map((rows) =>
+    rows.length === 1
+      ? rows[0]
+      : rows.reduce((best, curr) =>
+          (curr.prob ?? 0) > (best.prob ?? 0)
+            ? curr
+            : best
+        )
+  );
 
 // ===================================================
-// 🧩 Regroup by Event/Market/Player for O/U comparison
+// Regroup STANDARD rows by Event/Market/Player for O/U comparison.
+// IMPORTANT: special PrizePicks rows are intentionally excluded here.
 // ===================================================
 const groupedFinal = {};
+
 collapsed.forEach(({ row, prob }) => {
-  const baseKey = `${(row.Event || "").toLowerCase().trim()}|${(row.Market || "").toLowerCase().trim()}|${(row.Description || "").toLowerCase().trim()}`;
-  const sideText = (row.Outcome || row.OverUnder || "").toLowerCase();
+  const baseKey = getRenderBaseKey(row);
+  const sideText =
+    normalizeRenderToken(
+      row.Outcome || row.OverUnder
+    );
+
   const side =
-    sideText.includes("under") ? "Under" :
-    sideText.includes("over") ? "Over" :
-    "Even";
+    sideText.includes("under")
+      ? "Under"
+      : sideText.includes("over")
+      ? "Over"
+      : "Even";
 
-  if (!groupedFinal[baseKey])
-    groupedFinal[baseKey] = { Over: null, Under: null, Even: null };
+  if (!groupedFinal[baseKey]) {
+    groupedFinal[baseKey] = {
+      Over: null,
+      Under: null,
+      Even: null
+    };
+  }
 
-  groupedFinal[baseKey][side] = { row, prob };
+  groupedFinal[baseKey][side] = {
+    row,
+    prob
+  };
 });
 
-// 🧾 Debugging output
-console.log("✅ GroupedFinal keys:", Object.keys(groupedFinal));
 console.log(
-  `🧹 Deduped frontend: ${data.length} → ${
-    Object.values(groupedFinal)
-      .flatMap((g) => [g.Over, g.Under, g.Even].filter(Boolean))
-      .length
-  } grouped entries`
+  "✅ Standard GroupedFinal keys:",
+  Object.keys(groupedFinal)
 );
 
-// ===================================================
-// ✅ Keep both sides for consensus calculation
-// ===================================================
-// ✅ Keep only the stronger side (prevents duplicates)
-const deduped = [];
+// Keep only the stronger STANDARD side, exactly as the legacy table did.
+const dedupedStandard = [];
+
 Object.entries(groupedFinal).forEach(([key, sides]) => {
   const { Over, Under, Even } = sides;
 
   if (Over && Under) {
-    // keep whichever side has the stronger no-vig edge (further from 50%)
     const overEdge =
-    Over.prob != null ? Math.abs(Over.prob - 50) : -1;
+      Over.prob != null
+        ? Math.abs(Over.prob - 50)
+        : -1;
 
     const underEdge =
-    Under.prob != null ? Math.abs(Under.prob - 50) : -1;
-    deduped.push(overEdge >= underEdge ? Over.row : Under.row);
-  } else if (Over) deduped.push(Over.row);
-  else if (Under) deduped.push(Under.row);
-  else if (Even) deduped.push(Even.row);
+      Under.prob != null
+        ? Math.abs(Under.prob - 50)
+        : -1;
+
+    dedupedStandard.push(
+      overEdge >= underEdge
+        ? Over.row
+        : Under.row
+    );
+  } else if (Over) {
+    dedupedStandard.push(Over.row);
+  } else if (Under) {
+    dedupedStandard.push(Under.row);
+  } else if (Even) {
+    dedupedStandard.push(Even.row);
+  }
 });
 
+// ===================================================
+// PRIZEPICKS SPECIAL rows: preserve each distinct offered line.
+// This is the key protection that prevents Goblin/Demon from replacing
+// the normal PrizePicks projection.
+// ===================================================
+const specialByIdentity = new Map();
 
-console.log("✅ GroupedFinal keys (post-dedupe):", Object.keys(groupedFinal));
-console.log(`🧹 Deduped frontend: ${data.length} → ${deduped.length} rows`);
+prizePicksSpecialRows.forEach((row) => {
+  const variant =
+    normalizeRenderToken(
+      row.PrizePicksVariant || "alternate"
+    );
 
-// Fallback if dedup produced no rows
-const finalData = deduped.length > 0 ? deduped : data;
+  const line =
+    toValidLine(
+      row.PrizePickPoint ??
+      row.PrizePicksPoint ??
+      row.SourceLinePoint
+    );
 
-// ✅ Make groupedFinal globally available for Fact Check
+  if (!Number.isFinite(line)) {
+    return;
+  }
+
+  const identity =
+    `${getRenderBaseKey(row)}|` +
+    `${normalizeRenderToken(row.Outcome)}|` +
+    `${line}|${variant}`;
+
+  const existing =
+    specialByIdentity.get(identity);
+
+  if (!existing) {
+    specialByIdentity.set(identity, row);
+    return;
+  }
+
+  const existingProb =
+    toValidProbabilityPct(
+      existing.NoVigWinProb ??
+      existing.NoVigProb
+    ) ?? -1;
+
+  const candidateProb =
+    toValidProbabilityPct(
+      row.NoVigWinProb ??
+      row.NoVigProb
+    ) ?? -1;
+
+  if (candidateProb > existingProb) {
+    specialByIdentity.set(identity, row);
+  }
+});
+
+const dedupedSpecial =
+  [...specialByIdentity.values()];
+
+const specialByBase = new Map();
+
+dedupedSpecial.forEach((row) => {
+  const baseKey = getRenderBaseKey(row);
+
+  if (!specialByBase.has(baseKey)) {
+    specialByBase.set(baseKey, []);
+  }
+
+  specialByBase.get(baseKey).push(row);
+});
+
+const sortSpecialRows = (rows, standardRow = null) => {
+  const standardLine =
+    toValidLine(
+      standardRow?.PrizePickPoint ??
+      standardRow?.PrizePicksPoint ??
+      standardRow?.ConsensusPoint
+    );
+
+  return [...rows].sort((a, b) => {
+    const variantA =
+      normalizeRenderToken(
+        a.PrizePicksVariant
+      );
+
+    const variantB =
+      normalizeRenderToken(
+        b.PrizePicksVariant
+      );
+
+    // Keep Goblins together, then Demons.
+    const rankA =
+      variantA === "goblin" ? 0 : 1;
+
+    const rankB =
+      variantB === "goblin" ? 0 : 1;
+
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+
+    const lineA =
+      toValidLine(
+        a.PrizePickPoint ??
+        a.PrizePicksPoint ??
+        a.SourceLinePoint
+      );
+
+    const lineB =
+      toValidLine(
+        b.PrizePickPoint ??
+        b.PrizePicksPoint ??
+        b.SourceLinePoint
+      );
+
+    if (
+      Number.isFinite(standardLine) &&
+      Number.isFinite(lineA) &&
+      Number.isFinite(lineB)
+    ) {
+      const distanceA =
+        Math.abs(lineA - standardLine);
+
+      const distanceB =
+        Math.abs(lineB - standardLine);
+
+      if (distanceA !== distanceB) {
+        return distanceA - distanceB;
+      }
+    }
+
+    return (
+      (Number.isFinite(lineA) ? lineA : 0) -
+      (Number.isFinite(lineB) ? lineB : 0)
+    );
+  });
+};
+
+// ===================================================
+// FINAL DISPLAY ORDER
+// Standard row first, then its PrizePicks special lines.
+// Unqualified specials are still included here long enough to have their
+// exact-line platform signal hydrated; renderOddsTable() hides them before
+// DOM insertion unless specialLineQualified === true.
+// ===================================================
+const finalData = [];
+const attachedSpecialKeys = new Set();
+
+dedupedStandard.forEach((standardRow) => {
+  finalData.push(standardRow);
+
+  const baseKey =
+    getRenderBaseKey(standardRow);
+
+  const specials =
+    specialByBase.get(baseKey) || [];
+
+  if (specials.length) {
+    finalData.push(
+      ...sortSpecialRows(
+        specials,
+        standardRow
+      )
+    );
+
+    attachedSpecialKeys.add(baseKey);
+  }
+});
+
+// If a PrizePicks special exists without a standard sibling, do not discard it.
+// It can still render if the Vegas curve supports the special-line threshold.
+for (const [baseKey, specials] of specialByBase.entries()) {
+  if (attachedSpecialKeys.has(baseKey)) {
+    continue;
+  }
+
+  finalData.push(
+    ...sortSpecialRows(specials)
+  );
+}
+
+// Last-resort fallback for non-standard market shapes.
+if (finalData.length === 0 && data.length > 0) {
+  finalData.push(...data);
+}
+
+console.log(
+  `🧹 Frontend rows: ${data.length} input → ` +
+  `${dedupedStandard.length} standard + ` +
+  `${dedupedSpecial.length} PP special candidates`
+);
+
+// ✅ Make STANDARD groupedFinal globally available for Fact Check.
 window.groupedFinal = groupedFinal;
 
 // ===================================================
 // 🎯 STABLE FILTER DATASET
 //
-// Store the exact deduped row objects used by the INITIAL full render.
-// renderOddsTable() hydrates Brain / Fire / platform signals onto THESE
-// same objects. Filtered re-renders must NOT replace this base dataset.
-// This makes Ben's Picks deterministic regardless of click order.
+// Keep all distinct PP special candidates in the stable base so each line
+// can be re-evaluated by PrizePicks +EV / Ben's Picks filters. The DOM renderer
+// will suppress special candidates that fail their exact-line qualification.
 // ===================================================
 if (
   !isFiltered ||
@@ -6184,7 +6430,7 @@ if (
   window.filterDataset = finalData;
 }
 
-// ✅ Render table (call your rendering function)
+// ✅ Render table
 await renderOddsTable(finalData, batchSize, groupedFinal, isFiltered);
 
 }
@@ -6889,9 +7135,11 @@ if (
     ["DabblePoint", "Dabble", row.DabblePoint]
   ];
 
-  // Calculate ONE canonical no-vig recommendation for the row. Every DFS
-  // platform cell and BestNoVig must consume this same side so the table can
-  // never show Over in one column and Under in another for the same row.
+  // Calculate the row-level canonical no-vig recommendation for BestNoVig.
+  // IMPORTANT: this is only the row-level summary. Each DFS platform below
+  // must choose its OWN best side at its OWN posted line. PrizePicks,
+  // Underdog, and Dabble can legitimately prefer different sides when their
+  // lines differ, so the +EV filters must not inherit one shared DFS side.
   const canonicalNoVig = computeNoVigBothSides(signalData, row);
 
 // The DFS target may be outside the known fair curve.
@@ -7016,11 +7264,18 @@ const rowEstimate =
         dfsLine
       );
 
-    // Goblin/Demon probability must describe the ACTUAL PrizePicks
-    // offered side (More/Over or Less/Under), not merely the side
-    // that happens to be above 50% at that alternate line.
+    // PrizePicks Goblin/Demon probability must describe the ACTUAL offered
+    // side (More/Over or Less/Under). Standard DFS platforms are different:
+    // each one must independently select the stronger Vegas side at ITS OWN
+    // posted line. Reusing the row-level/PrizePicks side here made Underdog
+    // and Dabble filters evaluate the wrong side whenever platform lines
+    // straddled the market.
     const offeredOutcome =
-      String(row.Outcome || "")
+      String(
+        row.PrizePicksOutcome ||
+        row.Outcome ||
+        ""
+      )
         .trim()
         .toLowerCase();
 
@@ -7039,37 +7294,38 @@ const rowEstimate =
         ppVariant === "demon"
       );
 
-    const probabilitySide =
-      isPrizePicksSpecial &&
-      (
-        offeredOutcome === "over" ||
-        offeredOutcome === "under"
-      )
-        ? offeredOutcome
-        : sharedBestSide;
-
     let platformBestSide = null;
     let sideProbPct = null;
     let confidence = "unavailable";
     let booksUsed = 0;
 
-    if (
+    const hasPlatformEstimate =
       estimate &&
-      probabilitySide &&
-      Number.isFinite(
-        Number(estimate.over)
-      ) &&
-      Number.isFinite(
-        Number(estimate.under)
-      )
-    ) {
-      platformBestSide =
-        probabilitySide;
+      Number.isFinite(Number(estimate.over)) &&
+      Number.isFinite(Number(estimate.under));
 
-      sideProbPct =
-        Number(
-          estimate[probabilitySide]
-        );
+    if (hasPlatformEstimate) {
+      if (
+        isPrizePicksSpecial &&
+        (
+          offeredOutcome === "over" ||
+          offeredOutcome === "under"
+        )
+      ) {
+        // Special PrizePicks lines are one-sided offers. Grade the side that
+        // PrizePicks actually offers, even if the opposite side is > 50%.
+        platformBestSide = offeredOutcome;
+        sideProbPct = Number(estimate[offeredOutcome]);
+      } else {
+        // Standard PrizePicks / Underdog / Dabble each get their own side at
+        // their own line. This is the key +EV filter correction.
+        platformBestSide =
+          Number(estimate.over) >= Number(estimate.under)
+            ? "over"
+            : "under";
+
+        sideProbPct = Number(estimate[platformBestSide]);
+      }
 
       confidence =
         estimate.confidence ||
@@ -7082,9 +7338,17 @@ const rowEstimate =
     }
 
     if (!platformBestSide) {
-      platformBestSide =
-        probabilitySide ||
-        sharedBestSide;
+      if (
+        isPrizePicksSpecial &&
+        (
+          offeredOutcome === "over" ||
+          offeredOutcome === "under"
+        )
+      ) {
+        platformBestSide = offeredOutcome;
+      } else {
+        platformBestSide = sharedBestSide;
+      }
     }
 
     const hasMarketBaseline =
@@ -7182,10 +7446,16 @@ const dabbleAvailableSides =
     : [];
 
 // PrizePicks and Underdog continue using existing logic.
-// Dabble must explicitly contain the recommended side.
+// For Dabble, prefer the backend side list when present. Some feeds expose
+// only DabbleOutcome instead of DabbleAvailableSides; in that case the
+// explicit offered outcome is a valid fallback and must not be rejected.
 const platformSideIsAvailable =
   platform !== "Dabble" ||
-  dabbleAvailableSides.includes(normalizedBestSide);
+  (
+    dabbleAvailableSides.length > 0
+      ? dabbleAvailableSides.includes(normalizedBestSide)
+      : playableSideMatches
+  );
 
 // ===================================================
 // 🎯 STANDARD DFS SIGNALS vs PRIZEPICKS SPECIAL LINES
@@ -7299,7 +7569,7 @@ if (
 }
 const sideUnavailable =
   platform === "Dabble" &&
-  !playableSideMatches;
+  !platformSideIsAvailable;
 
   row._platformSignals[column] = {
   platform,
@@ -7356,6 +7626,48 @@ const sideUnavailable =
       if (!row._signalPlatforms.includes(column)) row._signalPlatforms.push(column);
     }
   }
+}
+
+// ===================================================
+// 👺😈 PRIZEPICKS SPECIAL ROW DISPLAY GATE
+//
+// Standard rows ALWAYS render.
+// Goblin/Demon rows render only when the exact PrizePicks line has passed
+// the dedicated special-line qualification above. This prevents the table
+// from exploding with every raw alternate while preserving the regular line.
+// ===================================================
+const renderedPrizePicksVariant =
+  String(
+    row.PrizePicksVariant ||
+    "standard"
+  )
+    .trim()
+    .toLowerCase();
+
+const isRenderedPrizePicksSpecial =
+  row.PrizePicksIsAlternate === true &&
+  (
+    renderedPrizePicksVariant === "goblin" ||
+    renderedPrizePicksVariant === "demon"
+  );
+
+if (isRenderedPrizePicksSpecial) {
+  const specialSignal =
+    row._platformSignals
+      ?.PrizePickPoint;
+
+  row._showPrizePicksSpecial =
+    specialSignal
+      ?.specialLineQualified === true;
+
+  if (!row._showPrizePicksSpecial) {
+    return;
+  }
+
+  tr.classList.add(
+    "pp-special-row",
+    `pp-${renderedPrizePicksVariant}-row`
+  );
 }
 
 // --- Render each cell ---
@@ -8550,28 +8862,37 @@ function filterUnderdogOptimal(data) {
           getMarketMedianPoint(row)
         );
 
-      let bestSide =
-        String(
-          row?.BestNoVigSide ||
-          row?._canonicalNoVig?.side ||
-          ""
-        )
-          .trim()
-          .toLowerCase();
+      // Underdog must choose the stronger side at the ACTUAL Underdog line.
+      // Do not inherit BestNoVigSide/_canonicalNoVig from PrizePicks or the
+      // row-level summary; those may have been calculated at a different line.
+      let bestSide = null;
 
       if (
-        bestSide !== "over" &&
-        bestSide !== "under"
+        Number.isFinite(estimate?.over) &&
+        Number.isFinite(estimate?.under)
       ) {
+        bestSide =
+          Number(estimate.over) >=
+          Number(estimate.under)
+            ? "over"
+            : "under";
+      }
+
+      if (!bestSide) {
+        const fallbackSide =
+          String(
+            row?.BestNoVigSide ||
+            row?._canonicalNoVig?.side ||
+            ""
+          )
+            .trim()
+            .toLowerCase();
+
         if (
-          Number.isFinite(estimate?.over) &&
-          Number.isFinite(estimate?.under)
+          fallbackSide === "over" ||
+          fallbackSide === "under"
         ) {
-          bestSide =
-            Number(estimate.over) >=
-            Number(estimate.under)
-              ? "over"
-              : "under";
+          bestSide = fallbackSide;
         }
       }
 
