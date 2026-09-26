@@ -4778,9 +4778,68 @@ function samePlayerMarket(a, b) {
   );
 }
 
+// ===================================================
+// ⚡ NO-VIG DATASET CACHE
+// Build the player/market index ONCE per loaded dataset.
+// WeakMap automatically releases old datasets.
+// ===================================================
+const noVigDatasetCache = new WeakMap();
+
+function getNoVigCacheKey(row) {
+  return (
+    `${normalizeMarketValue(row?.Event)}|` +
+    `${normalizeMarketValue(row?.Market)}|` +
+    `${normalizeMarketValue(row?.Description)}`
+  );
+}
+
+function getNoVigDatasetState(data) {
+  if (!Array.isArray(data)) return null;
+
+  let state = noVigDatasetCache.get(data);
+
+  if (state) {
+    return state;
+  }
+
+  const rowsByKey = new Map();
+
+  for (const candidate of data) {
+    const key = getNoVigCacheKey(candidate);
+
+    if (!rowsByKey.has(key)) {
+      rowsByKey.set(key, []);
+    }
+
+    rowsByKey.get(key).push(candidate);
+  }
+
+  state = {
+    rowsByKey,
+    curvesByKey: new Map()
+  };
+
+  noVigDatasetCache.set(data, state);
+
+  console.log(
+    `⚡ No-vig cache built: ${data.length} rows → ${rowsByKey.size} player/markets`
+  );
+
+  return state;
+}
+
 function getMarketRows(data, row) {
   if (!Array.isArray(data) || !row) return [];
-  return data.filter(candidate => samePlayerMarket(candidate, row));
+
+  const state = getNoVigDatasetState(data);
+
+  if (!state) return [];
+
+  return (
+    state.rowsByKey.get(
+      getNoVigCacheKey(row)
+    ) || []
+  );
 }
 
 function getBookPoint(row, book) {
@@ -4836,49 +4895,117 @@ function getMarketMedianPoint(row) {
 }
 
 function buildNoVigCurve(data, row) {
-  const marketRows = getMarketRows(data, row);
-  // ===================================================
-// 🧠 NO-VIG MODEL BOOKS
-//
-// ALWAYS use the full BTBT sportsbook set.
-// Table visibility has no impact on the model.
-// ===================================================
 
-const selectedBooks = [
-  ...MODEL_SPORTSBOOKS
-];
+  if (!Array.isArray(data) || !row) {
+    return [];
+  }
+
+  const state =
+    getNoVigDatasetState(data);
+
+  const cacheKey =
+    getNoVigCacheKey(row);
+
+  // ===================================================
+  // ⚡ RETURN PREVIOUSLY CALCULATED CURVE
+  // ===================================================
+  if (
+    state &&
+    state.curvesByKey.has(cacheKey)
+  ) {
+    return state.curvesByKey.get(cacheKey);
+  }
+
+  const marketRows =
+    state?.rowsByKey.get(cacheKey) ||
+    [];
+
+  // ===================================================
+  // 🧠 NO-VIG MODEL BOOKS
+  // ===================================================
+  const selectedBooks = [
+    ...MODEL_SPORTSBOOKS
+  ];
 
   const byLine = new Map();
 
   for (const book of selectedBooks) {
+
     const overs = [];
     const unders = [];
 
     for (const candidate of marketRows) {
-      const side = getOutcomeSide(candidate);
-      const line = getBookPoint(candidate, book);
-      const odds = getBookPrice(candidate, book);
-      if (!side || !Number.isFinite(line) || !Number.isFinite(odds)) continue;
 
-      const entry = { row: candidate, line, odds };
-      if (side === "over") overs.push(entry);
-      if (side === "under") unders.push(entry);
+      const side =
+        getOutcomeSide(candidate);
+
+      const line =
+        getBookPoint(candidate, book);
+
+      const odds =
+        getBookPrice(candidate, book);
+
+      if (
+        !side ||
+        !Number.isFinite(line) ||
+        !Number.isFinite(odds)
+      ) {
+        continue;
+      }
+
+      const entry = {
+        row: candidate,
+        line,
+        odds
+      };
+
+      if (side === "over") {
+        overs.push(entry);
+      }
+
+      if (side === "under") {
+        unders.push(entry);
+      }
     }
 
     for (const over of overs) {
-      const under = unders.find(item => Math.abs(item.line - over.line) < 0.0001);
+
+      const under =
+        unders.find(
+          item =>
+            Math.abs(
+              item.line - over.line
+            ) < 0.0001
+        );
+
       if (!under) continue;
 
-      const pOver = americanToProb(over.odds);
-      const pUnder = americanToProb(under.odds);
-      if (!Number.isFinite(pOver) || !Number.isFinite(pUnder)) continue;
+      const pOver =
+        americanToProb(over.odds);
 
-      const total = pOver + pUnder;
+      const pUnder =
+        americanToProb(under.odds);
+
+      if (
+        !Number.isFinite(pOver) ||
+        !Number.isFinite(pUnder)
+      ) {
+        continue;
+      }
+
+      const total =
+        pOver + pUnder;
+
       if (!(total > 0)) continue;
 
-      const fairOver = (pOver / total) * 100;
-      const fairUnder = (pUnder / total) * 100;
-      const lineKey = over.line.toFixed(4);
+      const fairOver =
+        (pOver / total) * 100;
+
+      const fairUnder =
+        (pUnder / total) * 100;
+
+      const lineKey =
+        over.line.toFixed(4);
 
       if (!byLine.has(lineKey)) {
         byLine.set(lineKey, {
@@ -4890,10 +5017,19 @@ const selectedBooks = [
         });
       }
 
-      const bucket = byLine.get(lineKey);
-      bucket.overValues.push(fairOver);
-      bucket.underValues.push(fairUnder);
+      const bucket =
+        byLine.get(lineKey);
+
+      bucket.overValues.push(
+        fairOver
+      );
+
+      bucket.underValues.push(
+        fairUnder
+      );
+
       bucket.books.push(book);
+
       bucket.details.push({
         book,
         line: over.line,
@@ -4905,17 +5041,57 @@ const selectedBooks = [
     }
   }
 
-  return [...byLine.values()]
-    .map(bucket => ({
-      line: bucket.line,
-      over: bucket.overValues.reduce((a, b) => a + b, 0) / bucket.overValues.length,
-      under: bucket.underValues.reduce((a, b) => a + b, 0) / bucket.underValues.length,
-      booksUsed: bucket.books.length,
-      books: [...bucket.books],
-      details: bucket.details
-    }))
-    .filter(point => Number.isFinite(point.over) && Number.isFinite(point.under))
-    .sort((a, b) => a.line - b.line);
+  const curve =
+    [...byLine.values()]
+      .map(bucket => ({
+        line: bucket.line,
+
+        over:
+          bucket.overValues.reduce(
+            (a, b) => a + b,
+            0
+          ) /
+          bucket.overValues.length,
+
+        under:
+          bucket.underValues.reduce(
+            (a, b) => a + b,
+            0
+          ) /
+          bucket.underValues.length,
+
+        booksUsed:
+          bucket.books.length,
+
+        books: [
+          ...bucket.books
+        ],
+
+        details:
+          bucket.details
+      }))
+      .filter(
+        point =>
+          Number.isFinite(point.over) &&
+          Number.isFinite(point.under)
+      )
+      .sort(
+        (a, b) =>
+          a.line - b.line
+      );
+
+  // ===================================================
+  // ⚡ CACHE RESULT
+  // Same player/market no longer gets recalculated.
+  // ===================================================
+  if (state) {
+    state.curvesByKey.set(
+      cacheKey,
+      curve
+    );
+  }
+
+  return curve;
 }
 
 function probabilityToLogit(probabilityPct) {
@@ -9103,26 +9279,42 @@ function filterBensPicks(data) {
 }
 
   // ===========================================
-  // ✅ High No-Vig (DOM-only)
-  // ===========================================
-  function filterHighNoVig(threshold = 54) {
-    const table = document.querySelector("#results table");
-    if (!table) return;
-    const rows = table.querySelectorAll("tbody tr");
-    let visibleCount = 0;
+// ✅ High No-Vig — DATA FILTER
+// Keeps table + Tap-to-Card in sync
+// ===========================================
+function filterHighNoVig(data, threshold = 54) {
+  if (!Array.isArray(data)) return [];
 
-    rows.forEach((row) => {
-      const bestNoVigCell = Array.from(row.querySelectorAll("td"))
-        .find((td) => td.textContent.includes("🧮"));
-      const match = bestNoVigCell?.textContent.match(/([\d.]+)%/);
-      const pct = match ? parseFloat(match[1]) : NaN;
-      const show = Number.isFinite(pct) && pct >= threshold;
-      row.style.display = show ? "" : "none";
-      if (show) visibleCount++;
-    });
+  const filtered = data.filter((row) => {
 
-    console.log(`💪 High No-Vig ≥ ${threshold}% → showing ${visibleCount} rows`);
-  }
+    // Primary source — already hydrated during table render
+    let pct = toValidProbabilityPct(
+      row.NoVigWinProb ??
+      row.NoVigProb
+    );
+
+    // Fallback to BestNoVig text if needed
+    if (!Number.isFinite(pct)) {
+      const match = String(row.BestNoVig || "")
+        .match(/(\d+(?:\.\d+)?)%/);
+
+      pct = match
+        ? Number(match[1])
+        : null;
+    }
+
+    return (
+      Number.isFinite(pct) &&
+      pct >= threshold
+    );
+  });
+
+  console.log(
+    `💪 High No-Vig ≥ ${threshold}% → ${filtered.length}/${data.length} rows`
+  );
+
+  return filtered;
+}
 
   
 
@@ -9236,13 +9428,9 @@ Object.entries(filterBtns).forEach(([key, btn]) => {
         break;
 
       case "high":
-        filterHighNoVig(54);
-        clearActiveHighlights();
-        btn.classList.add("active-filter");
-        activeFilter = key;
-        window.activeOptimalFilter = "high";      // ← NEW
-        console.log("🔍 Active filter set:", window.activeOptimalFilter);
-        return;
+        filtered = filterHighNoVig(base, 54);
+        window.activeOptimalFilter = "high";
+        break;
 
       case "clear":
         clearActiveHighlights();
