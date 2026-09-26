@@ -7651,7 +7651,7 @@ const isPrizePicksSpecialLine =
     ppVariant === "demon"
   );
 
-const brain =
+let brain =
   !isPrizePicksSpecialLine &&
   platformSideIsAvailable &&
   Number.isFinite(sideProbPct) &&
@@ -7743,6 +7743,117 @@ if (
     }
   }
 }
+
+// ===================================================
+// 🎯 SIDE-SPECIFIC DFS PAYOUT
+// ===================================================
+let platformMultiplier = null;
+
+if (platform === "Underdog") {
+
+  const payoutRow =
+    signalData.find(candidate => {
+
+      if (!samePlayerMarket(candidate, row)) {
+        return false;
+      }
+
+      // Match the side BTBT recommends
+      const candidateSide =
+        getOutcomeSide(candidate);
+
+      const recommendedSide =
+        String(platformBestSide || "")
+          .trim()
+          .toLowerCase();
+
+      if (candidateSide !== recommendedSide) {
+        return false;
+      }
+
+      // Match the exact Underdog line
+      const candidateLine =
+        toValidLine(candidate.UnderdogPoint);
+
+      if (
+        !Number.isFinite(candidateLine) ||
+        Math.abs(candidateLine - dfsLine) > EPSILON
+      ) {
+        return false;
+      }
+
+      // Must have an Underdog adjustment multiplier
+      const rawMultiplier =
+        candidate.UnderdogMultiplier;
+
+      return (
+        rawMultiplier !== null &&
+        rawMultiplier !== undefined &&
+        rawMultiplier !== "" &&
+        Number.isFinite(Number(rawMultiplier))
+      );
+    });
+
+  if (payoutRow) {
+
+    const rawMultiplier =
+      Number(
+        payoutRow.UnderdogMultiplier
+      );
+
+    // Underdog API adjustment → approximate displayed payout
+    platformMultiplier =
+      (rawMultiplier * 1.7535) + 0.1153;
+  }
+
+} else if (platform === "Dabble") {
+
+  const raw =
+    row.DabbleMultiplier;
+
+  if (
+    raw !== null &&
+    raw !== undefined &&
+    raw !== "" &&
+    Number.isFinite(Number(raw))
+  ) {
+    platformMultiplier =
+      Number(raw);
+  }
+}
+
+// ===================================================
+// 🧠 UNDERDOG PAYOUT-AWARE BRAIN CHECK
+//
+// Keep the normal 54% Vegas requirement,
+// but Underdog must also offer a payout that
+// has non-negative expected value.
+// ===================================================
+let underdogPayoutEV = null;
+
+if (
+  platform === "Underdog" &&
+  Number.isFinite(sideProbPct) &&
+  Number.isFinite(platformMultiplier)
+) {
+
+  underdogPayoutEV =
+    ((sideProbPct / 100) * platformMultiplier) - 1;
+
+  const underdogPayoutQualified =
+    underdogPayoutEV >= 0;
+
+  // Underdog Brain requires BOTH:
+  // normal BTBT qualification + acceptable payout
+  brain =
+    brain &&
+    underdogPayoutQualified;
+
+  // Don't show Fire on a payout-negative Underdog play either
+  if (!underdogPayoutQualified) {
+    fireLevel = 0;
+  }
+}
 const sideUnavailable =
   platform === "Dabble" &&
   !platformSideIsAvailable;
@@ -7754,6 +7865,8 @@ const sideUnavailable =
   marketLine: signalMarketLine,
   bestSide: platformBestSide,
   probability: sideProbPct,
+  multiplier: platformMultiplier,
+  payoutEV: underdogPayoutEV,
   confidence,
   booksUsed,
   isEqual,
@@ -8368,8 +8481,17 @@ if (
         ? `${icons.join(" ")} `
         : "";
 
+    const multiplierText =
+      (col === "DabblePoint" || col === "UnderdogPoint") &&
+      Number.isFinite(signal.multiplier)
+        ? ` • ${signal.multiplier
+          .toFixed(2)
+          .replace(/0+$/, "")
+          .replace(/\.$/, "")}x`
+      : "";
+
     const topLine =
-      `${variantBadgeHtml}${iconText}${signal.dfsLine.toFixed(2)}`;
+      `${variantBadgeHtml}${iconText}${signal.dfsLine.toFixed(2)}${multiplierText}`;
 
     const sideArrow =
       signal.bestSide === "under"
