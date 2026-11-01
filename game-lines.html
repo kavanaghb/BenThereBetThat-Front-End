@@ -6,6 +6,7 @@
   <title>Game Lines EV</title>
 
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="game-lines-premium.css">
 
   <!-- 🌐 API BASE -->
   <script>
@@ -2609,7 +2610,7 @@ tbody
 </head>
 
 
-<body>
+<body class="btbt-terminal">
 
 
 <!-- ===================================================== -->
@@ -2752,6 +2753,8 @@ tbody
   >
 
 
+  <button type="button" id="gameLinesPositiveEvOnly" class="btbt-ev-filter" aria-pressed="false" title="Show only matchups with estimated positive EV based on available sportsbook prices">+EV Only</button>
+
   <button
     id="toggleModelDebug"
     class="debug-toggle"
@@ -2892,6 +2895,8 @@ tbody
 
   <button
     id="tableViewBtn"
+    type="button"
+    aria-pressed="true"
     class="toggle-btn active"
   >
     📊 Table
@@ -2899,6 +2904,8 @@ tbody
 
   <button
     id="cardViewBtn"
+    type="button"
+    aria-pressed="false"
     class="toggle-btn"
   >
     📱 Card
@@ -2910,6 +2917,8 @@ tbody
 <!-- ===================================================== -->
 <!-- 📊 GAME LINES RESULTS -->
 <!-- ===================================================== -->
+
+<section id="ncaabForecastBoard" class="ncaab-forecast-board" hidden aria-live="polite"></section>
 
 <div id="gameLinesResults">
   Loading game line edges...

@@ -5,7 +5,77 @@ const NEWS_WARNING_THRESHOLD = 6;
 let sortField = "edge";   // default sort
 let sortDirection = "desc";
 let searchFilter = "";
-let currentViewMode = "table"; // preserves table vs card state
+let currentViewMode = (window.matchMedia && window.matchMedia("(max-width: 700px)").matches)
+  ? "card" : "table"; // mobile defaults to cards; user selection takes precedence
+let positiveEvOnly = false; // +EV means >0% estimated EV, never point-spread edge
+
+function hasPositiveEstimatedEV(game) {
+  if (game?.mode === "basketball_model" || game?.sport === "basketball_ncaab") {
+    const markets = game?.ncaab_ev_preview?.markets || {};
+    return ["spreads", "h2h", "totals"].some(kind =>
+      (markets[kind] || []).some(row =>
+        row?.model_ev_pct != null && Number.isFinite(Number(row.model_ev_pct)) && Number(row.model_ev_pct) > 0
+      )
+    );
+  }
+  const rows = [...(game?.market_board || []), ...(game?.market_picks || [])];
+  return rows.some(row => row?.expected_value_pct != null &&
+    Number.isFinite(Number(row.expected_value_pct)) && Number(row.expected_value_pct) > 0 &&
+    !game?.is_live); // live price edge is not an independently modeled +EV
+}
+
+function gamePassesGameLinesFilters(game) {
+  const searchOk = !searchFilter ||
+    `${game?.event_title || ""} ${game?.home_team || ""} ${game?.away_team || ""}`
+      .toLowerCase().includes(searchFilter);
+  return searchOk && (!positiveEvOnly || hasPositiveEstimatedEV(game));
+}
+
+function isPositiveModelRow(row) {
+  return row?.expected_value_pct != null &&
+    Number.isFinite(Number(row.expected_value_pct)) && Number(row.expected_value_pct) > 0;
+}
+
+function updatePositiveEvButton() {
+  const btn = document.getElementById("gameLinesPositiveEvOnly");
+  if (!btn) return;
+  btn.setAttribute("aria-pressed", String(positiveEvOnly));
+  btn.classList.toggle("active", positiveEvOnly);
+  btn.textContent = positiveEvOnly ? "✓ +EV Only" : "+EV Only";
+}
+
+function applyGameLinesView() {
+  const selectedSport = document.getElementById("sportSelect")?.value;
+  const ncaab = selectedSport === "basketball_ncaab" &&
+    currentGameLines.length > 0 && !isMarketEvMode(currentGameLines?.[0]?.mode);
+  const isCard = currentViewMode === "card";
+  const tablePanel = document.getElementById("gameLinesResults");
+  const cardPanel = document.getElementById("gameLinesCardView");
+  const forecastPanel = document.getElementById("ncaabForecastBoard");
+  const tableBtn = document.getElementById("tableViewBtn");
+  const cardBtn = document.getElementById("cardViewBtn");
+
+  tableBtn?.classList.toggle("active", !isCard);
+  cardBtn?.classList.toggle("active", isCard);
+  tableBtn?.setAttribute("aria-pressed", String(!isCard));
+  cardBtn?.setAttribute("aria-pressed", String(isCard));
+
+  if (tablePanel) tablePanel.style.display = isCard ? "none" : "block";
+  if (forecastPanel) forecastPanel.hidden = !ncaab || !isCard;
+  if (cardPanel) cardPanel.style.display = isCard && !ncaab ? "grid" : "none";
+
+  if (isCard && !ncaab) {
+    renderGameCards();
+    document.querySelectorAll(".game-lines-horizontal-scroll").forEach(el => el.remove());
+  } else if (!isCard) {
+    const scrollWrapper = tablePanel?.querySelector(".table-scroll-wrapper");
+    if (scrollWrapper && typeof attachGameLinesHorizontalScrollbar === "function") {
+      attachGameLinesHorizontalScrollbar(scrollWrapper);
+    }
+  }
+  updatePositiveEvButton();
+}
+
 let currentMlbView = "odds"; // odds | value | live
 let liveOddsRefreshTimer = null;
 
@@ -579,9 +649,11 @@ if (gameLinesIsMlbTrial) {
       games.length === 0
     ) {
 
-      container.innerHTML =
-        "No games found";
-
+      currentGameLines = [];
+      renderNcaabForecastBoard();
+      container.innerHTML = "No games found";
+      document.getElementById("gameLinesCardView")?.replaceChildren();
+      applyGameLinesView();
       return;
     }
     
@@ -645,7 +717,7 @@ if (modeNote) {
   }
   else {
     modeNote.innerHTML =
-      "🏀 College basketball spreads use Ben's learned Torvik/market model.";
+      "🏀 NCAAB Game Lines: Table = traditional sportsbook spread comparison plus best estimated +EV; Card = projected scores, spread/moneyline/total prices. Tap Ben’s Model Details for the Torvik + CBBD inputs. EV is experimental, not a recommendation.";
   }
 }
 
@@ -887,9 +959,17 @@ function formatEdge(edge, teamSpread) {
 function renderGameLines() {
 
   const container = document.getElementById("gameLinesResults");
+  renderNcaabForecastBoard();
+
+  if (positiveEvOnly && !currentGameLines.some(gamePassesGameLinesFilters)) {
+    container.innerHTML = '<div class="btbt-ev-empty">No matchups with a positive estimated EV for the selected date and search. Turn off +EV Only to see the full slate.</div>';
+    applyGameLinesView();
+    return;
+  }
 
   if (isMarketEvMode(currentGameLines?.[0]?.mode)) {
     renderMlbMarketPicks();
+    applyGameLinesView();
     return;
   }
 
@@ -952,13 +1032,11 @@ function renderGameLines() {
       </span>
    
     <th class="recommend-col">
-      Recommendation
-      <span class="info-icon"
-        title="Suggested bet when Edge ≥ 2.">
-        ⓘ
-      </span>
+      Legacy Spread Lean
+      <span class="info-icon" title="From the original point-spread model; NOT an EV percentage or backtested pick.">ⓘ</span>
     </th>
 
+    <th>Best Model +EV*</th>
     <th class="add-col">Add to Pick Tracker</th>
 
       </tr>
@@ -971,20 +1049,7 @@ function renderGameLines() {
   const tbody = table.querySelector("tbody");
 
 
-const filteredGames = currentGameLines.filter(game => {
-
-  if (!searchFilter)
-    return true;
-
-  const searchText = (
-    (game.event_title || "") + " " +
-    (game.home_team || "") + " " +
-    (game.away_team || "")
-  ).toLowerCase();
-
-  return searchText.includes(searchFilter);
-
-});
+const filteredGames = currentGameLines.filter(gamePassesGameLinesFilters);
 
 // ✅ ONLY ONE forEach
 filteredGames.forEach(game => {
@@ -999,8 +1064,8 @@ filteredGames.forEach(game => {
 
  tr.addEventListener("click", () => {
 
-  // Only open modal if debug mode enabled
-  if (!window.modelDebugMode)
+  // NCAAB always has a working detail view; other legacy behavior is preserved.
+  if (game?.sport !== "basketball_ncaab" && !window.modelDebugMode)
     return;
 
   // Remove highlight from all rows
@@ -1175,7 +1240,7 @@ if (consensusEdge != null || bookEdge != null) {
   edgeCell = `
     <div class="edge-stack">
       <div class="edge-row">
-        ${edgeBadge(consensusEdge)}
+        ${consensusEdge != null ? edgeBadge(consensusEdge) : "—"}
         <div class="edge-sub">Consensus</div>
       </div>
 
@@ -1229,9 +1294,21 @@ if (team === game.away_team) {
 
 
 
+// Best price-based NCAAB EV opportunity (independent from the older point-edge model).
+const pricedOptions = ["spreads", "h2h", "totals"].flatMap(kind =>
+  (game.ncaab_ev_preview?.markets?.[kind] || []).map(o => ({...o, market: kind}))
+);
+const bestPriced = pricedOptions
+  .filter(o => o.model_ev_pct != null && Number.isFinite(Number(o.model_ev_pct)) && Number(o.model_ev_pct) > 0)
+  .sort((a, b) => Number(b.model_ev_pct) - Number(a.model_ev_pct))[0];
+const bestPricedLabel = bestPriced ? `
+  <strong class="btbt-positive-ev-number">${ncaabSigned(bestPriced.model_ev_pct, 2)}%*</strong>
+  <small>${ncaabEscape(bestPriced.selection)}${bestPriced.line == null ? "" : " " + ncaabSigned(bestPriced.line)} · ${ncaabEscape(bestPriced.book_name || bestPriced.book || "")}</small>
+  <small>${ncaabOdds(bestPriced.price)} · ${ncaabEscape(bestPriced.market)}</small>` : "—";
+
 // Render
 rowHTML += `
-  <td class="model-col">${modelCell}</td>
+  <td class="model-col">${modelCell}<button type="button" class="ncaab-table-detail-btn" aria-label="Open Ben's model details for ${ncaabEscape(game.event_title)}">Model details</button></td>
 
   <td>
     ${edgeCell}
@@ -1240,6 +1317,7 @@ rowHTML += `
   <td class="recommend-col">
     ${recommendationCell}
   </td>
+  <td class="btbt-positive-ev-cell">${bestPricedLabel}</td>
 
   <td class="add-col">
     <button class="add-to-slip-btn">➕ Add</button>
@@ -1251,7 +1329,10 @@ rowHTML += `
 
 
 tr.innerHTML = rowHTML;
-
+tr.querySelector(".ncaab-table-detail-btn")?.addEventListener("click", e => {
+  e.stopPropagation();
+  window.showModelBreakdown(game);
+});
 
 // Attach Add button handler safely
 const addBtn = tr.querySelector(".add-to-slip-btn");
@@ -1437,6 +1518,7 @@ container.appendChild(wrapper);
 attachGameLinesHorizontalScrollbar(
   wrapper
 );
+applyGameLinesView();
 
 }
 
@@ -1759,6 +1841,13 @@ if (modelBtn) {
     const selectedSport =
       document.getElementById("sportSelect")?.value;
 
+    if (selectedSport === "basketball_ncaab") {
+      const visible = currentGameLines.filter(gamePassesGameLinesFilters);
+      if (visible.length) window.showModelBreakdown(visible[0]);
+      else alert("No NCAAB games match the current filters. Select a date with games or clear +EV Only.");
+      return;
+    }
+
     window.modelDebugMode = !window.modelDebugMode;
 
     if (window.modelDebugMode) {
@@ -1836,6 +1925,8 @@ marchMadnessBtn
 
   sportSelect?.addEventListener("change", () => {
     window.modelDebugMode = false;
+    const modalTitle = document.querySelector("#modelBreakdownModal .analytics-header h2");
+    if (modalTitle) modalTitle.textContent = "Model Breakdown";
 
     stopLiveOddsRefresh();
     currentMlbView = "odds";
@@ -1920,32 +2011,21 @@ if (dateInput && !dateInput.value) {
  
 
   if (searchInput) {
+    searchInput.addEventListener("input", e => {
+      searchFilter = e.target.value.toLowerCase().trim();
+      renderGameLines();
+    });
+  }
 
-  searchInput.addEventListener("input", (e) => {
-
-    searchFilter = e.target.value.toLowerCase().trim();
-    console.log("🔎 Search filter:", searchFilter);
-
-    renderGameLines();
-
-    // ✅ REAPPLY ACTIVE VIEW AFTER RENDER
-    if (currentViewMode === "card") {
-
-      renderGameCards();
-
-      document.querySelector(".table-scroll-wrapper").style.display = "none";
-      document.getElementById("gameLinesCardView").style.display = "block";
-
-    } else {
-
-      document.querySelector(".table-scroll-wrapper").style.display = "block";
-      document.getElementById("gameLinesCardView").style.display = "none";
-
+  document.getElementById("gameLinesPositiveEvOnly")?.addEventListener("click", () => {
+    positiveEvOnly = !positiveEvOnly;
+    if (positiveEvOnly && currentMlbView === "live") {
+      currentMlbView = "odds";
+      document.getElementById("mlbOddsScreenBtn")?.classList.add("active");
+      document.getElementById("mlbLiveOddsBtn")?.classList.remove("active");
     }
-
+    renderGameLines();
   });
-
-}
 
 
 // =====================================================
@@ -1985,82 +2065,16 @@ mlbLiveOddsBtn?.addEventListener("click", () => {
 });
 
 tableBtn?.addEventListener("click", () => {
-
   currentViewMode = "table";
-
-  const tableWrapper =
-    document.querySelector(
-      ".table-scroll-wrapper"
-    );
-
-  if (tableWrapper) {
-
-    tableWrapper.style.display =
-      "block";
-
-    attachGameLinesHorizontalScrollbar(
-      tableWrapper
-    );
-
-  }
-
-
-  cardView.style.display =
-    "none";
-
-
-  tableBtn.classList.add(
-    "active"
-  );
-
-  cardBtn.classList.remove(
-    "active"
-  );
-
+  applyGameLinesView();
 });
 
 cardBtn?.addEventListener("click", () => {
-
   currentViewMode = "card";
-
-
-  renderGameCards();
-
-
-  const tableWrapper =
-    document.querySelector(
-      ".table-scroll-wrapper"
-    );
-
-
-  if (tableWrapper) {
-
-    tableWrapper.style.display =
-      "none";
-
-  }
-
-
-  document
-    .querySelectorAll(
-      ".game-lines-horizontal-scroll"
-    )
-    .forEach(el => el.remove());
-
-
-  cardView.style.display =
-    "block";
-
-
-  cardBtn.classList.add(
-    "active"
-  );
-
-  tableBtn.classList.remove(
-    "active"
-  );
-
+  applyGameLinesView();
 });
+
+applyGameLinesView();
 
 // =====================================================
 // Initial load after controls are initialized
@@ -2072,6 +2086,10 @@ cardBtn?.addEventListener("click", () => {
 
 window.showModelBreakdown = function(game)
 {
+  if (game?.sport === "basketball_ncaab" || game?.mode === "basketball_model") {
+    window.showNcaabGameBreakdown(game);
+    return;
+  }
   if (
     game?.mode === "ncaaf_market"
     || ["NCAAF Market EV v1", "NCAAF EV+ v2"].includes(game?.model_version)
@@ -3188,7 +3206,7 @@ function updateModelDetailButtonLabel() {
 
   if (!isMarketSport) {
     button.innerHTML = "🧠 Ben's Model Detail";
-    button.title = "Toggle college basketball model details.";
+    button.title = "Open Ben's model breakdown for the first visible NCAAB game. Each game also has its own detail button.";
   }
 }
 
@@ -7247,13 +7265,7 @@ function renderMarketAnalyticsSummary() {
 
 }
 function mlbFilteredGames() {
-  return currentGameLines.filter(game => {
-    if (!searchFilter) return true;
-
-    return `${game.event_title || ""} ${game.home_team || ""} ${game.away_team || ""}`
-      .toLowerCase()
-      .includes(searchFilter);
-  });
+  return currentGameLines.filter(gamePassesGameLinesFilters);
 }
 
 function renderMlbMarketPicks() {
@@ -7389,7 +7401,9 @@ function renderMlbOddsScreen() {
   const tbody = table.querySelector("tbody");
 
   filteredGames.forEach(game => {
-    const rows = game.market_board || [];
+    const rows = positiveEvOnly
+      ? (game.market_board || []).filter(isPositiveModelRow)
+      : (game.market_board || []);
 
     if (!rows.length) {
       const tr = document.createElement("tr");
@@ -7672,6 +7686,7 @@ function renderMlbValuePicks() {
 
   filteredGames.forEach(game => {
     const picks = (game.market_picks || [])
+      .filter(pick => !positiveEvOnly || isPositiveModelRow(pick))
       .filter(pick => {
         const tier = String(
           pick.recommendation || ""
@@ -7876,7 +7891,9 @@ function renderMlbLiveOdds() {
   const tbody = table.querySelector("tbody");
 
   liveGames.forEach(game => {
-    const rows = game.market_board || [];
+    const rows = positiveEvOnly
+      ? (game.market_board || []).filter(isPositiveModelRow)
+      : (game.market_board || []);
 
     if (!rows.length) {
       const tr = document.createElement("tr");
@@ -8055,17 +8072,14 @@ function renderGameCards() {
 
   container.innerHTML = "";
 
-  const filteredGames = currentGameLines.filter(game => {
-    if (!searchFilter) return true;
+  const filteredGames = currentGameLines.filter(gamePassesGameLinesFilters);
 
-    const searchText = (
-      (game.event_title || "") + " " +
-      (game.home_team || "") + " " +
-      (game.away_team || "")
-    ).toLowerCase();
-
-    return searchText.includes(searchFilter);
-  });
+  if (!filteredGames.length) {
+    container.innerHTML = `<div class="btbt-ev-empty">${positiveEvOnly
+      ? "No modeled +EV game opportunities for this date. Try another date or turn off +EV Only."
+      : "No games match your search."}</div>`;
+    return;
+  }
 
   filteredGames.forEach(game => {
 
@@ -8083,6 +8097,7 @@ function renderGameCards() {
       const sportIcon = isNcaaf ? "🏈" : "⚾";
 
       const projectedRows = board
+        .filter(row => !positiveEvOnly || isPositiveModelRow(row))
         .filter(row =>
           row &&
           row.pick_label &&
@@ -8492,3 +8507,178 @@ document.addEventListener(
 
   }
 );
+
+
+// ==========================================================
+// NCAAB experimental game forecasts — responsive, slate-wide
+// Server supplies real sportsbook prices and calculated model values.
+// Never fabricate missing lines or call APIs from the browser.
+// ==========================================================
+function ncaabEscape(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, chr => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[chr]);
+}
+function ncaabSigned(value, digits=1) {
+  const n = Number(value);
+  return Number.isFinite(n) ? `${n > 0 ? "+" : ""}${n.toFixed(digits)}` : "—";
+}
+function ncaabOdds(value) {
+  return value == null ? "—" : ncaabSigned(value, 0);
+}
+function ncaabMarketRows(preview, market, home, away) {
+  const rows = (preview?.markets?.[market] || []).filter(row =>
+    !positiveEvOnly || (row?.model_ev_pct != null && Number.isFinite(Number(row.model_ev_pct)) && Number(row.model_ev_pct) > 0)
+  );
+  if (!rows.length) return `<div class="ncaab-market-empty">No ${market === "h2h" ? "moneyline" : market} prices available from the connected sportsbooks.</div>`;
+  return rows.map(r => {
+    const n = Number(r.model_ev_pct);
+    const evClass = Number.isFinite(n) ? (n >= 2 ? "positive" : n < 0 ? "negative" : "neutral") : "neutral";
+    const line = r.line == null ? "" : ` ${ncaabSigned(r.line)}`;
+    const marketNoVig = r.book_novig_pct == null ? "" : ` · Book no-vig ${ncaabEscape(r.book_novig_pct)}%`;
+    return `<div class="ncaab-market-option">
+      <div class="ncaab-option-pick"><strong>${ncaabEscape(r.selection)}${line}</strong><small>${ncaabEscape(r.book_name)} · ${ncaabOdds(r.price)}${marketNoVig}</small></div>
+      <div class="ncaab-option-est"><strong>${(Number(r.model_probability)*100).toFixed(1)}%</strong><small>Model chance</small></div>
+      <div class="ncaab-option-ev ${evClass}"><strong>${ncaabSigned(r.model_ev_pct,2)}%</strong><small>Est. EV*</small></div>
+    </div>`;
+  }).join("");
+}
+function renderNcaabForecastBoard() {
+  const board = document.getElementById("ncaabForecastBoard");
+  if (!board) return;
+  const sport = document.getElementById("sportSelect")?.value;
+  if (sport !== "basketball_ncaab" || !Array.isArray(currentGameLines) || !currentGameLines.length) {
+    board.hidden = true;
+    board.innerHTML = "";
+    document.body.classList.remove("ncaab-model-mode");
+    return;
+  }
+  board.hidden = false;
+  document.body.classList.add("ncaab-model-mode");
+  const matching = currentGameLines.filter(gamePassesGameLinesFilters);
+  const modeled = matching.filter(g => g.ncaab_ev_preview?.model);
+  const marketCount = modeled.reduce((n,g) => n + (g.ncaab_ev_preview?.available_markets?.length || 0), 0);
+  const gamesHtml = matching.map((game, i) => {
+    const data = game.ncaab_ev_preview;
+    const model = data?.model;
+    const fmt = (val) => Number.isFinite(Number(val)) && val != null ? Number(val).toFixed(1) : "—";
+    const chance = model ? `${(Number(model.home_win_probability) * 100).toFixed(1)}%` : "—";
+    const time = ncaabEscape(game.game_time_display || game.game_time || "Time TBA");
+    const summaries = model ? `<div class="ncaab-prediction">
+      <div><span>BTBT predicted score</span><strong>${fmt(model.away_points)} – ${fmt(model.home_points)}</strong><small>${ncaabEscape(game.away_team)} / ${ncaabEscape(game.home_team)}</small></div>
+      <div><span>Home win chance</span><strong>${chance}</strong><small>Experimental · uncalibrated</small></div>
+      <div><span>Projected total</span><strong>${fmt(model.total)}</strong><small>${fmt(model.pace)} estimated possessions</small></div>
+    </div>` : `<div class="ncaab-unavailable">Torvik matchup data unavailable. No prediction has been generated for this game.</div>`;
+    const marketsHtml = model ? `<div class="ncaab-market-triple">
+      <section><h4>Spread</h4>${ncaabMarketRows(data,"spreads",game.home_team,game.away_team)}</section>
+      <section><h4>Moneyline</h4>${ncaabMarketRows(data,"h2h",game.home_team,game.away_team)}</section>
+      <section><h4>Total</h4>${ncaabMarketRows(data,"totals",game.home_team,game.away_team)}</section>
+    </div>` : "";
+    const cbbdInfo = model ? Object.entries(model.form || {}).map(([side,f]) => `${side}: ${ncaabEscape(f.source || "not available")}${f.games ? ` (${Number(f.games)} games, ${Number(f.weight_pct)}% weight)` : ""}`).join(" · ") : "";
+    return `<article class="ncaab-forecast-card" ${i >= 8 ? "data-ncaab-extra=1 hidden" : ""}>
+      <div class="ncaab-match-head"><div><div class="ncaab-mini-label">${time}</div><h3>${ncaabEscape(game.away_team)} <span>@</span> ${ncaabEscape(game.home_team)}</h3></div><span class="ncaab-status">Experimental model</span></div>
+      ${summaries}
+      <button type="button" class="ncaab-detail-btn" data-ncaab-detail="${i}">🧠 Ben's Model Details</button>
+      ${marketsHtml}
+      ${model ? `<details class="ncaab-method-note"><summary>How this projection was calculated</summary><p>Torvik offense, defense and tempo form the baseline. CollegeBasketballData scoring provides only a small optional adjustment. Probability and EV use provisional game-score distributions, not fitted win-rate calibration.</p><p>${cbbdInfo}</p></details>` : ""}
+    </article>`;
+  }).join("");
+  board.innerHTML = `<div class="ncaab-forecast-head"><div><div class="ncaab-kicker">BTBT · NCAAB GAME MODEL</div><h2>Game forecasts & sportsbook value</h2><p>Independent projected scores against actual spreads, moneylines and totals.</p></div><div class="ncaab-metrics"><span><strong>${matching.length}</strong> games</span><span><strong>${modeled.length}</strong> modeled</span><span><strong>${marketCount}</strong> markets quoted</span></div></div>
+    <p class="ncaab-disclaimer">* Estimated EV is experimental, not backtested or a recommendation. Prices are shown only if The Odds API supplied them. Last-season player box scores receive a minimal weight because rosters can change.</p>
+    <div class="ncaab-forecast-grid">${gamesHtml || `<p class="btbt-ev-empty">${positiveEvOnly ? "No +EV NCAAB matchups at the prices currently available. Turn off +EV Only to see all games." : "No games match the current search."}</p>`}</div>
+    ${matching.length > 8 ? `<button type="button" id="ncaabMoreForecasts" class="ncaab-show-more" aria-expanded="false">Show all ${matching.length} games</button>` : ""}`;
+  board.querySelectorAll("[data-ncaab-detail]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.ncaabDetail);
+      if (matching[index]) window.showNcaabGameBreakdown(matching[index]);
+    });
+  });
+  const more = board.querySelector("#ncaabMoreForecasts");
+  if (more) more.addEventListener("click", () => {
+    const expanded = more.getAttribute("aria-expanded") !== "true";
+    board.querySelectorAll('[data-ncaab-extra="1"]').forEach(el => el.hidden = !expanded);
+    more.setAttribute("aria-expanded", String(expanded));
+    more.textContent = expanded ? "Show fewer games" : `Show all ${matching.length} games`;
+  });
+}
+
+
+// =====================================================
+// NCAAB Game Lines: actionable transparent per-game detail
+// =====================================================
+window.showNcaabGameBreakdown = function(game) {
+  const modal = document.getElementById("modelBreakdownModal");
+  const content = document.getElementById("modelBreakdownContent");
+  if (!modal || !content || !game) return;
+  const preview = game.ncaab_ev_preview || {};
+  const model = preview.model || {};
+  const debug = game.debug || {};
+  const esc = ncaabEscape;
+  const fmt = (v, digits=1, suffix="") => v != null && Number.isFinite(Number(v))
+    ? `${Number(v).toFixed(digits)}${suffix}` : "Unavailable";
+  const prob = v => v != null && Number.isFinite(Number(v))
+    ? `${(Number(v) * 100).toFixed(1)}%` : "Unavailable";
+  const source = (side, label) => {
+    const row = model.form?.[side] || {};
+    return `<div class="btbt-ncaab-detail-form"><strong>${esc(label)}</strong>
+      <span>${esc(row.source || "No matched scoring history")}</span>
+      <small>Games used: ${fmt(row.games, 0)} · Weight: ${fmt(row.weight_pct, 1, "%")}</small></div>`;
+  };
+  const marketName = {spreads: "Spreads", h2h: "Moneyline", totals: "Total points"};
+  const markets = ["spreads", "h2h", "totals"].map(kind => {
+    const items = (preview.markets?.[kind] || []);
+    return `<section class="btbt-ncaab-detail-section"><h3>${marketName[kind]}</h3>
+      ${items.length ? `<div class="btbt-ncaab-detail-market">${items.map(r => `
+        <div><span>${esc(r.selection)}${r.line == null ? "" : " " + ncaabSigned(r.line)}</span>
+          <strong>${esc(r.book_name || r.book || "—")} · ${ncaabOdds(r.price)}</strong>
+          <small>Model chance ${prob(r.model_probability)} · Est. EV ${fmt(r.model_ev_pct, 2, "%")}
+          ${r.book_novig_pct != null ? " · No-vig (one book): " + fmt(r.book_novig_pct,1,"%") : ""}</small></div>`).join("")}</div>`
+        : `<p class="btbt-ncaab-detail-missing">No sportsbook quotes available for this market.</p>`}</section>`;
+  }).join("");
+  const mainModelAvailable = model.home_points != null && model.away_points != null;
+  content.innerHTML = `<div class="btbt-ncaab-detail">
+    <div class="btbt-ncaab-detail-hero"><p>BEN'S MODEL · COLLEGE BASKETBALL</p>
+      <h2>${esc(game.away_team)} @ ${esc(game.home_team)}</h2>
+      <small>Game-level score projection · Experimental / not backtested</small></div>
+    ${mainModelAvailable ? `<div class="btbt-ncaab-detail-stats">
+      <div><span>Projected final · Away / Home</span><strong>${fmt(model.away_points)} – ${fmt(model.home_points)}</strong></div>
+      <div><span>Home win probability</span><strong>${prob(model.home_win_probability)}</strong></div>
+      <div><span>Home projected margin</span><strong>${ncaabSigned(model.home_margin)} pts</strong></div>
+      <div><span>Projected total</span><strong>${fmt(model.total)} pts</strong></div>
+      <div><span>Projected pace</span><strong>${fmt(model.pace)} possessions</strong></div>
+    </div>` : `<p class="btbt-ncaab-detail-missing">No valid Torvik matchup projection is available for this event.</p>`}
+    <section class="btbt-ncaab-detail-section"><h3>Torvik team inputs</h3>
+      <div class="btbt-ncaab-detail-scroll"><table><thead><tr>
+        <th>Rating / metric</th><th>${esc(game.away_team)}</th><th>${esc(game.home_team)}</th>
+      </tr></thead><tbody>
+        <tr><td>Adj. offense / 100 poss.</td><td>${fmt(debug.away_adj_off)}</td><td>${fmt(debug.home_adj_off)}</td></tr>
+        <tr><td>Adj. defense / 100 poss.</td><td>${fmt(debug.away_adj_def)}</td><td>${fmt(debug.home_adj_def)}</td></tr>
+        <tr><td>Adjusted tempo</td><td>${fmt(debug.away_tempo)}</td><td>${fmt(debug.home_tempo)}</td></tr>
+        <tr><td>Barthag</td><td>${fmt(debug.away_barthag,3)}</td><td>${fmt(debug.home_barthag,3)}</td></tr>
+        <tr><td>Team mapping</td><td>${esc(debug.away_mapping || "Unavailable")}</td><td>${esc(debug.home_mapping || "Unavailable")}</td></tr>
+      </tbody></table></div>
+      <p>Torvik opponent-adjusted efficiency and tempo establish the projected score. Baseline efficiency is 105 points per 100 possessions, with a provisional 2.5-point total home/away swing. These coefficients are not yet calibrated on an out-of-sample season.</p>
+    </section>
+    <section class="btbt-ncaab-detail-section"><h3>CollegeBasketballData team-scoring adjustments</h3>
+      <div class="btbt-ncaab-detail-form-grid">
+        ${source("away",game.away_team)}
+        ${source("home",game.home_team)}
+      </div>
+      <p>Only team game points derived from the imported player game logs affect this forecast. Prior-season scoring has a 4% weight when 3+ usable games exist; current-season scoring can rise to 18% as games accumulate, with each adjustment capped at 2 points. Individual player projections and injury data are <strong>not</strong> part of this game model.</p>
+    </section>
+    <section class="btbt-ncaab-detail-section"><h3>Existing legacy spread model (separate)</h3>
+      <div class="btbt-ncaab-detail-stats small">
+        <div><span>Legacy projected home margin</span><strong>${game.model_spread != null ? ncaabSigned(game.model_spread) + " pts" : "Unavailable"}</strong></div>
+        <div><span>Market consensus home spread</span><strong>${game.consensus_home != null ? ncaabSigned(game.consensus_home) : "Unavailable"}</strong></div>
+      </div><p>This legacy spread calculation is displayed for comparison only. Its prediction is <strong>not</strong> combined with the independent score projection used to calculate the experimental EV below.</p>
+    </section>
+    ${markets}
+    <div class="btbt-ncaab-detail-warning">EV is calculated using real sportsbook odds and an assumed normal distribution (11.5 points spread uncertainty; 15 points total uncertainty). These are provisional assumptions, not validated probabilities or betting recommendations. Lines can change.</div>
+  </div>`;
+  modal.classList.remove("hidden");
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+  document.querySelector("#modelBreakdownModal .analytics-header h2")?.replaceChildren(
+    document.createTextNode("Ben's NCAAB Model Details")
+  );
+};

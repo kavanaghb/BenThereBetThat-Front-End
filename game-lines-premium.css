@@ -1356,3 +1356,721 @@ body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
     padding: 10px 7px !important;
   }
 }
+
+
+/* ============================================================
+   NCAAB GAME FORECASTS • MOBILE-FIRST (v0.1 experimental)
+   Scoped to the NCAAB screen; other sport EV screens unchanged.
+   ============================================================ */
+.ncaab-forecast-board[hidden], .ncaab-forecast-card[hidden] { display: none !important; }
+.ncaab-forecast-board { max-width:1800px; margin:12px auto 22px; color:#e8eef8; }
+.ncaab-forecast-head { display:flex; gap:18px; justify-content:space-between; align-items:center; padding:16px 17px; background:linear-gradient(120deg,#12253e,#102f33); border:1px solid rgba(93,157,234,.3); border-radius:14px; }
+.ncaab-forecast-head h2 { font-size:clamp(19px,2.2vw,25px); line-height:1.1; margin:4px 0 6px; color:#fff; }
+.ncaab-forecast-head p {font-size:12px;color:#a6b8ca;margin:0;}
+.ncaab-kicker {font-size:10px;letter-spacing:.14em;font-weight:800;color:#71aaff;}
+.ncaab-metrics {display:flex;gap:8px;flex-wrap:wrap;}
+.ncaab-metrics span {display:grid;gap:3px;padding:9px 13px;border:1px solid #34516a;border-radius:10px;min-width:84px;font-size:10px;color:#9ab0c8;text-transform:uppercase;}
+.ncaab-metrics strong {font-size:21px;color:#fff;}
+.ncaab-disclaimer {padding:10px 12px;margin:10px 0 14px;border-left:3px solid #eab44a;background:#292515;color:#ffdfa0;font-size:12px;line-height:1.4;}
+.ncaab-forecast-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;}
+.ncaab-forecast-card {min-width:0;background:#0e1b2d;border:1px solid #28415d;border-radius:14px;padding:14px;box-shadow:0 9px 22px rgba(0,0,0,.15);}
+.ncaab-match-head {display:flex;justify-content:space-between;gap:8px;align-items:start;margin-bottom:12px;}
+.ncaab-match-head h3 {color:#f6f9ff;font-size:16px;line-height:1.3;margin:3px 0 0;}
+.ncaab-match-head h3 span {color:#7193b7;font-size:12px;}
+.ncaab-mini-label {color:#8aa4c2;font-size:11px;}
+.ncaab-status {white-space:nowrap;font-size:9px;font-weight:800;color:#f3cd86;background:#45381e;border:1px solid #776135;border-radius:12px;padding:5px 8px;}
+.ncaab-prediction {display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;margin-bottom:11px;}
+.ncaab-prediction>div {min-width:0;background:#112a3e;border:1px solid #29455a;border-radius:10px;padding:10px 9px;}
+.ncaab-prediction span,.ncaab-prediction small {display:block;color:#91a9bf;font-size:10px;line-height:1.35;}
+.ncaab-prediction strong {display:block;color:#f3fcff;font-size:clamp(16px,1.7vw,21px);margin:3px 0;}
+.ncaab-market-triple {display:grid;gap:10px;}
+.ncaab-market-triple>section {border-top:1px solid #243e55;padding-top:8px;}
+.ncaab-market-triple h4 {font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8eb9ff;margin:2px 0 6px;}
+.ncaab-market-option {display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 6px;border-radius:8px;}
+.ncaab-market-option:nth-of-type(even) {background:#12263a;}
+.ncaab-option-pick {min-width:0;}
+.ncaab-market-option strong {display:block;font-size:13px;color:#f1f7ff;overflow-wrap:anywhere;}
+.ncaab-market-option small {display:block;color:#8da2bb;font-size:10px;line-height:1.3;}
+.ncaab-option-est {text-align:right;min-width:57px;}
+.ncaab-option-ev {text-align:right;min-width:65px;}
+.ncaab-option-ev.positive strong {color:#85e6b0;}
+.ncaab-option-ev.negative strong {color:#f6aaaa;}
+.ncaab-option-ev.neutral strong {color:#d7e3fa;}
+.ncaab-market-empty,.ncaab-unavailable {font-size:12px;padding:9px;background:#15263a;border-radius:9px;color:#9bb0cb;}
+.ncaab-method-note {border-top:1px solid #263c52;margin-top:11px;padding-top:8px;font-size:11px;color:#95aac4;}
+.ncaab-method-note summary {cursor:pointer;color:#afc9ee;min-height:30px;}
+.ncaab-method-note p {line-height:1.5;}
+.ncaab-show-more,.ncaab-toggle-grid {display:block;margin:15px auto 0;background:#1c3d64;border:1px solid #4977a2;color:#e6f2ff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:750;cursor:pointer;min-height:44px;}
+.ncaab-toggle-grid {display:none;}
+@media(max-width:980px) {.ncaab-forecast-grid{grid-template-columns:1fr;}}
+@media(max-width:700px) {
+  .ncaab-forecast-board {margin:10px 0 16px;}
+  .ncaab-forecast-head {align-items:stretch;flex-direction:column;padding:13px;gap:10px;}
+  .ncaab-metrics {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+  .ncaab-metrics span {min-width:0;padding:8px;}
+  .ncaab-metrics strong {font-size:18px;}
+  .ncaab-forecast-card {padding:12px 10px;}
+  .ncaab-match-head h3 {font-size:15px;}
+  .ncaab-status {font-size:8px;padding:5px;}
+  .ncaab-prediction {gap:5px;}
+  .ncaab-prediction>div {padding:8px 6px;}
+  .ncaab-prediction strong {font-size:16px;}
+  .ncaab-prediction span,.ncaab-prediction small {font-size:9px;}
+  .ncaab-market-option {gap:5px;grid-template-columns:minmax(0,1fr) 55px 63px;}
+  .ncaab-market-option strong {font-size:12px;}
+  body.ncaab-model-mode:not(.ncaab-show-classic) #gameLinesResults {display:none !important;}
+  .ncaab-toggle-grid {display:block;}
+  .ncaab-disclaimer {font-size:11px;}
+}
+
+/* ============================================================
+   BTBT • WHITE / HIGH-CONTRAST RESTORE
+   Game Lines EV+ / NCAAB — visual changes only, 2026-11-01
+   Keep at END of game-lines-premium.css.
+   Model, EV logic, sportsbook data, and responsive layout unchanged.
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --btbt-bg: #f5f7fb;
+  --btbt-bg-2: #eef3f9;
+  --btbt-panel: #ffffff;
+  --btbt-panel-2: #f8fafc;
+  --btbt-panel-3: #edf4fc;
+  --btbt-line: #d9e2ed;
+  --btbt-line-strong: #bac9db;
+  --btbt-text: #17263d;
+  --btbt-muted: #485b75;
+  --btbt-muted-2: #5c6f88;
+  --btbt-blue: #1955c4;
+  --btbt-blue-2: #1d4ed8;
+  --btbt-green: #15803d;
+  --btbt-green-soft: #e7f7ed;
+  --btbt-red: #b91c1c;
+  --btbt-red-soft: #fff0f0;
+  --btbt-amber: #925900;
+  --btbt-amber-soft: #fff5db;
+  --btbt-shadow: 0 8px 22px rgba(25, 50, 83, .08);
+}
+html { background: #f5f7fb !important; }
+body.btbt-terminal {
+  color: #17263d !important;
+  background: linear-gradient(180deg, #f5f8fe 0%, #f8fafc 38%, #fff 100%) !important;
+}
+/* Header, nav and filters */
+.btbt-game-lines-hero { border-bottom-color: #d9e2ed !important; }
+.btbt-game-lines-title { color: #102641 !important; }
+.btbt-game-lines-kicker { color: #1955c4 !important; }
+.btbt-game-lines-subtitle { color: #51647e !important; }
+.btbt-game-lines-status { background: #e9f9ef !important; color: #126433 !important; border-color: #b8e4c5 !important; }
+.btbt-game-lines-mark { background: linear-gradient(135deg,#e3f0ff,#e9f9ef) !important; }
+body.btbt-terminal .tracker-button-row button,
+body.btbt-terminal #bookFilterActions button,
+body.btbt-terminal #refreshGameLinesBtn,
+body.btbt-terminal #toggleModelDebug,
+body.btbt-terminal .odds-converter-reset,
+body.btbt-terminal .btbt-converter-toggle,
+body.btbt-terminal #mlbViewTabs button,
+body.btbt-terminal .view-toggle button {
+  background: #fff !important;
+  color: #233b5a !important;
+  border-color: #c9d6e5 !important;
+}
+body.btbt-terminal .tracker-button-row button:hover,
+body.btbt-terminal #bookFilterActions button:hover,
+body.btbt-terminal #mlbViewTabs button:hover,
+body.btbt-terminal .view-toggle button:hover {
+  background: #edf4ff !important;
+  color: #1648a3 !important;
+}
+body.btbt-terminal #bookFilterActions button.active,
+body.btbt-terminal #mlbViewTabs button.active,
+body.btbt-terminal .view-toggle button.active {
+  background: #dceaff !important;
+  color: #123d86 !important;
+  border-color: #6da4f5 !important;
+}
+body.btbt-terminal #loadGameLinesBtn { background: #1d4ed8 !important; color: #fff !important; }
+body.btbt-terminal #bookFilterActions,
+body.btbt-terminal #sportsbookFilters,
+body.btbt-terminal .game-lines-controls,
+body.btbt-terminal .odds-converter-card {
+  background: #fff !important;
+  border-color: #d7e1ed !important;
+  box-shadow: 0 4px 15px rgba(23,49,83,.05) !important;
+}
+body.btbt-terminal #sportsbookFilters label,
+body.btbt-terminal .game-lines-controls label,
+body.btbt-terminal .odds-converter-heading strong,
+body.btbt-terminal .odds-converter-field > span,
+body.btbt-terminal .odds-converter-result > span {
+  color: #344a66 !important;
+}
+body.btbt-terminal .odds-converter-heading span,
+body.btbt-terminal #gameLinesTimestamp { color: #526985 !important; }
+body.btbt-terminal .game-lines-controls select,
+body.btbt-terminal .game-lines-controls input,
+body.btbt-terminal .odds-converter-field input {
+  background: #fff !important;
+  color: #14263d !important;
+  border-color: #b9c9da !important;
+}
+body.btbt-terminal .odds-converter-result { background: #ecf9f0 !important; border-color: #c2e8ce !important; }
+body.btbt-terminal .odds-converter-result strong { color: #166534 !important; }
+body.btbt-terminal #gameLinesModeNote { background: #eaf2ff !important; color: #29466c !important; border-left-color: #2563eb !important; font-size: 11px !important; }
+/* Market snapshot */
+body.btbt-terminal .mlb-analytics-summary {
+  background: #fff !important;
+  border-color: #d8e2ed !important;
+  box-shadow: 0 8px 18px rgba(25,49,80,.07) !important;
+}
+body.btbt-terminal .mlb-summary-title { color: #17283f !important; }
+body.btbt-terminal .mlb-summary-eyebrow { color: #2158b3 !important; }
+body.btbt-terminal .mlb-model-pipeline { color: #50647e !important; }
+body.btbt-terminal .mlb-model-pipeline span { color: #1d4ed8 !important; }
+body.btbt-terminal .mlb-summary-card { background: #f8fbff !important; border-color: #d9e4f2 !important; }
+body.btbt-terminal .mlb-summary-card span { color: #4d617a !important; font-size: 10px !important; }
+body.btbt-terminal .mlb-summary-card strong { color: #102842 !important; }
+body.btbt-terminal .mlb-summary-card small { color: #536a85 !important; font-size: 10px !important; }
+body.btbt-terminal .mlb-summary-card.featured,
+body.btbt-terminal .mlb-summary-card:last-child.featured { background: #ebf8ee !important; border-color: #9bd5ad !important; }
+body.btbt-terminal #summaryBestEv { color: #126a35 !important; }
+/* Scroll shell and sticky sportsbook table */
+body.btbt-terminal .table-scroll-wrapper,
+body.btbt-terminal .table-scroll-wrapper .odds-table,
+body.btbt-terminal .odds-table { background: #fff !important; color: #14283f !important; }
+body.btbt-terminal .table-scroll-wrapper {
+  border-color: #cbd6e5 !important;
+  box-shadow: 0 6px 20px rgba(15,45,80,.08) !important;
+  scrollbar-color: #aebfd3 #f1f5f9 !important;
+}
+body.btbt-terminal .table-scroll-wrapper .odds-table thead th,
+body.btbt-terminal .odds-table thead th {
+  background: #e9f1fc !important;
+  color: #1f3b5d !important;
+  border-color: #ccdaeb !important;
+  border-bottom: 2px solid #9bbce9 !important;
+  box-shadow: 0 3px 6px rgba(17,48,82,.08) !important;
+  font-size: 10px !important;
+}
+body.btbt-terminal .table-scroll-wrapper .odds-table thead .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table thead .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table thead .sticky-selection,
+body.btbt-terminal .odds-table thead .sticky-game,
+body.btbt-terminal .odds-table thead .sticky-market,
+body.btbt-terminal .odds-table thead .sticky-selection {
+  background: #e3edfa !important;
+  color: #1d3554 !important;
+}
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody td,
+body.btbt-terminal .odds-table tbody td {
+  background: #fff !important;
+  color: #1d304b !important;
+  border-bottom: 1px solid #e0e7f0 !important;
+  border-right: 1px solid #edf1f6 !important;
+}
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) td,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) td { background: #f5f8fc !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover td,
+body.btbt-terminal .odds-table tbody tr:hover td { background: #eaf3ff !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody .sticky-selection,
+body.btbt-terminal .odds-table tbody .sticky-game,
+body.btbt-terminal .odds-table tbody .sticky-market,
+body.btbt-terminal .odds-table tbody .sticky-selection {
+  background: #edf4fd !important;
+  color: #172c48 !important;
+}
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(even) .sticky-selection,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-game,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-market,
+body.btbt-terminal .odds-table tbody tr:nth-child(even) .sticky-selection { background: #e6f0fc !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:hover .sticky-selection { background: #dcecff !important; }
+body.btbt-terminal .odds-table strong,
+body.btbt-terminal .table-scroll-wrapper .odds-table strong,
+body.btbt-terminal .table-scroll-wrapper .odds-table .sticky-selection strong {
+  color: #15283f !important;
+}
+body.btbt-terminal .edge-sub { color: #506782 !important; font-size: 10px !important; }
+body.btbt-terminal .mlb-detail-inline-btn {
+  background: #ebf3ff !important; color: #1455b3 !important; border-color: #8bb7f5 !important;
+  font-size: 10px !important;
+}
+body.btbt-terminal .ncaaf-table-projection strong { color: #182e4c !important; }
+/* Colored price and EV cells need readable *dark* text on pastel fills.
+   Target TDs explicitly to override the generic table-cell backgrounds. */
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody td.odds-cell-best,
+body.btbt-terminal .odds-table tbody td.odds-cell-best,
+body.btbt-terminal .odds-cell-best {
+  background: #d6f5e1 !important; color: #135b34 !important;
+  box-shadow: inset 0 0 0 1px #85d8a5 !important;
+}
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody td.odds-cell-near,
+body.btbt-terminal .odds-table tbody td.odds-cell-near,
+body.btbt-terminal .odds-cell-near { background: #eaf9f0 !important; color: #166534 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody td.odds-cell-worse,
+body.btbt-terminal .odds-table tbody td.odds-cell-worse,
+body.btbt-terminal .odds-cell-worse { background: #fff0f0 !important; color: #9d2222 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody td.odds-cell-missing,
+body.btbt-terminal .odds-table tbody td.odds-cell-missing,
+body.btbt-terminal .odds-cell-missing { background: #f0f3f7 !important; color: #65748a !important; }
+body.btbt-terminal .odds-cell-neutral { color: #223752 !important; }
+body.btbt-terminal .odds-cell-best .badge { background: #15803d !important; color: #fff !important; }
+body.btbt-terminal .odds-cell-worse .badge { background: #ffe0e0 !important; color: #9d2222 !important; }
+body.btbt-terminal .price-edge-negative,
+body.btbt-terminal .expected-ev-negative { background: #fee9ea !important; color: #9d1c24 !important; }
+body.btbt-terminal .price-edge-neutral,
+body.btbt-terminal .expected-ev-neutral { background: #f0f3f7 !important; color: #41536d !important; }
+body.btbt-terminal .price-edge-shop,
+body.btbt-terminal .expected-ev-lean { background: #fff1cc !important; color: #825000 !important; }
+body.btbt-terminal .price-edge-value,
+body.btbt-terminal .expected-ev-value { background: #e0ecff !important; color: #1749a5 !important; }
+body.btbt-terminal .price-edge-strong,
+body.btbt-terminal .expected-ev-strong { background: #cff3dd !important; color: #126039 !important; }
+body.btbt-terminal .edge-strong { color: #13703a !important; }
+body.btbt-terminal .edge-moderate { color: #1455b5 !important; }
+body.btbt-terminal .edge-weak { color: #825000 !important; }
+body.btbt-terminal .btbt-pill-high { background: #daf4e5 !important; color: #115a32 !important; }
+body.btbt-terminal .btbt-pill-medium { background: #fff0cb !important; color: #755000 !important; }
+body.btbt-terminal .btbt-pill-low { background: #edf1f6 !important; color: #40536f !important; }
+body.btbt-terminal .btbt-pill-market,
+body.btbt-terminal .btbt-pill-model { background: #e6efff !important; color: #174aa0 !important; }
+body.btbt-terminal .btbt-pill-warn { background: #ffebeb !important; color: #9b2222 !important; }
+body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar-track { background: #f1f5f9 !important; }
+body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar-thumb { background: #afbed1 !important; border-color: #f1f5f9 !important; }
+/* Popups and mobile game cards */
+body.btbt-terminal .analytics-modal { background: rgba(17,34,55,.42) !important; }
+body.btbt-terminal .analytics-modal-content { background: #fff !important; color: #182b44 !important; border-color: #d3e0ee !important; }
+body.btbt-terminal .analytics-header { background: #eff5fc !important; border-color: #d8e2ed !important; }
+body.btbt-terminal .analytics-header h2,
+body.btbt-terminal .analytics-close-btn { color: #1d3555 !important; }
+body.btbt-terminal #modelBreakdownContent { color: #182b44 !important; }
+body.btbt-terminal .mlb-probability-card,
+body.btbt-terminal .mlb-team-detail { background: #f4f8fe !important; border-color: #d9e4f1 !important; }
+body.btbt-terminal .mlb-probability-card span,
+body.btbt-terminal .mlb-detail-subtitle { color: #566c86 !important; }
+body.btbt-terminal .mlb-probability-card strong { color: #152c47 !important; }
+body.btbt-terminal .mlb-confidence-badge { color: #1749a5 !important; background: #e6efff !important; }
+body.btbt-terminal .mlb-reason-list { color: #223d5c !important; }
+body.btbt-terminal .game-card { background: #fff !important; color: #1d304b !important; border-color: #cfdae6 !important; }
+body.btbt-terminal .card-row,
+body.btbt-terminal .card-line-values { color: #304966 !important; }
+body.btbt-terminal .card-line-row { background: #f1f6fd !important; }
+body.btbt-terminal .card-book-name { color: #1959b8 !important; }
+/* NCAAB forecast cards — retain mobile layout, restore white surfaces. */
+.ncaab-forecast-board { color: #192b44 !important; }
+.ncaab-forecast-head { background: linear-gradient(120deg,#e9f2ff,#f2faf7) !important; border-color: #c8dced !important; }
+.ncaab-forecast-head h2 { color: #142b47 !important; }
+.ncaab-forecast-head p { color: #405b77 !important; }
+.ncaab-kicker { color: #1f5ab7 !important; }
+.ncaab-metrics span { background: rgba(255,255,255,.65) !important; color: #425a75 !important; border-color: #b9cfe2 !important; }
+.ncaab-metrics strong { color: #132b47 !important; }
+.ncaab-disclaimer { background: #fff7df !important; color: #785000 !important; border-left-color: #d59b19 !important; }
+.ncaab-forecast-card { background: #fff !important; border-color: #d3e0ec !important; box-shadow: 0 6px 20px rgba(20,48,80,.07) !important; }
+.ncaab-match-head h3 { color: #162d49 !important; }
+.ncaab-match-head h3 span { color: #617c9d !important; }
+.ncaab-mini-label { color: #4d6581 !important; }
+.ncaab-status { background: #fff4dc !important; border-color: #e3c883 !important; color: #805500 !important; }
+.ncaab-prediction > div { background: #f2f7fd !important; border-color: #d5e3f1 !important; }
+.ncaab-prediction span,
+.ncaab-prediction small { color: #516782 !important; font-size: 11px; }
+.ncaab-prediction strong { color: #132e4d !important; }
+.ncaab-market-triple > section { border-top-color: #dce5ef !important; }
+.ncaab-market-triple h4 { color: #2159ac !important; }
+.ncaab-market-option:nth-of-type(even) { background: #f6f9fd !important; }
+.ncaab-market-option strong { color: #17314e !important; }
+.ncaab-market-option small { color: #546b86 !important; }
+.ncaab-option-ev.positive strong { color: #12683b !important; }
+.ncaab-option-ev.negative strong { color: #b4232d !important; }
+.ncaab-option-ev.neutral strong { color: #253d59 !important; }
+.ncaab-market-empty,
+.ncaab-unavailable { background: #f2f5fa !important; color: #516880 !important; }
+.ncaab-method-note { border-top-color: #d8e3ef !important; color: #4f657c !important; }
+.ncaab-method-note summary { color: #1752ad !important; }
+.ncaab-show-more,
+.ncaab-toggle-grid { background: #e8f1ff !important; border-color: #a2c3f1 !important; color: #19499a !important; }
+@media (max-width: 700px) {
+  body.btbt-terminal #mlbViewTabs,
+  body.btbt-terminal .view-toggle { background: rgba(249,251,255,.97) !important; }
+  body.btbt-terminal .table-scroll-wrapper .odds-table tbody td { font-size: 12px !important; }
+  .ncaab-prediction span,.ncaab-prediction small { font-size: 10px !important; }
+  .ncaab-market-option small { font-size: 11px !important; }
+}
+/* Final specificity fix: older terminal CSS gave ODD table rows a
+   stronger dark background than the generic light-cell override. */
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(odd) td,
+body.btbt-terminal .odds-table tbody tr:nth-child(odd) td {
+  background: #ffffff !important;
+  color: #1d304b !important;
+}
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(odd) .sticky-game,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(odd) .sticky-market,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr:nth-child(odd) .sticky-selection {
+  background: #edf4fd !important;
+}
+/* Preserve pastel price signals on ALL row parities. */
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.odds-cell-best { background: #d6f5e1 !important; color: #135b34 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.odds-cell-near { background: #eaf9f0 !important; color: #166534 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.odds-cell-worse { background: #fff0f0 !important; color: #9d2222 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.odds-cell-missing { background: #f0f3f7 !important; color: #65748a !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.price-edge-negative,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.expected-ev-negative { background: #fee9ea !important; color: #9d1c24 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.price-edge-neutral,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.expected-ev-neutral { background: #f0f3f7 !important; color: #41536d !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.price-edge-shop,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.expected-ev-lean { background: #fff1cc !important; color: #825000 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.price-edge-value,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.expected-ev-value { background: #e0ecff !important; color: #1749a5 !important; }
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.price-edge-strong,
+body.btbt-terminal .table-scroll-wrapper .odds-table tbody tr td.expected-ev-strong { background: #cff3dd !important; color: #126039 !important; }
+
+
+/* ==========================================================
+   BTBT Game Lines v0.2 — shared mobile/card controls + EV filter
+   White theme maintained. CSS only, no model or price changes.
+   ========================================================== */
+body.btbt-terminal .btbt-ev-filter {
+  min-height: 40px; border-radius: 9px; border: 1px solid #9bbfe9;
+  background: #eef5ff; color: #184a93; padding: 7px 13px;
+  font-weight: 800; font-size: 13px; cursor: pointer; white-space: nowrap;
+}
+body.btbt-terminal .btbt-ev-filter.active,
+body.btbt-terminal .btbt-ev-filter[aria-pressed="true"] {
+  background: #daf5e6; border-color: #66be88; color: #126039;
+  box-shadow: inset 0 0 0 1px #92d4a8;
+}
+body.btbt-terminal .view-toggle button[aria-pressed="true"] {
+  border-color: #6da4f5 !important; background: #dceaff !important;
+  color: #123d86 !important; font-weight: 800 !important;
+}
+body.btbt-terminal #gameLinesCardView {
+  max-width: 1800px; margin: 12px auto 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+  align-items: start;
+}
+body.btbt-terminal .btbt-ev-empty {
+  padding: 18px 16px; background: #f3f7ff; border: 1px solid #d6e3f2;
+  border-radius: 12px; color: #284466; font-size: 13px; font-weight: 600;
+  grid-column: 1/-1;
+}
+body.btbt-terminal .ncaab-forecast-board[hidden] { display: none !important; }
+body.btbt-terminal #gameLinesResults[style*="display: none"] { display: none !important; }
+body.btbt-terminal .btbt-positive-ev-cell small {display:block; font-size:10px; color:#4d6581; font-weight:550;}
+body.btbt-terminal .btbt-positive-ev-number {color:#147743 !important; display:block; font-size:13px;}
+body.btbt-terminal .ncaab-table-detail-btn,
+body.btbt-terminal .ncaab-detail-btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  border:1px solid #9ebee9; border-radius:8px; background:#e9f2ff;
+  color:#194f9c; font-size:12px; font-weight:800; cursor:pointer;
+  min-height:38px; padding:7px 12px;
+}
+body.btbt-terminal .ncaab-table-detail-btn {display:block; margin:6px auto 0; min-height:30px; padding:3px 7px; font-size:11px;}
+body.btbt-terminal .ncaab-detail-btn {margin:0 0 10px; width:100%;}
+body.btbt-terminal .ncaab-detail-btn:hover,
+body.btbt-terminal .ncaab-table-detail-btn:hover {background:#d9eaff; color:#0f3f85;}
+body.btbt-terminal .btbt-ncaab-detail {color:#1a304e; line-height:1.5; font-size:13px;}
+body.btbt-terminal .btbt-ncaab-detail-hero {padding:13px 15px; background:#eaf3ff; border:1px solid #d0e2f6; border-radius:11px;}
+body.btbt-terminal .btbt-ncaab-detail-hero p {font-size:10px; letter-spacing:.12em; margin:0; color:#2058a4; font-weight:800;}
+body.btbt-terminal .btbt-ncaab-detail-hero h2 {font-size:clamp(17px,2vw,23px); color:#123351; margin:3px 0;}
+body.btbt-terminal .btbt-ncaab-detail-hero small {color:#4e6987; font-size:11px;}
+body.btbt-terminal .btbt-ncaab-detail-stats {display:grid; grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0;}
+body.btbt-terminal .btbt-ncaab-detail-stats>div {padding:11px; background:#f5f9ff; border:1px solid #dce8f3; border-radius:9px;min-width:0;}
+body.btbt-terminal .btbt-ncaab-detail-stats span {display:block; font-size:10px; color:#526b86;}
+body.btbt-terminal .btbt-ncaab-detail-stats strong {display:block;color:#14385f;font-size:18px;line-height:1.25;margin:5px 0 0;}
+body.btbt-terminal .btbt-ncaab-detail-stats.small strong {font-size:15px;}
+body.btbt-terminal .btbt-ncaab-detail-section {margin:16px 0 0; border-top:1px solid #d9e5f0; padding:12px 0 0;}
+body.btbt-terminal .btbt-ncaab-detail-section h3 {font-size:14px;color:#1855a6;margin:0 0 10px;}
+body.btbt-terminal .btbt-ncaab-detail-section p {font-size:12px;color:#465f7a;margin:9px 0;line-height:1.55;}
+body.btbt-terminal .btbt-ncaab-detail-scroll {overflow:auto;max-width:100%;border-radius:9px;border:1px solid #dbe6f2;}
+body.btbt-terminal .btbt-ncaab-detail-scroll table {width:100%;border-collapse:collapse;min-width:380px;}
+body.btbt-terminal .btbt-ncaab-detail-scroll th,
+body.btbt-terminal .btbt-ncaab-detail-scroll td {padding:9px; border-bottom:1px solid #e0e9f2;text-align:left;font-size:12px;}
+body.btbt-terminal .btbt-ncaab-detail-scroll th {background:#e9f2ff;color:#174574;}
+body.btbt-terminal .btbt-ncaab-detail-scroll td {background:#fff;color:#243e5f;}
+body.btbt-terminal .btbt-ncaab-detail-form-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+body.btbt-terminal .btbt-ncaab-detail-form {background:#f5f9ff;border:1px solid #dce8f3;padding:10px;border-radius:9px;}
+body.btbt-terminal .btbt-ncaab-detail-form strong,
+body.btbt-terminal .btbt-ncaab-detail-form span,
+body.btbt-terminal .btbt-ncaab-detail-form small {display:block;overflow-wrap:anywhere;}
+body.btbt-terminal .btbt-ncaab-detail-form strong {color:#17416a;font-size:12px;}
+body.btbt-terminal .btbt-ncaab-detail-form span {color:#395875;font-size:11px;margin:3px 0;}
+body.btbt-terminal .btbt-ncaab-detail-form small {color:#577089;font-size:10px;}
+body.btbt-terminal .btbt-ncaab-detail-market {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+body.btbt-terminal .btbt-ncaab-detail-market>div {background:#f7faff;padding:10px;border:1px solid #e0e9f3;border-radius:9px;}
+body.btbt-terminal .btbt-ncaab-detail-market span,
+body.btbt-terminal .btbt-ncaab-detail-market strong,
+body.btbt-terminal .btbt-ncaab-detail-market small {display:block;overflow-wrap:anywhere;}
+body.btbt-terminal .btbt-ncaab-detail-market span {font-weight:800;color:#203d5b;}
+body.btbt-terminal .btbt-ncaab-detail-market strong {color:#185bb2;margin:3px 0;}
+body.btbt-terminal .btbt-ncaab-detail-market small {color:#536b83;}
+body.btbt-terminal .btbt-ncaab-detail-warning {margin-top:16px;background:#fff6e0;border-left:3px solid #d99d24;padding:11px;color:#73510e;font-size:12px;border-radius:5px;}
+body.btbt-terminal .btbt-ncaab-detail-missing {background:#f3f6fa;border-radius:8px;padding:10px;}
+@media(max-width:700px) {
+  body.btbt-terminal #gameLinesCardView {grid-template-columns:1fr;gap:10px;}
+  body.btbt-terminal .btbt-ncaab-detail-stats,
+  body.btbt-terminal .btbt-ncaab-detail-form-grid,
+  body.btbt-terminal .btbt-ncaab-detail-market {grid-template-columns:1fr 1fr;gap:6px;}
+  body.btbt-terminal .btbt-ncaab-detail-hero {padding:10px;}
+  body.btbt-terminal .btbt-ncaab-detail-stats>div {padding:8px;}
+  body.btbt-terminal #modelBreakdownContent {padding:12px !important;}
+  body.btbt-terminal.ncaab-model-mode #gameLinesResults {display:block !important;}
+  body.btbt-terminal.ncaab-model-mode #gameLinesResults[style*="display: none"] {display:none !important;}
+}
+@media(max-width:380px) {
+  body.btbt-terminal .btbt-ncaab-detail-form-grid,
+  body.btbt-terminal .btbt-ncaab-detail-market {grid-template-columns:1fr;}
+  body.btbt-terminal .ncaab-market-option {grid-template-columns:minmax(0,1fr) 54px 59px;}
+}
+
+/* A closed breakdown must not trap taps over the Game Lines filters. */
+body.btbt-terminal #modelBreakdownModal.hidden {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+
+/* ============================================================
+   BenThereBetThat — Game Lines white modal readability fix v0.3
+   Scope: NCAAF pick/model breakdown ONLY.
+   Purpose: fix dark-mode pale text on light-mode popup cards.
+   Append to the end of the existing v0.2 game-lines-premium.css.
+   Does not change game projections, market odds, or button logic.
+   ============================================================ */
+
+/* The modal is light; content injected by the football JS still has
+   dark-theme backgrounds and light-theme-incompatible foregrounds. */
+body.btbt-terminal #modelBreakdownModal #modelBreakdownContent .ncaaf-ev-panel {
+  color: #18314e !important;
+  background: #ffffff !important;
+}
+
+/* Matchup headline and market description */
+body.btbt-terminal #modelBreakdownModal .ncaaf-ev-hero {
+  background: #f3f8ff !important;
+  border-color: #d7e4f4 !important;
+  color: #17324f !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-ev-teams,
+body.btbt-terminal #modelBreakdownModal .ncaaf-ev-market,
+body.btbt-terminal #modelBreakdownModal .ncaaf-ev-market strong {
+  color: #1b3451 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-ev-market span { color: #66809e !important; }
+body.btbt-terminal #modelBreakdownModal .ncaaf-confidence-pill {
+  color: #1b538b !important;
+  background: #e8f1fd !important;
+  border-color: #cadff5 !important;
+}
+
+/* Pass, Lean, Value, and Strong Value: maintain meaning without low contrast. */
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-banner {
+  background: #f4f8fe !important;
+  border-color: #d7e4f0 !important;
+  color: #263d59 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-banner .ncaaf-signal-label,
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-banner .ncaaf-signal-message {
+  color: #263d59 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-pass {
+  background: #fff0f0 !important;
+  border-color: #efc1c1 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-pass .ncaaf-signal-label,
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-pass .ncaaf-signal-message {
+  color: #982d32 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-lean {
+  background: #fff6df !important;
+  border-color: #e9d095 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-lean .ncaaf-signal-label,
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-lean .ncaaf-signal-message {
+  color: #765111 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-value,
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-strong {
+  background: #e9f8ef !important;
+  border-color: #a1dabb !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-value .ncaaf-signal-label,
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-value .ncaaf-signal-message,
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-strong .ncaaf-signal-label,
+body.btbt-terminal #modelBreakdownModal .ncaaf-signal-strong .ncaaf-signal-message {
+  color: #136338 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-best-price-block,
+body.btbt-terminal #modelBreakdownModal .ncaaf-best-price-block span,
+body.btbt-terminal #modelBreakdownModal .ncaaf-best-price-block small {
+  color: #405b77 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-best-price-block strong {
+  color: #102e51 !important;
+}
+
+/* Top KPI cards: original injected CSS used white values on dark gray. */
+body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi {
+  background: #f1f6fd !important;
+  border: 1px solid #d6e3f2 !important;
+  color: #1b3452 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi.featured {
+  background: #eaf3ff !important;
+  border-color: #abc9ef !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi > span,
+body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi > small {
+  color: #46617e !important;
+  opacity: 1 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi > strong {
+  color: #173550 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi.positive > strong { color: #12633a !important; }
+body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi.negative > strong { color: #9c3034 !important; }
+
+/* The two explanation tiles shown in the screenshot. */
+body.btbt-terminal #modelBreakdownModal .ncaaf-user-card,
+body.btbt-terminal #modelBreakdownModal .ncaaf-detail-card {
+  background: #f7faff !important;
+  border: 1px solid #d7e4f2 !important;
+  color: #233e5c !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-user-card h3,
+body.btbt-terminal #modelBreakdownModal .ncaaf-detail-card h3,
+body.btbt-terminal #modelBreakdownModal .ncaaf-user-card strong {
+  color: #163657 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-user-card p,
+body.btbt-terminal #modelBreakdownModal .ncaaf-detail-card p {
+  color: #314e6c !important;
+  opacity: 1 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-section-heading,
+body.btbt-terminal #modelBreakdownModal .ncaaf-detail-subheading {
+  color: #1e4f85 !important;
+  opacity: 1 !important;
+}
+
+/* Reasons and readout — give every line a genuinely readable surface. */
+body.btbt-terminal #modelBreakdownModal .ncaaf-market-read-item {
+  background: #ffffff !important;
+  border-color: #d6e2ef !important;
+  color: #254262 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-market-read-text,
+body.btbt-terminal #modelBreakdownModal .ncaaf-market-read-text strong {
+  color: #203c59 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-market-read-icon {
+  color: #275e99 !important;
+}
+
+/* Team-matchup comparisons and raw input summaries. */
+body.btbt-terminal #modelBreakdownModal .ncaaf-matchup-team,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-projection-grid > div,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-driver,
+body.btbt-terminal #modelBreakdownModal .ncaaf-driver {
+  background: #ffffff !important;
+  border-color: #d9e5f1 !important;
+  color: #223d5b !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-projection-grid > div.featured {
+  background: #eaf7f0 !important;
+  border-color: #acd9bd !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-matchup-team h4,
+body.btbt-terminal #modelBreakdownModal .ncaaf-strength-row strong,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-projection-grid strong,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-driver strong,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-driver-value b,
+body.btbt-terminal #modelBreakdownModal .ncaaf-driver strong,
+body.btbt-terminal #modelBreakdownModal .ncaaf-detail-row strong {
+  color: #153450 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-strength-row span,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-projection-grid span,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-driver small,
+body.btbt-terminal #modelBreakdownModal .ncaaf-friendly-driver-value small,
+body.btbt-terminal #modelBreakdownModal .ncaaf-driver span,
+body.btbt-terminal #modelBreakdownModal .ncaaf-detail-row span {
+  color: #496581 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-matchup-edge {
+  background: #eaf3ff !important;
+  border-color: #b7d2f3 !important;
+  color: #193c68 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-matchup-edge strong { color: #173e72 !important; }
+
+/* Expandable advanced areas and sportsbook line comparisons. */
+body.btbt-terminal #modelBreakdownModal .ncaaf-advanced-toggle {
+  background: #f8fbff !important;
+  border-color: #d8e4f1 !important;
+  color: #1b3857 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-advanced-toggle > summary {
+  color: #174b85 !important;
+  background: #edf5ff !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-advanced-body {
+  background: #ffffff !important;
+  color: #294866 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-book-table th {
+  background: #eaf3ff !important;
+  color: #204a75 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-book-table td {
+  background: #ffffff !important;
+  color: #24415f !important;
+  border-color: #dce7f1 !important;
+}
+body.btbt-terminal #modelBreakdownModal .ncaaf-book-table .ncaaf-positive-text { color: #12673e !important; }
+body.btbt-terminal #modelBreakdownModal .ncaaf-book-table .ncaaf-negative-text { color: #a32d39 !important; }
+body.btbt-terminal #modelBreakdownModal .ncaaf-book-table .ncaaf-best-book-row td { background: #e9f7f0 !important; }
+
+/* Slightly more legible secondary text at phone widths. */
+@media (max-width: 700px) {
+  body.btbt-terminal #modelBreakdownModal .ncaaf-ev-panel { font-size: 13px; line-height: 1.5; }
+  body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi > span,
+  body.btbt-terminal #modelBreakdownModal .ncaaf-simple-kpi > small { font-size: 11px !important; }
+  body.btbt-terminal #modelBreakdownModal .ncaaf-user-card p,
+  body.btbt-terminal #modelBreakdownModal .ncaaf-market-read-text { font-size: 13px !important; }
+}
+
+
+/* ============================================================
+   v0.4 — NCAAB model popup header readability
+   Match the light College Football breakdown header.
+   NCAAB only: no odds, model, buttons, or other sports changes.
+   ============================================================ */
+body.btbt-terminal #modelBreakdownModal #modelBreakdownContent .btbt-ncaab-detail-hero {
+  background: #f3f8ff !important;
+  border: 1px solid #d7e4f4 !important;
+  border-radius: 11px !important;
+  color: #17324f !important;
+}
+body.btbt-terminal #modelBreakdownModal #modelBreakdownContent .btbt-ncaab-detail-hero h2 {
+  color: #1b3451 !important;
+  -webkit-text-fill-color: #1b3451 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere;
+}
+body.btbt-terminal #modelBreakdownModal #modelBreakdownContent .btbt-ncaab-detail-hero p {
+  color: #2058a4 !important;
+  -webkit-text-fill-color: #2058a4 !important;
+  opacity: 1 !important;
+}
+body.btbt-terminal #modelBreakdownModal #modelBreakdownContent .btbt-ncaab-detail-hero small {
+  color: #496581 !important;
+  -webkit-text-fill-color: #496581 !important;
+  opacity: 1 !important;
+}
