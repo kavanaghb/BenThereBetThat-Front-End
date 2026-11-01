@@ -2109,3 +2109,128 @@ body.btbt-terminal .ncaab-forecast-card .ncaab-status { color:#1e509b!important;
  body.btbt-terminal .btbt-unified-book-row {grid-template-columns:1fr 1fr;}
  body.btbt-terminal .btbt-unified-book-row strong {grid-column:1/-1;}
 }
+
+
+/* ===========================================================
+   BTBT v0.6: third "Quick Picks" view. White theme, accessible
+   readability, mobile-friendly compact table. No model changes.
+   =========================================================== */
+body.btbt-terminal #gameLinesResults.btbt-hidden-panel { display: none !important; }
+body.btbt-terminal .btbt-quick-picks[hidden] { display: none !important; }
+body.btbt-terminal .view-toggle { flex-wrap: wrap; }
+body.btbt-terminal #quickPicksViewBtn { min-height: 36px !important; font-size: 12px !important; }
+body.btbt-terminal .btbt-quick-picks {
+  max-width:1800px;margin:12px auto 20px;color:#173452;background:#fff;
+  border:1px solid #ccdbec;border-radius:13px;overflow:hidden;
+  box-shadow:0 8px 24px rgba(18,49,84,.07);
+}
+body.btbt-terminal .btbt-quick-header {
+  display:flex;justify-content:space-between;gap:12px;align-items:center;
+  padding:17px 18px;background:#eaf3ff;border-bottom:1px solid #c8dcf5;
+}
+body.btbt-terminal .btbt-quick-header p {
+  margin:0 0 3px;color:#1d55a2;font-size:10px;letter-spacing:.08em;font-weight:850;
+}
+body.btbt-terminal .btbt-quick-header h2 {margin:0 0 4px;color:#10365c;font-size:19px;font-weight:850;}
+body.btbt-terminal .btbt-quick-header span {display:block;color:#526b88;font-size:12px;line-height:1.45;}
+body.btbt-terminal .btbt-quick-header>strong {background:#fff;border:1px solid #bdd4ed;padding:8px 12px;border-radius:8px;white-space:nowrap;font-size:12px;}
+body.btbt-terminal .btbt-quick-scroll {width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+body.btbt-terminal .btbt-quick-table {width:100%;border-collapse:collapse;min-width:850px;table-layout:auto;font-size:12px;}
+body.btbt-terminal .btbt-quick-table th {
+  text-align:left;padding:12px 10px;background:#f3f7fc;color:#385473;
+  border-bottom:1px solid #cddced;font-size:10px;font-weight:850;white-space:nowrap;
+}
+body.btbt-terminal .btbt-quick-table td {padding:12px 10px;color:#193958;border-bottom:1px solid #dfe9f3;vertical-align:middle;background:#fff;}
+body.btbt-terminal .btbt-quick-table tbody tr {cursor:pointer;}
+body.btbt-terminal .btbt-quick-table tbody tr:hover td {background:#eaf3ff;}
+body.btbt-terminal .btbt-quick-table tbody tr:nth-child(even) td {background:#f8fbff;}
+body.btbt-terminal .btbt-quick-table td strong {font-size:12px;color:#16395f;}
+body.btbt-terminal .btbt-quick-table td small {display:block;color:#617a97;font-size:10px;margin-top:4px;line-height:1.35;}
+body.btbt-terminal .btbt-quick-table .btbt-quick-game {min-width:175px;max-width:290px;}
+body.btbt-terminal .btbt-quick-table .btbt-quick-selection {color:#145d3d;font-weight:800;}
+body.btbt-terminal .btbt-quick-win {font-size:15px;font-weight:850;color:#124c94 !important;white-space:nowrap;}
+body.btbt-terminal .btbt-quick-edge {font-weight:800;color:#177048 !important;white-space:nowrap;}
+body.btbt-terminal .btbt-quick-detail {min-height:36px;padding:6px 12px;cursor:pointer;color:#164b91;border:1px solid #8ab7e8;border-radius:8px;background:#eaf3ff;font-size:12px;font-weight:800;}
+body.btbt-terminal .btbt-quick-detail:hover {background:#d7e9ff;}
+body.btbt-terminal .btbt-quick-footnote {margin:0;padding:13px 16px;color:#536a85;background:#f8fbff;border-top:1px solid #e1eaf3;font-size:11px;line-height:1.55;}
+@media (max-width:700px) {
+  body.btbt-terminal .view-toggle {display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px !important;}
+  body.btbt-terminal .view-toggle button {min-width:0 !important;width:100%;font-size:11px !important;padding:8px 4px !important;}
+  body.btbt-terminal .btbt-quick-header {padding:12px;align-items:flex-start;}
+  body.btbt-terminal .btbt-quick-header h2 {font-size:16px;}
+  body.btbt-terminal .btbt-quick-header>strong {font-size:10px;padding:5px 7px;}
+  body.btbt-terminal .btbt-quick-table {min-width:620px;table-layout:fixed;width:100%;}
+  body.btbt-terminal .btbt-quick-table th, body.btbt-terminal .btbt-quick-table td {padding:9px 7px;}
+  body.btbt-terminal .btbt-quick-table th:nth-child(6),
+  body.btbt-terminal .btbt-quick-table td:nth-child(6) {display:none;}
+  body.btbt-terminal .btbt-quick-table th:nth-child(7),
+  body.btbt-terminal .btbt-quick-table td:nth-child(7) {display:none;}
+  body.btbt-terminal .btbt-quick-table th:nth-child(1) {width:28%;}
+  body.btbt-terminal .btbt-quick-table th:nth-child(2) {width:27%;}
+  body.btbt-terminal .btbt-quick-table th:nth-child(3) {width:14%;}
+  body.btbt-terminal .btbt-quick-table th:nth-child(4) {width:16%;}
+  body.btbt-terminal .btbt-quick-table th:nth-child(5) {width:15%;}
+  body.btbt-terminal .btbt-quick-table .btbt-quick-game {min-width:0;max-width:none;}
+  body.btbt-terminal .btbt-quick-table td strong {font-size:10px;line-height:1.3;overflow-wrap:anywhere;}
+  body.btbt-terminal .btbt-quick-table td small {font-size:9px;}
+  body.btbt-terminal .btbt-quick-footnote {font-size:10px;}
+}
+
+/* v0.7: accessible sort controls in the simple Quick Picks table */
+body.btbt-terminal .btbt-quick-table th .btbt-quick-sort {
+  display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;
+  width:100%;min-height:36px;padding:3px 0;border:0;
+  background:transparent;color:#2a496b;font:inherit;font-size:inherit;
+  font-weight:850;line-height:1.3;text-align:left;cursor:pointer;
+}
+body.btbt-terminal .btbt-quick-table th .btbt-quick-sort:hover,
+body.btbt-terminal .btbt-quick-table th .btbt-quick-sort.is-active {color:#0e55b3;}
+body.btbt-terminal .btbt-quick-table th .btbt-quick-sort:focus-visible {
+  outline:2px solid #2563eb;outline-offset:2px;border-radius:3px;
+}
+body.btbt-terminal .btbt-quick-table .btbt-quick-sort-icon {
+  color:#7187a0;font-size:12px;flex:0 0 auto;
+}
+body.btbt-terminal .btbt-quick-table .btbt-quick-sort.is-active .btbt-quick-sort-icon {color:#0e55b3;}
+@media (max-width:700px) {
+  body.btbt-terminal .btbt-quick-table th .btbt-quick-sort {
+    min-height:40px;white-space:normal;font-size:10px;gap:3px;
+  }
+}
+
+
+/* v0.8 · Sportsbook spread cap, responsive and consistent with light theme */
+body.btbt-terminal .btbt-spread-cap {
+  flex: 0 1 260px; min-width: 200px; max-width: 285px;
+  padding: 6px 10px; border: 1px solid #cbd7e8; border-radius: 9px;
+  background: #f4f8ff; color: #18365d;
+}
+body.btbt-terminal .btbt-spread-cap[hidden] { display: none !important; }
+body.btbt-terminal .btbt-spread-cap-heading {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+body.btbt-terminal .btbt-spread-cap-heading label {
+  font-size: 11px !important; font-weight: 800; color: #18365d !important;
+  letter-spacing: normal !important; text-transform: none !important;
+  display: block !important;
+}
+body.btbt-terminal .btbt-spread-cap output {
+  color: #1250a7; font-size: 11px; font-weight: 850; white-space: nowrap;
+}
+body.btbt-terminal .btbt-spread-cap input[type="range"] {
+  display: block; width: 100% !important; height: 19px !important;
+  min-height: 19px !important; margin: 3px 0 0; padding: 0 !important;
+  border: 0 !important; box-shadow: none !important; background: transparent !important;
+  accent-color: #2563eb; cursor: pointer;
+}
+body.btbt-terminal .btbt-spread-cap small {
+  display: block; color: #526783; line-height: 1.25; font-size: 9px;
+}
+@media(max-width:700px) {
+  body.btbt-terminal .btbt-spread-cap {
+    grid-column: 1 / -1; min-width: 0; max-width: 100%; width: 100%;
+    box-sizing: border-box; padding: 8px 10px;
+  }
+  body.btbt-terminal .btbt-spread-cap-heading label {font-size: 12px !important;}
+  body.btbt-terminal .btbt-spread-cap output {font-size: 12px;}
+}

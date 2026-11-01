@@ -2753,6 +2753,17 @@ tbody
   >
 
 
+  <!-- Spread cap filters the displayed slate only; it never alters model calculations. -->
+  <div class="btbt-spread-cap" id="gameLinesSpreadCapControl" role="group" aria-labelledby="gameLinesSpreadCapLabel">
+    <div class="btbt-spread-cap-heading">
+      <label for="gameLinesSpreadCap" id="gameLinesSpreadCapLabel">Max Vegas spread</label>
+      <output id="gameLinesSpreadCapValue" for="gameLinesSpreadCap">No cap</output>
+    </div>
+    <input type="range" id="gameLinesSpreadCap" min="5" max="50" step="1" value="50"
+      aria-describedby="gameLinesSpreadCapHelp" />
+    <small id="gameLinesSpreadCapHelp">Exclude spreads above ± limit · 50 = No cap</small>
+  </div>
+
   <button type="button" id="gameLinesPositiveEvOnly" class="btbt-ev-filter" aria-pressed="false" title="For NCAAB: show legacy spread leans. For MLB/NCAAF: show positive estimated EV.">+EV Only</button>
 
   <button
@@ -2911,6 +2922,16 @@ tbody
     📱 Card
   </button>
 
+  <button
+    id="quickPicksViewBtn"
+    type="button"
+    aria-pressed="false"
+    class="toggle-btn"
+    title="One-line picks, model projection and Vegas comparison"
+  >
+    ⚡ Quick Picks
+  </button>
+
 </div>
 
 
@@ -2919,6 +2940,8 @@ tbody
 <!-- ===================================================== -->
 
 <section id="ncaabForecastBoard" class="ncaab-forecast-board" hidden aria-live="polite"></section>
+
+<section id="gameLinesQuickPicks" class="btbt-quick-picks" hidden aria-live="polite"></section>
 
 <div id="gameLinesResults">
   Loading game line edges...

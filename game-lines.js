@@ -9,6 +9,56 @@ let currentViewMode = (window.matchMedia && window.matchMedia("(max-width: 700px
   ? "card" : "table"; // mobile defaults to cards; user selection takes precedence
 let positiveEvOnly = false; // +EV means >0% estimated EV, never point-spread edge
 
+// User-selectable sportsbook spread filter. 50 (maximum) means OFF.
+// Setting affects display/export ONLY. It never changes model or betting calculations.
+const BTBT_SPREAD_CAP_KEY = "btbt_game_lines_max_spread_v1";
+function btbtLoadSpreadCap() {
+  try {
+    const n = Number(window.localStorage.getItem(BTBT_SPREAD_CAP_KEY));
+    if (Number.isFinite(n) && n >= 5 && n < 50) return Math.round(n);
+  } catch (_) {}
+  return 50;
+}
+let btbtSpreadCap = btbtLoadSpreadCap();
+function btbtActiveSpreadCap() { return btbtSpreadCap >= 50 ? null : btbtSpreadCap; }
+function btbtFiniteNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+// NCAAB: use the actual legacy recommended sportsbook spread, not Ben's projected spread.
+// For no-recommendation games, use the supplied home-team Vegas consensus.
+function btbtNcaabLineToCap(game) {
+  return btbtFiniteNumber(
+    game?.recommended_spread != null ? game.recommended_spread : game?.consensus_home
+  );
+}
+// Football: only spread-market rows are capped. Moneylines/totals pass through.
+function btbtMarketRowAllowed(row) {
+  const limit = btbtActiveSpreadCap();
+  if (limit === null || !isNcaafMarketMode()) return true;
+  const market = String(row?.market || "").toLowerCase();
+  if (market !== "spreads" && market !== "spread") return true;
+  const point = btbtFiniteNumber(row?.point);
+  return point !== null && Math.abs(point) <= limit + 1e-8;
+}
+function btbtRefreshSpreadCapControl() {
+  const wrapper = document.getElementById("gameLinesSpreadCapControl");
+  const slider = document.getElementById("gameLinesSpreadCap");
+  const output = document.getElementById("gameLinesSpreadCapValue");
+  const footballOrBasketball = ["basketball_ncaab", "americanfootball_ncaaf"]
+    .includes(document.getElementById("sportSelect")?.value);
+  if (wrapper) wrapper.hidden = !footballOrBasketball;
+  if (slider) {
+    slider.value = String(btbtSpreadCap);
+    slider.setAttribute("aria-valuetext", btbtActiveSpreadCap() === null
+      ? "No cap" : `Maximum absolute spread ${btbtSpreadCap} points`);
+  }
+  if (output) output.textContent = btbtActiveSpreadCap() === null
+    ? "No cap" : `±${btbtSpreadCap} pts`;
+}
+
+
 function isNcaabGameLines() {
   return document.getElementById("sportSelect")?.value === "basketball_ncaab";
 }
@@ -24,7 +74,8 @@ function hasPositiveEstimatedEV(game) {
   if (game?.mode === "basketball_model" || game?.sport === "basketball_ncaab") {
     return hasLegacySpreadLean(game); // NCAAB filter is labeled Spread Leans (not +EV)
   }
-  const rows = [...(game?.market_board || []), ...(game?.market_picks || [])];
+  const rows = [...(game?.market_board || []), ...(game?.market_picks || [])]
+    .filter(btbtMarketRowAllowed);
   return rows.some(row => row?.expected_value_pct != null &&
     Number.isFinite(Number(row.expected_value_pct)) && Number(row.expected_value_pct) > 0 &&
     !game?.is_live);
@@ -34,7 +85,17 @@ function gamePassesGameLinesFilters(game) {
   const searchOk = !searchFilter ||
     `${game?.event_title || ""} ${game?.home_team || ""} ${game?.away_team || ""}`
       .toLowerCase().includes(searchFilter);
-  return searchOk && (!positiveEvOnly || hasPositiveEstimatedEV(game));
+  if (!searchOk) return false;
+  const cap = btbtActiveSpreadCap();
+  if (cap !== null && isNcaabGameLines()) {
+    const vegas = btbtNcaabLineToCap(game);
+    if (vegas === null || Math.abs(vegas) > cap + 1e-8) return false;
+  }
+  if (cap !== null && document.getElementById("sportSelect")?.value === "americanfootball_ncaaf") {
+    const rows = [...(game?.market_board || []), ...(game?.market_picks || [])];
+    if (!rows.some(btbtMarketRowAllowed)) return false;
+  }
+  return !positiveEvOnly || hasPositiveEstimatedEV(game);
 }
 
 function isPositiveModelRow(row) {
@@ -61,31 +122,42 @@ function applyGameLinesView() {
   const ncaab = selectedSport === "basketball_ncaab" &&
     currentGameLines.length > 0 && !isMarketEvMode(currentGameLines?.[0]?.mode);
   const isCard = currentViewMode === "card";
+  const isQuick = currentViewMode === "quick";
   const tablePanel = document.getElementById("gameLinesResults");
   const cardPanel = document.getElementById("gameLinesCardView");
   const forecastPanel = document.getElementById("ncaabForecastBoard");
+  const quickPanel = document.getElementById("gameLinesQuickPicks");
+  const quickBtn = document.getElementById("quickPicksViewBtn");
   const tableBtn = document.getElementById("tableViewBtn");
   const cardBtn = document.getElementById("cardViewBtn");
 
-  tableBtn?.classList.toggle("active", !isCard);
+  tableBtn?.classList.toggle("active", !isCard && !isQuick);
   cardBtn?.classList.toggle("active", isCard);
-  tableBtn?.setAttribute("aria-pressed", String(!isCard));
+  quickBtn?.classList.toggle("active", isQuick);
+  tableBtn?.setAttribute("aria-pressed", String(!isCard && !isQuick));
   cardBtn?.setAttribute("aria-pressed", String(isCard));
+  quickBtn?.setAttribute("aria-pressed", String(isQuick));
 
-  if (tablePanel) tablePanel.style.display = isCard ? "none" : "block";
+  if (tablePanel) {
+    tablePanel.style.display = (isCard || isQuick) ? "none" : "block";
+    tablePanel.classList.toggle("btbt-hidden-panel", isCard || isQuick);
+  }
   if (forecastPanel) forecastPanel.hidden = !ncaab || !isCard;
   if (cardPanel) cardPanel.style.display = isCard && !ncaab ? "grid" : "none";
+  if (quickPanel) quickPanel.hidden = !isQuick;
+  if (isQuick) renderQuickPicksView();
 
   if (isCard && !ncaab) {
     renderGameCards();
     document.querySelectorAll(".game-lines-horizontal-scroll").forEach(el => el.remove());
-  } else if (!isCard) {
+  } else if (!isCard && !isQuick) {
     const scrollWrapper = tablePanel?.querySelector(".table-scroll-wrapper");
     if (scrollWrapper && typeof attachGameLinesHorizontalScrollbar === "function") {
       attachGameLinesHorizontalScrollbar(scrollWrapper);
     }
   }
   updatePositiveEvButton();
+  btbtRefreshSpreadCapControl();
 }
 
 let currentMlbView = "odds"; // odds | value | live
@@ -974,9 +1046,11 @@ function renderGameLines() {
   renderNcaabForecastBoard();
 
   if (positiveEvOnly && !currentGameLines.some(gamePassesGameLinesFilters)) {
-    container.innerHTML = `<div class="btbt-ev-empty">${isNcaabGameLines()
-      ? "No legacy spread leans match the selected date and search. Turn off Spread Leans to see all games."
-      : "No matchups with positive estimated EV for the selected date and search. Turn off +EV Only to see the full slate."}</div>`;
+    container.innerHTML = `<div class="btbt-ev-empty">${btbtActiveSpreadCap() !== null
+      ? "No games match your maximum spread and value filters. Raise the cap or turn off the filter."
+      : (isNcaabGameLines()
+        ? "No legacy spread leans match the selected date and search. Turn off Spread Leans to see all games."
+        : "No matchups with positive estimated EV for the selected date and search. Turn off +EV Only to see the full slate.")}</div>`;
     applyGameLinesView();
     return;
   }
@@ -1874,6 +1948,23 @@ if (modelBtn) {
   const refreshBtn = document.getElementById("refreshGameLinesBtn");
   const searchInput = document.getElementById("gameSearchInput");
   const sportSelect = document.getElementById("sportSelect");
+  const spreadSlider = document.getElementById("gameLinesSpreadCap");
+  let spreadCapRefreshTimer = null;
+  if (spreadSlider) {
+    spreadSlider.value = String(btbtSpreadCap);
+    btbtRefreshSpreadCapControl();
+    const updateSpreadCap = () => {
+      btbtSpreadCap = Number(spreadSlider.value);
+      try { window.localStorage.setItem(BTBT_SPREAD_CAP_KEY, String(btbtSpreadCap)); } catch (_) {}
+      btbtRefreshSpreadCapControl();
+      clearTimeout(spreadCapRefreshTimer);
+      spreadCapRefreshTimer = setTimeout(() => {
+        if (currentGameLines.length) renderGameLines();
+      }, 125);
+    };
+    spreadSlider.addEventListener("input", updateSpreadCap);
+    spreadSlider.addEventListener("change", updateSpreadCap);
+  }
 
   const marchMadnessBtn =
   document.getElementById(
@@ -2034,6 +2125,7 @@ if (dateInput && !dateInput.value) {
 
 const tableBtn = document.getElementById("tableViewBtn");
 const cardBtn = document.getElementById("cardViewBtn");
+const quickPicksBtn = document.getElementById("quickPicksViewBtn");
 const cardView = document.getElementById("gameLinesCardView");
 
 const mlbOddsScreenBtn = document.getElementById("mlbOddsScreenBtn");
@@ -2071,6 +2163,11 @@ tableBtn?.addEventListener("click", () => {
 
 cardBtn?.addEventListener("click", () => {
   currentViewMode = "card";
+  applyGameLinesView();
+});
+
+quickPicksBtn?.addEventListener("click", () => {
+  currentViewMode = "quick";
   applyGameLinesView();
 });
 
@@ -2475,63 +2572,79 @@ function sortGames(field) {
 // Export Game Lines EV to CSV
 // =====================================================
 function exportGameLinesCSV() {
-
-  if (!currentGameLines || currentGameLines.length === 0) {
-    alert("No game lines data to export.");
+  if (!currentGameLines.length) {
+    alert("Load games before exporting.");
     return;
   }
-
-  const rows = [];
-
-  rows.push([
-    "Date",
-    "Game",
-    "Team",
-    "Model Spread",
-    "Recommended Edge",
-    "Recommended Bet"
-  ]);
-
-  currentGameLines.forEach(game => {
-
-    rows.push([
-      game.game_date || "",
-      game.event_title || "",
-      game.home_team || "",
-      game.model_spread != null ? (-game.model_spread).toFixed(2) : "",
-      game.recommended_team === game.home_team ? game.recommended_edge : "",
-      game.recommended_team === game.home_team ? "YES" : ""
+  const ncaab = isNcaabGameLines() && !isMarketEvMode(currentGameLines?.[0]?.mode);
+  const sport = document.getElementById("sportSelect")?.value || "";
+  const games = currentGameLines.filter(gamePassesGameLinesFilters);
+  const rows = [[
+    "Date", "Sport", "Game", "Team / Selection to Pick", "Market",
+    "Estimated Win % (approximate for NCAAB)", "Ben's Prediction",
+    "Vegas Consensus / Fair Chance", "Edge", "Edge Unit",
+    "Best Available Line", "Sportsbook", "Offered Odds", "Model Version", "Notes"
+  ]];
+  games.forEach(game => {
+    const common = [game.game_date || "", sport, game.event_title ||
+      `${game.away_team || ""} @ ${game.home_team || ""}`];
+    if (ncaab) {
+      // Export one row per ACTUAL legacy recommended pick, not both sides of every game.
+      if (!hasLegacySpreadLean(game)) return;
+      const info = btbtQuickNcaabModel(game);
+      const picked = game.recommended_team;
+      const bookLines = game.books?.[picked] || {};
+      const available = Object.entries(bookLines)
+        .filter(([key,value]) => visibleBooks.has(key) && btbtFiniteNumber(value) !== null)
+        .sort((a,b) => Number(b[1]) - Number(a[1])); // higher ATS spread is better
+      const best = available[0] || null;
+      rows.push([...common, picked, "Spread (ATS)",
+        info.win === null ? "" : (info.win * 100).toFixed(1),
+        info.modelRaw === null ? "" : info.modelRaw,
+        info.vegasRaw === null ? "" : info.vegasRaw,
+        info.edgeRaw === null ? "" : Math.abs(info.edgeRaw).toFixed(2), "points",
+        best ? Number(best[1]) : "", best ? (bookDisplayNames[best[0]] || best[0]) : "",
+        "", game.model_version || "Legacy Torvik spread model",
+        "NCAAB straight-up win chance is uncalibrated; pick is against spread"
+      ]);
+      return;
+    }
+    // Market sports: export best positive-EV selection per game, same as Quick Picks.
+    const info = btbtQuickMarketModel(game);
+    const row = info.rawRow;
+    if (!row) return;
+    rows.push([...common, info.selection, info.market,
+      info.win === null ? "" : (info.win * 100).toFixed(1),
+      info.modelRaw === null ? "" : (info.modelRaw * 100).toFixed(1),
+      info.vegasRaw === null ? "" : (info.vegasRaw * 100).toFixed(1),
+      info.edgeRaw === null ? "" : Number(info.edgeRaw).toFixed(2), "% EV",
+      row.point ?? "", row.best_book_name || row.best_book || "",
+      row.best_price ?? "", game.model_version || "",
+      "Model/Vegas columns are percentages for selected market; win % only for moneyline"
     ]);
-
-    rows.push([
-      game.game_date || "",
-      game.event_title || "",
-      game.away_team || "",
-      game.model_spread != null ? (game.model_spread).toFixed(2) : "",
-      game.recommended_team === game.away_team ? game.recommended_edge : "",
-      game.recommended_team === game.away_team ? "YES" : ""
-    ]);
-
   });
-
-  const csvContent =
-    "data:text/csv;charset=utf-8," +
-    rows.map(row => row.join(",")).join("\n");
-
+  if (rows.length <= 1) {
+    alert("No recommended picks match the current sport, search, value and spread-cap filters.");
+    return;
+  }
+  // Excel-compatible UTF-8 BOM and proper quoted cells (commas, accents, quotes).
+  // Protect spreadsheet users from formula injection in untrusted team/market labels.
+  const quoteCell = cell => {
+    const value = cell == null ? "" : String(cell);
+    const safe = /^[=+@\t\r\n]/.test(value) ||
+      (/^-/.test(value) && !/^-\d+(\.\d+)?$/.test(value)) ? "'" + value : value;
+    return '"' + safe.replace(/"/g, '""') + '"';
+  };
+  const content = "\ufeff" + rows.map(row => row.map(quoteCell).join(",")).join("\r\n");
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-
-  link.setAttribute("href", encodeURI(csvContent));
-
-  const dateStr = new Date().toISOString().slice(0,10);
-
-  link.setAttribute("download", `game-lines-ev-${dateStr}.csv`);
-
+  link.href = url;
+  link.download = `btbt-quick-picks-${sport}-${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(link);
-
   link.click();
-
-  document.body.removeChild(link);
-
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 
@@ -7402,8 +7515,8 @@ function renderMlbOddsScreen() {
 
   filteredGames.forEach(game => {
     const rows = positiveEvOnly
-      ? (game.market_board || []).filter(isPositiveModelRow)
-      : (game.market_board || []);
+      ? (game.market_board || []).filter(isPositiveModelRow).filter(btbtMarketRowAllowed)
+      : (game.market_board || []).filter(btbtMarketRowAllowed);
 
     if (!rows.length) {
       const tr = document.createElement("tr");
@@ -7686,6 +7799,7 @@ function renderMlbValuePicks() {
 
   filteredGames.forEach(game => {
     const picks = (game.market_picks || [])
+      .filter(btbtMarketRowAllowed)
       .filter(pick => !positiveEvOnly || isPositiveModelRow(pick))
       .filter(pick => {
         const tier = String(
@@ -7892,8 +8006,8 @@ function renderMlbLiveOdds() {
 
   liveGames.forEach(game => {
     const rows = positiveEvOnly
-      ? (game.market_board || []).filter(isPositiveModelRow)
-      : (game.market_board || []);
+      ? (game.market_board || []).filter(isPositiveModelRow).filter(btbtMarketRowAllowed)
+      : (game.market_board || []).filter(btbtMarketRowAllowed);
 
     if (!rows.length) {
       const tr = document.createElement("tr");
@@ -8097,6 +8211,7 @@ function renderGameCards() {
       const sportIcon = isNcaaf ? "🏈" : "⚾";
 
       const projectedRows = board
+        .filter(btbtMarketRowAllowed)
         .filter(row => !positiveEvOnly || isPositiveModelRow(row))
         .filter(row =>
           row &&
@@ -8545,6 +8660,189 @@ function ncaabMarketRows(preview, market, home, away) {
 }
 // NCAAB card layout of the SAME legacy data already used by the table.
 // No independent forecast or probabilities; identical spread and recommendation.
+
+// =====================================================
+// ⚡ QUICK PICKS: one shared slate, third presentation mode
+// =====================================================
+// NCAAB: ATS selection and spreads come directly from the legacy backend model.
+// Win % is ONLY an uncalibrated approximation from its predicted point margin;
+// no probability feeds recommendations, EV, or pick-tracker decisions.
+function btbtQuickNum(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const v = Number(value);
+  return Number.isFinite(v) ? v : null;
+}
+function btbtQuickSigned(value) {
+  const v = btbtQuickNum(value);
+  return v === null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(2)}`;
+}
+function btbtQuickPercent(value) {
+  const v = btbtQuickNum(value);
+  return v !== null && v >= 0 && v <= 1 ? `${(100 * v).toFixed(1)}%` : "—";
+}
+// Smooth standard-normal approximation, not a historically fitted NCAAB model.
+function btbtQuickNormalCdf(x) {
+  const z = Math.abs(x);
+  const t = 1 / (1 + 0.2316419 * z);
+  const density = 0.3989422804 * Math.exp(-z*z / 2);
+  const tail = density * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + 1.330274429 * t))));
+  return x >= 0 ? 1 - tail : tail;
+}
+function btbtQuickNcaabModel(game) {
+  const pick = hasLegacySpreadLean(game) ? game.recommended_team : null;
+  const homeMargin = btbtQuickNum(game.model_spread); // backend HOME minus AWAY projected margin
+  const homeSpread = btbtQuickNum(game.consensus_home);
+  const isHome = pick === game.home_team;
+  const isAway = pick === game.away_team;
+  // No selection is a valid outcome; never label a favorite a betting pick by default.
+  const pickMargin = homeMargin === null || !pick ? null : (isHome ? homeMargin : -homeMargin);
+  // Example display only: assumes a 12-point margin standard deviation.
+  const approximateWin = pickMargin === null ? null : btbtQuickNormalCdf(pickMargin / 12);
+  const vegasSpread = homeSpread === null || !pick ? null : (isHome ? homeSpread : -homeSpread);
+  const modelSpread = homeMargin === null || !pick ? null : (isHome ? -homeMargin : homeMargin);
+  return {
+    selection: pick ? `${pick}` : "No spread lean",
+    market: "Spread · ATS",
+    win: approximateWin,
+    model: modelSpread === null ? "—" : btbtQuickSigned(modelSpread),
+    vegas: vegasSpread === null ? "—" : btbtQuickSigned(vegasSpread),
+    modelRaw: modelSpread, vegasRaw: vegasSpread,
+    edgeRaw: pick ? btbtQuickNum(game.recommended_edge) : null,
+    edge: pick && btbtQuickNum(game.recommended_edge) !== null
+      ? `${Math.abs(Number(game.recommended_edge)).toFixed(2)} pts` : "—",
+    detail: "NCAAB model spread vs sportsbook consensus; straight-up win % is only a rough, uncalibrated conversion.",
+    rawRow: null
+  };
+}
+function btbtQuickMarketModel(game) {
+  const choices = (game.market_picks?.length ? game.market_picks : game.market_board) || [];
+  const qualifying = choices.filter(r => btbtMarketRowAllowed(r) &&
+    !game.is_live && btbtQuickNum(r?.expected_value_pct) > 0);
+  // Prefer the strongest offered +EV selection. This is the same row data as
+  // the regular market table, not a second prediction engine.
+  const row = qualifying.slice().sort((a,b) => Number(b.expected_value_pct)-Number(a.expected_value_pct))[0] || null;
+  if (!row) return {
+    selection: "No positive-EV pick", market: "—", win: null,
+    model: "—", vegas: "—", edge: "—", modelRaw:null, vegasRaw:null, edgeRaw:null, rawRow:null
+  };
+  const kind = String(row.market || "").toLowerCase();
+  const isMoneyline = ["h2h", "moneyline", "ml"].includes(kind) || /moneyline/i.test(String(row.market_label || ""));
+  const model = btbtQuickNum(row.model_probability ?? row.blended_probability);
+  const vegas = btbtQuickNum(row.market_probability);
+  return {
+    selection: String(row.pick_label || "Unnamed selection"),
+    market: String(row.market_label || row.market || "Market"),
+    win: isMoneyline ? model : null, // spread/total hit chance != team win chance
+    model: btbtQuickPercent(model),
+    vegas: btbtQuickPercent(vegas),
+    modelRaw: model, vegasRaw: vegas, edgeRaw: Number(row.expected_value_pct),
+    edge: `${Number(row.expected_value_pct).toFixed(2)}% EV`,
+    detail: "Model and Vegas numbers are outcome probabilities for this market (not predicted final scores).",
+    rawRow: row
+  };
+}
+// Quick Picks sorting is separate from the legacy odds-table sorting.
+// Preserve it when filters rerender the page; reset per sport automatically.
+let btbtQuickSort = { field: null, direction: "desc", sport: null };
+function btbtQuickSortValue(item, field) {
+  const { game, value } = item;
+  if (field === "game") return `${game.away_team || ""} @ ${game.home_team || ""}`;
+  if (field === "selection") return value.selection || "";
+  if (field === "win") return btbtQuickNum(value.win);
+  if (field === "model") return btbtQuickNum(value.modelRaw);
+  if (field === "vegas") return btbtQuickNum(value.vegasRaw);
+  if (field === "edge") return btbtQuickNum(value.edgeRaw);
+  return null;
+}
+function btbtQuickCompare(a, b, field, direction) {
+  const av = btbtQuickSortValue(a, field);
+  const bv = btbtQuickSortValue(b, field);
+  // Unavailable numbers never sort ahead of real predictions.
+  const missingA = av == null || av === "";
+  const missingB = bv == null || bv === "";
+  if (missingA !== missingB) return missingA ? 1 : -1;
+  if (missingA && missingB) return a.originalIndex - b.originalIndex;
+  let difference = 0;
+  if (typeof av === "number" && typeof bv === "number") difference = av - bv;
+  else difference = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
+  return (direction === "asc" ? difference : -difference) || (a.originalIndex - b.originalIndex);
+}
+function renderQuickPicksView() {
+  const panel = document.getElementById("gameLinesQuickPicks");
+  if (!panel) return;
+  const ncaab = isNcaabGameLines() && !isMarketEvMode(currentGameLines?.[0]?.mode);
+  const sport = document.getElementById("sportSelect")?.value || "";
+  if (btbtQuickSort.sport !== sport) btbtQuickSort = { field: null, direction: "desc", sport };
+  const games = currentGameLines.filter(gamePassesGameLinesFilters);
+  const esc = ncaabEscape;
+  const title = ncaab ? "NCAAB · Quick Spread Picks" : "Quick Picks · Model vs Vegas";
+  const desc = ncaab
+    ? "Same Ben's Model spread picks as Table/Card. Win % is an uncalibrated straight-up estimate from the model margin, NOT used to choose the spread."
+    : "Best positive-EV market selection per game, using the existing market rows. Win % is displayed only for a moneyline pick.";
+  const items = games.map((game, originalIndex) => ({
+    game,
+    originalIndex,
+    value: ncaab ? btbtQuickNcaabModel(game) : btbtQuickMarketModel(game)
+  }));
+  if (btbtQuickSort.field) items.sort((a,b) => btbtQuickCompare(a,b,btbtQuickSort.field,btbtQuickSort.direction));
+  const headings = [
+    ["game", "Game"], ["selection", "Team / selection to pick"],
+    ["win", ncaab ? "Est. win %*" : "Win % (ML only)"],
+    ["model", ncaab ? "Ben's spread" : "Model chance"],
+    ["vegas", ncaab ? "Vegas spread" : "Vegas fair chance"],
+    ["edge", ncaab ? "Spread edge" : "Est. EV"]
+  ];
+  const tableHead = headings.map(([field, label]) => {
+    const active = field === btbtQuickSort.field;
+    const direction = active ? btbtQuickSort.direction : null;
+    const symbol = active ? (direction === "asc" ? "▲" : "▼") : "↕";
+    return `<th scope="col" aria-sort="${active ? (direction === "asc" ? "ascending" : "descending") : "none"}"><button type="button" class="btbt-quick-sort${active ? " is-active" : ""}" data-quick-sort="${field}" title="Sort by ${esc(label)}${active ? (direction === "asc" ? " descending" : " ascending") : ""}" aria-label="Sort by ${esc(label)}${active ? (direction === "asc" ? ", currently ascending" : ", currently descending") : ""}"><span>${esc(label)}</span><span class="btbt-quick-sort-icon" aria-hidden="true">${symbol}</span></button></th>`;
+  }).join("") + `<th scope="col">Model</th>`;
+  const rows = items.map(({game,value:v}, index) => {
+    const time = String(game.game_time_display || "Time TBA");
+    const matchup = `${game.away_team || "Away"} @ ${game.home_team || "Home"}`;
+    const modelLabel = ncaab ? "Model spread" : "Model chance";
+    const vegasLabel = ncaab ? "Vegas spread" : "Vegas fair chance";
+    return `<tr data-quick-row="${index}" title="Tap to see model details">
+      <td class="btbt-quick-game"><strong>${esc(matchup)}</strong><small>${esc(time)}</small></td>
+      <td><strong class="btbt-quick-selection">${esc(v.selection)}</strong><small>${esc(v.market)}</small></td>
+      <td class="btbt-quick-win">${btbtQuickPercent(v.win)}</td>
+      <td data-label="${modelLabel}"><strong>${esc(v.model)}</strong></td>
+      <td data-label="${vegasLabel}"><strong>${esc(v.vegas)}</strong></td>
+      <td class="btbt-quick-edge">${esc(v.edge)}</td>
+      <td><button type="button" class="btbt-quick-detail" data-quick-detail="${index}">Details</button></td>
+    </tr>`;
+  });
+  panel.innerHTML = `<div class="btbt-quick-header"><div><p>BTBT · SAME MODEL, SIMPLER VIEW</p><h2>${esc(title)}</h2><span>${esc(desc)}</span></div><strong>${games.length} games</strong></div>
+    <div class="btbt-quick-scroll"><table class="btbt-quick-table"><thead><tr>${tableHead}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="7">No games match the current filters.</td></tr>`}</tbody></table></div>
+    <p class="btbt-quick-footnote">${ncaab
+      ? "* NCAAB win percentage is an illustrative normal-margin conversion (12-point assumed standard deviation), not a trained or backtested probability. Team to pick means against the spread, NOT necessarily the predicted game winner. Model and Vegas spreads are displayed for that same team."
+      : "Win % is the model's straight-up chance for moneyline selections only. For spreads/totals, model and Vegas percentages describe the selected market outcome (such as covering), not winning the game. Unavailable probabilities appear as —."}</p>`;
+  const showRow = index => {
+    const item = items[index];
+    if (!item) return;
+    if (ncaab) window.showModelBreakdown(item.game);
+    else if (item.value.rawRow) showMarketRowBreakdown(item.game, item.value.rawRow);
+  };
+  panel.querySelectorAll("[data-quick-sort]").forEach(button => {
+    button.addEventListener("click", () => {
+      const field = button.dataset.quickSort;
+      // Highest numeric result first; alphabetical columns start A to Z.
+      const initialDirection = ["game", "selection"].includes(field) ? "asc" : "desc";
+      const direction = btbtQuickSort.field === field
+        ? (btbtQuickSort.direction === "asc" ? "desc" : "asc") : initialDirection;
+      btbtQuickSort = { field, direction, sport };
+      renderQuickPicksView();
+    });
+  });
+  panel.querySelectorAll("[data-quick-detail]").forEach(btn => {
+    btn.addEventListener("click", e => {e.stopPropagation(); showRow(Number(btn.dataset.quickDetail));});
+  });
+  panel.querySelectorAll("[data-quick-row]").forEach(row => {
+    row.addEventListener("click", () => showRow(Number(row.dataset.quickRow)));
+  });
+}
+
 function renderNcaabForecastBoard() {
   const board = document.getElementById("ncaabForecastBoard");
   if (!board) return;
