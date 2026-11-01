@@ -9,19 +9,25 @@ let currentViewMode = (window.matchMedia && window.matchMedia("(max-width: 700px
   ? "card" : "table"; // mobile defaults to cards; user selection takes precedence
 let positiveEvOnly = false; // +EV means >0% estimated EV, never point-spread edge
 
+function isNcaabGameLines() {
+  return document.getElementById("sportSelect")?.value === "basketball_ncaab";
+}
+
+// All NCAAB views use the EXISTING backend spread model.
+// Spread-point differences are NOT percentage expected value.
+function hasLegacySpreadLean(game) {
+  return Boolean(game?.recommended_team && game?.recommended_spread != null &&
+    game?.model_spread != null);
+}
+
 function hasPositiveEstimatedEV(game) {
   if (game?.mode === "basketball_model" || game?.sport === "basketball_ncaab") {
-    const markets = game?.ncaab_ev_preview?.markets || {};
-    return ["spreads", "h2h", "totals"].some(kind =>
-      (markets[kind] || []).some(row =>
-        row?.model_ev_pct != null && Number.isFinite(Number(row.model_ev_pct)) && Number(row.model_ev_pct) > 0
-      )
-    );
+    return hasLegacySpreadLean(game); // NCAAB filter is labeled Spread Leans (not +EV)
   }
   const rows = [...(game?.market_board || []), ...(game?.market_picks || [])];
   return rows.some(row => row?.expected_value_pct != null &&
     Number.isFinite(Number(row.expected_value_pct)) && Number(row.expected_value_pct) > 0 &&
-    !game?.is_live); // live price edge is not an independently modeled +EV
+    !game?.is_live);
 }
 
 function gamePassesGameLinesFilters(game) {
@@ -41,7 +47,13 @@ function updatePositiveEvButton() {
   if (!btn) return;
   btn.setAttribute("aria-pressed", String(positiveEvOnly));
   btn.classList.toggle("active", positiveEvOnly);
-  btn.textContent = positiveEvOnly ? "✓ +EV Only" : "+EV Only";
+  const ncaab = isNcaabGameLines();
+  btn.textContent = ncaab
+    ? (positiveEvOnly ? "✓ Spread Leans" : "Spread Leans")
+    : (positiveEvOnly ? "✓ +EV Only" : "+EV Only");
+  btn.title = ncaab
+    ? "Show only legacy-model recommended spreads. These are point edges, not calculated +EV percentages."
+    : "Show only matchups with positive estimated EV from priced markets.";
 }
 
 function applyGameLinesView() {
@@ -717,7 +729,7 @@ if (modeNote) {
   }
   else {
     modeNote.innerHTML =
-      "🏀 NCAAB Game Lines: Table = traditional sportsbook spread comparison plus best estimated +EV; Card = projected scores, spread/moneyline/total prices. Tap Ben’s Model Details for the Torvik + CBBD inputs. EV is experimental, not a recommendation.";
+      "🏀 NCAAB uses one Torvik-based legacy spread model in both Table and Card view. Spread Leans are recommendations based on spread-point differences, not verified +EV percentages.";
   }
 }
 
@@ -962,7 +974,9 @@ function renderGameLines() {
   renderNcaabForecastBoard();
 
   if (positiveEvOnly && !currentGameLines.some(gamePassesGameLinesFilters)) {
-    container.innerHTML = '<div class="btbt-ev-empty">No matchups with a positive estimated EV for the selected date and search. Turn off +EV Only to see the full slate.</div>';
+    container.innerHTML = `<div class="btbt-ev-empty">${isNcaabGameLines()
+      ? "No legacy spread leans match the selected date and search. Turn off Spread Leans to see all games."
+      : "No matchups with positive estimated EV for the selected date and search. Turn off +EV Only to see the full slate."}</div>`;
     applyGameLinesView();
     return;
   }
@@ -1036,7 +1050,6 @@ function renderGameLines() {
       <span class="info-icon" title="From the original point-spread model; NOT an EV percentage or backtested pick.">ⓘ</span>
     </th>
 
-    <th>Best Model +EV*</th>
     <th class="add-col">Add to Pick Tracker</th>
 
       </tr>
@@ -1294,18 +1307,6 @@ if (team === game.away_team) {
 
 
 
-// Best price-based NCAAB EV opportunity (independent from the older point-edge model).
-const pricedOptions = ["spreads", "h2h", "totals"].flatMap(kind =>
-  (game.ncaab_ev_preview?.markets?.[kind] || []).map(o => ({...o, market: kind}))
-);
-const bestPriced = pricedOptions
-  .filter(o => o.model_ev_pct != null && Number.isFinite(Number(o.model_ev_pct)) && Number(o.model_ev_pct) > 0)
-  .sort((a, b) => Number(b.model_ev_pct) - Number(a.model_ev_pct))[0];
-const bestPricedLabel = bestPriced ? `
-  <strong class="btbt-positive-ev-number">${ncaabSigned(bestPriced.model_ev_pct, 2)}%*</strong>
-  <small>${ncaabEscape(bestPriced.selection)}${bestPriced.line == null ? "" : " " + ncaabSigned(bestPriced.line)} · ${ncaabEscape(bestPriced.book_name || bestPriced.book || "")}</small>
-  <small>${ncaabOdds(bestPriced.price)} · ${ncaabEscape(bestPriced.market)}</small>` : "—";
-
 // Render
 rowHTML += `
   <td class="model-col">${modelCell}<button type="button" class="ncaab-table-detail-btn" aria-label="Open Ben's model details for ${ncaabEscape(game.event_title)}">Model details</button></td>
@@ -1317,7 +1318,6 @@ rowHTML += `
   <td class="recommend-col">
     ${recommendationCell}
   </td>
-  <td class="btbt-positive-ev-cell">${bestPricedLabel}</td>
 
   <td class="add-col">
     <button class="add-to-slip-btn">➕ Add</button>
@@ -8543,58 +8543,84 @@ function ncaabMarketRows(preview, market, home, away) {
     </div>`;
   }).join("");
 }
+// NCAAB card layout of the SAME legacy data already used by the table.
+// No independent forecast or probabilities; identical spread and recommendation.
 function renderNcaabForecastBoard() {
   const board = document.getElementById("ncaabForecastBoard");
   if (!board) return;
-  const sport = document.getElementById("sportSelect")?.value;
-  if (sport !== "basketball_ncaab" || !Array.isArray(currentGameLines) || !currentGameLines.length) {
+  if (!isNcaabGameLines() || !Array.isArray(currentGameLines) || !currentGameLines.length) {
     board.hidden = true;
     board.innerHTML = "";
     document.body.classList.remove("ncaab-model-mode");
     return;
   }
-  board.hidden = false;
   document.body.classList.add("ncaab-model-mode");
   const matching = currentGameLines.filter(gamePassesGameLinesFilters);
-  const modeled = matching.filter(g => g.ncaab_ev_preview?.model);
-  const marketCount = modeled.reduce((n,g) => n + (g.ncaab_ev_preview?.available_markets?.length || 0), 0);
+  const withModel = matching.filter(g => g.model_spread != null);
+  const withLean = matching.filter(hasLegacySpreadLean);
+  const signed = v => v != null && Number.isFinite(Number(v)) ? ncaabSigned(v,2) : "—";
   const gamesHtml = matching.map((game, i) => {
-    const data = game.ncaab_ev_preview;
-    const model = data?.model;
-    const fmt = (val) => Number.isFinite(Number(val)) && val != null ? Number(val).toFixed(1) : "—";
-    const chance = model ? `${(Number(model.home_win_probability) * 100).toFixed(1)}%` : "—";
-    const time = ncaabEscape(game.game_time_display || game.game_time || "Time TBA");
-    const summaries = model ? `<div class="ncaab-prediction">
-      <div><span>BTBT predicted score</span><strong>${fmt(model.away_points)} – ${fmt(model.home_points)}</strong><small>${ncaabEscape(game.away_team)} / ${ncaabEscape(game.home_team)}</small></div>
-      <div><span>Home win chance</span><strong>${chance}</strong><small>Experimental · uncalibrated</small></div>
-      <div><span>Projected total</span><strong>${fmt(model.total)}</strong><small>${fmt(model.pace)} estimated possessions</small></div>
-    </div>` : `<div class="ncaab-unavailable">Torvik matchup data unavailable. No prediction has been generated for this game.</div>`;
-    const marketsHtml = model ? `<div class="ncaab-market-triple">
-      <section><h4>Spread</h4>${ncaabMarketRows(data,"spreads",game.home_team,game.away_team)}</section>
-      <section><h4>Moneyline</h4>${ncaabMarketRows(data,"h2h",game.home_team,game.away_team)}</section>
-      <section><h4>Total</h4>${ncaabMarketRows(data,"totals",game.home_team,game.away_team)}</section>
-    </div>` : "";
-    const cbbdInfo = model ? Object.entries(model.form || {}).map(([side,f]) => `${side}: ${ncaabEscape(f.source || "not available")}${f.games ? ` (${Number(f.games)} games, ${Number(f.weight_pct)}% weight)` : ""}`).join(" · ") : "";
-    return `<article class="ncaab-forecast-card" ${i >= 8 ? "data-ncaab-extra=1 hidden" : ""}>
-      <div class="ncaab-match-head"><div><div class="ncaab-mini-label">${time}</div><h3>${ncaabEscape(game.away_team)} <span>@</span> ${ncaabEscape(game.home_team)}</h3></div><span class="ncaab-status">Experimental model</span></div>
-      ${summaries}
-      <button type="button" class="ncaab-detail-btn" data-ncaab-detail="${i}">🧠 Ben's Model Details</button>
-      ${marketsHtml}
-      ${model ? `<details class="ncaab-method-note"><summary>How this projection was calculated</summary><p>Torvik offense, defense and tempo form the baseline. CollegeBasketballData scoring provides only a small optional adjustment. Probability and EV use provisional game-score distributions, not fitted win-rate calibration.</p><p>${cbbdInfo}</p></details>` : ""}
+    const homeModelLine = game.model_spread == null ? "—" : signed(-Number(game.model_spread));
+    const awayModelLine = game.model_spread == null ? "—" : signed(game.model_spread);
+    const recommended = hasLegacySpreadLean(game)
+      ? `Take ${ncaabEscape(game.recommended_team)} ${signed(game.recommended_spread)}`
+      : "No spread lean";
+    const bookRows = [...visibleBooks].map(book => {
+      const h = game.books?.[game.home_team]?.[book];
+      const a = game.books?.[game.away_team]?.[book];
+      if (h == null && a == null) return "";
+      return `<div class="btbt-unified-book-row"><strong>${ncaabEscape(bookDisplayNames?.[book] || book)}</strong>
+        <span>${ncaabEscape(game.away_team)} ${signed(a)}</span>
+        <span>${ncaabEscape(game.home_team)} ${signed(h)}</span></div>`;
+    }).filter(Boolean).join("");
+    return `<article class="ncaab-forecast-card" ${i >= 8 ? 'data-ncaab-extra="1" hidden' : ""}>
+      <div class="ncaab-match-head"><div><div class="ncaab-mini-label">${ncaabEscape(game.game_time_display || "Time TBA")}</div>
+      <h3>${ncaabEscape(game.away_team)} <span>@</span> ${ncaabEscape(game.home_team)}</h3></div>
+      <span class="ncaab-status">Legacy spread model</span></div>
+      <div class="ncaab-prediction btbt-unified-prediction">
+        <div><span>Ben's Model · Away</span><strong>${awayModelLine}</strong><small>${ncaabEscape(game.away_team)}</small></div>
+        <div><span>Ben's Model · Home</span><strong>${homeModelLine}</strong><small>${ncaabEscape(game.home_team)}</small></div>
+        <div><span>Consensus · Home</span><strong>${signed(game.consensus_home)}</strong><small>Sportsbook spread</small></div>
+      </div>
+      <div class="btbt-unified-recommendation ${hasLegacySpreadLean(game) ? "has-lean" : ""}">
+        <div><span>Legacy Spread Lean</span><strong>${recommended}</strong></div>
+        <div><span>Consensus edge</span><strong>${game.recommended_edge != null && hasLegacySpreadLean(game) ? `${Math.abs(Number(game.recommended_edge)).toFixed(2)} pts` : "—"}</strong></div>
+      </div>
+      <div class="btbt-unified-actions">
+        <button type="button" class="ncaab-detail-btn" data-ncaab-detail="${i}">🧠 Ben's Model Details</button>
+        <button type="button" class="btbt-unified-add" data-ncaab-add="${i}">＋ Add to Pick Tracker</button>
+      </div>
+      <details class="btbt-unified-books"><summary>Sportsbook spreads (${bookRows ? "tap to compare" : "unavailable"})</summary>
+        ${bookRows || '<p>There are no sportsbook spreads to compare.</p>'}</details>
     </article>`;
   }).join("");
-  board.innerHTML = `<div class="ncaab-forecast-head"><div><div class="ncaab-kicker">BTBT · NCAAB GAME MODEL</div><h2>Game forecasts & sportsbook value</h2><p>Independent projected scores against actual spreads, moneylines and totals.</p></div><div class="ncaab-metrics"><span><strong>${matching.length}</strong> games</span><span><strong>${modeled.length}</strong> modeled</span><span><strong>${marketCount}</strong> markets quoted</span></div></div>
-    <p class="ncaab-disclaimer">* Estimated EV is experimental, not backtested or a recommendation. Prices are shown only if The Odds API supplied them. Last-season player box scores receive a minimal weight because rosters can change.</p>
-    <div class="ncaab-forecast-grid">${gamesHtml || `<p class="btbt-ev-empty">${positiveEvOnly ? "No +EV NCAAB matchups at the prices currently available. Turn off +EV Only to see all games." : "No games match the current search."}</p>`}</div>
+  board.innerHTML = `<div class="ncaab-forecast-head"><div><div class="ncaab-kicker">BTBT · NCAAB SPREAD MODEL</div>
+    <h2>Ben's Model · Spread Leans</h2><p>Same model, sportsbook lines and recommendations in Table and Card views.</p></div>
+    <div class="ncaab-metrics"><span><strong>${matching.length}</strong> games</span>
+    <span><strong>${withModel.length}</strong> modeled</span><span><strong>${withLean.length}</strong> spread leans</span></div></div>
+    <p class="ncaab-disclaimer">Spread edge is measured in <strong>points</strong>, not expected-value percent. No separate moneyline or totals prediction is used in this view.</p>
+    <div class="ncaab-forecast-grid">${gamesHtml || `<p class="btbt-ev-empty">${positiveEvOnly ? "No legacy-model spread leans match your filters." : "No games match your search."}</p>`}</div>
     ${matching.length > 8 ? `<button type="button" id="ncaabMoreForecasts" class="ncaab-show-more" aria-expanded="false">Show all ${matching.length} games</button>` : ""}`;
   board.querySelectorAll("[data-ncaab-detail]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const index = Number(btn.dataset.ncaabDetail);
-      if (matching[index]) window.showNcaabGameBreakdown(matching[index]);
+      const game = matching[Number(btn.dataset.ncaabDetail)];
+      if (game) window.showModelBreakdown(game);
+    });
+  });
+  // Reuse the table's existing tracker handler, so both views have identical behavior.
+  board.querySelectorAll("[data-ncaab-add]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.ncaabAdd);
+      const game = matching[index];
+      if (!game) return;
+      const teamIndex = game.recommended_team === game.away_team ? 1 : 0;
+      const tableButtons = document.querySelectorAll("#gameLinesResults tbody .add-to-slip-btn");
+      const tableButton = tableButtons[index * 2 + teamIndex];
+      if (tableButton) tableButton.click();
     });
   });
   const more = board.querySelector("#ncaabMoreForecasts");
-  if (more) more.addEventListener("click", () => {
+  more?.addEventListener("click", () => {
     const expanded = more.getAttribute("aria-expanded") !== "true";
     board.querySelectorAll('[data-ncaab-extra="1"]').forEach(el => el.hidden = !expanded);
     more.setAttribute("aria-expanded", String(expanded));
@@ -8602,78 +8628,63 @@ function renderNcaabForecastBoard() {
   });
 }
 
-
 // =====================================================
 // NCAAB Game Lines: actionable transparent per-game detail
 // =====================================================
+// Details use the SAME original Torvik spread outputs as table and cards.
 window.showNcaabGameBreakdown = function(game) {
   const modal = document.getElementById("modelBreakdownModal");
   const content = document.getElementById("modelBreakdownContent");
   if (!modal || !content || !game) return;
-  const preview = game.ncaab_ev_preview || {};
-  const model = preview.model || {};
-  const debug = game.debug || {};
+  const d = game.debug || {};
   const esc = ncaabEscape;
-  const fmt = (v, digits=1, suffix="") => v != null && Number.isFinite(Number(v))
-    ? `${Number(v).toFixed(digits)}${suffix}` : "Unavailable";
-  const prob = v => v != null && Number.isFinite(Number(v))
-    ? `${(Number(v) * 100).toFixed(1)}%` : "Unavailable";
-  const source = (side, label) => {
-    const row = model.form?.[side] || {};
-    return `<div class="btbt-ncaab-detail-form"><strong>${esc(label)}</strong>
-      <span>${esc(row.source || "No matched scoring history")}</span>
-      <small>Games used: ${fmt(row.games, 0)} · Weight: ${fmt(row.weight_pct, 1, "%")}</small></div>`;
-  };
-  const marketName = {spreads: "Spreads", h2h: "Moneyline", totals: "Total points"};
-  const markets = ["spreads", "h2h", "totals"].map(kind => {
-    const items = (preview.markets?.[kind] || []);
-    return `<section class="btbt-ncaab-detail-section"><h3>${marketName[kind]}</h3>
-      ${items.length ? `<div class="btbt-ncaab-detail-market">${items.map(r => `
-        <div><span>${esc(r.selection)}${r.line == null ? "" : " " + ncaabSigned(r.line)}</span>
-          <strong>${esc(r.book_name || r.book || "—")} · ${ncaabOdds(r.price)}</strong>
-          <small>Model chance ${prob(r.model_probability)} · Est. EV ${fmt(r.model_ev_pct, 2, "%")}
-          ${r.book_novig_pct != null ? " · No-vig (one book): " + fmt(r.book_novig_pct,1,"%") : ""}</small></div>`).join("")}</div>`
-        : `<p class="btbt-ncaab-detail-missing">No sportsbook quotes available for this market.</p>`}</section>`;
+  const value = (v, digits=2) => v != null && Number.isFinite(Number(v)) ? Number(v).toFixed(digits) : "—";
+  const signed = v => v != null && Number.isFinite(Number(v)) ? ncaabSigned(v,2) : "—";
+  const homeLine = game.model_spread == null ? null : -Number(game.model_spread);
+  const awayLine = game.model_spread == null ? null : Number(game.model_spread);
+  const bookRows = [...visibleBooks].map(book => {
+    const home = game.books?.[game.home_team]?.[book];
+    const away = game.books?.[game.away_team]?.[book];
+    if (home == null && away == null) return "";
+    return `<tr><td>${esc(bookDisplayNames?.[book] || book)}</td><td>${signed(away)}</td><td>${signed(home)}</td></tr>`;
   }).join("");
-  const mainModelAvailable = model.home_points != null && model.away_points != null;
   content.innerHTML = `<div class="btbt-ncaab-detail">
     <div class="btbt-ncaab-detail-hero"><p>BEN'S MODEL · COLLEGE BASKETBALL</p>
       <h2>${esc(game.away_team)} @ ${esc(game.home_team)}</h2>
-      <small>Game-level score projection · Experimental / not backtested</small></div>
-    ${mainModelAvailable ? `<div class="btbt-ncaab-detail-stats">
-      <div><span>Projected final · Away / Home</span><strong>${fmt(model.away_points)} – ${fmt(model.home_points)}</strong></div>
-      <div><span>Home win probability</span><strong>${prob(model.home_win_probability)}</strong></div>
-      <div><span>Home projected margin</span><strong>${ncaabSigned(model.home_margin)} pts</strong></div>
-      <div><span>Projected total</span><strong>${fmt(model.total)} pts</strong></div>
-      <div><span>Projected pace</span><strong>${fmt(model.pace)} possessions</strong></div>
-    </div>` : `<p class="btbt-ncaab-detail-missing">No valid Torvik matchup projection is available for this event.</p>`}
-    <section class="btbt-ncaab-detail-section"><h3>Torvik team inputs</h3>
-      <div class="btbt-ncaab-detail-scroll"><table><thead><tr>
-        <th>Rating / metric</th><th>${esc(game.away_team)}</th><th>${esc(game.home_team)}</th>
-      </tr></thead><tbody>
-        <tr><td>Adj. offense / 100 poss.</td><td>${fmt(debug.away_adj_off)}</td><td>${fmt(debug.home_adj_off)}</td></tr>
-        <tr><td>Adj. defense / 100 poss.</td><td>${fmt(debug.away_adj_def)}</td><td>${fmt(debug.home_adj_def)}</td></tr>
-        <tr><td>Adjusted tempo</td><td>${fmt(debug.away_tempo)}</td><td>${fmt(debug.home_tempo)}</td></tr>
-        <tr><td>Barthag</td><td>${fmt(debug.away_barthag,3)}</td><td>${fmt(debug.home_barthag,3)}</td></tr>
-        <tr><td>Team mapping</td><td>${esc(debug.away_mapping || "Unavailable")}</td><td>${esc(debug.home_mapping || "Unavailable")}</td></tr>
-      </tbody></table></div>
-      <p>Torvik opponent-adjusted efficiency and tempo establish the projected score. Baseline efficiency is 105 points per 100 possessions, with a provisional 2.5-point total home/away swing. These coefficients are not yet calibrated on an out-of-sample season.</p>
+      <small>Original Torvik-based spread model · identical to Table and Card</small></div>
+    <div class="btbt-ncaab-detail-stats">
+      <div><span>Ben's Model · Away spread</span><strong>${signed(awayLine)}</strong></div>
+      <div><span>Ben's Model · Home spread</span><strong>${signed(homeLine)}</strong></div>
+      <div><span>Consensus · Home spread</span><strong>${signed(game.consensus_home)}</strong></div>
+      <div><span>Legacy Spread Lean</span><strong>${hasLegacySpreadLean(game) ? `Take ${esc(game.recommended_team)} ${signed(game.recommended_spread)}` : "No lean"}</strong></div>
+      <div><span>Recommended edge in points</span><strong>${hasLegacySpreadLean(game) ? value(game.recommended_edge) + " pts" : "—"}</strong></div>
+    </div>
+    <section class="btbt-ncaab-detail-section"><h3>Torvik efficiency and tempo</h3>
+      <div class="btbt-ncaab-detail-scroll"><table><thead><tr><th>Input</th><th>${esc(game.away_team)}</th><th>${esc(game.home_team)}</th></tr></thead><tbody>
+      <tr><td>Team mapped</td><td>${esc(d.away_mapping ?? "Not provided")}</td><td>${esc(d.home_mapping ?? "Not provided")}</td></tr>
+      <tr><td>Adjusted offense</td><td>${value(d.away_adj_off,1)}</td><td>${value(d.home_adj_off,1)}</td></tr>
+      <tr><td>Adjusted defense</td><td>${value(d.away_adj_def,1)}</td><td>${value(d.home_adj_def,1)}</td></tr>
+      <tr><td>Tempo</td><td>${value(d.away_tempo,1)}</td><td>${value(d.home_tempo,1)}</td></tr>
+      <tr><td>Barthag</td><td>${value(d.away_barthag,4)}</td><td>${value(d.home_barthag,4)}</td></tr>
+      </tbody></table></div></section>
+    <section class="btbt-ncaab-detail-section"><h3>Existing model calculation</h3>
+      <div class="btbt-ncaab-detail-scroll"><table><tbody>
+        <tr><td>Efficiency margin</td><td>${value(d.eff_margin)}</td></tr>
+        <tr><td>Tempo offset</td><td>${value(d.tempo_offset)}</td></tr>
+        <tr><td>Intercept contribution</td><td>${signed(d.intercept)}</td></tr>
+        <tr><td>Efficiency contribution</td><td>${signed(d.eff_contrib)}</td></tr>
+        <tr><td>Tempo contribution</td><td>${signed(d.tempo_contrib)}</td></tr>
+        <tr><td>Backend model spread</td><td>${signed(d.model_spread)}</td></tr>
+        <tr><td>Model error</td><td>${signed(d.model_error)}</td></tr>
+      </tbody></table></div></section>
+    <section class="btbt-ncaab-detail-section"><h3>Available sportsbook spreads</h3>
+      <div class="btbt-ncaab-detail-scroll"><table><thead><tr><th>Sportsbook</th><th>Away</th><th>Home</th></tr></thead><tbody>
+      ${bookRows || '<tr><td colspan="3">No available sportsbook spreads</td></tr>'}
+      </tbody></table></div></section>
+    <section class="btbt-ncaab-detail-section"><h3>CollegeBasketballData (CBBD)</h3>
+      <p>Your CBBD player-game history is stored for analytics and the player-prop model. The existing Game Lines legacy spread projection is based on its Torvik/market inputs; CBBD scoring is <strong>not represented as a separate adjustment here</strong> because the backend has not confirmed that integration for this model.</p>
     </section>
-    <section class="btbt-ncaab-detail-section"><h3>CollegeBasketballData team-scoring adjustments</h3>
-      <div class="btbt-ncaab-detail-form-grid">
-        ${source("away",game.away_team)}
-        ${source("home",game.home_team)}
-      </div>
-      <p>Only team game points derived from the imported player game logs affect this forecast. Prior-season scoring has a 4% weight when 3+ usable games exist; current-season scoring can rise to 18% as games accumulate, with each adjustment capped at 2 points. Individual player projections and injury data are <strong>not</strong> part of this game model.</p>
-    </section>
-    <section class="btbt-ncaab-detail-section"><h3>Existing legacy spread model (separate)</h3>
-      <div class="btbt-ncaab-detail-stats small">
-        <div><span>Legacy projected home margin</span><strong>${game.model_spread != null ? ncaabSigned(game.model_spread) + " pts" : "Unavailable"}</strong></div>
-        <div><span>Market consensus home spread</span><strong>${game.consensus_home != null ? ncaabSigned(game.consensus_home) : "Unavailable"}</strong></div>
-      </div><p>This legacy spread calculation is displayed for comparison only. Its prediction is <strong>not</strong> combined with the independent score projection used to calculate the experimental EV below.</p>
-    </section>
-    ${markets}
-    <div class="btbt-ncaab-detail-warning">EV is calculated using real sportsbook odds and an assumed normal distribution (11.5 points spread uncertainty; 15 points total uncertainty). These are provisional assumptions, not validated probabilities or betting recommendations. Lines can change.</div>
+    <div class="btbt-ncaab-detail-warning">A spread-point difference is not a calculated probability or +EV percentage. Table and Card display the same prediction; neither is a backtested guarantee.</div>
   </div>`;
   modal.classList.remove("hidden");
   modal.style.display = "flex";

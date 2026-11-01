@@ -1418,7 +1418,7 @@ body.btbt-terminal .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
   .ncaab-prediction span,.ncaab-prediction small {font-size:9px;}
   .ncaab-market-option {gap:5px;grid-template-columns:minmax(0,1fr) 55px 63px;}
   .ncaab-market-option strong {font-size:12px;}
-  body.ncaab-model-mode:not(.ncaab-show-classic) #gameLinesResults {display:none !important;}
+  /* Table and Card visibility is controlled by applyGameLinesView, including on mobile. */
   .ncaab-toggle-grid {display:block;}
   .ncaab-disclaimer {font-size:11px;}
 }
@@ -2073,4 +2073,39 @@ body.btbt-terminal #modelBreakdownModal #modelBreakdownContent .btbt-ncaab-detai
   color: #496581 !important;
   -webkit-text-fill-color: #496581 !important;
   opacity: 1 !important;
+}
+
+/* v0.5: One legacy NCAAB spread model across both views */
+body.btbt-terminal .btbt-unified-prediction { margin-bottom: 11px; }
+body.btbt-terminal .btbt-unified-recommendation {
+  display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr);
+  gap:9px; margin:9px 0 12px;
+}
+body.btbt-terminal .btbt-unified-recommendation>div {
+  background:#f4f7fb; border:1px solid #dbe5f1;
+  border-radius:9px; padding:10px; min-width:0;
+}
+body.btbt-terminal .btbt-unified-recommendation.has-lean>div:first-child {
+  background:#e8f8ee; border-color:#a6dbc0;
+}
+body.btbt-terminal .btbt-unified-recommendation span { display:block; color:#526b86; font-size:11px; margin-bottom:4px; }
+body.btbt-terminal .btbt-unified-recommendation strong { display:block; color:#17314e; font-size:15px; overflow-wrap:anywhere; }
+body.btbt-terminal .btbt-unified-actions {display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 10px;}
+body.btbt-terminal .btbt-unified-actions button {min-height:42px; border-radius:8px; font-weight:750; cursor:pointer;}
+body.btbt-terminal .btbt-unified-actions .ncaab-detail-btn {margin:0!important;}
+body.btbt-terminal .btbt-unified-add {border:1px solid #b7d5f3; color:#1b51a0; background:#ecf5ff; font-size:12px;}
+@media(max-width:420px) {body.btbt-terminal .btbt-unified-actions {grid-template-columns:1fr;}}
+body.btbt-terminal .btbt-unified-books { margin-top:8px; border-top:1px solid #dce5ef; padding-top:9px; }
+body.btbt-terminal .btbt-unified-books summary { color:#2159ac; font-size:12px; font-weight:750; cursor:pointer; min-height:36px; }
+body.btbt-terminal .btbt-unified-book-row {
+  display:grid; grid-template-columns:minmax(90px,.65fr) minmax(0,1fr) minmax(0,1fr);
+  gap:8px; padding:8px 3px; border-top:1px solid #e2e9f1;
+  color:#203a58; font-size:11px; align-items:center;
+}
+body.btbt-terminal .btbt-unified-book-row span { overflow-wrap:anywhere; }
+body.btbt-terminal .ncaab-forecast-card .ncaab-status { color:#1e509b!important; background:#eaf3ff!important; border-color:#bbd4f1!important; }
+@media(max-width:420px) {
+ body.btbt-terminal .btbt-unified-recommendation { grid-template-columns:1fr; }
+ body.btbt-terminal .btbt-unified-book-row {grid-template-columns:1fr 1fr;}
+ body.btbt-terminal .btbt-unified-book-row strong {grid-column:1/-1;}
 }
