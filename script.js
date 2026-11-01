@@ -5784,14 +5784,11 @@ if (!hasPropsAccess) {
       }
     }
   );
-    const text = await res.text();
-    console.log("📦 Raw API Response:", text);
-
     if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
 
     let allData;
     try {
-      allData = JSON.parse(text);
+      allData = await res.json();
     } catch (parseErr) {
       console.error("❌ JSON Parse Error:", parseErr);
       progressText.textContent = "❌ Failed to parse API response.";
@@ -5812,8 +5809,8 @@ if (!hasPropsAccess) {
     // Keep sportsbook-only alternate rows in fullDataset so the no-vig
     // engine can price PrizePicks Goblin/Demon lines. CurveOnly rows
     // are calculation helpers and must never appear as user-facing picks.
-    window.fullDataset =
-      JSON.parse(JSON.stringify(cleanedData));
+    // Read-only calculation source: avoid doubling memory/CPU through JSON deep copy.
+    window.fullDataset = cleanedData;
 
     let visibleData =
       cleanedData.filter(
@@ -8712,10 +8709,16 @@ const isNFLPlayerProp =
     true;
 
 
+const isNCAABPlayerProp =
+  selectedSport === "basketball_ncaab" &&
+  value && value !== "None" &&
+  row.Market?.startsWith("player_");
+
 const hasEdgeProfile =
   isMLBPlayerProp ||
   isNCAAFPlayerProp ||
-  isNFLPlayerProp;
+  isNFLPlayerProp ||
+  isNCAABPlayerProp;
 
   td.innerHTML = `
     <div class="player-cell-with-edge">
@@ -10462,12 +10465,156 @@ function exportToExcel() {
 // ===================================================
 // 🏈 Enhanced Game Lines Table Renderer
 // ===================================================
+function btbtHtml(value) {
+  return String(value ?? "—").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function btbtNumber(value, digits = 1, suffix = "") {
+  if (value === null || value === undefined || value === "") return "—";
+  const n = Number(value);
+  return Number.isFinite(n) ? `${n.toFixed(digits)}${suffix}` : "—";
+}
+
+function btbtDetailGrid(values) {
+  return `<div class="btbt-detail-grid">${values.map(([label, value]) =>
+    `<div class="btbt-detail-metric"><span>${btbtHtml(label)}</span><strong>${btbtHtml(value)}</strong></div>`
+  ).join("")}</div>`;
+}
+
+function btbtNcaabDetail(game) {
+  const d = game.debug || {};
+  const books = game.books || {};
+  const rows = Object.entries(books).flatMap(([team, markets]) =>
+    Object.entries(markets || {}).map(([book, spread]) =>
+      `<tr><td>${btbtHtml(team)}</td><td>${btbtHtml(game.book_names?.[book] || book)}</td><td>${btbtHtml(btbtNumber(spread))}</td></tr>`)
+  ).join("");
+  const available = d.home_found !== false && d.away_found !== false;
+  return `
+    <h4>Model vs. sportsbook consensus</h4>
+    ${btbtDetailGrid([
+      ["Home model margin", btbtNumber(game.model_spread, 2)],
+      ["Home market spread", btbtNumber(game.consensus_home, 2)],
+      ["Home model edge (points)", btbtNumber(game.edge_home, 2)],
+      ["Away model edge (points)", btbtNumber(game.edge_away, 2)],
+      ["Recommended side", game.recommended_team || "No edge"],
+      ["Model version", d.model_version || "Torvik"],
+    ])}
+    <h4>Torvik efficiency and pace</h4>
+    ${btbtDetailGrid([
+      ["Home adj. offense", btbtNumber(d.home_adj_off)],
+      ["Home adj. defense", btbtNumber(d.home_adj_def)],
+      ["Away adj. offense", btbtNumber(d.away_adj_off)],
+      ["Away adj. defense", btbtNumber(d.away_adj_def)],
+      ["Home tempo", btbtNumber(d.home_tempo)],
+      ["Away tempo", btbtNumber(d.away_tempo)],
+      ["Efficiency margin", btbtNumber(d.eff_margin, 2)],
+      ["Tempo offset", btbtNumber(d.tempo_offset, 2)],
+      ["Home Barthag", btbtNumber(d.home_barthag, 3)],
+      ["Away Barthag", btbtNumber(d.away_barthag, 3)],
+    ])}
+    <h4>Explainable model contributions (home-margin points)</h4>
+    ${btbtDetailGrid([
+      ["Intercept", btbtNumber(d.intercept_contribution, 2)],
+      ["Vegas contribution", btbtNumber(d.vegas_contribution, 2)],
+      ["Efficiency contribution", btbtNumber(d.eff_contribution, 2)],
+      ["Tempo contribution", btbtNumber(d.tempo_contribution, 2)],
+      ["Torvik reference spread", btbtNumber(d.torvik_spread, 2)],
+    ])}
+    <p class="btbt-explain">Positive model margin favors the home team; negative favors the away team. Sportsbook spreads use the opposite sign from expected winning margin. Contributions explain the current model, not a guaranteed result.</p>
+    ${available ? "" : `<p class="btbt-explain">Some team rating mappings are missing. Verify team aliases before relying on this projection.</p>`}
+    <h4>Live sportsbook spread comparison</h4>
+    ${rows ? `<div class="btbt-scroll"><table class="btbt-book-table"><thead><tr><th>Team</th><th>Book</th><th>Spread</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p>Spread prices are not available for this matchup.</p>`}
+  `;
+}
+
+function btbtMarketDetail(game) {
+  const context = game.model_context || {};
+  const picks = Array.isArray(game.market_picks) ? game.market_picks : [];
+  return `
+    <h4>Model and market diagnostics</h4>
+    ${btbtDetailGrid([
+      ["Method", game.model_version || "Market consensus"],
+      ["Model status", context.model_status || "Market only"],
+      ["Confidence", context.confidence_label || "Market confidence"],
+      ["Market picks", String(picks.length)],
+      ["Market board selections", String(game.market_board?.length || 0)],
+      ["Home projected spread", btbtNumber(context.projected_home_spread, 2)],
+      ["Sportsbook home spread", btbtNumber(context.market_home_spread, 2)],
+    ])}
+    <h4>Top value selections</h4>
+    ${picks.length ? `<div class="btbt-scroll"><table class="btbt-book-table"><thead><tr><th>Selection</th><th>Market</th><th>EV</th><th>Confidence</th></tr></thead><tbody>${picks.slice(0, 10).map(p => `
+      <tr><td>${btbtHtml(p.pick_label)}</td><td>${btbtHtml(p.market_label)}</td><td>${btbtHtml(btbtNumber(p.expected_value_pct, 1, "%"))}</td><td>${btbtHtml(p.model_confidence)}</td></tr>`).join("")}</tbody></table></div>` : "<p>No qualifying pregame value selections.</p>"}
+    <p class="btbt-explain">The market consensus and model diagnostics are estimates, not guarantees. NFL/NCAAF/MLB use their existing models; these details do not trigger additional API requests.</p>
+  `;
+}
+
+function renderStructuredGameLines(data, resultsDiv) {
+  if (!document.getElementById("btbt-game-line-style")) {
+    const sheet = document.createElement("style");
+    sheet.id = "btbt-game-line-style";
+    sheet.textContent = `
+      .btbt-game-lines{display:grid;gap:12px;max-width:1100px;margin:auto}
+      .btbt-game-card{border:1px solid #ccd5df;border-radius:12px;background:var(--card-bg,#fff);color:var(--text-color,#172338);overflow:hidden}
+      .btbt-game-card summary{cursor:pointer;padding:16px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+      .btbt-game-card summary::-webkit-details-marker{display:none}
+      .btbt-game-head{font-size:1rem;font-weight:700}
+      .btbt-game-minor{font-size:.81rem;color:#607083}
+      .btbt-game-headline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+      .btbt-game-pill{font-size:.81rem;border-radius:6px;padding:5px 8px;background:#e9eef5;color:#24334c;font-weight:600}
+      .btbt-game-more{font-size:.85rem;color:#3065ab}
+      .btbt-game-body{padding:16px;border-top:1px solid #d9e1e8}
+      .btbt-game-body h4{font-size:.94rem;margin:16px 0 9px}
+      .btbt-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+      .btbt-detail-metric{padding:10px;background:#f3f6fa;color:#1d2d44;border-radius:8px;min-width:0}
+      .btbt-detail-metric span{display:block;font-size:.76rem;color:#607083;margin-bottom:3px}
+      .btbt-detail-metric strong{font-size:.99rem;overflow-wrap:anywhere}
+      .btbt-scroll{overflow-x:auto}
+      .btbt-book-table{border-collapse:collapse;width:100%;font-size:.85rem}
+      .btbt-book-table th,.btbt-book-table td{padding:8px;border-bottom:1px solid #e0e5eb;text-align:left}
+      .btbt-explain{font-size:.83rem;color:#667083;margin:12px 0}
+      @media(max-width:520px){.btbt-game-card summary{padding:12px}.btbt-game-body{padding:12px}}
+    `;
+    document.head.appendChild(sheet);
+  }
+  const wrapper = document.createElement("div");
+  wrapper.className = "btbt-game-lines";
+  const fragment = document.createDocumentFragment();
+  data.forEach((game, index) => {
+    const card = document.createElement("details");
+    card.className = "btbt-game-card";
+    const ncaab = game.mode === "basketball_model";
+    const favor = game.recommended_team || null;
+    const headline = ncaab
+      ? `Model ${btbtNumber(game.model_spread, 1)} · Market ${btbtNumber(game.consensus_home, 1)}`
+      : `${game.market_picks?.length || 0} value selections`;
+    card.innerHTML = `<summary><div><div class="btbt-game-head">${btbtHtml(game.event_title || `${game.away_team} @ ${game.home_team}`)}</div>
+      <div class="btbt-game-minor">${btbtHtml(game.game_time_display || game.game_time || "")}</div></div>
+      <div class="btbt-game-headline"><span class="btbt-game-pill">${btbtHtml(headline)}</span>${favor ? `<span class="btbt-game-pill">Lean ${btbtHtml(favor)}</span>` : ""}<span class="btbt-game-more">Details ▾</span></div></summary><div class="btbt-game-body" hidden></div>`;
+    card.addEventListener("toggle", () => {
+      const panel = card.querySelector(".btbt-game-body");
+      if (card.open && panel && panel.hidden) {
+        panel.innerHTML = ncaab ? btbtNcaabDetail(game) : btbtMarketDetail(game);
+        panel.hidden = false;
+      }
+    });
+    fragment.appendChild(card);
+  });
+  wrapper.appendChild(fragment);
+  resultsDiv.appendChild(wrapper);
+}
+
 function renderGameTable(data) {
   const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = "";
 
   if (!Array.isArray(data) || data.length === 0) {
     resultsDiv.innerHTML = "<p>No game line data available.</p>";
+    return;
+  }
+  if (data[0] && ["basketball_model", "ncaaf_market", "mlb_market"].includes(data[0].mode)) {
+    renderStructuredGameLines(data, resultsDiv);
     return;
   }
 
@@ -11141,6 +11288,11 @@ return `
       "americanfootball_ncaaf"
     ||
     (
+      selectedSport === "basketball_ncaab" &&
+      row.Market?.startsWith("player_")
+    )
+    ||
+    (
       selectedSport ===
         "americanfootball_nfl"
       &&
@@ -11154,7 +11306,7 @@ return `
         class="tap-ai-btn"
         data-card-index="${cardIndex}"
       >
-        🧠 AI Details
+        ${selectedSport === "basketball_ncaab" ? "📊 Player Details" : "🧠 AI Details"}
       </button>
     `
     : ""
@@ -14154,6 +14306,108 @@ platformRows.forEach(
   );
 
 }
+
+// ===================================================
+// 🏀 NCAAB player box-score modal (CBBD -> cron -> Supabase -> API)
+// ===================================================
+async function loadNcaabEdgeProfile({rowData, player, market, line, outcome, playerTeam, teamA, teamB}) {
+  const chart = document.getElementById("edgeGameLogChart");
+  const table = document.getElementById("edgeGameLogTable");
+  const matchup = document.getElementById("edgeMatchupTable");
+  const details = document.getElementById("edgeDetailsTable");
+  const summary = document.getElementById("edgeKeyPoints");
+  const flag = document.getElementById("edgeFlag");
+  const escapeText = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  const fmt = (v) => v === null || v === undefined ? "N/A" : Number(v).toFixed(1);
+  const reqId = (window._ncaabProfileRequestId || 0) + 1;
+  window._ncaabProfileRequestId = reqId;
+  try {
+    const params = new URLSearchParams({player, market, limit:"10"});
+    if (line !== "" && line !== null && line !== undefined) params.set("line", line);
+    if (outcome) params.set("outcome", outcome);
+    if (playerTeam) params.set("player_team", playerTeam);
+    if (teamA) params.set("team_a", teamA);
+    if (teamB) params.set("team_b", teamB);
+    const response = await fetch(`${window.API_BASE}/api/ncaab/player-profile?${params.toString()}`);
+    if (!response.ok) throw new Error(`Player details unavailable (${response.status})`);
+    const data = await response.json();
+    if (window._ncaabProfileRequestId !== reqId) return;
+    if (!data?.available || !Array.isArray(data.game_log) || !data.game_log.length) {
+      flag.textContent = "🏀 NCAAB player history pending";
+      summary.innerHTML = `<li>${escapeText(data.message || "No matching completed game logs have been imported for this player and team yet.")}</li>`;
+      chart.innerHTML = "<p>No game log is available for this player yet.</p>";
+      table.innerHTML = `<tr><td>Status</td><td>${escapeText(data.reason || "Not available")}</td></tr>`;
+      matchup.innerHTML = "<tr><td>Data source</td><td>CollegeBasketballData</td></tr>";
+      details.innerHTML = "<tr><td>Player model</td><td>Not calculated from missing game logs</td></tr>";
+      return;
+    }
+    const isPrevious = data.previous_season === true;
+    const seasonLabel = `${data.season - 1}–${String(data.season).slice(-2)}`;
+    const side = String(outcome || "").toLowerCase();
+    const lineN = Number(line);
+    const validLine = line !== "" && line !== null && Number.isFinite(lineN);
+    const games = data.game_log;
+    const projection = data.projection || {};
+    flag.textContent = isPrevious
+      ? `🏀 ${seasonLabel} previous-season game logs (not current form)`
+      : `🏀 ${seasonLabel} current-season game logs`;
+    summary.innerHTML = `
+      <div class="edge-summary-grid">
+        <div class="edge-mini-card"><span>Last 5</span><strong>${escapeText(data.last5?.record || "N/A")}</strong><small>Avg ${fmt(data.last5?.average)}</small></div>
+        <div class="edge-mini-card"><span>Last 10</span><strong>${escapeText(data.last10?.record || "N/A")}</strong><small>Avg ${fmt(data.last10?.average)}</small></div>
+      </div>
+      <div class="edge-summary-card">
+        <h4>🏀 Recent player performance</h4>
+        <div class="edge-line-row"><span>Player team</span><strong>${escapeText(data.team)}</strong></div>
+        <div class="edge-line-row"><span>Stat market</span><strong>${escapeText(market.replaceAll("_", " "))}</strong></div>
+        <div class="edge-line-row"><span>Sample</span><strong>${games.length} games (${escapeText(seasonLabel)})</strong></div>
+        <div class="edge-line-row"><span>Last 10 hit rate</span><strong>${data.last10?.hit_rate == null ? "N/A" : `${fmt(data.last10.hit_rate)}%`}</strong></div>
+      </div>
+      <div class="edge-summary-card">
+        <h4>🏀 BTBT experimental player estimate</h4>
+        <div class="edge-line-row"><span>Estimated ${escapeText(market.replaceAll("_", " "))}</span><strong>${projection.available ? fmt(projection.value) : "N/A"}</strong></div>
+        <div class="edge-line-row"><span>Data status</span><strong>${escapeText(projection.status_label || "Not enough history")}</strong></div>
+        <div class="edge-ai-read">${escapeText(projection.explanation || projection.message || "Provisional baseline only")}</div>
+      </div>
+      <div class="edge-ai-read edge-ai-large">
+        📊 <strong>Data read:</strong> Historical results are descriptive, not a model prediction.
+        ${isPrevious ? "These stats are from last season and may not reflect the current roster or playing time." : "Early-season samples may be small."}
+      </div>`;
+    const maxVal = Math.max(...games.map(g => Number(g.value) || 0), validLine ? lineN : 0, 1);
+    chart.innerHTML = games.map(g => {
+      const val = Number(g.value) || 0;
+      const hit = validLine && (side === "over" ? val > lineN : side === "under" ? val < lineN : false);
+      const push = validLine && val === lineN;
+      const suffix = (g.date || "").slice(5);
+      return `<div class="edge-log-row"><span>${escapeText(suffix)}</span>
+        <div class="edge-log-bar-track"><div class="edge-log-bar ${hit ? "hit" : "miss"}" style="width:${Math.max(5, Math.round(val / maxVal * 100))}%"></div></div>
+        <strong>${val}${push ? " (P)" : ""}</strong></div>`;
+    }).join("");
+    table.innerHTML = `<tr><td>DFS line</td><td>${validLine ? lineN : "N/A"}</td></tr>
+      <tr><td>Side</td><td>${escapeText(outcome)}</td></tr>
+      <tr><td>Last 5</td><td>${escapeText(data.last5?.record || "N/A")}, avg ${fmt(data.last5?.average)}</td></tr>
+      <tr><td>Last 10</td><td>${escapeText(data.last10?.record || "N/A")}, avg ${fmt(data.last10?.average)}</td></tr>
+      <tr><td>Season sample</td><td>${games.length} games, avg ${fmt(data.season_sample?.average)}</td></tr>`;
+    matchup.innerHTML = `<tr><td>Current team</td><td>${escapeText(data.team)}</td></tr>
+      <tr><td>Selected matchup</td><td>${escapeText([teamA,teamB].filter(Boolean).join(" vs ") || "N/A")}</td></tr>
+      <tr><td>Opponents in log</td><td>${escapeText(games.map(g => g.opponent).filter(Boolean).slice(0,5).join(", ") || "N/A")}</td></tr>`;
+    details.innerHTML = `<tr><td>Source</td><td>CollegeBasketballData (Supabase cache)</td></tr>
+      <tr><td>Season</td><td>${escapeText(seasonLabel)}</td></tr>
+      <tr><td>Statistic</td><td>${escapeText(market.replaceAll("_", " "))}</td></tr>
+      <tr><td>BTBT statistical estimate</td><td>${projection.available ? `${fmt(projection.value)} (${escapeText(projection.status_label)})` : escapeText(projection.message || "Not available")}</td></tr>
+      <tr><td>Sample</td><td>${games.length} games</td></tr>`;
+  } catch (err) {
+    if (window._ncaabProfileRequestId !== reqId) return;
+    console.warn("NCAAB player profile:", err);
+    flag.textContent = "🏀 Player details temporarily unavailable";
+    summary.innerHTML = "<li>Couldn't retrieve cached player statistics. Existing props remain available.</li>";
+    chart.innerHTML = "<p>Game log unavailable.</p>";
+    table.innerHTML = "<tr><td>Status</td><td>Unavailable</td></tr>";
+    matchup.innerHTML = "<tr><td>Status</td><td>Unavailable</td></tr>";
+    details.innerHTML = "<tr><td>Status</td><td>Unavailable</td></tr>";
+  }
+}
+
 async function openEdgeProfile(
   rowData,
   options = {}
@@ -14174,6 +14428,9 @@ async function openEdgeProfile(
   const isNFL =
     selectedSport ===
     "americanfootball_nfl";
+
+  const isNCAAB =
+    selectedSport === "basketball_ncaab";
 
   // ===================================================
   // 🧹 CLEAR SPORT-SPECIFIC PROFILE CONTENT
@@ -14291,6 +14548,8 @@ logoWrap.innerHTML = `
       ? "Loading NFL BTBT AI profile..."
       : isNCAAF
       ? "Loading NCAAF AI profile..."
+      : isNCAAB
+      ? "Loading college basketball player stats..."
       : "Loading MLB profile...";
 
   document.getElementById("edgeKeyPoints").innerHTML = `
@@ -14325,6 +14584,17 @@ logoWrap.innerHTML = `
   "hidden"
 );
 
+
+// ===================================================
+// 🏀 NCAAB: lightweight, cached box scores; no live CBBD API calls.
+// ===================================================
+if (isNCAAB) {
+  await loadNcaabEdgeProfile({
+    rowData, player, market, line, outcome,
+    playerTeam, teamA, teamB
+  });
+  return;
+}
 
 // ===================================================
 // 🏈 NFL
